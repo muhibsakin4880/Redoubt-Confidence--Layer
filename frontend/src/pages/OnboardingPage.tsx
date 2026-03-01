@@ -141,10 +141,10 @@ export default function OnboardingPage() {
     }, [stepReady, step])
 
     useEffect(() => {
-        if (accessStatus === 'pending') {
+        if (accessStatus === 'pending' && step !== 5) {
             navigate('/onboarding/confirmation', { replace: true })
         }
-    }, [accessStatus, navigate])
+    }, [accessStatus, navigate, step])
 
     const next = () => {
         if (step >= 4) return
@@ -192,7 +192,7 @@ export default function OnboardingPage() {
         setApplicationReference(referenceId)
         setSubmittedDate(submissionDate)
         setShowStepError(false)
-        navigate('/onboarding/confirmation')
+        setStep(5)
     }
 
     return (

@@ -1,0 +1,96 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - navigation [ref=e5]:
+      - generic [ref=e6]:
+        - link "Breach Data Confidence & Security Infrastructure Layer" [ref=e7] [cursor=pointer]:
+          - /url: /
+          - text: Breach
+          - generic [ref=e8]: Data Confidence & Security Infrastructure Layer
+        - generic [ref=e10]:
+          - link "Home" [ref=e11] [cursor=pointer]:
+            - /url: /
+          - link "Platform Overview" [ref=e12] [cursor=pointer]:
+            - /url: /about
+          - link "Solutions" [ref=e13] [cursor=pointer]:
+            - /url: /solutions
+          - link "Sign In" [ref=e14] [cursor=pointer]:
+            - /url: /login
+  - main [ref=e15]:
+    - generic [ref=e17]:
+      - generic [ref=e18]:
+        - heading "Participant Onboarding" [level=1] [ref=e19]
+        - paragraph [ref=e20]: Security and confidence infrastructure intake for controlled participation.
+      - generic [ref=e22]:
+        - generic [ref=e24]:
+          - img [ref=e96]
+          - generic [ref=e26]: Step 1
+          - generic [ref=e27]: Organization & Identity
+        - generic [ref=e30]:
+          - img [ref=e109]
+          - generic [ref=e32]: Step 2
+          - generic [ref=e33]: Intended Platform Usage
+        - generic [ref=e36]:
+          - img [ref=e133]
+          - generic [ref=e38]: Step 3
+          - generic [ref=e39]: Participation Intent
+        - generic [ref=e42]:
+          - img [ref=e148]
+          - generic [ref=e44]: Step 4
+          - generic [ref=e45]: Compliance Commitment
+        - generic [ref=e48]:
+          - generic [ref=e49]: "5"
+          - generic [ref=e50]: Step 5
+          - generic [ref=e51]: Submission Confirmation
+      - generic [ref=e150]:
+        - img [ref=e156]
+        - generic [ref=e158]:
+          - heading "Application Submitted Successfully" [level=2] [ref=e159]
+          - paragraph [ref=e160]: Your application is under review by the Breach trust committee.
+        - generic [ref=e161]:
+          - generic [ref=e162]:
+            - generic [ref=e163]: Reference ID
+            - generic [ref=e164]: "#BRE-2026-3123"
+          - generic [ref=e165]:
+            - generic [ref=e166]: Submitted
+            - generic [ref=e167]: March 1, 2026
+          - generic [ref=e168]:
+            - generic [ref=e169]: Status
+            - generic [ref=e170]: Pending Review
+          - generic [ref=e171]:
+            - generic [ref=e172]: Estimated review time
+            - generic [ref=e173]: 2-3 business days
+        - generic [ref=e174]:
+          - heading "What happens next" [level=3] [ref=e175]
+          - list [ref=e176]:
+            - listitem [ref=e177]: 1. Identity & organization verification
+            - listitem [ref=e178]: 2. Trust committee review
+            - listitem [ref=e179]: 3. Access credentials issued via email
+        - generic [ref=e180]:
+          - link "Return to Home" [ref=e181] [cursor=pointer]:
+            - /url: /
+          - button "Check Application Status" [ref=e182] [cursor=pointer]
+  - contentinfo [ref=e76]:
+    - generic [ref=e77]:
+      - generic [ref=e78]:
+        - generic [ref=e79]:
+          - heading "Data Confidence Layer" [level=3] [ref=e80]
+          - paragraph [ref=e81]: A trusted platform for data verification, research access, and dataset management with built-in quality assurance.
+        - generic [ref=e82]:
+          - heading "Quick Links" [level=4] [ref=e83]
+          - generic [ref=e84]:
+            - link "About Us" [ref=e85] [cursor=pointer]:
+              - /url: "#"
+            - link "Documentation" [ref=e86] [cursor=pointer]:
+              - /url: "#"
+            - link "API Reference" [ref=e87] [cursor=pointer]:
+              - /url: "#"
+        - generic [ref=e88]:
+          - heading "Legal" [level=4] [ref=e89]
+          - generic [ref=e90]:
+            - link "Privacy Policy" [ref=e91] [cursor=pointer]:
+              - /url: "#"
+            - link "Terms of Service" [ref=e92] [cursor=pointer]:
+              - /url: "#"
+            - link "Contact" [ref=e93] [cursor=pointer]:
+              - /url: "#"
+      - paragraph [ref=e95]: © 2026 Data Confidence Layer. All rights reserved.
