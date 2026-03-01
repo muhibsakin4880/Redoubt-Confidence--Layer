@@ -16,6 +16,7 @@ import OnboardingStep3 from './pages/OnboardingStep3'
 import OnboardingStep4 from './pages/OnboardingStep4'
 import OnboardingConfirmation from './pages/OnboardingConfirmation'
 import AboutPage from './pages/AboutPage'
+import ApplicationStatusPage from './pages/ApplicationStatusPage'
 import ProfilePage from './pages/ProfilePage'
 import ContributionsPage from './pages/ContributionsPage'
 import ContributionStatusDetailsPage from './pages/ContributionStatusDetailsPage'
@@ -60,6 +61,7 @@ function App() {
                     <Route path="about" element={<AboutPage />} />
                     <Route path="solutions" element={<SolutionsPage />} />
                     <Route path="login" element={<LoginPage />} />
+                    <Route path="application-status" element={<ApplicationStatusPage />} />
                     <Route path="onboarding" element={RequireOnboardingAccess(<OnboardingPage />)} />
                     <Route path="onboarding/step1" element={RequireOnboardingAccess(<OnboardingStep1 />)} />
                     <Route path="onboarding/step2" element={RequireOnboardingAccess(<OnboardingStep2 />)} />

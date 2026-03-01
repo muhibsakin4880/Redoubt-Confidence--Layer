@@ -44,7 +44,6 @@ export default function OnboardingPage() {
     const [step, setStep] = useState(1)
     const [step4SubmitUnlockAt, setStep4SubmitUnlockAt] = useState(0)
     const [showStepError, setShowStepError] = useState(false)
-    const [showStatusTrackingInfo, setShowStatusTrackingInfo] = useState(false)
     const [applicationReference, setApplicationReference] = useState(() => {
         const stored = localStorage.getItem(SUBMISSION_META_STORAGE_KEY)
         if (!stored) return generateReferenceId()
@@ -194,10 +193,6 @@ export default function OnboardingPage() {
         setSubmittedDate(submissionDate)
         setShowStepError(false)
         navigate('/onboarding/confirmation')
-    }
-
-    const handleCheckApplicationStatus = () => {
-        setShowStatusTrackingInfo(true)
     }
 
     return (
@@ -551,17 +546,12 @@ export default function OnboardingPage() {
                                 </Link>
                                 <button
                                     type="button"
-                                    onClick={handleCheckApplicationStatus}
+                                    onClick={() => navigate('/application-status')}
                                     className="px-4 py-2 rounded-lg border border-slate-600 hover:border-blue-500 text-slate-200 hover:text-white font-semibold transition-colors"
                                 >
                                     Check Application Status
                                 </button>
                             </div>
-                            {showStatusTrackingInfo && (
-                                <p className="text-sm text-slate-300">
-                                    Application status tracking will be available once your account is approved. You will receive an email notification.
-                                </p>
-                            )}
                         </section>
                     )}
 

@@ -1,0 +1,167 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - navigation [ref=e5]:
+      - generic [ref=e6]:
+        - link "Breach Data Confidence & Security Infrastructure Layer" [ref=e7] [cursor=pointer]:
+          - /url: /
+          - text: Breach
+          - generic [ref=e8]: Data Confidence & Security Infrastructure Layer
+        - generic [ref=e10]:
+          - link "Home" [ref=e11] [cursor=pointer]:
+            - /url: /
+          - link "Platform Overview" [ref=e12] [cursor=pointer]:
+            - /url: /about
+          - link "Solutions" [ref=e13] [cursor=pointer]:
+            - /url: /solutions
+          - link "Sign In" [ref=e14] [cursor=pointer]:
+            - /url: /login
+  - main [ref=e15]:
+    - generic [ref=e17]:
+      - generic [ref=e26]:
+        - generic [ref=e29]: Trusted Data Infrastructure
+        - heading "Breach — Data Confidence & Security Layer" [level=1] [ref=e30]:
+          - generic [ref=e31]: Breach —
+          - generic [ref=e32]: Data Confidence &
+          - generic [ref=e33]: Security Layer
+        - paragraph [ref=e34]: Secure data access with verified datasets, AI-backed confidence, and controlled participation — no marketplace, just trust-first collaboration.
+        - generic [ref=e35]:
+          - link "Sign In →" [ref=e36] [cursor=pointer]:
+            - /url: /login
+          - button "Request Platform Access" [ref=e37] [cursor=pointer]
+        - generic [ref=e38]:
+          - generic [ref=e39]:
+            - img [ref=e40]
+            - text: SOC 2 Compliant
+          - generic [ref=e42]:
+            - img [ref=e43]
+            - text: End-to-End Encrypted
+          - generic [ref=e45]:
+            - img [ref=e46]
+            - text: Zero Marketplace Risk
+      - generic [ref=e51]:
+        - generic [ref=e52]:
+          - generic [ref=e53]: 0+
+          - generic [ref=e54]: Verified Datasets
+        - generic [ref=e55]:
+          - generic [ref=e56]: 0%
+          - generic [ref=e57]: Accuracy Rate
+        - generic [ref=e58]:
+          - generic [ref=e59]: 0+
+          - generic [ref=e60]: Trusted Partners
+      - generic [ref=e63]:
+        - generic [ref=e64]:
+          - paragraph [ref=e65]: Process
+          - heading "How It Works" [level=2] [ref=e66]
+          - paragraph [ref=e67]: Our automated pipeline ensures every dataset meets the highest standards
+        - generic [ref=e68]:
+          - generic [ref=e70]:
+            - generic [ref=e71]:
+              - generic [ref=e72]: ⬆
+              - generic [ref=e73]: "01"
+            - heading "Controlled Dataset Onboarding" [level=3] [ref=e74]
+            - paragraph [ref=e75]: Participants submit datasets with metadata and documentation for verification
+          - generic [ref=e76]:
+            - generic [ref=e77]:
+              - generic [ref=e78]: ⚡
+              - generic [ref=e79]: "02"
+            - heading "AI Quality Verification" [level=3] [ref=e80]
+            - paragraph [ref=e81]: Automated AI systems check data quality, completeness, and consistency
+          - generic [ref=e82]:
+            - generic [ref=e83]:
+              - generic [ref=e84]: ◎
+              - generic [ref=e85]: "03"
+            - heading "Confidence Scoring" [level=3] [ref=e86]
+            - paragraph [ref=e87]: Each dataset receives a comprehensive confidence score based on multiple factors
+          - generic [ref=e88]:
+            - generic [ref=e89]:
+              - generic [ref=e90]: 🔐
+              - generic [ref=e91]: "04"
+            - heading "Secure Access" [level=3] [ref=e92]
+            - paragraph [ref=e93]: Approved participants access datasets with full audit trails and security controls
+      - generic [ref=e96]:
+        - generic [ref=e97]:
+          - paragraph [ref=e98]: Security
+          - heading "Trust & Verification" [level=2] [ref=e99]
+          - paragraph [ref=e100]: Multi-layered verification ensures secure, trustworthy collaboration without marketplace risks
+        - generic [ref=e101]:
+          - generic [ref=e102]:
+            - generic [ref=e103]: 🤖
+            - heading "AI Dataset Validation" [level=3] [ref=e104]
+            - paragraph [ref=e105]: Automated AI systems validate data quality, detect anomalies, and ensure consistency
+          - generic [ref=e106]:
+            - generic [ref=e107]: ✓
+            - heading "Provider Verification" [level=3] [ref=e108]
+            - paragraph [ref=e109]: All data providers undergo identity verification and credentialing processes
+          - generic [ref=e110]:
+            - generic [ref=e111]: 📊
+            - heading "Confidence Scores" [level=3] [ref=e112]
+            - paragraph [ref=e113]: Transparent scoring system showing quality, completeness, and reliability metrics
+          - generic [ref=e114]:
+            - generic [ref=e115]: 🔒
+            - heading "Secure Dataset Access" [level=3] [ref=e116]
+            - paragraph [ref=e117]: Enterprise-grade security with role-based access and complete audit trails
+      - generic [ref=e120]:
+        - generic [ref=e121]:
+          - paragraph [ref=e122]: Solutions
+          - heading "Built for Every Team" [level=2] [ref=e123]
+          - paragraph [ref=e124]: Tailored solutions for diverse data needs
+        - generic [ref=e125]:
+          - link "🎓 Researchers Verified datasets for academic research with citation support Learn more →" [ref=e126] [cursor=pointer]:
+            - /url: /solutions#researchers
+            - generic [ref=e127]: 🎓
+            - heading "Researchers" [level=3] [ref=e128]
+            - paragraph [ref=e129]: Verified datasets for academic research with citation support
+            - text: Learn more →
+          - link "🤖 AI & ML Teams Training data with quality validation and bias detection Learn more →" [ref=e130] [cursor=pointer]:
+            - /url: /solutions#ai-ml-teams
+            - generic [ref=e131]: 🤖
+            - heading "AI & ML Teams" [level=3] [ref=e132]
+            - paragraph [ref=e133]: Training data with quality validation and bias detection
+            - text: Learn more →
+          - link "🏢 Enterprises Enterprise-grade security and compliance for critical applications Learn more →" [ref=e134] [cursor=pointer]:
+            - /url: /solutions#enterprises
+            - generic [ref=e135]: 🏢
+            - heading "Enterprises" [level=3] [ref=e136]
+            - paragraph [ref=e137]: Enterprise-grade security and compliance for critical applications
+            - text: Learn more →
+          - link "📊 Contribute Data Participants can contribute datasets with verification, governance, and audit trails Learn more →" [ref=e138] [cursor=pointer]:
+            - /url: /solutions#data-providers
+            - generic [ref=e139]: 📊
+            - heading "Contribute Data" [level=3] [ref=e140]
+            - paragraph [ref=e141]: Participants can contribute datasets with verification, governance, and audit trails
+            - text: Learn more →
+      - generic [ref=e146]:
+        - generic [ref=e149]: Invitation-only platform
+        - heading "Participation requires verification & approval" [level=2] [ref=e150]:
+          - text: Participation requires
+          - generic [ref=e151]: verification & approval
+        - paragraph [ref=e152]: Secure data access only after identity and use-case verification. Collaborate with confidence as trusted participants in a controlled network.
+        - generic [ref=e153]:
+          - link "Sign In →" [ref=e154] [cursor=pointer]:
+            - /url: /login
+          - button "Request Platform Access" [ref=e155] [cursor=pointer]
+  - contentinfo [ref=e156]:
+    - generic [ref=e157]:
+      - generic [ref=e158]:
+        - generic [ref=e159]:
+          - heading "Data Confidence Layer" [level=3] [ref=e160]
+          - paragraph [ref=e161]: A trusted platform for data verification, research access, and dataset management with built-in quality assurance.
+        - generic [ref=e162]:
+          - heading "Quick Links" [level=4] [ref=e163]
+          - generic [ref=e164]:
+            - link "About Us" [ref=e165] [cursor=pointer]:
+              - /url: "#"
+            - link "Documentation" [ref=e166] [cursor=pointer]:
+              - /url: "#"
+            - link "API Reference" [ref=e167] [cursor=pointer]:
+              - /url: "#"
+        - generic [ref=e168]:
+          - heading "Legal" [level=4] [ref=e169]
+          - generic [ref=e170]:
+            - link "Privacy Policy" [ref=e171] [cursor=pointer]:
+              - /url: "#"
+            - link "Terms of Service" [ref=e172] [cursor=pointer]:
+              - /url: "#"
+            - link "Contact" [ref=e173] [cursor=pointer]:
+              - /url: "#"
+      - paragraph [ref=e175]: © 2026 Data Confidence Layer. All rights reserved.

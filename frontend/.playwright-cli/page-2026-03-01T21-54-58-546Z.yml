@@ -1,0 +1,89 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - navigation [ref=e5]:
+      - generic [ref=e6]:
+        - link "Breach Data Confidence & Security Infrastructure Layer" [ref=e7] [cursor=pointer]:
+          - /url: /
+          - text: Breach
+          - generic [ref=e8]: Data Confidence & Security Infrastructure Layer
+        - generic [ref=e10]:
+          - link "Home" [ref=e11] [cursor=pointer]:
+            - /url: /
+          - link "Platform Overview" [ref=e12] [cursor=pointer]:
+            - /url: /about
+          - link "Solutions" [ref=e13] [cursor=pointer]:
+            - /url: /solutions
+          - link "Sign In" [ref=e14] [cursor=pointer]:
+            - /url: /login
+  - main [ref=e15]:
+    - generic [ref=e17]:
+      - generic [ref=e18]:
+        - paragraph [ref=e19]: Application Portal
+        - heading "Application Status" [level=1] [ref=e20]
+        - paragraph [ref=e21]: Track your onboarding request and review progress with the Breach trust committee.
+      - generic [ref=e22]:
+        - generic [ref=e23]:
+          - generic [ref=e24]:
+            - generic [ref=e25]: Reference ID
+            - generic [ref=e26]: Pending assignment
+            - generic [ref=e27]: Submitted Not available
+          - generic [ref=e28]:
+            - generic [ref=e29]:
+              - generic [ref=e30]: Status
+              - generic [ref=e31]: In review
+            - generic [ref=e32]:
+              - generic [ref=e33]: Estimated review time
+              - generic [ref=e34]: 2-3 business days
+            - generic [ref=e35]:
+              - generic [ref=e36]: Next update
+              - generic [ref=e37]: Email notification
+        - generic [ref=e38]:
+          - heading "Status timeline" [level=2] [ref=e39]
+          - list [ref=e40]:
+            - listitem [ref=e41]:
+              - img [ref=e45]
+              - generic [ref=e47]:
+                - heading "Application received" [level=3] [ref=e49]
+                - paragraph [ref=e50]: We have logged your submission and assigned a reference ID.
+            - listitem [ref=e51]:
+              - generic [ref=e55]: "2"
+              - generic [ref=e56]:
+                - generic [ref=e57]:
+                  - heading "Trust committee review" [level=3] [ref=e58]
+                  - generic [ref=e59]: Active
+                - paragraph [ref=e60]: Security, compliance, and governance review is underway.
+            - listitem [ref=e61]:
+              - generic [ref=e64]: "3"
+              - generic [ref=e65]:
+                - heading "Access decision" [level=3] [ref=e67]
+                - paragraph [ref=e68]: Credentials are issued via email once the review is complete.
+        - generic [ref=e69]:
+          - link "Return to Home" [ref=e70] [cursor=pointer]:
+            - /url: /
+          - link "Log in to view updates" [ref=e71] [cursor=pointer]:
+            - /url: /login
+  - contentinfo [ref=e72]:
+    - generic [ref=e73]:
+      - generic [ref=e74]:
+        - generic [ref=e75]:
+          - heading "Data Confidence Layer" [level=3] [ref=e76]
+          - paragraph [ref=e77]: A trusted platform for data verification, research access, and dataset management with built-in quality assurance.
+        - generic [ref=e78]:
+          - heading "Quick Links" [level=4] [ref=e79]
+          - generic [ref=e80]:
+            - link "About Us" [ref=e81] [cursor=pointer]:
+              - /url: "#"
+            - link "Documentation" [ref=e82] [cursor=pointer]:
+              - /url: "#"
+            - link "API Reference" [ref=e83] [cursor=pointer]:
+              - /url: "#"
+        - generic [ref=e84]:
+          - heading "Legal" [level=4] [ref=e85]
+          - generic [ref=e86]:
+            - link "Privacy Policy" [ref=e87] [cursor=pointer]:
+              - /url: "#"
+            - link "Terms of Service" [ref=e88] [cursor=pointer]:
+              - /url: "#"
+            - link "Contact" [ref=e89] [cursor=pointer]:
+              - /url: "#"
+      - paragraph [ref=e91]: © 2026 Data Confidence Layer. All rights reserved.
