@@ -12,7 +12,6 @@ const formatSubmissionDate = (date: Date) =>
     })
 
 export default function OnboardingConfirmation() {
-    const [showStatusTrackingInfo, setShowStatusTrackingInfo] = useState(false)
     const stepTitles = [
         'Organization & Identity',
         'Intended Platform Usage',
@@ -163,19 +162,13 @@ export default function OnboardingConfirmation() {
                         >
                             Return to Home
                         </Link>
-                        <button
-                            type="button"
-                            onClick={() => setShowStatusTrackingInfo(true)}
+                        <Link
+                            to="/application-status"
                             className="px-4 py-2 rounded-lg border border-slate-600 hover:border-blue-500 text-slate-200 hover:text-white font-semibold transition-colors"
                         >
                             Check Application Status
-                        </button>
+                        </Link>
                     </div>
-                    {showStatusTrackingInfo && (
-                        <p className="text-sm text-slate-300">
-                            Application status tracking will be available once your account is approved. You will receive an email notification.
-                        </p>
-                    )}
                 </div>
             </div>
         </div>
