@@ -1,6 +1,7 @@
 {
   "recommendations": [
     "Continue.continue",
-    "ollama.ollama"
+    "ollama.ollama",
+    "github.copilot-chat"
   ]
 }
