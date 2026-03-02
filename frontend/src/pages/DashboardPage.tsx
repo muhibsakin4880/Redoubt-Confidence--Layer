@@ -8,32 +8,47 @@ export default function DashboardPage() {
     const approvedAccess = datasetRequests.filter(item => item.status === 'Approved').length
     const recentCount = recentActivity.length
 
+    const trustProgress = Math.min(Math.max(netTrustScore, 0), 100)
+    const trustCircumference = 2 * Math.PI * 42
+    const trustOffset = trustCircumference - (trustProgress / 100) * trustCircumference
+
     const overviewCards = [
         {
             label: 'Trust Score',
             value: netTrustScore,
             helper: trustLevel(netTrustScore).label,
-            gradient: 'from-emerald-500/20 via-emerald-400/10 to-slate-900'
+            gradient: 'from-emerald-500/20 via-emerald-400/10 to-slate-900',
+            border: 'border-l-4 border-l-emerald-400',
+            icon: '🛡️'
         },
         {
             label: 'Pending Requests',
             value: pendingRequests,
             helper: 'Action required',
-            gradient: 'from-amber-500/20 via-amber-400/10 to-slate-900'
+            gradient: 'from-amber-500/20 via-amber-400/10 to-slate-900',
+            border: 'border-l-4 border-l-amber-400',
+            icon: '⏳'
         },
         {
             label: 'Approved Access',
             value: approvedAccess,
             helper: 'Active approvals',
-            gradient: 'from-blue-500/20 via-blue-400/10 to-slate-900'
+            gradient: 'from-blue-500/20 via-blue-400/10 to-slate-900',
+            border: 'border-l-4 border-l-blue-400',
+            icon: '✅'
         },
         {
             label: 'Recent Activity',
             value: recentCount,
             helper: 'Last 7 days',
-            gradient: 'from-cyan-500/20 via-cyan-400/10 to-slate-900'
+            gradient: 'from-purple-500/20 via-purple-400/10 to-slate-900',
+            border: 'border-l-4 border-l-purple-400',
+            icon: '📈'
         }
     ]
+
+    const accessTrend = [40, 65, 35, 75, 85, 55, 70]
+    const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
     return (
         <div className="bg-slate-900 text-white min-h-screen">
@@ -55,13 +70,46 @@ export default function DashboardPage() {
                         {overviewCards.map(card => (
                             <div
                                 key={card.label}
-                                className={`rounded-xl border border-slate-800 bg-gradient-to-br ${card.gradient} p-4 shadow-lg`}
+                                className={`rounded-xl border border-slate-800 ${card.border} bg-gradient-to-br ${card.gradient} p-4 shadow-lg`}
                             >
-                                <div className="text-xs uppercase tracking-[0.12em] text-slate-400 mb-2">{card.label}</div>
-                                <div className="flex items-baseline justify-between gap-3">
-                                    <div className="text-3xl font-semibold">{card.value}</div>
-                                    <div className="text-xs text-slate-400 text-right">{card.helper}</div>
+                                <div className="flex items-center justify-between mb-2">
+                                    <div className="text-xs uppercase tracking-[0.12em] text-slate-400">{card.label}</div>
+                                    <span className="text-lg" aria-hidden>
+                                        {card.icon}
+                                    </span>
                                 </div>
+                                {card.label === 'Trust Score' ? (
+                                    <div className="flex items-center justify-between gap-3">
+                                        <div className="relative w-24 h-24">
+                                            <svg viewBox="0 0 100 100" className="w-24 h-24 -rotate-90">
+                                                <circle cx="50" cy="50" r="42" stroke="rgb(51 65 85)" strokeWidth="10" fill="none" />
+                                                <circle
+                                                    cx="50"
+                                                    cy="50"
+                                                    r="42"
+                                                    stroke="rgb(52 211 153)"
+                                                    strokeWidth="10"
+                                                    fill="none"
+                                                    strokeLinecap="round"
+                                                    strokeDasharray={trustCircumference}
+                                                    strokeDashoffset={trustOffset}
+                                                />
+                                            </svg>
+                                            <div className="absolute inset-0 flex items-center justify-center text-sm font-semibold text-emerald-300">
+                                                {netTrustScore}/100
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="text-3xl font-semibold text-emerald-300">{card.value}</div>
+                                            <div className="text-xs text-slate-300">{card.helper}</div>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="flex items-baseline justify-between gap-3">
+                                        <div className="text-3xl font-semibold">{card.value}</div>
+                                        <div className="text-xs text-slate-400 text-right">{card.helper}</div>
+                                    </div>
+                                )}
                             </div>
                         ))}
                     </div>
@@ -80,18 +128,36 @@ export default function DashboardPage() {
                         </span>
                     </div>
 
-                    <div className="space-y-4 mb-6">
+                    <div className="space-y-3 mb-8">
                         {recentActivity.slice(0, 4).map((item, idx) => (
-                            <div key={idx} className="flex gap-3">
-                                <div className="pt-1">
-                                    <span className={`inline-block w-2.5 h-2.5 rounded-full ${activityDot[item.type]}`} />
+                            <div key={idx} className="flex items-center gap-4 rounded-xl border border-slate-700 bg-slate-900/50 px-4 py-3">
+                                <div className="relative flex items-center justify-center">
+                                    <span className={`inline-block w-3.5 h-3.5 rounded-full ${activityDot[item.type]}`} />
+                                    <span className={`absolute inline-block w-6 h-6 rounded-full opacity-30 ${activityDot[item.type]}`} />
                                 </div>
-                                <div>
+                                <div className="min-w-0">
                                     <div className="text-sm font-medium text-white">{item.label}</div>
-                                    <div className="text-xs text-slate-400">{item.timestamp}</div>
+                                    <div className="text-xs text-slate-400 mt-1">{item.timestamp}</div>
                                 </div>
                             </div>
                         ))}
+                    </div>
+
+                    <div className="mb-6">
+                        <h3 className="text-sm font-semibold text-slate-200 mb-3">Dataset Access Trend (last 7 days)</h3>
+                        <div className="grid grid-cols-7 gap-3 items-end h-40 p-4 rounded-xl bg-slate-900/60 border border-slate-700">
+                            {accessTrend.map((value, idx) => (
+                                <div key={dayLabels[idx]} className="flex flex-col items-center justify-end gap-2 h-full">
+                                    <div className="w-full rounded-md bg-slate-700/50 overflow-hidden">
+                                        <div
+                                            className="w-full rounded-md bg-gradient-to-t from-blue-600 to-cyan-400"
+                                            style={{ height: `${Math.max(value, 12)}px` }}
+                                        />
+                                    </div>
+                                    <span className="text-[10px] text-slate-400">{dayLabels[idx]}</span>
+                                </div>
+                            ))}
+                        </div>
                     </div>
 
                     <div className="flex flex-wrap gap-2">
