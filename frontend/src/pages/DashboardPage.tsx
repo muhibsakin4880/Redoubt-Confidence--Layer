@@ -116,36 +116,47 @@ export default function DashboardPage() {
                 </div>
             </div>
 
-            <div className="container mx-auto px-4 py-8 space-y-6">
-                <section className="bg-slate-800/60 border border-slate-700 rounded-2xl p-6 shadow-xl">
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
-                        <div>
-                            <h2 className="text-xl font-semibold">Recent activity summary</h2>
-                            <p className="text-slate-400 text-sm">Latest workflow events across requests, approvals, and compliance.</p>
-                        </div>
-                        <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${trustLevel(netTrustScore).classes}`}>
-                            Trust summary: {netTrustScore}
-                        </span>
-                    </div>
-
-                    <div className="space-y-3 mb-8">
-                        {recentActivity.slice(0, 4).map((item, idx) => (
-                            <div key={idx} className="flex items-center gap-4 rounded-xl border border-slate-700 bg-slate-900/50 px-4 py-3">
-                                <div className="relative flex items-center justify-center">
-                                    <span className={`inline-block w-3.5 h-3.5 rounded-full ${activityDot[item.type]}`} />
-                                    <span className={`absolute inline-block w-6 h-6 rounded-full opacity-30 ${activityDot[item.type]}`} />
-                                </div>
-                                <div className="min-w-0">
-                                    <div className="text-sm font-medium text-white">{item.label}</div>
-                                    <div className="text-xs text-slate-400 mt-1">{item.timestamp}</div>
-                                </div>
+            <div className="container mx-auto px-4 py-8">
+                <section className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                    <div className="bg-slate-800/60 border border-slate-700 rounded-2xl p-5 shadow-xl flex flex-col">
+                        <div className="flex items-start justify-between gap-3 mb-4">
+                            <div>
+                                <h2 className="text-xl font-semibold">Recent Activity</h2>
+                                <p className="text-slate-400 text-sm">Latest workflow events across requests and compliance.</p>
                             </div>
-                        ))}
+                            <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${trustLevel(netTrustScore).classes}`}>
+                                Trust: {netTrustScore}
+                            </span>
+                        </div>
+
+                        <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
+                            {recentActivity.slice(0, 4).map((item, idx) => (
+                                <div key={idx} className="flex items-center gap-3 rounded-lg border border-slate-700 bg-slate-900/50 px-3 py-2.5">
+                                    <div className="relative flex items-center justify-center">
+                                        <span className={`inline-block w-3 h-3 rounded-full ${activityDot[item.type]}`} />
+                                        <span className={`absolute inline-block w-5 h-5 rounded-full opacity-30 ${activityDot[item.type]}`} />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <div className="text-sm font-medium text-white truncate">{item.label}</div>
+                                        <div className="text-xs text-slate-400 mt-0.5">{item.timestamp}</div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="mt-4 pt-4 border-t border-slate-700">
+                            <Link
+                                to="/access-requests"
+                                className="w-full inline-flex justify-center px-3 py-2 rounded-lg border border-slate-700 hover:border-blue-500 text-xs font-semibold text-slate-200 hover:text-white transition-colors"
+                            >
+                                View All
+                            </Link>
+                        </div>
                     </div>
 
-                    <div className="mb-6">
-                        <h3 className="text-sm font-semibold text-slate-200 mb-3">Dataset Access Trend (last 7 days)</h3>
-                        <div className="grid grid-cols-7 gap-3 items-end h-40 p-4 rounded-xl bg-slate-900/60 border border-slate-700">
+                    <div className="bg-[#0a1628] border border-slate-700 rounded-2xl p-5 shadow-xl">
+                        <h3 className="text-sm font-semibold text-slate-200 mb-4">Dataset Access Trend (last 7 days)</h3>
+                        <div className="grid grid-cols-7 gap-3 items-end h-[22rem] p-4 rounded-xl bg-slate-900/50 border border-slate-700">
                             {accessTrend.map((value, idx) => (
                                 <div key={dayLabels[idx]} className="flex flex-col items-center justify-end gap-2 h-full">
                                     <div className="w-full rounded-md bg-slate-700/50 overflow-hidden">
@@ -158,15 +169,6 @@ export default function DashboardPage() {
                                 </div>
                             ))}
                         </div>
-                    </div>
-
-                    <div className="flex flex-wrap gap-2">
-                        <Link to="/access-requests" className="px-3 py-2 rounded-lg border border-slate-700 hover:border-blue-500 text-xs font-semibold text-slate-200 hover:text-white transition-colors">
-                            Open Access Requests
-                        </Link>
-                        <Link to="/trust-profile" className="px-3 py-2 rounded-lg border border-slate-700 hover:border-blue-500 text-xs font-semibold text-slate-200 hover:text-white transition-colors">
-                            Open Trust Profile
-                        </Link>
                     </div>
                 </section>
             </div>
