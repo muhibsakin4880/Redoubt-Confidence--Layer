@@ -324,13 +324,49 @@ export default function DatasetQualityBreakdownPage() {
                                     </div>
                                     <div className="text-xs text-slate-300">Record count range: {dataset.preview.recordCountRange}</div>
                                     <div className="text-xs uppercase tracking-wide text-slate-500">Schema glimpse</div>
-                                    <div className="space-y-1">
-                                        {dataset.preview.sampleSchema.map(field => (
-                                            <div key={field.field} className="flex items-center justify-between text-xs bg-slate-800 rounded-lg px-3 py-2 border border-slate-700">
-                                                <span className="text-white">{field.field}</span>
-                                                <span className="text-slate-300">{field.type}</span>
-                                            </div>
-                                        ))}
+                                    <div className="overflow-x-auto">
+                                        <table className="min-w-full text-xs">
+                                            <thead className="text-[10px] uppercase tracking-[0.1em] text-slate-400 border-b border-slate-700">
+                                                <tr>
+                                                    <th className="py-2 pr-3 text-left font-medium">Field</th>
+                                                    <th className="py-2 px-3 text-left font-medium">Type</th>
+                                                    <th className="py-2 px-3 text-left font-medium">Sample Value</th>
+                                                    <th className="py-2 pl-3 text-left font-medium">Description</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-slate-800">
+                                                <tr>
+                                                    <td className="py-2 pr-3 text-white">station_id</td>
+                                                    <td className="py-2 px-3 text-slate-300">string</td>
+                                                    <td className="py-2 px-3 text-slate-300">"STN-00142"</td>
+                                                    <td className="py-2 pl-3 text-slate-400">Unique station identifier</td>
+                                                </tr>
+                                                <tr>
+                                                    <td className="py-2 pr-3 text-white">timestamp_utc</td>
+                                                    <td className="py-2 px-3 text-slate-300">datetime</td>
+                                                    <td className="py-2 px-3 text-slate-300">"2026-01-15 08:00:00"</td>
+                                                    <td className="py-2 pl-3 text-slate-400">UTC timestamp of reading</td>
+                                                </tr>
+                                                <tr>
+                                                    <td className="py-2 pr-3 text-white">temperature_c</td>
+                                                    <td className="py-2 px-3 text-slate-300">float</td>
+                                                    <td className="py-2 px-3 text-slate-300">"23.4"</td>
+                                                    <td className="py-2 pl-3 text-slate-400">Temperature in Celsius</td>
+                                                </tr>
+                                                <tr>
+                                                    <td className="py-2 pr-3 text-white">precip_mm</td>
+                                                    <td className="py-2 px-3 text-slate-300">float</td>
+                                                    <td className="py-2 px-3 text-slate-300">"0.0"</td>
+                                                    <td className="py-2 pl-3 text-slate-400">Precipitation in millimeters</td>
+                                                </tr>
+                                                <tr>
+                                                    <td className="py-2 pr-3 text-white">wind_speed_ms</td>
+                                                    <td className="py-2 px-3 text-slate-300">float</td>
+                                                    <td className="py-2 px-3 text-slate-300">"4.2"</td>
+                                                    <td className="py-2 pl-3 text-slate-400">Wind speed in meters/second</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
                                     </div>
                                 </div>
                             </div>

@@ -118,18 +118,27 @@ function CodeBlock({ label, code }: { label: string; code: string }) {
 
 export default function PipelinesPage() {
     const [activeTab, setActiveTab] = useState<PipelinesTab>('overview')
+    const [isAnnual, setIsAnnual] = useState(false)
 
     return (
         <div className="cyber-grid-bg min-h-screen">
-            <div className="max-w-7xl mx-auto px-4 py-12 text-white space-y-6">
+            <div className="max-w-7xl mx-auto px-4 py-12 text-white space-y-12">
             <section className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                 <div>
+                    <div className="flex items-center gap-2 mb-2">
+                        <span className="text-xs text-gray-500">Pipelines</span>
+                        <span className="text-xs text-cyan-400">→</span>
+                        <span className="text-xs text-cyan-400 font-medium">Overview</span>
+                    </div>
                     <h1 className="text-3xl font-bold">Pipelines</h1>
                     <p className="text-slate-400 mt-1">Access and contribute data via our APIs and SDKs.</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 text-xs">
                     <span className="px-3 py-1 rounded-full border border-emerald-500/40 bg-emerald-500/10 text-emerald-200">API v1</span>
                     <span className="px-3 py-1 rounded-full border border-cyan-500/40 bg-cyan-500/10 text-cyan-200">Verified session enabled</span>
+                    <button className="px-3 py-1 rounded-full border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/20 hover:shadow-[0_0_15px_#00F0FF40] transition-all duration-200">
+                        ← Back to Dashboard
+                    </button>
                 </div>
             </section>
 
@@ -151,8 +160,27 @@ export default function PipelinesPage() {
                 </div>
             </section>
 
+            <section className="rounded-3xl border border-cyan-500/30 bg-black/70 backdrop-blur-xl p-6 md:p-8 shadow-[0_0_20px_#00F0FF20]">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                    <div className="text-left">
+                        <p className="text-lg md:text-xl font-bold text-white">Get your API key in 30 seconds & start querying verified datasets</p>
+                        <div className="mt-3 text-sm text-gray-400">
+                            1,234 calls this month • 98% avg confidence
+                        </div>
+                    </div>
+                    <div className="flex flex-col items-start md:items-end gap-2">
+                        <button className="px-6 py-3 rounded-xl bg-cyan-500 text-black font-bold text-sm transition-all duration-300 hover:bg-cyan-400 hover:shadow-[0_0_25px_#00F0FF70] hover:scale-105">
+                            Generate API Key Now
+                        </button>
+                        <button className="text-xs text-gray-500 hover:text-cyan-400 transition-colors duration-200">
+                            Already have one? View your key →
+                        </button>
+                    </div>
+                </div>
+            </section>
+
             {activeTab === 'overview' && (
-                <section className="space-y-8">
+                <section className="space-y-12">
                     <div className="rounded-3xl border border-cyan-500/30 bg-black/70 backdrop-blur-xl p-8 md:p-12 shadow-2xl">
                         <div className="max-w-3xl">
                             <h2 className="text-4xl md:text-5xl font-bold text-white mb-4 border-t border-cyan-500/40 pt-4">Breach Data Pipeline API</h2>
@@ -197,22 +225,42 @@ export default function PipelinesPage() {
                     <div className="text-center py-8">
                         <h3 className="text-2xl font-semibold text-white mb-2 border-t border-cyan-500/40 pt-4">Built for enterprise data stacks</h3>
                         <p className="text-slate-400 mb-6">Connect Breach verified data directly into your existing infrastructure</p>
-                        <div className="flex flex-wrap justify-center gap-4">
-                            {['Snowflake', 'Databricks', 'BigQuery', 'Palantir'].map(name => (
-                                <div key={name} className="px-6 py-3 rounded-lg border border-slate-700 bg-[#0a1628] text-slate-300 text-sm font-medium">
-                                    {name}
-                                </div>
-                            ))}
+                        <div className="flex flex-wrap justify-center gap-6">
+                            <div className="w-16 h-16 rounded-xl bg-[#1e90ff]/10 border border-[#1e90ff]/30 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-[0_0_15px_#00F0FF30]">
+                                <svg viewBox="0 0 24 24" className="w-8 h-8" fill="#1e90ff"><path d="M12.999 2L4.754 6.002v11.996L12.999 22l8.246-4.002V6.002L12.999 2zm2.999 14.002l-6.2 2.998-1.8-3.998 6.2-3.002 1.8 4.002zm1.5-6.002l-7.498 3.632-1.753-3.908L17 4.002l6.499 3.998z"/></svg>
+                            </div>
+                            <div className="w-16 h-16 rounded-xl bg-[#ff6f00]/10 border border-[#ff6f00]/30 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-[0_0_15px_#00F0FF30]">
+                                <svg viewBox="0 0 24 24" className="w-8 h-8" fill="#ff6f00"><path d="M12.752 2.417C17.099 2.417 20.704 5.08 20.704 9.63c0 3.45-2.556 5.99-5.914 6.682-.51.105-.882.56-.882 1.096v1.364c0 .624-.504 1.131-1.128 1.131H9.58c-.624 0-1.128-.507-1.128-1.131v-1.364c0-.536-.372-.991-.882-1.096C5.152 15.62 2.596 13.08 2.596 9.63c0-4.55 3.605-7.213 7.952-7.213 2.336 0 4.16.91 5.204 1.712-.372.244-.68.58-.92.972-.576-.408-1.318-.68-2.184-.68zm-.752 2.036c-2.44 0-4.688 1.485-5.896 3.636 1.116 2.26 3.196 4.352 5.664 5.192 1.94-.948 3.612-2.928 4.308-5.192-1.152-1.952-3.132-3.636-5.768-3.636-.62 0-1.204.112-1.736.312.14-.688.26-1.392.26-2.124 0-2.256-1.776-4.088-3.968-4.088-2.192 0-3.968 1.832-3.968 4.088 0 2.256 1.776 4.088 3.968 4.088.244 0 .484-.024.72-.056l.404 1.84c-.576.244-1.12.38-1.68.38z"/></svg>
+                            </div>
+                            <div className="w-16 h-16 rounded-xl bg-[#fbbc05]/10 border border-[#fbbc05]/30 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-[0_0_15px_#00F0FF30]">
+                                <svg viewBox="0 0 24 24" className="w-8 h-8" fill="#fbbc05"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                            </div>
+                            <div className="w-16 h-16 rounded-xl bg-[#9c27b0]/10 border border-[#9c27b0]/30 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-[0_0_15px_#00F0FF30]">
+                                <svg viewBox="0 0 24 24" className="w-8 h-8" fill="#9c27b0"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                            </div>
                         </div>
                     </div>
 
                     <div>
                         <h3 className="text-2xl font-bold text-white mb-6 border-t border-cyan-500/40 pt-4">Pipeline Access Pricing</h3>
+                        
+                        <div className="flex items-center justify-center gap-4 mb-8">
+                            <span className={`text-sm font-medium ${!isAnnual ? 'text-white' : 'text-gray-400'}`}>Monthly</span>
+                            <button 
+                                onClick={() => setIsAnnual(!isAnnual)}
+                                className={`relative w-14 h-7 rounded-full transition-all duration-300 ${isAnnual ? 'bg-cyan-500 shadow-[0_0_15px_#00F0FF50]' : 'bg-gray-700'}`}
+                            >
+                                <div className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-all duration-300 ${isAnnual ? 'left-8' : 'left-1'}`}></div>
+                            </button>
+                            <span className={`text-sm font-medium ${isAnnual ? 'text-white' : 'text-gray-400'}`}>Annual <span className="text-cyan-400">(Save 20%)</span></span>
+                        </div>
+
                         <div className="grid md:grid-cols-3 gap-6">
                             <div className="rounded-3xl border border-cyan-500/30 bg-black/70 backdrop-blur-xl p-6 transition-all duration-300 hover:scale-105 hover:shadow-[0_0_25px_#00F0FF35]">
                                 <div className="text-lg font-bold text-white mb-2">Starter</div>
-                                <div className="text-4xl font-bold text-white mb-1 shadow-[0_0_20px_#00F0FF50]">$500<span className="text-base font-normal text-gray-400">/mo</span></div>
-                                <div className="text-sm text-gray-400 mb-6">1,000 API calls/month</div>
+                                <div className="text-4xl font-bold text-white mb-1 shadow-[0_0_20px_#00F0FF50]">{isAnnual ? '$400' : '$500'}<span className="text-base font-normal text-gray-400">/mo</span></div>
+                                {isAnnual && <div className="text-xs text-cyan-400 mb-1">billed annually</div>}
+                                <div className="text-sm text-gray-400 mb-6">{isAnnual ? '1,200' : '1,000'} API calls/month</div>
                                 <ul className="space-y-2 mb-6">
                                     <li className="flex items-center gap-2 text-sm text-gray-300"><svg className="w-4 h-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>Basic API access</li>
                                     <li className="flex items-center gap-2 text-sm text-gray-300"><svg className="w-4 h-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>Email support</li>
@@ -222,8 +270,9 @@ export default function PipelinesPage() {
                             <div className="rounded-3xl border border-cyan-500/50 bg-black/70 backdrop-blur-xl p-6 transition-all duration-300 hover:scale-105 hover:shadow-[0_0_25px_#00F0FF35] relative">
                                 <div className="absolute -top-3 right-4 px-4 py-1 rounded-full bg-cyan-500/20 border border-cyan-400/60 text-cyan-300 text-xs font-bold shadow-[0_0_15px_#00F0FF50]">Most Popular</div>
                                 <div className="text-lg font-bold text-white mb-2">Growth</div>
-                                <div className="text-4xl font-bold text-white mb-1 shadow-[0_0_20px_#00F0FF50]">$2,000<span className="text-base font-normal text-gray-400">/mo</span></div>
-                                <div className="text-sm text-gray-400 mb-6">10,000 API calls/month</div>
+                                <div className="text-4xl font-bold text-white mb-1 shadow-[0_0_20px_#00F0FF50]">{isAnnual ? '$1,600' : '$2,000'}<span className="text-base font-normal text-gray-400">/mo</span></div>
+                                {isAnnual && <div className="text-xs text-cyan-400 mb-1">billed annually</div>}
+                                <div className="text-sm text-gray-400 mb-6">{isAnnual ? '12,000' : '10,000'} API calls/month</div>
                                 <ul className="space-y-2 mb-6">
                                     <li className="flex items-center gap-2 text-sm text-gray-300"><svg className="w-4 h-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>Full API access</li>
                                     <li className="flex items-center gap-2 text-sm text-gray-300"><svg className="w-4 h-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>Priority support</li>
@@ -242,6 +291,86 @@ export default function PipelinesPage() {
                                 </ul>
                                 <button className="w-full py-3 rounded-xl border border-cyan-500/50 text-white text-sm font-semibold transition-all duration-300 hover:bg-cyan-500/20 hover:shadow-[0_0_20px_#00F0FF50]">Contact Sales</button>
                             </div>
+                        </div>
+
+                        <div className="mt-10 rounded-3xl border border-cyan-500/30 bg-black/70 backdrop-blur-xl overflow-hidden">
+                            <div className="p-4 border-b border-cyan-500/30">
+                                <h4 className="text-lg font-bold text-white">Feature Comparison</h4>
+                            </div>
+                            <div className="overflow-x-auto">
+                                <table className="w-full">
+                                    <thead>
+                                        <tr className="border-b border-cyan-500/30">
+                                            <th className="text-left p-4 text-gray-400 font-medium">Features</th>
+                                            <th className="text-center p-4 text-white font-bold">Starter</th>
+                                            <th className="text-center p-4 text-cyan-400 font-bold bg-cyan-500/10">Growth</th>
+                                            <th className="text-center p-4 text-white font-bold">Enterprise</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr className="border-b border-cyan-500/20">
+                                            <td className="p-4 text-gray-300">API Calls/month</td>
+                                            <td className="p-4 text-center text-white">{isAnnual ? '1,200' : '1,000'}</td>
+                                            <td className="p-4 text-center text-cyan-300 bg-cyan-500/10">{isAnnual ? '12,000' : '10,000'}</td>
+                                            <td className="p-4 text-center text-white">Unlimited</td>
+                                        </tr>
+                                        <tr className="border-b border-cyan-500/20">
+                                            <td className="p-4 text-gray-300">Confidence Score Access</td>
+                                            <td className="p-4 text-center text-white">Basic</td>
+                                            <td className="p-4 text-center text-cyan-300 bg-cyan-500/10">Full</td>
+                                            <td className="p-4 text-center text-white">Full</td>
+                                        </tr>
+                                        <tr className="border-b border-cyan-500/20">
+                                            <td className="p-4 text-gray-300">Audit Logs</td>
+                                            <td className="p-4 text-center text-white">7 days</td>
+                                            <td className="p-4 text-center text-cyan-300 bg-cyan-500/10">30 days</td>
+                                            <td className="p-4 text-center text-white">Unlimited</td>
+                                        </tr>
+                                        <tr className="border-b border-cyan-500/20">
+                                            <td className="p-4 text-gray-300">Dataset Access</td>
+                                            <td className="p-4 text-center text-white">Public</td>
+                                            <td className="p-4 text-center text-cyan-300 bg-cyan-500/10">Public + Verified</td>
+                                            <td className="p-4 text-center text-white">All Datasets</td>
+                                        </tr>
+                                        <tr className="border-b border-cyan-500/20">
+                                            <td className="p-4 text-gray-300">Dedicated Support</td>
+                                            <td className="p-4 text-center text-gray-500">—</td>
+                                            <td className="p-4 text-center text-cyan-300 bg-cyan-500/10"><svg className="w-5 h-5 text-cyan-400 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg></td>
+                                            <td className="p-4 text-center text-white">24/7</td>
+                                        </tr>
+                                        <tr className="border-b border-cyan-500/20">
+                                            <td className="p-4 text-gray-300">Custom Rate Limits</td>
+                                            <td className="p-4 text-center text-gray-500">—</td>
+                                            <td className="p-4 text-center text-cyan-300 bg-cyan-500/10"><svg className="w-5 h-5 text-cyan-400 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg></td>
+                                            <td className="p-4 text-center text-white"><svg className="w-5 h-5 text-cyan-400 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg></td>
+                                        </tr>
+                                        <tr className="border-b border-cyan-500/20">
+                                            <td className="p-4 text-gray-300">SLA Guarantee</td>
+                                            <td className="p-4 text-center text-gray-500">—</td>
+                                            <td className="p-4 text-center text-gray-500">—</td>
+                                            <td className="p-4 text-center text-white">99.9%</td>
+                                        </tr>
+                                        <tr>
+                                            <td className="p-4 text-gray-300">Custom Integrations</td>
+                                            <td className="p-4 text-center text-gray-500">—</td>
+                                            <td className="p-4 text-center text-cyan-300 bg-cyan-500/10"><svg className="w-5 h-5 text-cyan-400 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg></td>
+                                            <td className="p-4 text-center text-white"><svg className="w-5 h-5 text-cyan-400 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="rounded-3xl border border-cyan-500/30 bg-black/70 backdrop-blur-xl p-8 md:p-12 shadow-[0_0_30px_#00F0FF20]">
+                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                            <div className="text-left">
+                                <p className="text-2xl md:text-3xl font-bold text-white">Ready to start building?</p>
+                                <p className="text-gray-400 mt-2">Get your API key and start querying verified datasets in minutes.</p>
+                            </div>
+                            <button className="px-8 py-4 rounded-xl bg-cyan-500 text-black font-bold text-lg transition-all duration-300 hover:bg-cyan-400 hover:shadow-[0_0_30px_#00F0FF70] hover:scale-105">
+                                Generate My API Key
+                            </button>
                         </div>
                     </div>
                 </section>

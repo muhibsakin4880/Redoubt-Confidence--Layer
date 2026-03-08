@@ -122,9 +122,16 @@ const statusStyles: Record<ContributionStatus, string> = {
     Rejected: 'border-rose-500/60 bg-rose-500/10 text-rose-200'
 }
 
-const clickableStatusDetails: ContributionStatus[] = ['Needs fixes', 'Rejected', 'Restricted']
+const clickableStatusDetails: ContributionStatus[] = ['Needs fixes', 'Rejected', 'Restricted', 'Approved']
 
 const isStatusDetailsClickable = (status: ContributionStatus) => clickableStatusDetails.includes(status)
+
+const getStatusLink = (dataset: UploadedDataset) => {
+    if (dataset.id === 'cn-1003') {
+        return '/contributions/ds-1003'
+    }
+    return `/contributions/${dataset.id}/status-details`
+}
 
 const pipelineStateStyles: Record<PipelineState, { dot: string; line: string; text: string }> = {
     complete: { dot: 'bg-emerald-400 border-emerald-300', line: 'bg-emerald-400/80', text: 'text-emerald-200' },
@@ -181,6 +188,18 @@ export default function ContributionsPage() {
                         <div className="text-slate-400 text-xs mb-1">Description</div>
                         <div className="text-slate-100">Aggregated sensor flow, occupancy, and throughput metrics by 5-minute intervals.</div>
                     </div>
+                    <div className="sm:col-span-2">
+                        <div className="text-slate-400 text-xs mb-1">Dataset Access Price</div>
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="number"
+                                placeholder="299"
+                                className="flex-1 sm:flex-none sm:w-32 bg-slate-900/70 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-cyan-500/50"
+                            />
+                            <span className="text-slate-400 text-sm">USD per access</span>
+                        </div>
+                        <div className="text-slate-500 text-xs mt-1">Breach retains 20% platform fee. You receive 80% of each transaction.</div>
+                    </div>
                 </div>
             )
         },
@@ -203,34 +222,41 @@ export default function ContributionsPage() {
             title: 'Schema preview',
             description: 'Review inferred schema before quality checks.',
             body: (
-                <div className="overflow-x-auto">
-                    <table className="min-w-full text-sm">
-                        <thead className="text-xs uppercase text-slate-400 border-b border-slate-700">
-                            <tr>
-                                <th className="py-2 pr-4 text-left">Field</th>
-                                <th className="py-2 px-4 text-left">Type</th>
-                                <th className="py-2 pl-4 text-left">Null %</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-800 text-slate-200">
-                            <tr>
-                                <td className="py-2 pr-4">sensor_id</td>
-                                <td className="py-2 px-4">string</td>
-                                <td className="py-2 pl-4">0.0%</td>
-                            </tr>
-                            <tr>
-                                <td className="py-2 pr-4">timestamp_utc</td>
-                                <td className="py-2 px-4">datetime</td>
-                                <td className="py-2 pl-4">0.0%</td>
-                            </tr>
-                            <tr>
-                                <td className="py-2 pr-4">flow_count</td>
-                                <td className="py-2 px-4">integer</td>
-                                <td className="py-2 pl-4">1.8%</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+                <>
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full text-sm">
+                            <thead className="text-xs uppercase text-slate-400 border-b border-slate-700">
+                                <tr>
+                                    <th className="py-2 pr-4 text-left">Field</th>
+                                    <th className="py-2 px-4 text-left">Type</th>
+                                    <th className="py-2 pl-4 text-left">Null %</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-800 text-slate-200">
+                                <tr>
+                                    <td className="py-2 pr-4">sensor_id</td>
+                                    <td className="py-2 px-4">string</td>
+                                    <td className="py-2 pl-4">0.0%</td>
+                                </tr>
+                                <tr>
+                                    <td className="py-2 pr-4">timestamp_utc</td>
+                                    <td className="py-2 px-4">datetime</td>
+                                    <td className="py-2 pl-4">0.0%</td>
+                                </tr>
+                                <tr>
+                                    <td className="py-2 pr-4">flow_count</td>
+                                    <td className="py-2 px-4">integer</td>
+                                    <td className="py-2 pl-4">1.8%</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div className="flex flex-wrap gap-2 mt-3">
+                        <span className="px-2.5 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs text-slate-300">3 fields detected</span>
+                        <span className="px-2.5 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs text-slate-300">0.0% avg null rate</span>
+                        <span className="px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-xs text-emerald-200">Schema valid ✓</span>
+                    </div>
+                </>
             )
         },
         {
@@ -289,6 +315,40 @@ export default function ContributionsPage() {
                     </div>
 
                     <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
+                        <div className="text-[11px] uppercase tracking-[0.14em] text-slate-400 mb-3">Buyer Restrictions</div>
+                        <div className="grid sm:grid-cols-3 gap-3">
+                            <div className="bg-slate-950/70 border border-slate-700 rounded-lg p-3">
+                                <div className="text-slate-400 text-xs mb-1">Allowed Industries</div>
+                                <select className="w-full bg-slate-900/70 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 text-sm focus:outline-none focus:border-cyan-500/50">
+                                    <option>All Industries</option>
+                                    <option>Healthcare Only</option>
+                                    <option>Finance Only</option>
+                                    <option>Government Only</option>
+                                    <option>Research & Academia Only</option>
+                                </select>
+                            </div>
+                            <div className="bg-slate-950/70 border border-slate-700 rounded-lg p-3">
+                                <div className="text-slate-400 text-xs mb-1">Geographic Restriction</div>
+                                <select className="w-full bg-slate-900/70 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 text-sm focus:outline-none focus:border-cyan-500/50">
+                                    <option>Global</option>
+                                    <option>US Only</option>
+                                    <option>EU Only</option>
+                                    <option>Asia Pacific Only</option>
+                                </select>
+                            </div>
+                            <div className="bg-slate-950/70 border border-slate-700 rounded-lg p-3">
+                                <div className="text-slate-400 text-xs mb-1">Permitted Use</div>
+                                <select className="w-full bg-slate-900/70 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 text-sm focus:outline-none focus:border-cyan-500/50">
+                                    <option>All Uses</option>
+                                    <option>Research Only</option>
+                                    <option>Commercial Use</option>
+                                    <option>AI Training Only</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
                         <div className="text-[11px] uppercase tracking-[0.14em] text-slate-400 mb-3">Compliance Controls</div>
                         <div className="flex flex-wrap gap-2">
                             <span className="px-2.5 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs text-slate-200">PII-checked</span>
@@ -303,12 +363,42 @@ export default function ContributionsPage() {
             title: 'Submission confirmation',
             description: 'Finalize contribution package into validation pipeline.',
             body: (
-                <div className="space-y-3 text-sm">
-                    <div className="bg-slate-900/70 border border-slate-700 rounded-lg p-3 text-slate-200">
-                        Package ready for submission. Validation pipeline will begin with schema analysis and quality checks.
+                <div className="space-y-4 text-sm">
+                    <div className="bg-slate-900/70 border border-slate-700 rounded-lg p-4 space-y-3">
+                        <div className="grid sm:grid-cols-2 gap-x-6 gap-y-2">
+                            <div>
+                                <div className="text-slate-400 text-xs">Dataset</div>
+                                <div className="text-slate-100">City Sensor Aggregates 2026-Q1</div>
+                            </div>
+                            <div>
+                                <div className="text-slate-400 text-xs">Domain</div>
+                                <div className="text-slate-100">Mobility & Infrastructure</div>
+                            </div>
+                            <div>
+                                <div className="text-slate-400 text-xs">Price</div>
+                                <div className="text-slate-100">$299 USD per access</div>
+                            </div>
+                            <div>
+                                <div className="text-slate-400 text-xs">File</div>
+                                <div className="text-slate-100">city_sensors_q1.parquet - 6.3 GB</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="grid sm:grid-cols-2 gap-3">
+                        <div className="bg-slate-900/70 border border-slate-700 rounded-lg p-3">
+                            <div className="text-slate-400 text-xs">Estimated confidence score</div>
+                            <div className="text-slate-100">88-94%</div>
+                        </div>
+                        <div className="bg-slate-900/70 border border-slate-700 rounded-lg p-3">
+                            <div className="text-slate-400 text-xs">Expected review timeline</div>
+                            <div className="text-slate-100">3-5 business days</div>
+                        </div>
+                    </div>
+                    <div className="text-slate-500 text-xs">
+                        Submission ID: BRE-DS-2026-XXXX
                     </div>
                     <button className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-colors">
-                        Submit dataset (mock)
+                        Submit dataset
                     </button>
                 </div>
             )
@@ -410,7 +500,7 @@ export default function ContributionsPage() {
                                                 <td className="py-4 px-4 min-w-[150px]">
                                                     {isStatusDetailsClickable(dataset.status) ? (
                                                         <Link
-                                                            to={`/contributions/${dataset.id}/status-details`}
+                                                            to={getStatusLink(dataset)}
                                                             onClick={(event) => event.stopPropagation()}
                                                             className={`inline-flex whitespace-nowrap px-3 py-1 rounded-full border text-xs font-medium hover:brightness-110 transition ${statusStyles[dataset.status]}`}
                                                         >
@@ -499,12 +589,14 @@ export default function ContributionsPage() {
                                 >
                                     Previous
                                 </button>
-                                <button
-                                    onClick={() => setActiveStep(prev => Math.min(prev + 1, uploadSteps.length - 1))}
-                                    className="px-3 py-2 rounded-lg border border-slate-700 hover:border-blue-500 text-xs font-semibold text-slate-200 transition-colors"
-                                >
-                                    Next
-                                </button>
+                                {activeStep < uploadSteps.length - 1 && (
+                                    <button
+                                        onClick={() => setActiveStep(prev => Math.min(prev + 1, uploadSteps.length - 1))}
+                                        className="px-3 py-2 rounded-lg border border-slate-700 hover:border-blue-500 text-xs font-semibold text-slate-200 transition-colors"
+                                    >
+                                        Next
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </section>

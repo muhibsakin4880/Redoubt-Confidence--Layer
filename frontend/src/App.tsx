@@ -19,6 +19,7 @@ import AboutPage from './pages/AboutPage'
 import ApplicationStatusPage from './pages/ApplicationStatusPage'
 import ProfilePage from './pages/ProfilePage'
 import ContributionsPage from './pages/ContributionsPage'
+import ContributionDetailPage from './pages/ContributionDetailPage'
 import ContributionStatusDetailsPage from './pages/ContributionStatusDetailsPage'
 import AccessRequestsPage from './pages/AccessRequestsPage'
 import AccessRequestDetailPage from './pages/AccessRequestDetailPage'
@@ -137,6 +138,7 @@ function App() {
                     <Route path="requests" element={<Navigate to="/access-requests" replace />} />
                     <Route path="trust-profile" element={<TrustProfilePage />} />
                     <Route path="contributions" element={<ContributionsPage />} />
+                    <Route path="contributions/ds-1003" element={<ContributionDetailPage />} />
                     <Route path="contributions/:datasetId/status-details" element={<ContributionStatusDetailsPage />} />
                     <Route path="pipelines" element={<PipelinesPage />} />
                     <Route path="profile" element={<ProfilePage />} />
