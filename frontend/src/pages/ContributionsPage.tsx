@@ -149,6 +149,18 @@ export default function ContributionsPage() {
     const [activeStep, setActiveStep] = useState(0)
     const [selectedDatasetId, setSelectedDatasetId] = useState(uploadedDatasets[0]?.id ?? '')
     const [isUploadViewOpen, setIsUploadViewOpen] = useState(false)
+    const [anonymitySettings, setAnonymitySettings] = useState({
+        anonymousUpload: true,
+        pseudonymization: false,
+        fullDeIdentification: false
+    })
+
+    const toggleAnonymitySetting = (setting: keyof typeof anonymitySettings) => {
+        setAnonymitySettings(prev => ({
+            ...prev,
+            [setting]: !prev[setting]
+        }))
+    }
 
     const selectedDataset = useMemo(
         () => uploadedDatasets.find(dataset => dataset.id === selectedDatasetId) ?? uploadedDatasets[0],
@@ -279,22 +291,61 @@ export default function ContributionsPage() {
                                     <div className="text-slate-100 font-medium">Enable Anonymous Upload</div>
                                     <div className="text-slate-400 text-xs mt-1 max-w-xl">Your identity and organization name will remain completely hidden from other participants and accessors</div>
                                 </div>
-                                <button className="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full bg-cyan-500 ring-1 ring-cyan-300/40">
-                                    <span className="inline-block h-5 w-5 translate-x-5 rounded-full bg-white shadow" />
+                                <button
+                                    type="button"
+                                    aria-pressed={anonymitySettings.anonymousUpload}
+                                    onClick={() => toggleAnonymitySetting('anonymousUpload')}
+                                    className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
+                                        anonymitySettings.anonymousUpload
+                                            ? 'bg-cyan-500 ring-1 ring-cyan-300/40'
+                                            : 'bg-slate-700 ring-1 ring-slate-500/60'
+                                    }`}
+                                >
+                                    <span
+                                        className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${
+                                            anonymitySettings.anonymousUpload ? 'translate-x-5' : 'translate-x-1'
+                                        }`}
+                                    />
                                 </button>
                             </div>
 
                             <div className="flex items-center justify-between gap-4 rounded-lg border border-slate-700/80 bg-slate-900/80 px-3 py-3">
                                 <div className="text-slate-100 font-medium">Apply Pseudonymization</div>
-                                <button className="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full bg-slate-700 ring-1 ring-slate-500/60">
-                                    <span className="inline-block h-5 w-5 translate-x-1 rounded-full bg-white shadow" />
+                                <button
+                                    type="button"
+                                    aria-pressed={anonymitySettings.pseudonymization}
+                                    onClick={() => toggleAnonymitySetting('pseudonymization')}
+                                    className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
+                                        anonymitySettings.pseudonymization
+                                            ? 'bg-cyan-500 ring-1 ring-cyan-300/40'
+                                            : 'bg-slate-700 ring-1 ring-slate-500/60'
+                                    }`}
+                                >
+                                    <span
+                                        className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${
+                                            anonymitySettings.pseudonymization ? 'translate-x-5' : 'translate-x-1'
+                                        }`}
+                                    />
                                 </button>
                             </div>
 
                             <div className="flex items-center justify-between gap-4 rounded-lg border border-slate-700/80 bg-slate-900/80 px-3 py-3">
                                 <div className="text-slate-100 font-medium">Full De-identification</div>
-                                <button className="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full bg-slate-700 ring-1 ring-slate-500/60">
-                                    <span className="inline-block h-5 w-5 translate-x-1 rounded-full bg-white shadow" />
+                                <button
+                                    type="button"
+                                    aria-pressed={anonymitySettings.fullDeIdentification}
+                                    onClick={() => toggleAnonymitySetting('fullDeIdentification')}
+                                    className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
+                                        anonymitySettings.fullDeIdentification
+                                            ? 'bg-cyan-500 ring-1 ring-cyan-300/40'
+                                            : 'bg-slate-700 ring-1 ring-slate-500/60'
+                                    }`}
+                                >
+                                    <span
+                                        className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${
+                                            anonymitySettings.fullDeIdentification ? 'translate-x-5' : 'translate-x-1'
+                                        }`}
+                                    />
                                 </button>
                             </div>
                         </div>
