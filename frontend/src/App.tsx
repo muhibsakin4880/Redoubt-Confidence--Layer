@@ -30,6 +30,7 @@ import ComplianceLockerPage from './pages/ComplianceLockerPage'
 import AuditTrailPage from './pages/AuditTrailPage'
 import ConsentTrackerPage from './pages/ConsentTrackerPage'
 import RedTeamModePage from './pages/RedTeamModePage'
+
 import { useAuth } from './contexts/AuthContext'
 
 type AccessIntentAuth = ReturnType<typeof useAuth> & {
@@ -151,6 +152,7 @@ function App() {
                     <Route path="audit-trail" element={<AuditTrailPage />} />
                     <Route path="consent-tracker" element={<ConsentTrackerPage />} />
                     <Route path="red-team" element={<RedTeamModePage />} />
+
                     <Route path="profile" element={<ProfilePage />} />
                 </Route>
 
