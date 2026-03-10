@@ -50,7 +50,10 @@ const navGroups: NavGroup[] = [
     },
     {
         title: 'Account',
-        items: [{ label: 'Profile / Settings', to: '/profile' }]
+        items: [
+            { label: 'Profile / Settings', to: '/profile' },
+            { label: 'Platform Status', to: '/status' }
+        ]
     }
 ]
 
