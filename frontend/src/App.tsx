@@ -38,6 +38,8 @@ import SecureEnclavePage from './pages/SecureEnclavePage'
 import StatusPage from './pages/StatusPage'
 import EscrowCenterPage from './pages/EscrowCenterPage'
 import TrustGlossaryPage from './pages/TrustGlossaryPage'
+import DeploymentModelPage from './pages/DeploymentModelPage'
+import GuidedTourPage from './pages/GuidedTourPage'
 
 import { useAuth } from './contexts/AuthContext'
 
@@ -168,6 +170,8 @@ function App() {
                     <Route path="red-team" element={<RedTeamModePage />} />
                     <Route path="status" element={<StatusPage />} />
                     <Route path="trust-glossary" element={<TrustGlossaryPage />} />
+                    <Route path="deployment-model" element={<DeploymentModelPage />} />
+                    <Route path="guided-tour" element={<GuidedTourPage />} />
 
                     <Route path="profile" element={<ProfilePage />} />
                 </Route>
