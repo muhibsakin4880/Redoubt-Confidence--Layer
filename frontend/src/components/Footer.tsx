@@ -1,3 +1,5 @@
+import LogoMark from './LogoMark'
+
 export default function Footer() {
     const currentYear = new Date().getFullYear()
 
@@ -57,27 +59,7 @@ export default function Footer() {
                         © {currentYear} <span className="text-cyan-400" style={{ textShadow: '0 0 8px rgba(34, 211, 238, 0.4)' }}>Layered Defense for Data Confidence</span>. All rights reserved.
                     </p>
                     <div className="flex items-center gap-2 cyber-glow" style={{ filter: 'drop-shadow(0 0 8px rgba(34, 211, 238, 0.5))' }}>
-                        <svg className="w-5 h-5 text-cyan-400" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                            <path
-                                d="M6 4h12l2 3v7l-8 6-8-6V7l2-3z"
-                                stroke="currentColor"
-                                strokeWidth="1.7"
-                                strokeLinejoin="round"
-                            />
-                            <path
-                                d="M10 18V8.5h4.8a2.4 2.4 0 0 1 0 4.8H10"
-                                stroke="currentColor"
-                                strokeWidth="1.7"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                            />
-                            <path
-                                d="M12.5 14.5l4 5.5"
-                                stroke="currentColor"
-                                strokeWidth="1.7"
-                                strokeLinecap="round"
-                            />
-                        </svg>
+                        <LogoMark className="w-5 h-5" />
                         <span className="text-white font-semibold text-sm" style={{ fontFamily: "'Satoshi Black', 'Syne', sans-serif" }}>Redoubt</span>
                     </div>
                 </div>
@@ -85,4 +67,5 @@ export default function Footer() {
         </footer>
     )
 }
+
 

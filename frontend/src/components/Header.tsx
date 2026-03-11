@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
+import LogoMark from './LogoMark'
 
 type NavItem = { label: string; to: string; primary?: boolean }
 
@@ -45,27 +46,7 @@ export default function Header() {
             <nav className="container mx-auto px-8 md:px-16 h-full">
                 <div className="flex items-center justify-between h-full">
                     <Link to="/" className="flex items-center gap-5">
-                        <svg className="w-8 h-8 text-cyan-400" style={{ filter: 'drop-shadow(0 0 15px #00F0FF40)' }} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                            <path
-                                d="M6 4h12l2 3v7l-8 6-8-6V7l2-3z"
-                                stroke="currentColor"
-                                strokeWidth="1.7"
-                                strokeLinejoin="round"
-                            />
-                            <path
-                                d="M10 18V8.5h4.8a2.4 2.4 0 0 1 0 4.8H10"
-                                stroke="currentColor"
-                                strokeWidth="1.7"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                            />
-                            <path
-                                d="M12.5 14.5l4 5.5"
-                                stroke="currentColor"
-                                strokeWidth="1.7"
-                                strokeLinecap="round"
-                            />
-                        </svg>
+                        <LogoMark className="w-8 h-8" />
                         <div className="flex items-center">
                             <span className="text-2xl text-white" style={{ fontFamily: "'Satoshi Black', 'Syne', sans-serif" }}>Redoubt</span>
                         </div>
@@ -97,4 +78,5 @@ export default function Header() {
         </header>
     )
 }
+
 
