@@ -57,7 +57,7 @@ export default function BreachOnboarding() {
     const [acknowledgmentTwo, setAcknowledgmentTwo] = useState(false)
     const [acknowledgmentThree, setAcknowledgmentThree] = useState(false)
 
-    const workEmail = 'participant@breach-enterprise.com'
+    const workEmail = 'participant@redoubt-enterprise.com'
 
     useEffect(() => {
         return () => {
@@ -133,7 +133,7 @@ export default function BreachOnboarding() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0A0F1E]/90 px-4 py-8 backdrop-blur-sm">
             <div className="relative w-full max-w-4xl overflow-hidden rounded-2xl border border-slate-700/70 bg-[#0A0F1E] shadow-[0_30px_90px_-30px_rgba(0,0,0,0.9)]">
                 <div className="pointer-events-none absolute inset-x-6 top-0 h-px bg-[#2D6EF5]/90 shadow-[0_0_28px_6px_rgba(45,110,245,0.55)]" />
-                <p className="absolute left-6 top-5 text-xs font-semibold uppercase tracking-[0.16em] text-[#2D6EF5]">Breach</p>
+                <p className="absolute left-6 top-5 text-xs font-semibold uppercase tracking-[0.16em] text-[#2D6EF5]">Redoubt</p>
 
                 <div className="space-y-8 p-6 sm:p-8">
                     <header className="space-y-5 pt-8">
@@ -247,7 +247,7 @@ export default function BreachOnboarding() {
                                     onChange={(event) => setPrimaryPurpose(event.target.value)}
                                     rows={4}
                                     className="w-full resize-none rounded-lg border border-slate-600 bg-[#0C1427] px-3 py-2 text-sm text-white outline-none transition-colors duration-200 placeholder:text-slate-500 focus:border-[#2D6EF5]"
-                                    placeholder="Describe your primary purpose for participating in Breach."
+                                    placeholder="Describe your primary purpose for participating in Redoubt."
                                 />
                                 <p className="text-xs text-slate-400">{primaryPurpose.trim().length}/150 characters</p>
                             </div>
@@ -276,7 +276,7 @@ export default function BreachOnboarding() {
                                 <span>
                                     I agree to the{' '}
                                     <a href="#" onClick={(event) => event.preventDefault()} className="text-[#2D6EF5] underline">
-                                        Breach Data Governance Policy
+                                        Redoubt Data Governance Policy
                                     </a>{' '}
                                     and accept that all data access is logged, governed, and subject to contributor permissions.
                                 </span>
@@ -317,3 +317,4 @@ export default function BreachOnboarding() {
         </div>
     )
 }
+

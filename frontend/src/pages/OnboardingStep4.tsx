@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 
-const SUBMISSION_META_STORAGE_KEY = 'breach:onboarding:submissionMeta'
+const SUBMISSION_META_STORAGE_KEY = 'Redoubt:onboarding:submissionMeta'
 
 const formatSubmissionDate = (date: Date) =>
     date.toLocaleDateString('en-US', {
@@ -15,7 +15,7 @@ export default function OnboardingStep4() {
     const navigate = useNavigate()
     const { submitApplication } = useAuth()
     const [state, setState] = useState(() => {
-        const saved = localStorage.getItem('breach:onboarding:compliance')
+        const saved = localStorage.getItem('Redoubt:onboarding:compliance')
         if (saved) {
             try {
                 return JSON.parse(saved)
@@ -37,7 +37,7 @@ export default function OnboardingStep4() {
     const handleChange = (field: string, value: boolean) => {
         const newState = { ...state, [field]: value }
         setState(newState)
-        localStorage.setItem('breach:onboarding:compliance', JSON.stringify(newState))
+        localStorage.setItem('Redoubt:onboarding:compliance', JSON.stringify(newState))
     }
 
     const stepReady = state.responsibleDataUsage && state.noUnauthorizedSharing && state.platformCompliancePolicies
@@ -47,7 +47,7 @@ export default function OnboardingStep4() {
         if (!stepReady) return
 
         // Get email from step 1
-        const step1Data = localStorage.getItem('breach:onboarding:step1')
+        const step1Data = localStorage.getItem('Redoubt:onboarding:step1')
         let email = ''
         if (step1Data) {
             try {
@@ -163,3 +163,4 @@ export default function OnboardingStep4() {
         </div>
     )
 }
+

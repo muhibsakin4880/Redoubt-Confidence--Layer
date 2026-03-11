@@ -162,7 +162,7 @@ export default function DashboardPage() {
 
                 <section className="mb-10 rounded-3xl border border-white/[0.06] bg-slate-900/50 p-8 backdrop-blur-2xl">
                     <div className="flex flex-col gap-2 mb-6">
-                        <h2 className="text-2xl font-bold text-white">How Breach Works</h2>
+                        <h2 className="text-2xl font-bold text-white">How Redoubt Works</h2>
                         <p className="text-sm text-slate-500">
                             Every data transaction follows this trust-enforced lifecycle
                         </p>
@@ -340,3 +340,4 @@ export default function DashboardPage() {
         </div>
     )
 }
+

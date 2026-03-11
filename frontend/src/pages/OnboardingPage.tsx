@@ -28,7 +28,7 @@ const stepTitles = [
 
 const isWorkEmail = (value: string) => /^[^\s@]+@[^\s@]+$/.test(value)
 const MOCK_AUTH = (import.meta.env.VITE_MOCK_AUTH ?? 'true') === 'true'
-const SUBMISSION_META_STORAGE_KEY = 'breach:onboarding:submissionMeta'
+const SUBMISSION_META_STORAGE_KEY = 'Redoubt:onboarding:submissionMeta'
 const generateReferenceId = () => `#BRE-2026-${Math.floor(1000 + Math.random() * 9000)}`
 
 const formatSubmissionDate = (date: Date) =>
@@ -91,7 +91,7 @@ export default function OnboardingPage() {
         setState(prev => ({
             ...prev,
             organizationName: 'Demo Corporation',
-            officialWorkEmail: 'demo@breach.local',
+            officialWorkEmail: 'demo@redoubt.local',
             roleInOrganization: 'Senior Data Engineer',
             industryDomain: 'Technology & AI',
             country: 'United States'
@@ -425,7 +425,7 @@ export default function OnboardingPage() {
                                             onClick={(e) => e.preventDefault()}
                                             className="text-blue-400 underline underline-offset-2"
                                         >
-                                            Breach Data Governance Policy
+                                            Redoubt Data Governance Policy
                                         </a>{' '}
                                         and accept that all data access is logged, governed, and subject to contributor
                                         permissions.
@@ -503,7 +503,7 @@ export default function OnboardingPage() {
                             <div className="text-center space-y-2">
                                 <h2 className="text-xl font-semibold text-white">Application Submitted Successfully</h2>
                                 <p className="text-sm text-slate-300">
-                                    Your application is under review by the Breach trust committee.
+                                    Your application is under review by the Redoubt trust committee.
                                 </p>
                             </div>
 
@@ -595,3 +595,4 @@ export default function OnboardingPage() {
         </div>
     )
 }
+

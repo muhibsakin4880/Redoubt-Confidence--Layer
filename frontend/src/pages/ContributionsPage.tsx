@@ -210,7 +210,7 @@ export default function ContributionsPage() {
                             />
                             <span className="text-slate-400 text-sm">USD per access</span>
                         </div>
-                        <div className="text-slate-500 text-xs mt-1">Breach retains 20% platform fee. You receive 80% of each transaction.</div>
+                        <div className="text-slate-500 text-xs mt-1">Redoubt retains 20% platform fee. You receive 80% of each transaction.</div>
                     </div>
                 </div>
             )
@@ -707,3 +707,4 @@ export default function ContributionsPage() {
         </div>
     )
 }
+

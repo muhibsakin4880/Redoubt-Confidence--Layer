@@ -39,7 +39,7 @@ const buildDatasetSystemPrompt = (dataset: DatasetDetail) => {
     const limits = dataset.access.usageLimits
 
     return [
-        'You are the Breach Dataset Assistant.',
+        'You are the Redoubt Dataset Assistant.',
         'Only answer using the dataset metadata below.',
         'If asked for raw rows, identities, or protected data, refuse and redirect to access request flow.',
         'Keep answers concise and factual.',
@@ -98,3 +98,4 @@ export const askDatasetAssistant = async (
 
     return text
 }
+

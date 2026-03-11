@@ -26,20 +26,20 @@ const endpoints: Endpoint[] = [
     { method: 'PATCH', path: '/v1/access-requests/{id}', description: 'Update request rationale or usage scope.', auth: 'OAuth token' }
 ]
 
-const curlExample = `curl -X GET "https://api.breach.local/v1/datasets?domain=climate&limit=10" \\
-  -H "Authorization: Bearer $BREACH_API_KEY" \\
+const curlExample = `curl -X GET "https://api.redoubt.local/v1/datasets?domain=climate&limit=10" \\
+  -H "Authorization: Bearer $REDOUBT_API_KEY" \\
   -H "X-Workspace-Id: ws_participant_001"`
 
-const pythonExample = `from breach_sdk import BreachClient
+const pythonExample = `from redoubt_sdk import RedoubtClient
 
-client = BreachClient(api_key="YOUR_API_KEY", workspace_id="ws_participant_001")
+client = RedoubtClient(api_key="YOUR_API_KEY", workspace_id="ws_participant_001")
 datasets = client.datasets.list(domain="climate", limit=10)
 print(datasets[0]["title"])`
 
-const jsExample = `import { BreachClient } from "@breach/sdk"
+const jsExample = `import { RedoubtClient } from "@redoubt/sdk"
 
-const client = new BreachClient({
-  apiKey: process.env.BREACH_API_KEY,
+const client = new RedoubtClient({
+  apiKey: process.env.REDOUBT_API_KEY,
   workspaceId: "ws_participant_001"
 })
 
@@ -62,9 +62,9 @@ const jsonResponseExample = `{
   }
 }`
 
-const pythonQuickstart = `from breach_sdk import BreachClient
+const pythonQuickstart = `from redoubt_sdk import RedoubtClient
 
-client = BreachClient(api_key="YOUR_API_KEY", workspace_id="ws_participant_001")
+client = RedoubtClient(api_key="YOUR_API_KEY", workspace_id="ws_participant_001")
 
 # 1) List datasets
 for ds in client.datasets.list(limit=5):
@@ -81,10 +81,10 @@ upload = client.uploads.create(
 client.uploads.add_file(upload["id"], "./mock-data/mobility_q1.parquet")
 client.uploads.complete(upload["id"])`
 
-const jsQuickstart = `import { BreachClient } from "@breach/sdk"
+const jsQuickstart = `import { RedoubtClient } from "@redoubt/sdk"
 
-const client = new BreachClient({
-  apiKey: process.env.BREACH_API_KEY,
+const client = new RedoubtClient({
+  apiKey: process.env.REDOUBT_API_KEY,
   workspaceId: "ws_participant_001"
 })
 
@@ -184,7 +184,7 @@ export default function PipelinesPage() {
                 <section className="space-y-12">
                     <div className="rounded-3xl border border-cyan-500/30 bg-black/70 backdrop-blur-xl p-8 md:p-12 shadow-2xl">
                         <div className="max-w-3xl">
-                            <h2 className="text-4xl md:text-5xl font-bold text-white mb-4 border-t border-cyan-500/40 pt-4">Breach Data Pipeline API</h2>
+                            <h2 className="text-4xl md:text-5xl font-bold text-white mb-4 border-t border-cyan-500/40 pt-4">Redoubt Data Pipeline API</h2>
                             <p className="text-lg md:text-xl text-slate-400 mb-6">Enterprise-grade verified data delivery for platforms, tools, and AI systems</p>
                             <div className="flex flex-wrap gap-3">
                                 <span className="px-4 py-2 rounded-full border border-cyan-500/40 bg-cyan-500/10 text-cyan-200 text-sm font-medium">API v1 • Live</span>
@@ -225,7 +225,7 @@ export default function PipelinesPage() {
 
                     <div className="text-center py-8">
                         <h3 className="text-2xl font-semibold text-white mb-2 border-t border-cyan-500/40 pt-4">Built for enterprise data stacks</h3>
-                        <p className="text-slate-400 mb-6">Connect Breach verified data directly into your existing infrastructure</p>
+                        <p className="text-slate-400 mb-6">Connect Redoubt verified data directly into your existing infrastructure</p>
                         <div className="flex flex-wrap justify-center gap-6">
                             <div className="w-16 h-16 rounded-xl bg-[#1e90ff]/10 border border-[#1e90ff]/30 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-[0_0_15px_#00F0FF30]">
                                 <svg viewBox="0 0 24 24" className="w-8 h-8" fill="#1e90ff"><path d="M12.999 2L4.754 6.002v11.996L12.999 22l8.246-4.002V6.002L12.999 2zm2.999 14.002l-6.2 2.998-1.8-3.998 6.2-3.002 1.8 4.002zm1.5-6.002l-7.498 3.632-1.753-3.908L17 4.002l6.499 3.998z"/></svg>
@@ -384,7 +384,7 @@ export default function PipelinesPage() {
                             <div className="flex-1">
                                 <div className="text-xs text-gray-400 uppercase tracking-wider mb-1">Base URL</div>
                                 <div className="flex items-center gap-3">
-                                    <code className="text-sm text-cyan-300 font-mono">https://api.breach.io/v1</code>
+                                    <code className="text-sm text-cyan-300 font-mono">https://api.redoubt.io/v1</code>
                                     <button className="p-1.5 rounded-lg border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/20 transition-all duration-300 hover:shadow-[0_0_15px_#00F0FF40]">
                                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -444,7 +444,7 @@ export default function PipelinesPage() {
                                 <h3 className="text-lg font-semibold text-white">Python SDK</h3>
                             </div>
                             <div className="rounded-lg bg-[#0a1628] border border-cyan-500/20 p-3 mb-5 flex items-center justify-between gap-3">
-                                <code className="text-sm text-cyan-300 font-mono">pip install breach-sdk</code>
+                                <code className="text-sm text-cyan-300 font-mono">pip install redoubt-sdk</code>
                                 <button className="p-2 rounded-lg border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/20 transition-all duration-300 hover:shadow-[0_0_15px_#00F0FF50] flex-shrink-0">
                                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -463,7 +463,7 @@ export default function PipelinesPage() {
                                 <h3 className="text-lg font-semibold text-white">JavaScript/Node SDK</h3>
                             </div>
                             <div className="rounded-lg bg-[#0a1628] border border-cyan-500/20 p-3 mb-5 flex items-center justify-between gap-3">
-                                <code className="text-sm text-cyan-300 font-mono">npm install @breach/sdk</code>
+                                <code className="text-sm text-cyan-300 font-mono">npm install @redoubt/sdk</code>
                                 <button className="p-2 rounded-lg border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/20 transition-all duration-300 hover:shadow-[0_0_15px_#00F0FF50] flex-shrink-0">
                                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -516,8 +516,8 @@ export default function PipelinesPage() {
                             </button>
                         </div>
                         <pre className="rounded-xl bg-[#0F172A] border border-cyan-500/20 p-4 text-sm overflow-x-auto font-mono">
-                            <code><span className="text-cyan-400">1</span>  <span className="text-purple-400">import</span> breach<br/>
-<span className="text-cyan-400">2</span>  <span className="text-gray-400">client =</span> <span className="text-cyan-400">breach</span>.<span className="text-yellow-300">Client</span>(<span className="text-green-400">api_key</span>=<span className="text-orange-300">"YOUR_KEY"</span>)<br/>
+                            <code><span className="text-cyan-400">1</span>  <span className="text-purple-400">import</span> Redoubt<br/>
+<span className="text-cyan-400">2</span>  <span className="text-gray-400">client =</span> <span className="text-cyan-400">Redoubt</span>.<span className="text-yellow-300">Client</span>(<span className="text-green-400">api_key</span>=<span className="text-orange-300">"YOUR_KEY"</span>)<br/>
 <span className="text-cyan-400">3</span>  datasets = <span className="text-gray-400">client</span>.<span className="text-yellow-300">datasets</span>.<span className="text-blue-300">list</span>(<br/>
 <span className="text-cyan-400">4</span>      <span className="text-green-400">domain</span>=<span className="text-orange-300">"healthcare"</span>,<br/>
 <span className="text-cyan-400">5</span>      <span className="text-green-400">min_confidence</span>=<span className="text-orange-300">90</span><br/>
@@ -538,8 +538,8 @@ export default function PipelinesPage() {
                             </button>
                         </div>
                         <pre className="rounded-xl bg-[#0F172A] border border-cyan-500/20 p-4 text-sm overflow-x-auto font-mono">
-                            <code><span className="text-cyan-400">1</span>  <span className="text-purple-400">const</span> breach = <span className="text-purple-400">require</span>(<span className="text-orange-300">'@breach/sdk'</span>);<br/>
-<span className="text-cyan-400">2</span>  <span className="text-purple-400">const</span> client = <span className="text-purple-400">new</span> <span className="text-cyan-400">breach</span>.<span className="text-yellow-300">Client</span>({'{'}<span className="text-green-400">apiKey</span>{'}'});<br/>
+                            <code><span className="text-cyan-400">1</span>  <span className="text-purple-400">const</span> Redoubt = <span className="text-purple-400">require</span>(<span className="text-orange-300">'@redoubt/sdk'</span>);<br/>
+<span className="text-cyan-400">2</span>  <span className="text-purple-400">const</span> client = <span className="text-purple-400">new</span> <span className="text-cyan-400">Redoubt</span>.<span className="text-yellow-300">Client</span>({'{'}<span className="text-green-400">apiKey</span>{'}'});<br/>
 <span className="text-cyan-400">3</span>  <span className="text-purple-400">await</span> client.<span className="text-yellow-300">access</span>.<span className="text-blue-300">request</span>({'{'}<br/>
 <span className="text-cyan-400">4</span>      <span className="text-green-400">datasetId</span>: <span className="text-orange-300">'ds_climate_2024'</span>,<br/>
 <span className="text-cyan-400">5</span>      <span className="text-green-400">purpose</span>: <span className="text-orange-300">'ML training'</span>,<br/>
@@ -653,7 +653,7 @@ export default function PipelinesPage() {
                     <div>
                         <h3 className="text-xl font-semibold text-white mb-6 border-t border-cyan-500/40 pt-4">External Links</h3>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <a href="https://docs.breach.io" target="_blank" rel="noopener noreferrer" className="rounded-3xl border border-cyan-500/30 bg-black/70 backdrop-blur-xl p-4 flex items-center justify-between transition-all duration-300 hover:scale-105 hover:shadow-[0_0_20px_#00F0FF30]">
+                            <a href="https://docs.redoubt.io" target="_blank" rel="noopener noreferrer" className="rounded-3xl border border-cyan-500/30 bg-black/70 backdrop-blur-xl p-4 flex items-center justify-between transition-all duration-300 hover:scale-105 hover:shadow-[0_0_20px_#00F0FF30]">
                                 <div className="flex items-center gap-4">
                                     <div className="w-10 h-10 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center shadow-[0_0_15px_rgba(0,240,255,0.2)]">
                                         <svg className="w-5 h-5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -662,14 +662,14 @@ export default function PipelinesPage() {
                                     </div>
                                     <div>
                                         <div className="text-sm font-medium text-white">Documentation Portal</div>
-                                        <div className="text-xs text-cyan-300">docs.breach.io</div>
+                                        <div className="text-xs text-cyan-300">docs.redoubt.io</div>
                                     </div>
                                 </div>
                                 <svg className="w-4 h-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                                 </svg>
                             </a>
-                            <a href="https://github.com/breach-io" target="_blank" rel="noopener noreferrer" className="rounded-3xl border border-cyan-500/30 bg-black/70 backdrop-blur-xl p-4 flex items-center justify-between transition-all duration-300 hover:scale-105 hover:shadow-[0_0_20px_#00F0FF30]">
+                            <a href="https://github.com/redoubt-io" target="_blank" rel="noopener noreferrer" className="rounded-3xl border border-cyan-500/30 bg-black/70 backdrop-blur-xl p-4 flex items-center justify-between transition-all duration-300 hover:scale-105 hover:shadow-[0_0_20px_#00F0FF30]">
                                 <div className="flex items-center gap-4">
                                     <div className="w-10 h-10 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center shadow-[0_0_15px_rgba(0,240,255,0.2)]">
                                         <svg className="w-5 h-5 text-cyan-400" fill="currentColor" viewBox="0 0 24 24">
@@ -678,14 +678,14 @@ export default function PipelinesPage() {
                                     </div>
                                     <div>
                                         <div className="text-sm font-medium text-white">GitHub Repository</div>
-                                        <div className="text-xs text-cyan-300">github.com/breach-io</div>
+                                        <div className="text-xs text-cyan-300">github.com/redoubt-io</div>
                                     </div>
                                 </div>
                                 <svg className="w-4 h-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                                 </svg>
                             </a>
-                            <a href="https://status.breach.io" target="_blank" rel="noopener noreferrer" className="rounded-3xl border border-cyan-500/30 bg-black/70 backdrop-blur-xl p-4 flex items-center justify-between transition-all duration-300 hover:scale-105 hover:shadow-[0_0_20px_#00F0FF30]">
+                            <a href="https://status.redoubt.io" target="_blank" rel="noopener noreferrer" className="rounded-3xl border border-cyan-500/30 bg-black/70 backdrop-blur-xl p-4 flex items-center justify-between transition-all duration-300 hover:scale-105 hover:shadow-[0_0_20px_#00F0FF30]">
                                 <div className="flex items-center gap-4">
                                     <div className="w-10 h-10 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center shadow-[0_0_15px_rgba(0,240,255,0.2)]">
                                         <svg className="w-5 h-5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -694,7 +694,7 @@ export default function PipelinesPage() {
                                     </div>
                                     <div>
                                         <div className="text-sm font-medium text-white">API Status Page</div>
-                                        <div className="text-xs text-cyan-300">status.breach.io</div>
+                                        <div className="text-xs text-cyan-300">status.redoubt.io</div>
                                     </div>
                                 </div>
                                 <svg className="w-4 h-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -918,3 +918,5 @@ export default function PipelinesPage() {
         </div>
     )
 }
+
+

@@ -9,7 +9,7 @@ type Step1FormState = {
     country: string
 }
 
-const STORAGE_KEY = 'breach:onboarding:step1'
+const STORAGE_KEY = 'Redoubt:onboarding:step1'
 const steps = [
     'Organization & Identity',
     'Intended Platform Usage',
@@ -56,7 +56,7 @@ export default function OnboardingStep1() {
     const fillMockData = () => {
         const mockState: Step1FormState = {
             organizationName: 'Demo Corporation',
-            officialWorkEmail: 'demo@breach.local',
+            officialWorkEmail: 'demo@redoubt.local',
             roleInOrganization: 'Senior Data Engineer',
             industryDomain: 'Technology & AI',
             country: 'United States'
@@ -194,3 +194,4 @@ export default function OnboardingStep1() {
         </div>
     )
 }
+

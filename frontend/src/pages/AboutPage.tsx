@@ -5,7 +5,7 @@ export default function AboutPage() {
                 <div className="container mx-auto px-4 py-12 md:py-16 space-y-4 max-w-5xl">
                     <h1 className="text-3xl md:text-4xl font-bold">About the Platform</h1>
                     <p className="text-slate-300 text-lg">
-                        Breach is an information-protected participation layer: identity-verified participants request access, contribute datasets,
+                        Redoubt is an information-protected participation layer: identity-verified participants request access, contribute datasets,
                         and collaborate under governed controls. No marketplace listings, just security, confidence, and auditability.
                     </p>
                 </div>
@@ -32,3 +32,4 @@ export default function AboutPage() {
         </div>
     )
 }
+

@@ -15,10 +15,10 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 
-const STORAGE_AUTH = 'breach:isAuthenticated'
-const STORAGE_ACCESS_STATUS = 'breach:accessStatus'
-const STORAGE_ONBOARDING_INITIATED = 'breach:onboardingInitiated'
-const STORAGE_APPLICANT_EMAIL = 'breach:applicantEmail'
+const STORAGE_AUTH = 'Redoubt:isAuthenticated'
+const STORAGE_ACCESS_STATUS = 'Redoubt:accessStatus'
+const STORAGE_ONBOARDING_INITIATED = 'Redoubt:onboardingInitiated'
+const STORAGE_APPLICANT_EMAIL = 'Redoubt:applicantEmail'
 
 // Enable a fully client-side experience when there is no backend.
 // Default is ON for development; set VITE_MOCK_AUTH=false to restore strict gating.
@@ -51,7 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [applicantEmail, setApplicantEmail] = useState<string>(() => {
         const stored = localStorage.getItem(STORAGE_APPLICANT_EMAIL)
         if (stored !== null) return stored
-        return MOCK_AUTH ? 'demo@breach.local' : ''
+        return MOCK_AUTH ? 'demo@redoubt.local' : ''
     })
 
     useEffect(() => {
@@ -137,3 +137,4 @@ export function useAuth() {
     if (!ctx) throw new Error('useAuth must be used within AuthProvider')
     return ctx
 }
+

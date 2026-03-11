@@ -86,10 +86,31 @@ export default function AppLayout() {
             <aside className="hidden md:flex md:w-64 flex-col border-r border-slate-800 bg-slate-950/80">
                 <div className="px-5 py-5 border-b border-slate-800">
                     <Link to="/dashboard" className="flex items-center gap-3">
-                        <svg className="w-8 h-8 text-cyan-400" style={{ filter: 'drop-shadow(0 0 8px rgba(0, 240, 255, 0.4))' }} fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 6c1.4 0 2.8 1.1 2.8 2.5V11c.6.3 1 .9 1 1.6v3c0 1-.8 1.9-1.8 1.9h-4c-1 0-1.8-.9-1.8-1.9v-3c0-.7.4-1.3 1-1.6V9.5c0-1.4 1.4-2.5 2.8-2.5zm0 1.5c-.8 0-1.3.7-1.3 1v1.5h2.6V9.5c0-1.3-.5-1-1.3-1z"/>
+                        <svg className="w-8 h-8 text-cyan-400" style={{ filter: 'drop-shadow(0 0 8px rgba(0, 240, 255, 0.4))' }} viewBox="0 0 24 24" fill="none">
+                            <path
+                                d="M12 2.5L4 7v10l8 4.5 8-4.5V7l-8-4.5z"
+                                stroke="currentColor"
+                                strokeWidth="1.6"
+                                strokeLinejoin="round"
+                            />
+                            <path
+                                d="M9 9.3h6v1.4H9z"
+                                fill="currentColor"
+                            />
+                            <path
+                                d="M9.5 10.7v4.2M12 10.7v4.2M14.5 10.7v4.2"
+                                stroke="currentColor"
+                                strokeWidth="1.6"
+                                strokeLinecap="round"
+                            />
+                            <path
+                                d="M9 15h6"
+                                stroke="currentColor"
+                                strokeWidth="1.6"
+                                strokeLinecap="round"
+                            />
                         </svg>
-                        <span className="text-xl font-bold text-white hover:text-blue-300 transition-colors">Breach Workspace</span>
+                        <span className="text-xl font-bold text-white hover:text-blue-300 transition-colors">Redoubt Workspace</span>
                     </Link>
                     <p className="text-xs text-slate-400 mt-1 ml-11">Participant Console</p>
                 </div>
@@ -156,3 +177,4 @@ export default function AppLayout() {
         </div>
     )
 }
+

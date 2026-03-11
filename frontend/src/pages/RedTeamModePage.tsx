@@ -57,7 +57,7 @@ export default function RedTeamModePage() {
                         </div>
                         <h1 className="mt-4 text-4xl font-bold tracking-tight text-white sm:text-5xl">Red Team Simulation</h1>
                         <p className="mt-2 text-slate-300">
-                            Live demonstration of Breach security controls under simulated attack
+                            Live demonstration of Redoubt security controls under simulated attack
                         </p>
                     </div>
                     <div className="rounded-2xl border border-amber-400/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-100 shadow-[0_0_20px_rgba(245,158,11,0.2)]">
@@ -165,3 +165,4 @@ export default function RedTeamModePage() {
         </div>
     )
 }
+

@@ -49,7 +49,7 @@ export default function SecurityOperationsPage() {
                         </div>
                         <h1 className="mt-4 text-4xl font-bold tracking-tight text-white sm:text-5xl">Security Operations</h1>
                         <p className="mt-2 text-slate-400">
-                            Live security posture and compliance status for the Breach platform
+                            Live security posture and compliance status for the Redoubt platform
                         </p>
                     </div>
                     <div className="rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200 shadow-[0_0_20px_rgba(16,185,129,0.18)]">
@@ -193,3 +193,4 @@ export default function SecurityOperationsPage() {
         </div>
     )
 }
+

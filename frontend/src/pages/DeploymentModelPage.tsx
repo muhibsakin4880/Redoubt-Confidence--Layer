@@ -31,7 +31,7 @@ const deploymentOptions: DeploymentOption[] = [
             'Hosted on AWS US-East + EU-West',
             'SOC 2 Type II certified',
             'Data encrypted at rest + in transit',
-            'Breach manages infrastructure'
+            'Redoubt manages infrastructure'
         ],
         bestFor: 'Best for: Fast onboarding, small-mid enterprises'
     },
@@ -39,7 +39,7 @@ const deploymentOptions: DeploymentOption[] = [
         title: 'Private Cloud (VPC)',
         bullets: [
             'Deploy within your own AWS/Azure/GCP account',
-            'Breach has zero access to your data',
+            'Redoubt has zero access to your data',
             'You manage infrastructure'
         ],
         bestFor: 'Best for: Large enterprises, strict residency requirements',
@@ -68,7 +68,7 @@ const visibilityRows: VisibilityRow[] = [
     {
         label: 'Raw dataset content',
         answer: 'NO',
-        detail: 'Never stored or accessed by Breach'
+        detail: 'Never stored or accessed by Redoubt'
     },
     {
         label: 'Participant identity',
@@ -83,7 +83,7 @@ const visibilityRows: VisibilityRow[] = [
     {
         label: 'Payment information',
         answer: 'NO',
-        detail: 'Handled by Stripe, Breach never sees card details'
+        detail: 'Handled by Stripe, Redoubt never sees card details'
     },
     {
         label: 'API keys',
@@ -130,7 +130,7 @@ export default function DeploymentModelPage() {
                             Deployment & Data Residency
                         </h1>
                         <p className="mt-2 max-w-2xl text-slate-400">
-                            Understand where your data lives, what Breach can see, and how your deployment is configured
+                            Understand where your data lives, what Redoubt can see, and how your deployment is configured
                         </p>
                     </div>
                     <div className="rounded-2xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-3 text-sm text-cyan-200 shadow-[0_0_18px_rgba(34,211,238,0.18)]">
@@ -305,3 +305,4 @@ export default function DeploymentModelPage() {
         </div>
     )
 }
+

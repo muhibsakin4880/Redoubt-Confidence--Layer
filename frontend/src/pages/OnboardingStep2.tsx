@@ -6,7 +6,7 @@ const usageOptions = ['Research', 'AI/ML training', 'Analytics', 'Product develo
 export default function OnboardingStep2() {
     const navigate = useNavigate()
     const [intendedUsage, setIntendedUsage] = useState<string[]>(() => {
-        const saved = localStorage.getItem('breach:onboarding:intendedUsage')
+        const saved = localStorage.getItem('Redoubt:onboarding:intendedUsage')
         if (!saved) return []
         try {
             const parsed = JSON.parse(saved)
@@ -20,7 +20,7 @@ export default function OnboardingStep2() {
         setIntendedUsage(prev => {
             const exists = prev.includes(value)
             const newValue = exists ? prev.filter(item => item !== value) : [...prev, value]
-            localStorage.setItem('breach:onboarding:intendedUsage', JSON.stringify(newValue))
+            localStorage.setItem('Redoubt:onboarding:intendedUsage', JSON.stringify(newValue))
             return newValue
         })
     }
@@ -37,13 +37,13 @@ export default function OnboardingStep2() {
 
     const selectAllUsages = () => {
         setIntendedUsage(usageOptions)
-        localStorage.setItem('breach:onboarding:intendedUsage', JSON.stringify(usageOptions))
+        localStorage.setItem('Redoubt:onboarding:intendedUsage', JSON.stringify(usageOptions))
     }
 
     const fillMockData = () => {
         const mockUsage = ['Research', 'AI/ML training']
         setIntendedUsage(mockUsage)
-        localStorage.setItem('breach:onboarding:intendedUsage', JSON.stringify(mockUsage))
+        localStorage.setItem('Redoubt:onboarding:intendedUsage', JSON.stringify(mockUsage))
     }
 
     const stepReady = intendedUsage.length > 0
@@ -136,3 +136,4 @@ export default function OnboardingStep2() {
         </div>
     )
 }
+

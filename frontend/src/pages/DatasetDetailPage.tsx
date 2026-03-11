@@ -336,7 +336,7 @@ export default function DatasetDetailPage() {
                                 </div>
 
                                 <p className="mt-3 text-[11px] text-slate-500">
-                                    Breach holds payment in escrow and releases to provider only after buyer confirmation or
+                                    Redoubt holds payment in escrow and releases to provider only after buyer confirmation or
                                     window expiry
                                 </p>
 
@@ -538,3 +538,4 @@ export default function DatasetDetailPage() {
         </div>
     )
 }
+

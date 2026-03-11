@@ -38,7 +38,7 @@ const glossarySections: GlossarySection[] = [
             {
                 term: 'Confidence Score',
                 definition:
-                    "A 0-100 rating assigned by Breach's AI engine indicating how trustworthy and complete a dataset is.",
+                    "A 0-100 rating assigned by Redoubt's AI engine indicating how trustworthy and complete a dataset is.",
                 category: 'Trust'
             },
             {
@@ -83,7 +83,7 @@ const glossarySections: GlossarySection[] = [
             {
                 term: 'Egress Control',
                 definition:
-                    'Rules that govern what data can leave a secure environment. Breach blocks unauthorized egress by default.',
+                    'Rules that govern what data can leave a secure environment. Redoubt blocks unauthorized egress by default.',
                 category: 'Security'
             },
             {
@@ -111,7 +111,7 @@ const glossarySections: GlossarySection[] = [
             {
                 term: 'Provider Anonymity',
                 definition:
-                    'Breach hides the identity of data providers from buyers, and vice versa. Only Breach knows both parties.',
+                    'Redoubt hides the identity of data providers from buyers, and vice versa. Only Redoubt knows both parties.',
                 category: 'Trust'
             }
         ]
@@ -139,7 +139,7 @@ const glossarySections: GlossarySection[] = [
             {
                 term: 'Trust Score',
                 definition:
-                    'A 0-100 rating assigned to each Breach participant based on their identity verification, data quality, and compliance history.',
+                    'A 0-100 rating assigned to each Redoubt participant based on their identity verification, data quality, and compliance history.',
                 category: 'Trust'
             }
         ]
@@ -247,3 +247,4 @@ export default function TrustGlossaryPage() {
         </div>
     )
 }
+

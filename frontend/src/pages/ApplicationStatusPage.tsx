@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
-const SUBMISSION_META_STORAGE_KEY = 'breach:onboarding:submissionMeta'
+const SUBMISSION_META_STORAGE_KEY = 'Redoubt:onboarding:submissionMeta'
 
 const fallbackSubmissionMeta = {
     referenceId: 'Pending assignment',
@@ -64,7 +64,7 @@ export default function ApplicationStatusPage() {
                     <p className="text-sm uppercase tracking-[0.3em] text-slate-500">Application Portal</p>
                     <h1 className="text-3xl font-bold">Application Status</h1>
                     <p className="text-slate-400">
-                        Track your onboarding request and review progress with the Breach trust committee.
+                        Track your onboarding request and review progress with the Redoubt trust committee.
                     </p>
                 </div>
 
@@ -175,3 +175,4 @@ export default function ApplicationStatusPage() {
         </div>
     )
 }
+

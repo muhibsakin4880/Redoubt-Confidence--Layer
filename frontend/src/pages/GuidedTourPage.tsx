@@ -144,7 +144,7 @@ export default function GuidedTourPage() {
                     <div className="rounded-2xl border border-white/10 bg-[#0a1628] p-6 shadow-[0_10px_40px_rgba(0,0,0,0.25)]">
                         <div className="flex flex-col gap-2">
                             <h2 className="text-2xl font-semibold text-white">Your recommended workflow</h2>
-                            <p className="text-sm text-slate-400">Follow these steps to get the most out of Breach</p>
+                            <p className="text-sm text-slate-400">Follow these steps to get the most out of Redoubt</p>
                         </div>
                         <div className="mt-6 grid gap-4 md:grid-cols-2">
                             {guidedSteps.map(step => (
@@ -218,3 +218,4 @@ export default function GuidedTourPage() {
         </div>
     )
 }
+

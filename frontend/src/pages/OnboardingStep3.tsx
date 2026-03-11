@@ -2,12 +2,12 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 const participationOptions = ['Access datasets', 'Contribute datasets', 'Collaborate', 'Research participation']
-const LEGAL_STORAGE_KEY = 'breach:onboarding:legalAcknowledgment'
+const LEGAL_STORAGE_KEY = 'Redoubt:onboarding:legalAcknowledgment'
 
 export default function OnboardingStep3() {
     const navigate = useNavigate()
     const [participationIntent, setParticipationIntent] = useState<string[]>(() => {
-        const saved = localStorage.getItem('breach:onboarding:participationIntent')
+        const saved = localStorage.getItem('Redoubt:onboarding:participationIntent')
         if (!saved) return []
         try {
             const parsed = JSON.parse(saved)
@@ -41,7 +41,7 @@ export default function OnboardingStep3() {
         setParticipationIntent(prev => {
             const exists = prev.includes(value)
             const newValue = exists ? prev.filter(item => item !== value) : [...prev, value]
-            localStorage.setItem('breach:onboarding:participationIntent', JSON.stringify(newValue))
+            localStorage.setItem('Redoubt:onboarding:participationIntent', JSON.stringify(newValue))
             return newValue
         })
     }
@@ -61,7 +61,7 @@ export default function OnboardingStep3() {
 
     const selectAllParticipation = () => {
         setParticipationIntent(participationOptions)
-        localStorage.setItem('breach:onboarding:participationIntent', JSON.stringify(participationOptions))
+        localStorage.setItem('Redoubt:onboarding:participationIntent', JSON.stringify(participationOptions))
     }
 
     const fillMockData = () => {
@@ -74,7 +74,7 @@ export default function OnboardingStep3() {
 
         setParticipationIntent(mockParticipation)
         setLegalAcknowledgment(mockLegal)
-        localStorage.setItem('breach:onboarding:participationIntent', JSON.stringify(mockParticipation))
+        localStorage.setItem('Redoubt:onboarding:participationIntent', JSON.stringify(mockParticipation))
         localStorage.setItem(LEGAL_STORAGE_KEY, JSON.stringify(mockLegal))
     }
 
@@ -171,7 +171,7 @@ export default function OnboardingStep3() {
                                 onClick={(e) => e.preventDefault()}
                                 className="text-blue-400 underline underline-offset-2"
                             >
-                                Breach Data Governance Policy
+                                Redoubt Data Governance Policy
                             </a>{' '}
                             and accept that all data access is logged, governed, and subject to contributor permissions.
                         </span>
@@ -226,3 +226,4 @@ export default function OnboardingStep3() {
         </div>
     )
 }
+

@@ -94,7 +94,7 @@ export default function HomePage() {
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
 
-                .breach-font { font-family: 'Syne', sans-serif; }
+                .Redoubt-font { font-family: 'Syne', sans-serif; }
                 .body-font { font-family: 'DM Sans', sans-serif; }
 
                 @keyframes fadeUp {
@@ -291,13 +291,34 @@ export default function HomePage() {
                             </div>
 
                             {/* Headline */}
-                            <h1 className={`breach-font font-bold mb-6 leading-none tracking-tight opacity-0-init ${heroVisible ? 'animate-fadeUp delay-100' : ''}`}
+                            <h1 className={`Redoubt-font font-bold mb-6 leading-none tracking-tight opacity-0-init ${heroVisible ? 'animate-fadeUp delay-100' : ''}`}
                                 style={{ opacity: heroVisible ? undefined : 0 }}>
                                 <span className="text-white flex items-center justify-center gap-4 text-5xl md:text-7xl lg:text-8xl">
-                                    <svg className="w-16 h-16 text-cyan-400 cyber-glow" fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 6c1.4 0 2.8 1.1 2.8 2.5V11c.6.3 1 .9 1 1.6v3c0 1-.8 1.9-1.8 1.9h-4c-1 0-1.8-.9-1.8-1.9v-3c0-.7.4-1.3 1-1.6V9.5c0-1.4 1.4-2.5 2.8-2.5zm0 1.5c-.8 0-1.3.7-1.3 1v1.5h2.6V9.5c0-1.3-.5-1-1.3-1z"/>
+                                    <svg className="w-16 h-16 text-cyan-400 cyber-glow" viewBox="0 0 24 24" fill="none">
+                                        <path
+                                            d="M12 2.5L4 7v10l8 4.5 8-4.5V7l-8-4.5z"
+                                            stroke="currentColor"
+                                            strokeWidth="1.6"
+                                            strokeLinejoin="round"
+                                        />
+                                        <path
+                                            d="M9 9.3h6v1.4H9z"
+                                            fill="currentColor"
+                                        />
+                                        <path
+                                            d="M9.5 10.7v4.2M12 10.7v4.2M14.5 10.7v4.2"
+                                            stroke="currentColor"
+                                            strokeWidth="1.6"
+                                            strokeLinecap="round"
+                                        />
+                                        <path
+                                            d="M9 15h6"
+                                            stroke="currentColor"
+                                            strokeWidth="1.6"
+                                            strokeLinecap="round"
+                                        />
                                     </svg>
-                                    Breach
+                                    Redoubt
                                 </span>
                                 <span className="text-shimmer block text-base md:text-lg lg:text-xl mt-2 leading-tight whitespace-nowrap" style={{ textShadow: '0 0 30px rgba(0,240,255,0.4)' }}>Layered Defense for Data Confidence</span>
                             </h1>
@@ -374,7 +395,7 @@ export default function HomePage() {
                                     <div className="w-10 h-10 mx-auto mb-3 rounded-lg flex items-center justify-center bg-cyan-500/10 border border-cyan-500/30 text-cyan-400">
                                         {stat.icon}
                                     </div>
-                                    <div className="breach-font text-4xl md:text-5xl font-bold text-white mb-2">{stat.value}</div>
+                                    <div className="Redoubt-font text-4xl md:text-5xl font-bold text-white mb-2">{stat.value}</div>
                                     <div className="text-slate-400 text-sm">{stat.label}</div>
                                 </div>
                             ))}
@@ -390,7 +411,7 @@ export default function HomePage() {
                         <div className="max-w-6xl mx-auto">
                             <div className="text-center mb-20">
                                 <p className="text-cyan-400 text-sm font-semibold tracking-widest uppercase mb-3">Process</p>
-                                <h2 className="breach-font text-4xl md:text-5xl font-bold text-white mb-4">
+                                <h2 className="Redoubt-font text-4xl md:text-5xl font-bold text-white mb-4">
                                     How It Works
                                 </h2>
                                 <p className="text-slate-400 text-lg max-w-xl mx-auto">
@@ -437,7 +458,7 @@ export default function HomePage() {
                                                 {step.icon}
                                             </div>
                                         </div>
-                                        <h3 className="breach-font text-lg font-semibold text-white mb-3">{step.title}</h3>
+                                        <h3 className="Redoubt-font text-lg font-semibold text-white mb-3">{step.title}</h3>
                                         <p className="text-slate-400 text-sm leading-relaxed">{step.desc}</p>
                                     </div>
                                 ))}
@@ -455,7 +476,7 @@ export default function HomePage() {
                             <div className="text-center mb-16">
                                 <div className="w-16 h-px mx-auto mb-4 bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent" />
                                 <p className="text-cyan-400 text-sm font-semibold tracking-widest uppercase mb-3">Security</p>
-                                <h2 className="breach-font text-4xl md:text-5xl font-bold text-white mb-4">
+                                <h2 className="Redoubt-font text-4xl md:text-5xl font-bold text-white mb-4">
                                     Trust & <span className="text-cyan-400" style={{ textShadow: '0 0 20px rgba(0,240,255,0.4)' }}>Verification</span>
                                 </h2>
                                 <p className="text-slate-400 text-lg max-w-xl mx-auto">
@@ -490,7 +511,7 @@ export default function HomePage() {
                                         <div className="w-12 h-12 rounded-xl flex items-center justify-center text-cyan-400 mb-5 border border-cyan-500/30 bg-cyan-500/10">
                                             {card.icon}
                                         </div>
-                                        <h3 className="breach-font text-lg font-semibold text-white mb-3">{card.title}</h3>
+                                        <h3 className="Redoubt-font text-lg font-semibold text-white mb-3">{card.title}</h3>
                                         <p className="text-slate-400 text-sm leading-relaxed">{card.desc}</p>
                                     </div>
                                 ))}
@@ -508,7 +529,7 @@ export default function HomePage() {
                             <div className="text-center mb-16">
                                 <div className="w-16 h-px mx-auto mb-4 bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent" />
                                 <p className="text-cyan-400 text-sm font-semibold tracking-widest uppercase mb-3">Solutions</p>
-                                <h2 className="breach-font text-4xl md:text-5xl font-bold text-white mb-4">
+                                <h2 className="Redoubt-font text-4xl md:text-5xl font-bold text-white mb-4">
                                     Built for Every <span className="text-cyan-400" style={{ textShadow: '0 0 20px rgba(0,240,255,0.4)' }}>Team</span>
                                 </h2>
                                 <p className="text-slate-400 text-lg">Tailored solutions for diverse data needs</p>
@@ -541,7 +562,7 @@ export default function HomePage() {
                                         <div className="w-12 h-12 rounded-xl flex items-center justify-center text-cyan-400 mb-5 border border-cyan-500/30 bg-cyan-500/10 transition-transform group-hover:scale-110">
                                             {card.icon}
                                         </div>
-                                        <h3 className="breach-font text-lg font-semibold text-white mb-3">{card.title}</h3>
+                                        <h3 className="Redoubt-font text-lg font-semibold text-white mb-3">{card.title}</h3>
                                         <p className="text-slate-400 text-sm leading-relaxed mb-4">{card.desc}</p>
                                         <span className="text-sm font-medium text-cyan-400 relative overflow-hidden inline-flex items-center gap-1 group-hover:text-cyan-300">
                                             Learn more 
@@ -561,7 +582,7 @@ export default function HomePage() {
                     <div className="container mx-auto px-4">
                         <div className="max-w-4xl mx-auto text-center mb-12">
                             <p className="text-xs uppercase tracking-[0.25em] text-slate-500 mb-4">Why Now</p>
-                            <h2 className="breach-font text-3xl md:text-5xl font-bold text-white mb-4">
+                            <h2 className="Redoubt-font text-3xl md:text-5xl font-bold text-white mb-4">
                                 The data trust crisis is here
                             </h2>
                             <p className="text-slate-400 text-base md:text-lg">
@@ -591,7 +612,7 @@ export default function HomePage() {
                         </div>
 
                         <p className="mt-6 text-center text-sm text-blue-300/70 italic">
-                            Breach exists because trust cannot be an afterthought.
+                            Redoubt exists because trust cannot be an afterthought.
                         </p>
                     </div>
                 </section>
@@ -603,7 +624,7 @@ export default function HomePage() {
                     <div className="container mx-auto px-4">
                         <div className="max-w-4xl mx-auto text-center mb-12">
                             <p className="text-xs uppercase tracking-[0.25em] text-slate-500 mb-4">Validated Partners & Early Adopters</p>
-                            <h2 className="breach-font text-3xl md:text-5xl font-bold text-white mb-4">
+                            <h2 className="Redoubt-font text-3xl md:text-5xl font-bold text-white mb-4">
                                 Trusted by forward-thinking teams
                             </h2>
                             <p className="text-slate-400 text-base md:text-lg">
@@ -638,7 +659,7 @@ export default function HomePage() {
                         </div>
 
                         <p className="mt-6 text-center text-xs text-slate-500">
-                            All partners are verified Breach participants. Logos are representative of participant categories.
+                            All partners are verified Redoubt participants. Logos are representative of participant categories.
                         </p>
                     </div>
                 </section>
@@ -1117,3 +1138,4 @@ function Step3AccessIntent({ value, onToggleDomain, onChange, onBack, onSubmit }
         </form>
     )
 }
+

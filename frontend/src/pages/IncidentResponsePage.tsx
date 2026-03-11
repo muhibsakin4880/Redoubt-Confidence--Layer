@@ -77,7 +77,7 @@ export default function IncidentResponsePage() {
                         </div>
                         <h1 className="mt-4 text-4xl font-bold tracking-tight text-white sm:text-5xl">Incident Response Center</h1>
                         <p className="mt-2 max-w-2xl text-slate-400">
-                            Runbook execution, SLA tracking, and breach notification management.
+                            Runbook execution, SLA tracking, and Redoubt notification management.
                         </p>
                     </div>
                     <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100 shadow-[0_0_24px_rgba(16,185,129,0.25)]">
@@ -301,3 +301,4 @@ export default function IncidentResponsePage() {
         </div>
     )
 }
+

@@ -15,7 +15,7 @@ const lineageNodes = [
     {
         title: 'Transformation: Quality Normalization',
         subtitle: 'Standardized time-series resolution',
-        meta: ['Pipeline: TS-NORM-24', 'Owner: breach_ops'],
+        meta: ['Pipeline: TS-NORM-24', 'Owner: redoubt_ops'],
         tone: 'blue'
     },
     {
@@ -34,7 +34,7 @@ const lineageNodes = [
 
 const accessEvents = [
     { timestamp: '2026-03-11 08:12', action: 'Access request created', actor: 'part_anon_042', status: 'Logged' },
-    { timestamp: '2026-03-11 08:18', action: 'Escrow initiated', actor: 'breach_escrow', status: 'Verified' },
+    { timestamp: '2026-03-11 08:18', action: 'Escrow initiated', actor: 'redoubt_escrow', status: 'Verified' },
     { timestamp: '2026-03-11 08:41', action: 'Secure enclave granted', actor: 'rbac_console', status: 'Verified' },
     { timestamp: '2026-03-11 08:42', action: 'Usage telemetry synced', actor: 'audit_trail', status: 'Logged' }
 ]
