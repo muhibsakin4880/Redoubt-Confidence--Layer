@@ -4,21 +4,38 @@ import { useNavigate } from 'react-router-dom'
 type Step1FormState = {
     organizationName: string
     officialWorkEmail: string
+    inviteCode: string
     roleInOrganization: string
     industryDomain: string
     country: string
 }
 
 const STORAGE_KEY = 'Redoubt:onboarding:step1'
+const freeEmailProviders = new Set([
+    'gmail.com',
+    'yahoo.com',
+    'outlook.com',
+    'hotmail.com',
+    'icloud.com',
+    'aol.com',
+    'protonmail.com'
+])
+
 const steps = [
     'Organization & Identity',
     'Intended Platform Usage',
     'Participation Intent',
+    'Verification & Credentials',
     'Compliance Commitment',
     'Submission Confirmation'
 ]
 
 const isWorkEmail = (value: string) => /^[^\s@]+@[^\s@]+$/.test(value)
+const isCorporateEmail = (value: string) => {
+    if (!isWorkEmail(value)) return false
+    const domain = value.split('@')[1]?.toLowerCase()
+    return Boolean(domain) && !freeEmailProviders.has(domain)
+}
 
 export default function OnboardingStep1() {
     const navigate = useNavigate()
@@ -28,6 +45,7 @@ export default function OnboardingStep1() {
             return {
                 organizationName: '',
                 officialWorkEmail: '',
+                inviteCode: '',
                 roleInOrganization: '',
                 industryDomain: '',
                 country: ''
@@ -39,6 +57,7 @@ export default function OnboardingStep1() {
             return {
                 organizationName: '',
                 officialWorkEmail: '',
+                inviteCode: '',
                 roleInOrganization: '',
                 industryDomain: '',
                 country: ''
@@ -57,6 +76,7 @@ export default function OnboardingStep1() {
         const mockState: Step1FormState = {
             organizationName: 'Demo Corporation',
             officialWorkEmail: 'demo@redoubt.local',
+            inviteCode: 'REDO-2026',
             roleInOrganization: 'Senior Data Engineer',
             industryDomain: 'Technology & AI',
             country: 'United States'
@@ -69,7 +89,8 @@ export default function OnboardingStep1() {
     const stepReady = useMemo(
         () =>
             state.organizationName.trim().length > 0 &&
-            isWorkEmail(state.officialWorkEmail.trim()) &&
+            isCorporateEmail(state.officialWorkEmail.trim()) &&
+            state.inviteCode.trim().length >= 6 &&
             state.roleInOrganization.trim().length > 0 &&
             state.industryDomain.trim().length > 0 &&
             state.country.trim().length > 0,
@@ -92,7 +113,7 @@ export default function OnboardingStep1() {
                     <p className="text-slate-400">Security and confidence infrastructure intake for controlled participation.</p>
                 </div>
 
-                <div className="mb-6 grid grid-cols-2 md:grid-cols-5 gap-2">
+                <div className="mb-6 grid grid-cols-2 md:grid-cols-6 gap-2">
                     {steps.map((title, idx) => {
                         const currentStep = idx + 1
                         const active = currentStep === 1
@@ -147,6 +168,16 @@ export default function OnboardingStep1() {
                             />
                         </div>
                         <div>
+                            <label className="block text-sm text-slate-300 mb-2">Invite code</label>
+                            <input
+                                className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                                value={state.inviteCode}
+                                onChange={(e) => handleChange('inviteCode', e.target.value)}
+                                placeholder="INV-XXXXXX"
+                            />
+                            <p className="mt-1 text-xs text-slate-500">Optional — we'll verify either way, but this helps us move faster.</p>
+                        </div>
+                        <div>
                             <label className="block text-sm text-slate-300 mb-2">Role in organization</label>
                             <input
                                 className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
@@ -176,7 +207,7 @@ export default function OnboardingStep1() {
                     </div>
                     {showError && !stepReady && (
                         <div className="text-sm text-amber-300 bg-amber-500/10 border border-amber-400/50 rounded-lg px-3 py-2">
-                            Please complete all fields with a valid work email before continuing.
+                            Please complete all fields with a valid corporate email and invite code before continuing.
                         </div>
                     )}
                 </section>

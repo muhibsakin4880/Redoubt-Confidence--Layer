@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext'
 type OnboardingFormState = {
     organizationName: string
     officialWorkEmail: string
+    inviteCode: string
     roleInOrganization: string
     industryDomain: string
     country: string
@@ -20,6 +21,16 @@ const participationOptions = ['Access datasets', 'Contribute datasets', 'Collabo
 const allowedFileExtensions = new Set(['pdf', 'jpg', 'jpeg', 'png'])
 const maxFileSizeBytes = 5 * 1024 * 1024
 
+const freeEmailProviders = new Set([
+    'gmail.com',
+    'yahoo.com',
+    'outlook.com',
+    'hotmail.com',
+    'icloud.com',
+    'aol.com',
+    'protonmail.com'
+])
+
 const stepTitles = [
     'Organization & Identity',
     'Intended Platform Usage',
@@ -30,6 +41,11 @@ const stepTitles = [
 ]
 
 const isWorkEmail = (value: string) => /^[^\s@]+@[^\s@]+$/.test(value)
+const isCorporateEmail = (value: string) => {
+    if (!isWorkEmail(value)) return false
+    const domain = value.split('@')[1]?.toLowerCase()
+    return Boolean(domain) && !freeEmailProviders.has(domain)
+}
 const MOCK_AUTH = (import.meta.env.VITE_MOCK_AUTH ?? 'true') === 'true'
 const SUBMISSION_META_STORAGE_KEY = 'Redoubt:onboarding:submissionMeta'
 const generateReferenceId = () => `#BRE-2026-${Math.floor(1000 + Math.random() * 9000)}`
@@ -70,6 +86,7 @@ export default function OnboardingPage() {
     const [state, setState] = useState<OnboardingFormState>({
         organizationName: '',
         officialWorkEmail: applicantEmail,
+        inviteCode: '',
         roleInOrganization: '',
         industryDomain: '',
         country: '',
@@ -152,6 +169,7 @@ export default function OnboardingPage() {
             ...prev,
             organizationName: 'Demo Corporation',
             officialWorkEmail: 'demo@redoubt.local',
+            inviteCode: 'REDO-2026',
             roleInOrganization: 'Senior Data Engineer',
             industryDomain: 'Technology & AI',
             country: 'United States'
@@ -180,7 +198,8 @@ export default function OnboardingPage() {
 
     const stepOneReady =
         state.organizationName.trim().length > 0 &&
-        isWorkEmail(state.officialWorkEmail.trim()) &&
+        isCorporateEmail(state.officialWorkEmail.trim()) &&
+        state.inviteCode.trim().length >= 6 &&
         state.roleInOrganization.trim().length > 0 &&
         state.industryDomain.trim().length > 0 &&
         state.country.trim().length > 0
@@ -363,6 +382,16 @@ export default function OnboardingPage() {
                                         onChange={(e) => setState(prev => ({ ...prev, officialWorkEmail: e.target.value }))}
                                         placeholder="name@organization.com"
                                     />
+                                </div>
+                                <div>
+                                    <label className="block text-[13px] text-slate-400 mb-2">Invite code</label>
+                                    <input
+                                        className="w-full px-4 py-3 bg-[#0d1f35] border border-slate-700 rounded-lg text-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/60"
+                                        value={state.inviteCode}
+                                        onChange={(e) => setState(prev => ({ ...prev, inviteCode: e.target.value }))}
+                                        placeholder="INV-XXXXXX"
+                                    />
+                                    <p className="mt-1 text-[11px] text-slate-500">Optional — we'll verify either way, but this helps us move faster.</p>
                                 </div>
                                 <div>
                                     <label className="block text-[13px] text-slate-400 mb-2">Role in organization</label>
@@ -789,7 +818,7 @@ export default function OnboardingPage() {
                     )}
                     {showStepError && !stepReady && step === 1 && (
                         <div className="text-sm text-amber-300 bg-amber-500/10 border border-amber-400/50 rounded-lg px-3 py-2">
-                            Please complete all fields with a valid work email before continuing.
+                            Please complete all fields with a valid corporate email and invite code before continuing.
                         </div>
                     )}
                 </form>

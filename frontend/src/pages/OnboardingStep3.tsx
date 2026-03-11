@@ -99,8 +99,8 @@ export default function OnboardingStep3() {
                     <p className="text-slate-400">Security and confidence infrastructure intake for controlled participation.</p>
                 </div>
 
-                <div className="mb-6 grid grid-cols-2 md:grid-cols-5 gap-2">
-                    {['Organization & Identity', 'Intended Platform Usage', 'Participation Intent', 'Compliance Commitment', 'Submission Confirmation'].map((title, idx) => {
+                <div className="mb-6 grid grid-cols-2 md:grid-cols-6 gap-2">
+                    {['Organization & Identity', 'Intended Platform Usage', 'Participation Intent', 'Verification & Credentials', 'Compliance Commitment', 'Submission Confirmation'].map((title, idx) => {
                         const currentStep = idx + 1
                         const active = currentStep === 3
                         const done = currentStep < 3

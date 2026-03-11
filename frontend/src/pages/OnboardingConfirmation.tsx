@@ -16,9 +16,11 @@ export default function OnboardingConfirmation() {
         'Organization & Identity',
         'Intended Platform Usage',
         'Participation Intent',
+        'Verification & Credentials',
         'Compliance Commitment',
         'Submission Confirmation'
     ]
+    const finalStep = stepTitles.length
     const [submissionMeta] = useState(() => {
         const stored = localStorage.getItem(SUBMISSION_META_STORAGE_KEY)
         if (!stored) {
@@ -53,9 +55,9 @@ export default function OnboardingConfirmation() {
                     <div className="min-w-[760px] flex items-start">
                         {stepTitles.map((title, idx) => {
                             const currentStep = idx + 1
-                            const active = currentStep === 5
-                            const done = currentStep < 5
-                            const connectorDone = currentStep < 5
+                            const active = currentStep === finalStep
+                            const done = currentStep < finalStep
+                            const connectorDone = currentStep < finalStep
                             return (
                                 <div key={title} className="flex items-center flex-1 last:flex-none">
                                     <div className="w-32">
