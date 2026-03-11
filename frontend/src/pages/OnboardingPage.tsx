@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 
@@ -17,11 +17,14 @@ type OnboardingFormState = {
 
 const usageOptions = ['Research', 'AI/ML training', 'Analytics', 'Product development', 'Other usage']
 const participationOptions = ['Access datasets', 'Contribute datasets', 'Collaborate', 'Research participation']
+const allowedFileExtensions = new Set(['pdf', 'jpg', 'jpeg', 'png'])
+const maxFileSizeBytes = 5 * 1024 * 1024
 
 const stepTitles = [
     'Organization & Identity',
     'Intended Platform Usage',
     'Participation Intent',
+    'Verification & Credentials',
     'Compliance Commitment',
     'Submission Confirmation'
 ]
@@ -42,7 +45,7 @@ export default function OnboardingPage() {
     const navigate = useNavigate()
     const { accessStatus, applicantEmail, isAuthenticated, submitApplication } = useAuth()
     const [step, setStep] = useState(1)
-    const [step4SubmitUnlockAt, setStep4SubmitUnlockAt] = useState(0)
+    const [step5SubmitUnlockAt, setStep5SubmitUnlockAt] = useState(0)
     const [showStepError, setShowStepError] = useState(false)
     const [applicationReference, setApplicationReference] = useState(() => {
         const stored = localStorage.getItem(SUBMISSION_META_STORAGE_KEY)
@@ -76,6 +79,22 @@ export default function OnboardingPage() {
         noUnauthorizedSharing: false,
         platformCompliancePolicies: false
     })
+    const linkedInTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+    const [isLinkedInLoading, setIsLinkedInLoading] = useState(false)
+    const [isLinkedInConnected, setIsLinkedInConnected] = useState(false)
+    const [affiliationFileName, setAffiliationFileName] = useState<string | null>(null)
+    const [authorizationFileName, setAuthorizationFileName] = useState<string | null>(null)
+    const [affiliationError, setAffiliationError] = useState<string | null>(null)
+    const [authorizationError, setAuthorizationError] = useState<string | null>(null)
+    const [dragTarget, setDragTarget] = useState<'affiliation' | 'authorization' | null>(null)
+
+    useEffect(() => {
+        return () => {
+            if (linkedInTimerRef.current) {
+                clearTimeout(linkedInTimerRef.current)
+            }
+        }
+    }, [])
 
     if (!MOCK_AUTH && accessStatus === 'approved' && isAuthenticated) return <Navigate to="/dashboard" replace />
     if (!MOCK_AUTH && accessStatus === 'approved') return <Navigate to="/login" replace />
@@ -85,6 +104,47 @@ export default function OnboardingPage() {
             const exists = prev[field].includes(value)
             return { ...prev, [field]: exists ? prev[field].filter(item => item !== value) : [...prev[field], value] }
         })
+    }
+
+    const handleLinkedInConnect = () => {
+        if (isLinkedInLoading || isLinkedInConnected) return
+        setIsLinkedInLoading(true)
+        linkedInTimerRef.current = setTimeout(() => {
+            setIsLinkedInLoading(false)
+            setIsLinkedInConnected(true)
+        }, 1600)
+    }
+
+    const handleFileSelection = (file: File | null | undefined, target: 'affiliation' | 'authorization') => {
+        if (!file) return
+        const fileExtension = file.name.split('.').pop()?.toLowerCase()
+        const setFileName = target === 'affiliation' ? setAffiliationFileName : setAuthorizationFileName
+        const setError = target === 'affiliation' ? setAffiliationError : setAuthorizationError
+
+        if (!fileExtension || !allowedFileExtensions.has(fileExtension)) {
+            setError('Only PDF, JPG, and PNG files are accepted.')
+            setFileName(null)
+            return
+        }
+
+        if (file.size > maxFileSizeBytes) {
+            setError('File size exceeds 5MB limit.')
+            setFileName(null)
+            return
+        }
+
+        setError(null)
+        setFileName(file.name)
+    }
+
+    const handleFileDrop = (event: React.DragEvent<HTMLLabelElement>, target: 'affiliation' | 'authorization') => {
+        event.preventDefault()
+        setDragTarget(null)
+        handleFileSelection(event.dataTransfer.files?.[0], target)
+    }
+
+    const handleFileInputChange = (event: React.ChangeEvent<HTMLInputElement>, target: 'affiliation' | 'authorization') => {
+        handleFileSelection(event.target.files?.[0], target)
     }
 
     const fillMockStep1 = () => {
@@ -131,48 +191,59 @@ export default function OnboardingPage() {
         state.responsibleDataUsage &&
         state.noUnauthorizedSharing &&
         state.platformCompliancePolicies
-    const stepFourReady = state.responsibleDataUsage && state.noUnauthorizedSharing && state.platformCompliancePolicies
+    const stepFourReady = isLinkedInConnected && Boolean(affiliationFileName) && Boolean(authorizationFileName)
+    const stepFiveReady = state.responsibleDataUsage && state.noUnauthorizedSharing && state.platformCompliancePolicies
 
     const stepReady =
-        step === 1 ? stepOneReady : step === 2 ? stepTwoReady : step === 3 ? stepThreeReady : step === 4 ? stepFourReady : true
+        step === 1
+            ? stepOneReady
+            : step === 2
+                ? stepTwoReady
+                : step === 3
+                    ? stepThreeReady
+                    : step === 4
+                        ? stepFourReady
+                        : step === 5
+                            ? stepFiveReady
+                            : true
 
     useEffect(() => {
         if (stepReady) setShowStepError(false)
     }, [stepReady, step])
 
     useEffect(() => {
-        if (accessStatus === 'pending' && step !== 5) {
+        if (accessStatus === 'pending' && step !== 6) {
             navigate('/onboarding/confirmation', { replace: true })
         }
     }, [accessStatus, navigate, step])
 
     const next = () => {
-        if (step >= 4) return
+        if (step >= 5) return
         if (!stepReady) {
             setShowStepError(true)
             return
         }
         setShowStepError(false)
-        if (step === 3) {
+        if (step === 4) {
             // Prevent accidental immediate submit when users double-click Continue.
-            setStep4SubmitUnlockAt(Date.now() + 400)
-            setStep(4)
+            setStep5SubmitUnlockAt(Date.now() + 400)
+            setStep(5)
             return
         }
-        setStep(prev => Math.min(prev + 1, 5))
+        setStep(prev => Math.min(prev + 1, 6))
     }
 
     const back = () => {
         if (step <= 1) return
         setShowStepError(false)
-        if (step === 4) setStep4SubmitUnlockAt(0)
+        if (step === 5) setStep5SubmitUnlockAt(0)
         setStep(prev => prev - 1)
     }
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
-        if (Date.now() < step4SubmitUnlockAt) return
-        if (!stepFourReady) {
+        if (Date.now() < step5SubmitUnlockAt) return
+        if (!stepFiveReady) {
             setShowStepError(true)
             return
         }
@@ -192,7 +263,7 @@ export default function OnboardingPage() {
         setApplicationReference(referenceId)
         setSubmittedDate(submissionDate)
         setShowStepError(false)
-        setStep(5)
+        setStep(6)
     }
 
     return (
@@ -451,6 +522,137 @@ export default function OnboardingPage() {
                     )}
 
                     {step === 4 && (
+                        <section className="bg-slate-800/70 border border-slate-700 rounded-xl p-5 space-y-5">
+                            <div className="flex items-center justify-between gap-3">
+                                <h2 className="text-xl font-semibold">Verification &amp; Credentials</h2>
+                                <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-amber-200 bg-amber-500/10 border border-amber-400/50 px-2 py-1 rounded-full">
+                                    Required
+                                </span>
+                            </div>
+                            <p className="text-sm text-slate-400">
+                                Confirm identity and provide authorization documents before we can approve access.
+                            </p>
+
+                            <div className="grid gap-4 md:grid-cols-2">
+                                <article className="rounded-xl border border-slate-700 bg-slate-900/70 p-4">
+                                    <div className="flex items-center justify-between gap-2">
+                                        <h3 className="text-base font-semibold text-white">Connect LinkedIn</h3>
+                                        <span className="text-xs text-amber-300">Required</span>
+                                    </div>
+                                    <p className="mt-1 text-sm text-slate-400">Instantly verify your organizational affiliation.</p>
+
+                                    <div className="mt-4">
+                                        {isLinkedInConnected ? (
+                                            <div className="inline-flex items-center gap-2 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-sm font-medium text-emerald-300">
+                                                <span aria-hidden="true">✓</span>
+                                                <span>Affiliation Confirmed</span>
+                                            </div>
+                                        ) : (
+                                            <button
+                                                type="button"
+                                                onClick={handleLinkedInConnect}
+                                                disabled={isLinkedInLoading}
+                                                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors duration-200 hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-600/60"
+                                            >
+                                                {isLinkedInLoading ? 'Connecting...' : 'Connect LinkedIn'}
+                                            </button>
+                                        )}
+                                    </div>
+                                </article>
+
+                                <article className="rounded-xl border border-slate-700 bg-slate-900/70 p-4">
+                                    <div className="flex items-center justify-between gap-2">
+                                        <h3 className="text-base font-semibold text-white">Upload Proof of Affiliation</h3>
+                                        <span className="text-xs text-amber-300">Required</span>
+                                    </div>
+                                    <p className="mt-1 text-sm text-slate-400">PDF, JPG or PNG only. Max 5MB.</p>
+
+                                    <label
+                                        htmlFor="affiliation-proof-upload"
+                                        onDragOver={(event) => {
+                                            event.preventDefault()
+                                            setDragTarget('affiliation')
+                                        }}
+                                        onDragLeave={() => setDragTarget(null)}
+                                        onDrop={(event) => handleFileDrop(event, 'affiliation')}
+                                        className={`mt-4 flex min-h-28 cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed px-4 py-5 text-center transition-colors duration-200 ${
+                                            dragTarget === 'affiliation'
+                                                ? 'border-blue-500/80 bg-blue-500/10'
+                                                : 'border-slate-600 bg-slate-900 hover:border-blue-500/70'
+                                        }`}
+                                    >
+                                        <span className="text-sm text-slate-300">Drag and drop a file here</span>
+                                        <span className="mt-1 text-xs text-slate-400">or click to browse</span>
+                                    </label>
+
+                                    <input
+                                        id="affiliation-proof-upload"
+                                        type="file"
+                                        accept=".pdf,.jpg,.jpeg,.png"
+                                        onChange={(event) => handleFileInputChange(event, 'affiliation')}
+                                        className="sr-only"
+                                    />
+
+                                    {affiliationFileName && (
+                                        <div className="mt-3 inline-flex items-center gap-2 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-300">
+                                            <span aria-hidden="true">✓</span>
+                                            <span className="break-all">{affiliationFileName}</span>
+                                        </div>
+                                    )}
+
+                                    {affiliationError && <p className="mt-3 text-xs text-amber-300">{affiliationError}</p>}
+                                </article>
+                            </div>
+
+                            <article className="rounded-xl border border-slate-700 bg-slate-900/70 p-4">
+                                <div className="flex items-center justify-between gap-2">
+                                    <h3 className="text-base font-semibold text-white">Upload Authorization / Compliance Letter</h3>
+                                    <span className="text-xs text-amber-300">Required</span>
+                                </div>
+                                <p className="mt-1 text-sm text-slate-400">
+                                    Examples: DPA, IRB approval, or letter of authority.
+                                </p>
+
+                                <label
+                                    htmlFor="authorization-proof-upload"
+                                    onDragOver={(event) => {
+                                        event.preventDefault()
+                                        setDragTarget('authorization')
+                                    }}
+                                    onDragLeave={() => setDragTarget(null)}
+                                    onDrop={(event) => handleFileDrop(event, 'authorization')}
+                                    className={`mt-4 flex min-h-28 cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed px-4 py-5 text-center transition-colors duration-200 ${
+                                        dragTarget === 'authorization'
+                                            ? 'border-blue-500/80 bg-blue-500/10'
+                                            : 'border-slate-600 bg-slate-900 hover:border-blue-500/70'
+                                    }`}
+                                >
+                                    <span className="text-sm text-slate-300">Drag and drop a file here</span>
+                                    <span className="mt-1 text-xs text-slate-400">or click to browse</span>
+                                </label>
+
+                                <input
+                                    id="authorization-proof-upload"
+                                    type="file"
+                                    accept=".pdf,.jpg,.jpeg,.png"
+                                    onChange={(event) => handleFileInputChange(event, 'authorization')}
+                                    className="sr-only"
+                                />
+
+                                {authorizationFileName && (
+                                    <div className="mt-3 inline-flex items-center gap-2 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-300">
+                                        <span aria-hidden="true">✓</span>
+                                        <span className="break-all">{authorizationFileName}</span>
+                                    </div>
+                                )}
+
+                                {authorizationError && <p className="mt-3 text-xs text-amber-300">{authorizationError}</p>}
+                            </article>
+                        </section>
+                    )}
+
+                    {step === 5 && (
+
                         <section className="bg-slate-800/70 border border-slate-700 rounded-xl p-5 space-y-4">
                             <h2 className="text-xl font-semibold">Compliance Commitment</h2>
                             <p className="text-sm text-slate-400">All commitments are required before application submission.</p>
@@ -487,7 +689,7 @@ export default function OnboardingPage() {
                         </section>
                     )}
 
-                    {step === 5 && (
+                    {step === 6 && (
                         <section className="rounded-xl border border-slate-700/80 bg-[#0a1628]/85 backdrop-blur-md p-5 space-y-4 shadow-[0_16px_48px_rgba(2,8,23,0.45)]">
                             <div className="relative mx-auto w-36 h-36">
                                 <div className="absolute inset-0 rounded-full bg-emerald-500/10 blur-2xl animate-pulse" />
@@ -555,7 +757,7 @@ export default function OnboardingPage() {
                         </section>
                     )}
 
-                    {step < 5 && (
+                    {step < 6 && (
                         <div className="flex flex-wrap gap-3">
                             <button
                                 type="button"
@@ -565,7 +767,7 @@ export default function OnboardingPage() {
                             >
                                 ← Back
                             </button>
-                            {step < 4 ? (
+                            {step < 5 ? (
                                 <button
                                     type="button"
                                     onClick={next}
@@ -577,7 +779,7 @@ export default function OnboardingPage() {
                             ) : (
                                 <button
                                     type="submit"
-                                    disabled={!stepFourReady}
+                                    disabled={!stepFiveReady}
                                     className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                 >
                                     Submit Application
@@ -595,4 +797,5 @@ export default function OnboardingPage() {
         </div>
     )
 }
+
 
