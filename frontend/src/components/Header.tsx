@@ -16,7 +16,7 @@ export default function Header() {
     const [isMobileOpen, setIsMobileOpen] = useState(false)
     const { signOut } = useAuth()
     const location = useLocation()
-    const isHome = location.pathname === '/'
+    const hideBrand = location.pathname === '/' || location.pathname === '/login'
 
     const renderLinks = (isMobile = false) => (
         <div className={`flex ${isMobile ? 'flex-col gap-3' : 'items-center gap-6'}`}>
@@ -46,8 +46,8 @@ export default function Header() {
     return (
         <header className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-black/80 border-b border-cyan-500/30" style={{ height: '88px' }}>
             <nav className="container mx-auto px-8 md:px-16 h-full">
-                <div className={`flex items-center ${isHome ? 'justify-end' : 'justify-between'} h-full`}>
-                    {!isHome && (
+                <div className={`flex items-center ${hideBrand ? 'justify-end' : 'justify-between'} h-full`}>
+                    {!hideBrand && (
                         <Link to="/" className="flex items-center gap-5">
                             <LogoMark className="w-8 h-8" />
                             <div className="flex items-center">

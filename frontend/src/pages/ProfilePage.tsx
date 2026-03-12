@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 
 type DomainOption = 'Climate' | 'Finance' | 'Healthcare' | 'Mobility'
@@ -16,27 +16,92 @@ const sessionData = [
     { id: 'session-3', device: 'Mobile Safari on iOS', location: 'Chicago, US', status: '7 days ago' }
 ]
 
+const DEFAULT_NOTIFICATIONS: NotificationItem[] = [
+    { id: 'security-alerts', label: 'Security alerts', enabled: true },
+    { id: 'request-updates', label: 'Access request updates', enabled: true },
+    { id: 'product-announcements', label: 'Platform announcements', enabled: false }
+]
+
+const STORAGE_TWO_FACTOR_ENABLED = 'Redoubt:profile:twoFactorEnabled'
+const STORAGE_NOTIFICATION_SETTINGS = 'Redoubt:profile:notificationSettings'
+const STORAGE_SELECTED_DOMAINS = 'Redoubt:profile:selectedDomains'
+const STORAGE_DEFAULT_ACCESS = 'Redoubt:profile:defaultAccessPreference'
+
 const generateInviteCode = (prefix = 'REDO') => {
     const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
     let body = ''
     for (let i = 0; i < 6; i += 1) {
-        body += alphabet[Math.floor(Math.random() * alphabet.length)]
+        const randomIndex =
+            typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function'
+                ? crypto.getRandomValues(new Uint32Array(1))[0] % alphabet.length
+                : Math.floor(Math.random() * alphabet.length)
+        body += alphabet[randomIndex]
     }
     return `${prefix}-${body}`
 }
 
 export default function ProfilePage() {
     const { signOut } = useAuth()
-    const [isTwoFactorEnabled, setIsTwoFactorEnabled] = useState(true)
-    const [notifications, setNotifications] = useState<NotificationItem[]>([
-        { id: 'security-alerts', label: 'Security alerts', enabled: true },
-        { id: 'request-updates', label: 'Access request updates', enabled: true },
-        { id: 'product-announcements', label: 'Platform announcements', enabled: false }
-    ])
-    const [selectedDomains, setSelectedDomains] = useState<DomainOption[]>(['Climate', 'Healthcare'])
-    const [defaultAccessPreference, setDefaultAccessPreference] = useState<AccessPreference>('Aggregated / anonymized data')
+    const [isTwoFactorEnabled, setIsTwoFactorEnabled] = useState(() => {
+        const stored = localStorage.getItem(STORAGE_TWO_FACTOR_ENABLED)
+        if (stored === null) return true
+        return stored === 'true'
+    })
+    const [notifications, setNotifications] = useState<NotificationItem[]>(() => {
+        const stored = localStorage.getItem(STORAGE_NOTIFICATION_SETTINGS)
+        if (!stored) return DEFAULT_NOTIFICATIONS
+        try {
+            const parsed = JSON.parse(stored) as Record<string, unknown>
+            if (!parsed || typeof parsed !== 'object') return DEFAULT_NOTIFICATIONS
+            return DEFAULT_NOTIFICATIONS.map((item) => ({
+                ...item,
+                enabled: typeof parsed[item.id] === 'boolean' ? (parsed[item.id] as boolean) : item.enabled
+            }))
+        } catch {
+            return DEFAULT_NOTIFICATIONS
+        }
+    })
+    const [selectedDomains, setSelectedDomains] = useState<DomainOption[]>(() => {
+        const stored = localStorage.getItem(STORAGE_SELECTED_DOMAINS)
+        if (!stored) return ['Climate', 'Healthcare']
+        try {
+            const parsed = JSON.parse(stored)
+            if (!Array.isArray(parsed)) return ['Climate', 'Healthcare']
+            const allowed = new Set<DomainOption>(['Climate', 'Finance', 'Healthcare', 'Mobility'])
+            return parsed.filter((value): value is DomainOption => typeof value === 'string' && allowed.has(value as DomainOption))
+        } catch {
+            return ['Climate', 'Healthcare']
+        }
+    })
+    const [defaultAccessPreference, setDefaultAccessPreference] = useState<AccessPreference>(() => {
+        const stored = localStorage.getItem(STORAGE_DEFAULT_ACCESS)
+        if (!stored) return 'Aggregated / anonymized data'
+        const allowed = new Set<AccessPreference>([
+            'Metadata & summaries only',
+            'Aggregated / anonymized data',
+            'Full raw dataset access'
+        ])
+        return allowed.has(stored as AccessPreference) ? (stored as AccessPreference) : 'Aggregated / anonymized data'
+    })
     const [inviteCode, setInviteCode] = useState<string | null>(null)
     const [inviteCopied, setInviteCopied] = useState(false)
+
+    useEffect(() => {
+        localStorage.setItem(STORAGE_TWO_FACTOR_ENABLED, String(isTwoFactorEnabled))
+    }, [isTwoFactorEnabled])
+
+    useEffect(() => {
+        const settings = Object.fromEntries(notifications.map((item) => [item.id, item.enabled]))
+        localStorage.setItem(STORAGE_NOTIFICATION_SETTINGS, JSON.stringify(settings))
+    }, [notifications])
+
+    useEffect(() => {
+        localStorage.setItem(STORAGE_SELECTED_DOMAINS, JSON.stringify(selectedDomains))
+    }, [selectedDomains])
+
+    useEffect(() => {
+        localStorage.setItem(STORAGE_DEFAULT_ACCESS, defaultAccessPreference)
+    }, [defaultAccessPreference])
 
     const toggleDomain = (domain: DomainOption) => {
         setSelectedDomains((current) =>
