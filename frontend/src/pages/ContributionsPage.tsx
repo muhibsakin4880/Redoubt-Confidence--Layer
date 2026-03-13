@@ -292,14 +292,14 @@ export default function ContributionsPage() {
                                     <div className="text-slate-400 text-xs mt-1 max-w-xl">Your identity and organization name will remain completely hidden from other participants and accessors</div>
                                 </div>
                                 <button
-                                    type="button"
-                                    aria-pressed={anonymitySettings.anonymousUpload}
-                                    onClick={() => toggleAnonymitySetting('anonymousUpload')}
-                                    className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
-                                        anonymitySettings.anonymousUpload
-                                            ? 'bg-cyan-500 ring-1 ring-cyan-300/40'
-                                            : 'bg-slate-700 ring-1 ring-slate-500/60'
-                                    }`}
+type="button"
+                                     aria-pressed={anonymitySettings.anonymousUpload}
+                                     onClick={() => toggleAnonymitySetting('anonymousUpload')}
+                                     className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors transition-transform duration-100 active:scale-95 ${
+                                         anonymitySettings.anonymousUpload
+                                             ? 'bg-cyan-500 ring-1 ring-cyan-300/40'
+                                             : 'bg-slate-700 ring-1 ring-slate-500/60'
+                                     }`}
                                 >
                                     <span
                                         className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${
@@ -312,14 +312,14 @@ export default function ContributionsPage() {
                             <div className="flex items-center justify-between gap-4 rounded-lg border border-slate-700/80 bg-slate-900/80 px-3 py-3">
                                 <div className="text-slate-100 font-medium">Apply Pseudonymization</div>
                                 <button
-                                    type="button"
-                                    aria-pressed={anonymitySettings.pseudonymization}
-                                    onClick={() => toggleAnonymitySetting('pseudonymization')}
-                                    className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
-                                        anonymitySettings.pseudonymization
-                                            ? 'bg-cyan-500 ring-1 ring-cyan-300/40'
-                                            : 'bg-slate-700 ring-1 ring-slate-500/60'
-                                    }`}
+type="button"
+                                     aria-pressed={anonymitySettings.pseudonymization}
+                                     onClick={() => toggleAnonymitySetting('pseudonymization')}
+                                     className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors transition-transform duration-100 active:scale-95 ${
+                                         anonymitySettings.pseudonymization
+                                             ? 'bg-cyan-500 ring-1 ring-cyan-300/40'
+                                             : 'bg-slate-700 ring-1 ring-slate-500/60'
+                                     }`}
                                 >
                                     <span
                                         className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${

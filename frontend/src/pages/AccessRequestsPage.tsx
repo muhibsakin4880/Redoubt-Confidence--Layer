@@ -181,11 +181,11 @@ function RequestTableRow({ request, onSelect, riskScore, isSelected }: RequestTa
             </td>
             <td className="py-4 px-4 text-slate-300">{request.lastUpdated}</td>
             <td className="py-4 pl-4 text-right">
-                <Link
-                    to={`/access-requests/${request.id}`}
-                    className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-700 hover:border-blue-500 text-xs font-semibold text-slate-200 hover:text-white transition-colors"
-                    onClick={e => e.stopPropagation()}
-                >
+<Link
+                     to={`/access-requests/${request.id}`}
+                     className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-700 hover:border-blue-500 text-xs font-semibold text-slate-200 hover:text-white transition-colors transition-transform duration-100 active:scale-95"
+                     onClick={e => e.stopPropagation()}
+                 >
                     Request Details
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />

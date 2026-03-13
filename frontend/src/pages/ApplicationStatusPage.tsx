@@ -120,19 +120,19 @@ export default function ApplicationStatusPage() {
                                                 <div
                                                     className={`relative w-11 h-11 rounded-full border flex items-center justify-center text-sm font-semibold ${indicatorClasses}`}
                                                 >
-                                                    {isComplete ? (
-                                                        <svg
-                                                            viewBox="0 0 24 24"
-                                                            className="w-5 h-5"
-                                                            fill="none"
-                                                            stroke="currentColor"
-                                                            strokeWidth="2.75"
-                                                        >
-                                                            <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
-                                                        </svg>
-                                                    ) : (
-                                                        index + 1
-                                                    )}
+{isComplete ? (
+                                                         <svg
+                                                             viewBox="0 0 24 24"
+                                                             className="w-6 h-6"
+                                                             fill="none"
+                                                             stroke="currentColor"
+                                                             strokeWidth="2.75"
+                                                         >
+                                                             <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
+                                                         </svg>
+                                                     ) : (
+                                                         index + 1
+                                                     )}
                                                 </div>
                                             </div>
                                             {index < timelineSteps.length - 1 && (

@@ -180,10 +180,10 @@ export default function AppLayout() {
                         </div>
                         <div className="hidden md:block text-sm text-slate-400">Participant workspace</div>
                         <div className="flex items-center gap-3">
-                            <button className="relative p-2 rounded-lg border border-slate-700 text-slate-200 hover:text-white hover:border-blue-500 transition-colors" aria-label="Notifications">
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2c0 .53-.21 1.04-.59 1.42L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                                </svg>
+<button className="relative p-2 rounded-lg border border-slate-700 text-slate-200 hover:text-white hover:border-blue-500 transition-colors transition-transform duration-100 active:scale-95" aria-label="Notifications">
+                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2c0 .53-.21 1.04-.59 1.42L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                                 </svg>
                                 <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-emerald-400" />
                             </button>
                             <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800/60 border border-slate-700/50">

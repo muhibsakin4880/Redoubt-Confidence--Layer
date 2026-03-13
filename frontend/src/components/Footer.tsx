@@ -59,7 +59,7 @@ export default function Footer() {
                         © {currentYear} <span className="text-cyan-400" style={{ textShadow: '0 0 8px rgba(34, 211, 238, 0.4)' }}>Layered Defense for Data Confidence</span>. All rights reserved.
                     </p>
                     <div className="flex items-center gap-2 cyber-glow" style={{ filter: 'drop-shadow(0 0 8px rgba(34, 211, 238, 0.5))' }}>
-                        <LogoMark className="w-5 h-5" />
+                        <LogoMark className="w-6 h-6" />
                         <span className="text-white font-semibold text-sm" style={{ fontFamily: "'Satoshi Black', 'Syne', sans-serif" }}>Redoubt</span>
                     </div>
                 </div>

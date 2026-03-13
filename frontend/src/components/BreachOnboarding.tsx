@@ -162,23 +162,23 @@ export default function BreachOnboarding() {
                                 <h3 className="text-base font-semibold text-white">Connect with LinkedIn</h3>
                                 <p className="mt-1 text-sm text-slate-400">Instantly verify your organisational affiliation</p>
 
-                                <div className="mt-4">
-                                    {isLinkedInConnected ? (
-                                        <div className="inline-flex items-center gap-2 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-sm font-medium text-emerald-300">
-                                            <span aria-hidden="true">✓</span>
-                                            <span>Affiliation Confirmed</span>
-                                        </div>
-                                    ) : (
-                                        <button
-                                            type="button"
-                                            onClick={handleLinkedInConnect}
-                                            disabled={isLinkedInLoading}
-                                            className="rounded-lg bg-[#2D6EF5] px-4 py-2 text-sm font-semibold text-white transition-colors duration-200 hover:bg-[#205BE0] disabled:cursor-not-allowed disabled:bg-[#2D6EF5]/60"
-                                        >
-                                            {isLinkedInLoading ? 'Connecting...' : 'Connect LinkedIn'}
-                                        </button>
-                                    )}
-                                </div>
+<div className="mt-4">
+                                     {isLinkedInConnected ? (
+                                         <div className="inline-flex items-center gap-2 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-sm font-medium text-emerald-300">
+                                             <span aria-hidden="true">✓</span>
+                                             <span>Affiliation Confirmed</span>
+                                         </div>
+                                     ) : (
+                                         <button
+                                             type="button"
+                                             onClick={handleLinkedInConnect}
+                                             disabled={isLinkedInLoading}
+                                             className="rounded-lg bg-[#2D6EF5] px-4 py-2 text-sm font-semibold text-white transition-colors duration-200 hover:bg-[#205BE0] transition-transform duration-100 active:scale-95 disabled:cursor-not-allowed disabled:bg-[#2D6EF5]/60"
+                                         >
+                                             {isLinkedInLoading ? 'Connecting...' : 'Connect LinkedIn'}
+                                         </button>
+                                     )}
+                                 </div>
                             </article>
 
                             <article className="rounded-xl border border-slate-700 bg-[#111B33] p-4">
@@ -297,21 +297,21 @@ export default function BreachOnboarding() {
                         </section>
                     </div>
 
-                    <footer className="flex flex-col-reverse gap-3 border-t border-slate-700/70 pt-5 sm:flex-row sm:items-center sm:justify-between">
-                        <button
-                            type="button"
-                            className="rounded-lg border border-slate-600 bg-transparent px-4 py-2 text-sm font-medium text-slate-200 transition-colors duration-200 hover:border-[#2D6EF5] hover:text-white"
-                        >
-                            Back
-                        </button>
-                        <button
-                            type="button"
-                            disabled={!canSubmitForReview}
-                            className="rounded-lg bg-[#2D6EF5] px-4 py-2 text-sm font-semibold text-white transition-colors duration-200 hover:bg-[#205BE0] disabled:cursor-not-allowed disabled:bg-[#2D6EF5]/50"
-                        >
-                            Submit for Review
-                        </button>
-                    </footer>
+<footer className="flex flex-col-reverse gap-3 border-t border-slate-700/70 pt-5 sm:flex-row sm:items-center sm:justify-between">
+                         <button
+                             type="button"
+                             className="rounded-lg border border-slate-600 bg-transparent px-4 py-2 text-sm font-medium text-slate-200 transition-colors duration-200 hover:border-[#2D6EF5] hover:text-white transition-transform duration-100 active:scale-95"
+                         >
+                             Back
+                         </button>
+                         <button
+                             type="button"
+                             disabled={!canSubmitForReview}
+                             className="rounded-lg bg-[#2D6EF5] px-4 py-2 text-sm font-semibold text-white transition-colors duration-200 hover:bg-[#205BE0] disabled:cursor-not-allowed disabled:bg-[#2D6EF5]/50 transition-transform duration-100 active:scale-95"
+                         >
+                             Submit for Review
+                         </button>
+                     </footer>
                 </div>
             </div>
         </div>

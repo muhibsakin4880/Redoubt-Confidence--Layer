@@ -70,19 +70,19 @@ export default function OnboardingConfirmation() {
                                                         : 'border-slate-700 bg-slate-900 text-slate-500'
                                             }`}
                                         >
-                                            {done ? (
-                                                <svg
-                                                    viewBox="0 0 24 24"
-                                                    className="w-5 h-5"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    strokeWidth="2.75"
-                                                >
-                                                    <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
-                                                </svg>
-                                            ) : (
-                                                currentStep
-                                            )}
+{done ? (
+                                                 <svg
+                                                     viewBox="0 0 24 24"
+                                                     className="w-6 h-6"
+                                                     fill="none"
+                                                     stroke="currentColor"
+                                                     strokeWidth="2.75"
+                                                 >
+                                                     <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
+                                                 </svg>
+                                             ) : (
+                                                 currentStep
+                                             )}
                                         </div>
                                         <div className="mt-2 text-[11px] uppercase tracking-[0.1em] text-slate-500">
                                             Step {currentStep}

@@ -352,10 +352,10 @@ export default function DatasetDetailPage() {
                                                 </select>
                                             </div>
                                             <p className="text-xs text-slate-400">Full refund if unsatisfied</p>
-                                            <button
-                                                className="w-full px-3 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-sm font-semibold transition-colors"
-                                                onClick={() => setEscrowActive(true)}
-                                            >
+<button
+                                                 className="w-full px-3 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-sm font-semibold transition-colors transition-transform duration-100 active:scale-95"
+                                                 onClick={() => setEscrowActive(true)}
+                                             >
                                                 Put on Escrow
                                             </button>
                                         </div>
@@ -450,10 +450,10 @@ export default function DatasetDetailPage() {
 
             {showRequestModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-                    <div
-                        className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"
-                        onClick={() => setShowRequestModal(false)}
-                    />
+<div
+                         className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm transition-transform duration-100 active:scale-95"
+                         onClick={() => setShowRequestModal(false)}
+                     />
                     <div className="relative w-full max-w-lg bg-slate-900 border border-slate-700 rounded-2xl p-6 shadow-2xl">
                         <div className="flex items-center justify-between mb-4">
                             <div>
