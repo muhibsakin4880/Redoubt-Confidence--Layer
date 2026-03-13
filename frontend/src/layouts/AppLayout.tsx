@@ -15,7 +15,8 @@ const navGroups: NavGroup[] = [
     {
         title: 'Overview',
         items: [
-            { label: 'Dashboard', to: '/dashboard' }
+            { label: 'Dashboard', to: '/dashboard' },
+            { label: 'Guided Tour', to: '/guided-tour' }
         ]
     },
     {
@@ -66,8 +67,7 @@ const navGroups: NavGroup[] = [
         items: [
             { label: 'Platform Status', to: '/status' },
             { label: 'Profile / Settings', to: '/profile' },
-            { label: 'Deployment Model', to: '/deployment-model' },
-            { label: 'Guided Tour', to: '/guided-tour' }
+            { label: 'Deployment Model', to: '/deployment-model' }
         ]
     }
 ]
