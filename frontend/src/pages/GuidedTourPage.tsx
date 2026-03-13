@@ -1,16 +1,15 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
 type Persona = {
     id: string
     title: string
     description: string
-    selected?: boolean
 }
 
 type GuidedStep = {
     id: number
     title: string
-    destination: string
     description: string
     buttonLabel: string
     to: string
@@ -21,8 +20,7 @@ const personas: Persona[] = [
     {
         id: 'governance',
         title: 'Data Governance Lead',
-        description: 'Access approvals, consent, audit readiness, risk controls',
-        selected: true
+        description: 'Access approvals, consent, audit readiness, risk controls'
     },
     {
         id: 'ciso',
@@ -40,7 +38,6 @@ const guidedSteps: GuidedStep[] = [
     {
         id: 1,
         title: 'Review Dataset Trust',
-        destination: 'Datasets',
         description: 'Browse verified datasets and check confidence scores before requesting access',
         buttonLabel: 'Go to Datasets →',
         to: '/datasets',
@@ -49,7 +46,6 @@ const guidedSteps: GuidedStep[] = [
     {
         id: 2,
         title: 'Submit Access Request',
-        destination: 'Access Requests',
         description: 'Submit a purpose-driven request. Risk score will be auto-calculated.',
         buttonLabel: 'Go to Access Requests →',
         to: '/access-requests'
@@ -57,7 +53,6 @@ const guidedSteps: GuidedStep[] = [
     {
         id: 3,
         title: 'Set Consent Terms',
-        destination: 'Trust & Consent',
         description: 'Define legal basis, purpose, and expiration for each access',
         buttonLabel: 'Go to Consent →',
         to: '/consent-tracker'
@@ -65,7 +60,6 @@ const guidedSteps: GuidedStep[] = [
     {
         id: 4,
         title: 'Monitor via Escrow',
-        destination: 'Escrow Center',
         description: 'Track payment, access window, and release or dispute',
         buttonLabel: 'Go to Escrow Center →',
         to: '/escrow-center'
@@ -73,22 +67,31 @@ const guidedSteps: GuidedStep[] = [
     {
         id: 5,
         title: 'Review Audit Trail',
-        destination: 'Compliance Ops → Audit Trail',
         description: 'Verify all access events are logged and hash-verified',
         buttonLabel: 'Go to Audit Trail →',
         to: '/audit-trail'
     },
     {
         id: 6,
-        title: 'Check Trust Score Impact',
-        destination: 'Trust Profile',
-        description: 'See how your activity affects your platform trust score',
+        title: 'Verify Your Trust Standing',
+        description: "Review your trust standing and confirm your profile is audit-ready",
         buttonLabel: 'Go to Trust Profile →',
         to: '/trust-profile'
     }
 ]
 
 export default function GuidedTourPage() {
+    const [selectedPersona, setSelectedPersona] = useState('governance')
+    const [visitedSteps, setVisitedSteps] = useState<Set<number>>(new Set())
+
+    const handleStepClick = (stepId: number) => {
+        setVisitedSteps(prev => new Set(prev).add(stepId))
+    }
+
+    const stepsCompleted = `${visitedSteps.size}/6`
+    const trustScore = Math.min(50 + (visitedSteps.size * 5), 80)
+    const pendingConsents = visitedSteps.has(3) ? 0 : 1
+
     return (
         <div className="relative min-h-screen bg-[#050b15] text-white">
             <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_12%_18%,rgba(34,211,238,0.12),transparent_40%),radial-gradient(circle_at_88%_0%,rgba(59,130,246,0.1),transparent_38%)]" />
@@ -104,7 +107,7 @@ export default function GuidedTourPage() {
                         </p>
                     </div>
                     <div className="rounded-2xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-3 text-sm text-cyan-200 shadow-[0_0_18px_rgba(34,211,238,0.18)]">
-                        Personalized path for trust-focused operators
+                        Operator workflow · Data Governance Lead
                     </div>
                 </header>
 
@@ -117,15 +120,16 @@ export default function GuidedTourPage() {
                         {personas.map(persona => (
                             <article
                                 key={persona.id}
-                                className={`rounded-2xl border p-5 shadow-[0_10px_30px_rgba(0,0,0,0.2)] ${
-                                    persona.selected
+                                onClick={() => setSelectedPersona(persona.id)}
+                                className={`cursor-pointer rounded-2xl border p-5 shadow-[0_10px_30px_rgba(0,0,0,0.2)] ${
+                                    selectedPersona === persona.id
                                         ? 'border-blue-500/50 bg-blue-500/10'
                                         : 'border-white/10 bg-[#0a1628]'
                                 }`}
                             >
                                 <div className="flex items-start justify-between gap-3">
                                     <h3 className="text-lg font-semibold text-white">{persona.title}</h3>
-                                    {persona.selected && (
+                                    {selectedPersona === persona.id && (
                                         <span className="inline-flex items-center gap-2 rounded-full border border-blue-400/40 bg-blue-500/15 px-2.5 py-1 text-[11px] font-semibold text-blue-200">
                                             <svg className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                                 <path d="M10 1.5l2.47 5 5.53.8-4 3.9.95 5.5L10 14.9 5.05 16.7l.95-5.5-4-3.9 5.53-.8L10 1.5z" />
@@ -165,10 +169,10 @@ export default function GuidedTourPage() {
                                             </span>
                                         )}
                                     </div>
-                                    <div className="mt-3 text-sm text-slate-400">Go to: {step.destination}</div>
                                     <p className="mt-3 text-sm text-slate-300">{step.description}</p>
                                     <Link
                                         to={step.to}
+                                        onClick={() => handleStepClick(step.id)}
                                         className="mt-4 inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500"
                                     >
                                         {step.buttonLabel}
@@ -183,11 +187,11 @@ export default function GuidedTourPage() {
                         <div className="mt-5 space-y-3 text-sm text-slate-300">
                             <div className="flex items-center justify-between rounded-lg border border-white/5 bg-white/5 px-4 py-2.5">
                                 <span>Steps completed</span>
-                                <span className="text-slate-100 font-semibold">2/6</span>
+                                <span className="text-slate-100 font-semibold">{stepsCompleted}</span>
                             </div>
                             <div className="flex items-center justify-between rounded-lg border border-white/5 bg-white/5 px-4 py-2.5">
                                 <span>Trust Score</span>
-                                <span className="text-slate-100 font-semibold">80</span>
+                                <span className="text-slate-100 font-semibold">{trustScore}</span>
                             </div>
                             <div className="flex items-center justify-between rounded-lg border border-white/5 bg-white/5 px-4 py-2.5">
                                 <span>Active Escrows</span>
@@ -195,7 +199,7 @@ export default function GuidedTourPage() {
                             </div>
                             <div className="flex items-center justify-between rounded-lg border border-white/5 bg-white/5 px-4 py-2.5">
                                 <span>Pending Consents</span>
-                                <span className="text-slate-100 font-semibold">1</span>
+                                <span className="text-slate-100 font-semibold">{pendingConsents}</span>
                             </div>
                         </div>
                     </aside>
