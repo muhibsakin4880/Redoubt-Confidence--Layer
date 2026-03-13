@@ -18,19 +18,14 @@ type GuidedStep = {
 
 const personas: Persona[] = [
     {
-        id: 'governance',
-        title: 'Data Governance Lead',
-        description: 'Access approvals, consent, audit readiness, risk controls'
+        id: 'consumer',
+        title: 'Data Consumer',
+        description: 'Access requests, consent management, escrow monitoring, audit trail, trust score'
     },
     {
-        id: 'ciso',
-        title: 'CISO / Security Lead',
-        description: 'Security posture, incident response, threat monitoring'
-    },
-    {
-        id: 'developer',
-        title: 'Data Engineer / Developer',
-        description: 'API integration, pipelines, SDK setup, usage analytics'
+        id: 'provider',
+        title: 'Data Provider',
+        description: 'Dataset uploads, access approvals, escrow monitoring, trust management'
     }
 ]
 
@@ -80,8 +75,54 @@ const guidedSteps: GuidedStep[] = [
     }
 ]
 
+const providerSteps: GuidedStep[] = [
+    {
+        id: 1,
+        title: 'Publish Your Dataset',
+        description: 'Upload and tag your dataset with confidence score and classification labels',
+        buttonLabel: 'Go to Datasets →',
+        to: '/datasets'
+    },
+    {
+        id: 2,
+        title: 'Define Access Policy',
+        description: 'Set who can request access, under what purpose, and for how long',
+        buttonLabel: 'Go to Access Requests →',
+        to: '/access-requests'
+    },
+    {
+        id: 3,
+        title: 'Review Incoming Requests',
+        description: 'Approve or reject purpose-driven access requests from verified buyers',
+        buttonLabel: 'Go to Access Requests →',
+        to: '/access-requests',
+        highlight: 'Action required'
+    },
+    {
+        id: 4,
+        title: 'Confirm Escrow Release',
+        description: 'Verify payment is secured before granting access window',
+        buttonLabel: 'Go to Escrow Center →',
+        to: '/escrow-center'
+    },
+    {
+        id: 5,
+        title: 'Monitor Access Activity',
+        description: 'Track all access events via immutable audit trail',
+        buttonLabel: 'Go to Audit Trail →',
+        to: '/audit-trail'
+    },
+    {
+        id: 6,
+        title: 'Verify Your Trust Standing',
+        description: 'Review your provider trust score and ensure your profile is audit-ready',
+        buttonLabel: 'Go to Trust Profile →',
+        to: '/trust-profile'
+    }
+]
+
 export default function GuidedTourPage() {
-    const [selectedPersona, setSelectedPersona] = useState('governance')
+    const [selectedPersona, setSelectedPersona] = useState('consumer')
     const [visitedSteps, setVisitedSteps] = useState<Set<number>>(new Set())
 
     const handleStepClick = (stepId: number) => {
@@ -91,6 +132,8 @@ export default function GuidedTourPage() {
     const stepsCompleted = `${visitedSteps.size}/6`
     const trustScore = Math.min(50 + (visitedSteps.size * 5), 80)
     const pendingConsents = visitedSteps.has(3) ? 0 : 1
+
+    const currentSteps = selectedPersona === 'provider' ? providerSteps : guidedSteps
 
     return (
         <div className="relative min-h-screen bg-[#050b15] text-white">
@@ -116,7 +159,7 @@ export default function GuidedTourPage() {
                         <h2 className="text-xl font-semibold text-white">Who are you?</h2>
                         <span className="text-xs text-slate-500">Select a persona to tailor the workflow</span>
                     </div>
-                    <div className="mt-4 grid gap-4 md:grid-cols-3">
+                    <div className="mt-4 grid gap-4 md:grid-cols-2">
                         {personas.map(persona => (
                             <article
                                 key={persona.id}
@@ -151,7 +194,7 @@ export default function GuidedTourPage() {
                             <p className="text-sm text-slate-400">Follow these steps to get the most out of Redoubt</p>
                         </div>
                         <div className="mt-6 grid gap-4 md:grid-cols-2">
-                            {guidedSteps.map(step => (
+                            {currentSteps.map(step => (
                                 <article
                                     key={step.id}
                                     className="rounded-2xl border border-white/10 bg-slate-900/70 p-5 shadow-[0_10px_25px_rgba(0,0,0,0.2)]"
