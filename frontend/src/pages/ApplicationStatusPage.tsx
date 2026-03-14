@@ -61,6 +61,11 @@ export default function ApplicationStatusPage() {
         <div className="bg-slate-900 min-h-screen text-white">
             <div className="container mx-auto px-4 py-12 max-w-4xl">
                 <div className="mb-8 space-y-2">
+                    <div className="flex items-center gap-3">
+                        <span className="px-3 py-1 rounded-full bg-blue-500/15 border border-blue-400/30 text-blue-300 text-xs font-semibold">
+                            Step 5 of 5
+                        </span>
+                    </div>
                     <p className="text-sm uppercase tracking-[0.3em] text-slate-500">Application Portal</p>
                     <h1 className="text-3xl font-bold">Application Status</h1>
                     <p className="text-slate-400">
@@ -154,6 +159,15 @@ export default function ApplicationStatusPage() {
                                 )
                             })}
                         </ul>
+                    </div>
+
+                    <div className="bg-slate-900/55 border border-slate-700/80 rounded-xl p-4 md:p-5 space-y-3">
+                        <h3 className="text-lg font-semibold text-white">What happens next</h3>
+                        <ol className="space-y-2 text-sm text-slate-300">
+                            <li><span className="text-cyan-400 font-mono text-xs">[1]</span> Automated DNS & Corporate Entity Verification (KYB).</li>
+                            <li><span className="text-cyan-400 font-mono text-xs">[2]</span> Human-in-the-loop DPO & Legal Mandate Audit.</li>
+                            <li><span className="text-cyan-400 font-mono text-xs">[3]</span> Upon clearance, you will receive a Secure Enclave setup link via email to configure your cryptographic keys and vault access.</li>
+                        </ol>
                     </div>
 
                     <div className="border-t border-slate-800/80 pt-6 flex flex-wrap gap-3">
