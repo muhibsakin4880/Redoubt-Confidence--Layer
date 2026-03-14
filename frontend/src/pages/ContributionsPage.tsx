@@ -154,6 +154,45 @@ export default function ContributionsPage() {
         pseudonymization: false,
         fullDeIdentification: false
     })
+    const [submissionConfirmed, setSubmissionConfirmed] = useState(false)
+    const [schemaSearchQuery, setSchemaSearchQuery] = useState('')
+    const [expandedFields, setExpandedFields] = useState<Set<string>>(new Set())
+
+    const toggleFieldExpansion = (field: string) => {
+        setExpandedFields(prev => {
+            const next = new Set(prev)
+            if (next.has(field)) {
+                next.delete(field)
+            } else {
+                next.add(field)
+            }
+            return next
+        })
+    }
+
+    const schemaFieldData = [
+        { field: 'device_id', type: 'String', sample: '["DE-7829-XK", "AE-4512-QR"]', nullRate: 0.0, piiStatus: 'safe' as const, residency: 'global' as const, aiDescription: 'Unique device identifier assigned to tracking hardware. No PII correlation detected.', cryptoState: 'Plaintext' as const, cardinality: 'High (12k unique)' as const, provenance: 'IoT Sensor Stream' as const, anomalyFlags: '0.01% Outliers Detected' as const, updateVelocity: 'Real-time stream' as const },
+        { field: 'timestamp_utc', type: 'Timestamp', sample: '["2026-01-15T08:23:41Z"]', nullRate: 0.0, piiStatus: 'safe' as const, residency: 'global' as const, aiDescription: 'UTC timestamp of data capture event. System-generated, no personal data.', cryptoState: 'Plaintext' as const, cardinality: 'High (890k unique)' as const, provenance: 'IoT Sensor Stream' as const, anomalyFlags: '0.00% Outliers Detected' as const, updateVelocity: 'Real-time stream' as const },
+        { field: 'flow_count', type: 'Integer', sample: '[1247, 3892, 562]', nullRate: 1.8, piiStatus: 'safe' as const, residency: 'global' as const, aiDescription: 'Aggregated flow measurement. No individual attribution possible.', cryptoState: 'Plaintext' as const, cardinality: 'High (67k unique)' as const, provenance: 'IoT Sensor Stream' as const, anomalyFlags: '0.12% Outliers Detected' as const, updateVelocity: 'Real-time stream' as const },
+        { field: 'blood_type', type: 'String', sample: '["A+", "O-", "B+"]', nullRate: 0.0, piiStatus: 'flagged' as const, residency: 'local' as const, aiDescription: 'Medical classification data. HIGH RISK: PDPL Article 4 - Health data requires explicit consent and local processing.', cryptoState: 'Plaintext' as const, cardinality: 'Low (8 unique)' as const, provenance: 'Direct User Input' as const, anomalyFlags: '0.00% Outliers Detected' as const, updateVelocity: 'Batch updated' as const },
+        { field: 'national_id', type: 'String', sample: '["784-1972-1234567-1"]', nullRate: 0.0, piiStatus: 'flagged' as const, residency: 'local' as const, aiDescription: 'UAE National ID number. CRITICAL: Direct identifier under PDPL Article 2. Local storage mandatory.', cryptoState: 'AES-256 Encrypted' as const, cardinality: 'High (45k unique)' as const, provenance: 'Direct User Input' as const, anomalyFlags: '0.00% Outliers Detected' as const, updateVelocity: 'Batch updated' as const },
+        { field: 'location_lat', type: 'Float', sample: '["24.4539", "25.2697"]', nullRate: 2.1, piiStatus: 'review' as const, residency: 'local' as const, aiDescription: 'Geographic coordinates. GRAY ZONE: Can derive home location if combined with temporal patterns.', cryptoState: 'Plaintext' as const, cardinality: 'High (890k unique)' as const, provenance: 'IoT Sensor Stream' as const, anomalyFlags: '0.08% Outliers Detected' as const, updateVelocity: 'Real-time stream' as const },
+        { field: 'location_lon', type: 'Float', sample: '["54.3773", "55.3092"]', nullRate: 2.1, piiStatus: 'review' as const, residency: 'local' as const, aiDescription: 'Geographic coordinates. GRAY ZONE: Can derive home location if combined with temporal patterns.', cryptoState: 'Plaintext' as const, cardinality: 'High (890k unique)' as const, provenance: 'IoT Sensor Stream' as const, anomalyFlags: '0.08% Outliers Detected' as const, updateVelocity: 'Real-time stream' as const },
+        { field: 'salary_bracket', type: 'String', sample: '["150000-200000 AED"]', nullRate: 5.4, piiStatus: 'review' as const, residency: 'local' as const, aiDescription: 'Financial bracket. GRAY ZONE: Financial data under PDPL Article 3 - sensitive personal data.', cryptoState: 'Partially Masked' as const, cardinality: 'Low (12 unique)' as const, provenance: 'Direct User Input' as const, anomalyFlags: '0.00% Outliers Detected' as const, updateVelocity: 'Batch updated' as const },
+        { field: 'email_hash', type: 'String', sample: '["a7b3c9f2..."]', nullRate: 0.0, piiStatus: 'safe' as const, residency: 'global' as const, aiDescription: 'SHA-256 hashed email. Pseudonymized identifier. Reversible with original lookup table.', cryptoState: 'SHA-256 Hashed' as const, cardinality: 'High (42k unique)' as const, provenance: '3rd Party Enriched' as const, anomalyFlags: '0.00% Outliers Detected' as const, updateVelocity: 'Batch updated' as const },
+        { field: 'registration_date', type: 'Date', sample: '["2024-03-12", "2025-01-08"]', nullRate: 0.0, piiStatus: 'safe' as const, residency: 'global' as const, aiDescription: 'Account registration date. Insufficient alone for re-identification.', cryptoState: 'Plaintext' as const, cardinality: 'High (365 unique)' as const, provenance: 'Direct User Input' as const, anomalyFlags: '0.00% Outliers Detected' as const, updateVelocity: 'Event-driven' as const },
+        { field: 'ip_address', type: 'String', sample: '["185.58.142.12"]', nullRate: 0.0, piiStatus: 'flagged' as const, residency: 'local' as const, aiDescription: 'Network identifier. PDPL guidance: IP considered personal data if linkable to individual.', cryptoState: 'Partially Masked' as const, cardinality: 'High (8.2k unique)' as const, provenance: '3rd Party Enriched' as const, anomalyFlags: '0.15% Outliers Detected' as const, updateVelocity: 'Real-time stream' as const },
+        { field: 'passport_number', type: 'String', sample: '["A12345678"]', nullRate: 0.0, piiStatus: 'flagged' as const, residency: 'local' as const, aiDescription: 'Travel document identifier. CRITICAL: Government ID equivalent. Local processing required.', cryptoState: 'AES-256 Encrypted' as const, cardinality: 'High (45k unique)' as const, provenance: 'Direct User Input' as const, anomalyFlags: '0.00% Outliers Detected' as const, updateVelocity: 'Batch updated' as const },
+        { field: 'phone_prefix', type: 'String', sample: '["+971-50", "+971-55"]', nullRate: 0.0, piiStatus: 'review' as const, residency: 'local' as const, aiDescription: 'Partial phone prefix. GRAY ZONE: Can narrow to region, not full number.', cryptoState: 'Plaintext' as const, cardinality: 'Low (15 unique)' as const, provenance: 'Direct User Input' as const, anomalyFlags: '0.00% Outliers Detected' as const, updateVelocity: 'Batch updated' as const },
+        { field: 'department_code', type: 'String', sample: '["HR-FIN-001", "OPS-TECH-042"]', nullRate: 0.0, piiStatus: 'safe' as const, residency: 'global' as const, aiDescription: 'Internal department classification. Corporate metadata only.', cryptoState: 'Plaintext' as const, cardinality: 'Low (24 unique)' as const, provenance: 'Internal System' as const, anomalyFlags: '0.00% Outliers Detected' as const, updateVelocity: 'Event-driven' as const },
+        { field: 'employee_id', type: 'String', sample: '["EMP-2024-8891"]', nullRate: 0.0, piiStatus: 'safe' as const, residency: 'global' as const, aiDescription: 'Internal employee identifier. Pseudonymized with HR system lookup.', cryptoState: 'SHA-256 Hashed' as const, cardinality: 'High (8.9k unique)' as const, provenance: 'Internal System' as const, anomalyFlags: '0.00% Outliers Detected' as const, updateVelocity: 'Event-driven' as const },
+    ]
+
+    const filteredSchemaFields = useMemo(() => {
+        if (!schemaSearchQuery) return schemaFieldData
+        const query = schemaSearchQuery.toLowerCase()
+        return schemaFieldData.filter(f => f.field.toLowerCase().includes(query))
+    }, [schemaSearchQuery])
 
     const toggleAnonymitySetting = (setting: keyof typeof anonymitySettings) => {
         setAnonymitySettings(prev => ({
@@ -234,41 +273,149 @@ export default function ContributionsPage() {
             title: 'Schema preview',
             description: 'Review inferred schema before quality checks.',
             body: (
-                <>
-                    <div className="overflow-x-auto">
-                        <table className="min-w-full text-sm">
-                            <thead className="text-xs uppercase text-slate-400 border-b border-slate-700">
-                                <tr>
-                                    <th className="py-2 pr-4 text-left">Field</th>
-                                    <th className="py-2 px-4 text-left">Type</th>
-                                    <th className="py-2 pl-4 text-left">Null %</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-800 text-slate-200">
-                                <tr>
-                                    <td className="py-2 pr-4">sensor_id</td>
-                                    <td className="py-2 px-4">string</td>
-                                    <td className="py-2 pl-4">0.0%</td>
-                                </tr>
-                                <tr>
-                                    <td className="py-2 pr-4">timestamp_utc</td>
-                                    <td className="py-2 px-4">datetime</td>
-                                    <td className="py-2 pl-4">0.0%</td>
-                                </tr>
-                                <tr>
-                                    <td className="py-2 pr-4">flow_count</td>
-                                    <td className="py-2 px-4">integer</td>
-                                    <td className="py-2 pl-4">1.8%</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                <div className="space-y-4">
+                    <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg className="h-4 w-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </div>
+                        <input
+                            type="text"
+                            placeholder="Search fields..."
+                            value={schemaSearchQuery}
+                            onChange={(e) => setSchemaSearchQuery(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2 bg-slate-900/80 border border-slate-700 rounded-lg text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 font-mono"
+                        />
                     </div>
-                    <div className="flex flex-wrap gap-2 mt-3">
-                        <span className="px-2.5 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs text-slate-300">3 fields detected</span>
-                        <span className="px-2.5 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs text-slate-300">0.0% avg null rate</span>
-                        <span className="px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-xs text-emerald-200">Schema valid ✓</span>
+                    <div className="border border-slate-700 rounded-lg overflow-hidden">
+                        <div className="overflow-x-auto max-h-[400px] overflow-y-auto">
+                            <table className="min-w-full text-sm">
+                                <thead className="bg-slate-900/90 text-xs uppercase text-slate-400 sticky top-0 z-10">
+                                    <tr>
+                                        <th className="py-3 px-3 text-left font-medium">Field</th>
+                                        <th className="py-3 px-3 text-left font-medium">Type</th>
+                                        <th className="py-3 px-3 text-left font-medium">Sample</th>
+                                        <th className="py-3 px-3 text-left font-medium">Compliance & PII</th>
+                                        <th className="py-3 px-3 text-left font-medium">Residency</th>
+                                        <th className="py-3 px-3 text-left font-medium">Null %</th>
+                                        <th className="py-3 px-3 text-center font-medium w-10"></th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-800 bg-slate-950/50 font-mono text-xs">
+                                    {filteredSchemaFields.map((field) => (
+                                        <>
+                                            <tr key={field.field} className="hover:bg-slate-800/50 transition-colors">
+                                                <td className="py-3 px-3 text-cyan-300 font-semibold">{field.field}</td>
+                                                <td className="py-3 px-3">
+                                                    <span className="px-2 py-0.5 rounded bg-slate-800 border border-slate-600 text-slate-300 text-[10px]">{field.type}</span>
+                                                </td>
+                                                <td className="py-3 px-3 text-slate-400 max-w-[150px] truncate">{field.sample}</td>
+                                                <td className="py-3 px-3">
+                                                    {field.piiStatus === 'safe' && (
+                                                        <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[10px] font-medium">Tier 1: Safe</span>
+                                                    )}
+                                                    {field.piiStatus === 'flagged' && (
+                                                        <span className="px-2 py-0.5 rounded-full bg-rose-500/15 border border-rose-500/30 text-rose-300 text-[10px] font-medium">High Risk: PDPL Flagged</span>
+                                                    )}
+                                                    {field.piiStatus === 'review' && (
+                                                        <span className="px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 text-[10px] font-medium">Gray Zone: DPO Review Pending</span>
+                                                    )}
+                                                </td>
+                                                <td className="py-3 px-3">
+                                                    {field.residency === 'local' ? (
+                                                        <span className="inline-flex items-center gap-1 text-amber-400 text-[10px]">
+                                                            <span>🇦🇪</span> Local Hosting Required
+                                                        </span>
+                                                    ) : (
+                                                        <span className="inline-flex items-center gap-1 text-emerald-400 text-[10px]">
+                                                            <span>🌐</span> Global Transfer Cleared
+                                                        </span>
+                                                    )}
+                                                </td>
+                                                <td className="py-3 px-3">
+                                                    <span className={field.nullRate > 5 ? 'text-amber-400' : field.nullRate > 0 ? 'text-slate-300' : 'text-emerald-400'}>
+                                                        {field.nullRate.toFixed(1)}%
+                                                    </span>
+                                                </td>
+                                                <td className="py-3 px-3 text-center">
+                                                    <button
+                                                        onClick={() => toggleFieldExpansion(field.field)}
+                                                        className="p-1 hover:bg-slate-700 rounded transition-colors"
+                                                    >
+                                                        <svg
+                                                            className={`w-4 h-4 text-slate-400 transition-transform ${expandedFields.has(field.field) ? 'rotate-180' : ''}`}
+                                                            fill="none"
+                                                            viewBox="0 0 24 24"
+                                                            stroke="currentColor"
+                                                        >
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                                        </svg>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            {expandedFields.has(field.field) && (
+                                                <tr key={`${field.field}-expanded`} className="bg-slate-900/30">
+                                                    <td colSpan={7} className="py-4 px-4">
+                                                        <div className="space-y-4">
+                                                            <div className="flex items-center gap-2">
+                                                                <svg className="w-4 h-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+                                                                </svg>
+                                                                <span className="text-[10px] uppercase tracking-wider text-cyan-400 font-semibold">Advanced AI Analysis & Provenance</span>
+                                                            </div>
+                                                            <div className="grid grid-cols-5 gap-3">
+                                                                <div className="bg-slate-900/80 border border-slate-700 rounded-lg p-3">
+                                                                    <div className="text-[9px] uppercase tracking-wider text-slate-500 mb-1">Cryptographic State</div>
+                                                                    <div className={`text-xs font-mono font-medium ${
+                                                                        field.cryptoState === 'Plaintext' ? 'text-amber-400' :
+                                                                        field.cryptoState === 'SHA-256 Hashed' ? 'text-cyan-400' :
+                                                                        field.cryptoState === 'AES-256 Encrypted' ? 'text-emerald-400' :
+                                                                        'text-purple-400'
+                                                                    }`}>{field.cryptoState}</div>
+                                                                </div>
+                                                                <div className="bg-slate-900/80 border border-slate-700 rounded-lg p-3">
+                                                                    <div className="text-[9px] uppercase tracking-wider text-slate-500 mb-1">Cardinality</div>
+                                                                    <div className="text-xs font-mono text-slate-300">{field.cardinality}</div>
+                                                                </div>
+                                                                <div className="bg-slate-900/80 border border-slate-700 rounded-lg p-3">
+                                                                    <div className="text-[9px] uppercase tracking-wider text-slate-500 mb-1">Data Provenance</div>
+                                                                    <div className="text-xs font-mono text-slate-300">{field.provenance}</div>
+                                                                </div>
+                                                                <div className="bg-slate-900/80 border border-slate-700 rounded-lg p-3">
+                                                                    <div className="text-[9px] uppercase tracking-wider text-slate-500 mb-1">Anomaly Flags</div>
+                                                                    <div className={`text-xs font-mono font-medium ${
+                                                                        field.anomalyFlags.includes('0.00%') ? 'text-emerald-400' :
+                                                                        field.anomalyFlags.includes('0.15%') ? 'text-rose-400' :
+                                                                        'text-amber-400'
+                                                                    }`}>{field.anomalyFlags}</div>
+                                                                </div>
+                                                                <div className="bg-slate-900/80 border border-slate-700 rounded-lg p-3">
+                                                                    <div className="text-[9px] uppercase tracking-wider text-slate-500 mb-1">Update Velocity</div>
+                                                                    <div className="text-xs font-mono text-slate-300">{field.updateVelocity}</div>
+                                                                </div>
+                                                            </div>
+                                                            <div className="pt-2 border-t border-slate-800">
+                                                                <div className="text-[10px] uppercase tracking-wider text-cyan-400 mb-1">AI Inferred Description</div>
+                                                                <div className="text-slate-300 text-xs font-mono">{field.aiDescription}</div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            )}
+                                        </>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                </>
+                    <div className="flex flex-wrap gap-2">
+                        <span className="px-2.5 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs text-slate-300">{schemaFieldData.length} fields detected</span>
+                        <span className="px-2.5 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs text-slate-300">{Number((schemaFieldData.filter(f => f.nullRate > 0).reduce((acc, f) => acc + f.nullRate, 0) / schemaFieldData.length)).toFixed(1)}% avg null rate</span>
+                        <span className="px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-xs text-emerald-200">AI Integrity Check: Passed ✨</span>
+                        <span className="px-2.5 py-1 rounded-full bg-cyan-500/15 border border-cyan-500/30 text-xs text-cyan-200">Classification: Tier 1 (Safe)</span>
+                    </div>
+                </div>
             )
         },
         {
@@ -448,7 +595,25 @@ type="button"
                     <div className="text-slate-500 text-xs">
                         Submission ID: BRE-DS-2026-XXXX
                     </div>
-                    <button className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-colors">
+                    <label className="flex items-start gap-3 cursor-pointer">
+                        <input
+                            type="checkbox"
+                            checked={submissionConfirmed}
+                            onChange={(e) => setSubmissionConfirmed(e.target.checked)}
+                            className="mt-1 w-4 h-4 rounded border-slate-600 bg-slate-800 text-blue-600 focus:ring-blue-500 focus:ring-offset-slate-900"
+                        />
+                        <span className="text-xs text-slate-300">
+                            I declare under penalty of perjury that this dataset contains no unauthorized PII and complies with Redoubt's Provider Agreement.
+                        </span>
+                    </label>
+                    <button
+                        disabled={!submissionConfirmed}
+                        className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
+                            submissionConfirmed
+                                ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                                : 'bg-slate-600 text-slate-400 cursor-not-allowed'
+                        }`}
+                    >
                         Submit dataset
                     </button>
                 </div>
@@ -663,14 +828,18 @@ type="button"
                                 {validationStages.map((stage, idx) => {
                                     const state = selectedDataset.validationPipeline[idx]
                                     const style = pipelineStateStyles[state]
+                                    const statusText = stage === 'Compliance review' && state === 'pending' ? 'AWAITING DPO CLEARANCE' : state.toUpperCase()
                                     return (
                                         <div key={stage} className="relative">
                                             <div className={`h-full min-h-[120px] rounded-lg border border-slate-700 bg-slate-900/60 p-3 ${style.text}`}>
                                                 <div className="flex items-center gap-2 mb-2">
                                                     <span className={`inline-block w-3 h-3 rounded-full border ${style.dot}`} />
-                                                    <span className="text-[11px] uppercase tracking-[0.12em]">{state}</span>
+                                                    <span className="text-[11px] uppercase tracking-[0.12em]">{statusText}</span>
                                                 </div>
                                                 <div className="text-sm font-semibold text-slate-100">{stage}</div>
+                                                {stage === 'Compliance review' && state === 'pending' && (
+                                                    <div className="text-[10px] text-slate-500 mt-1">Human DPO reviewing legal packet</div>
+                                                )}
                                             </div>
                                             {idx < validationStages.length - 1 && (
                                                 <span className={`hidden md:block absolute top-1/2 -right-2 w-4 h-[2px] ${style.line}`} />
@@ -702,6 +871,23 @@ type="button"
                             )}
                         </div>
                     </section>
+
+                    <div className="mt-6 bg-slate-900/80 border-l-4 border-cyan-500 rounded-r-lg p-4 shadow-lg shadow-cyan-900/10">
+                        <div className="flex gap-3">
+                            <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center">
+                                <svg className="w-5 h-5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                </svg>
+                            </div>
+                            <div className="space-y-2">
+                                <h3 className="text-sm font-semibold text-cyan-300">Compliance Protocol & Liability Shift</h3>
+                                <div className="text-xs text-slate-400 space-y-2 font-mono">
+                                    <p><span className="text-slate-500">What we are doing:</span> Our automated AI engine is actively inspecting your schema for structural integrity, PII (Personally Identifiable Information) exposure, and cross-border data residency flags.</p>
+                                    <p><span className="text-slate-500">Why we do this:</span> Redoubt operates on a zero-trust architecture. This rigorous validation protects your organization from GDPR/PDPL violations and ensures that enterprise consumers receive a clean, audit-ready data pipeline without legal liabilities.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </>
             )}
         </div>
