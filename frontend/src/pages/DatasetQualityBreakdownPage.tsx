@@ -108,10 +108,10 @@ export default function DatasetQualityBreakdownPage() {
 
     return (
         <div className="bg-slate-900 text-white min-h-screen">
-            <div className="container mx-auto px-4 py-10 space-y-6">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="container mx-auto px-6 py-12 space-y-12">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
                     <div>
-                        <div className="text-sm text-slate-400 mb-2">
+                        <div className="text-sm text-slate-400 mb-3">
                             <Link to="/datasets" className="hover:text-white transition-colors">Datasets</Link>
                             <span className="mx-2 text-slate-600">/</span>
                             <Link to={`/datasets/${dataset.id}`} className="hover:text-white transition-colors">{dataset.title}</Link>
@@ -119,66 +119,66 @@ export default function DatasetQualityBreakdownPage() {
                             <span className="text-slate-200">Quality Breakdown</span>
                         </div>
                         <h1 className="text-3xl font-bold">Quality Breakdown for {dataset.title}</h1>
-                        <p className="text-slate-400">Signal-by-signal view of the checks backing the confidence score and AI-generated summary.</p>
+                        <p className="text-slate-400 mt-2">Signal-by-signal view of the checks backing the confidence score and AI-generated summary.</p>
                     </div>
                     <Link
                         to={`/datasets/${dataset.id}`}
-                        className="inline-flex items-center px-4 py-2 rounded-lg border border-slate-700 hover:border-blue-500 text-slate-200 hover:text-white transition-colors self-start"
+                        className="inline-flex items-center px-5 py-2.5 rounded-lg border border-slate-700 hover:border-blue-500 text-slate-200 hover:text-white transition-colors self-start"
                     >
                         Back to Dataset Detail
                     </Link>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                    <div className="bg-slate-800 border border-slate-700 rounded-xl p-4">
-                        <div className="flex items-center justify-between mb-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="bg-slate-800 border border-slate-700 rounded-xl p-5">
+                        <div className="flex items-center justify-between mb-3">
                             <span className="text-slate-300">Completeness</span>
                             <span className="text-white font-semibold">{dataset.quality.completeness}%</span>
                         </div>
-                        <div className="w-full bg-slate-700 rounded-full h-2 mb-2">
+                        <div className="w-full bg-slate-700 rounded-full h-2 mb-3">
                             <div className={`h-2 rounded-full ${qualityColor(dataset.quality.completeness)}`} style={{ width: `${dataset.quality.completeness}%` }} />
                         </div>
                         <p className="text-sm text-slate-400">Required fields filled across stations and time slices.</p>
                     </div>
 
-                    <div className="bg-slate-800 border border-slate-700 rounded-xl p-4">
-                        <div className="flex items-center justify-between mb-2">
+                    <div className="bg-slate-800 border border-slate-700 rounded-xl p-5">
+                        <div className="flex items-center justify-between mb-3">
                             <span className="text-slate-300">Data Freshness</span>
                             <span className="text-white font-semibold">{dataset.quality.freshnessScore}%</span>
                         </div>
-                        <div className="w-full bg-slate-700 rounded-full h-2 mb-2">
+                        <div className="w-full bg-slate-700 rounded-full h-2 mb-3">
                             <div className={`h-2 rounded-full ${qualityColor(dataset.quality.freshnessScore)}`} style={{ width: `${dataset.quality.freshnessScore}%` }} />
                         </div>
                         <p className="text-sm text-slate-400">{dataset.quality.freshnessNote}</p>
                     </div>
 
-                    <div className="bg-slate-800 border border-slate-700 rounded-xl p-4">
-                        <div className="flex items-center justify-between mb-2">
+                    <div className="bg-slate-800 border border-slate-700 rounded-xl p-5">
+                        <div className="flex items-center justify-between mb-3">
                             <span className="text-slate-300">Consistency</span>
                             <span className="text-white font-semibold">{dataset.quality.consistency}%</span>
                         </div>
-                        <div className="w-full bg-slate-700 rounded-full h-2 mb-2">
+                        <div className="w-full bg-slate-700 rounded-full h-2 mb-3">
                             <div className={`h-2 rounded-full ${qualityColor(dataset.quality.consistency)}`} style={{ width: `${dataset.quality.consistency}%` }} />
                         </div>
                         <p className="text-sm text-slate-400">Schema-aligned across providers with unit normalizations.</p>
                     </div>
 
-                    <div className="bg-slate-800 border border-slate-700 rounded-xl p-4">
-                        <div className="flex items-center justify-between mb-2">
+                    <div className="bg-slate-800 border border-slate-700 rounded-xl p-5">
+                        <div className="flex items-center justify-between mb-3">
                             <span className="text-slate-300">Validation Status</span>
                             <span className="px-2 py-1 rounded-full bg-green-500/15 border border-green-400 text-green-200 text-xs">
                                 {dataset.quality.validationStatus}
                             </span>
                         </div>
-                        <p className="text-sm text-slate-400">
+                        <p className="text-sm text-slate-400 mb-4">
                             Anomaly detection, duplication checks, and reference crosswalks run on each load.
                         </p>
-                        <div className="mt-3 text-sm text-slate-300">Escalations: none open</div>
+                        <div className="text-sm text-slate-300">Escalations: none open</div>
                     </div>
                 </div>
 
-                <div className="grid lg:grid-cols-[1.35fr_0.65fr] gap-10">
-                    <div className="bg-slate-800 border border-slate-700 rounded-2xl p-6 space-y-4 shadow-[0_0_40px_rgba(56,189,248,0.06)]">
+                <div className="grid lg:grid-cols-[1fr_1fr] gap-12">
+                    <div className="flex flex-col bg-slate-800 border border-slate-700 rounded-2xl p-7 space-y-5 shadow-[0_0_40px_rgba(56,189,248,0.06)]">
                         <div className="flex items-center justify-between gap-4">
                             <h3 className="text-xl font-semibold">AI Insight</h3>
                             <span className="inline-flex items-center rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-[11px] font-semibold text-cyan-200">
@@ -187,16 +187,16 @@ export default function DatasetQualityBreakdownPage() {
                         </div>
                         <p className="text-slate-200 text-sm leading-relaxed">{dataset.preview.aiSummary}</p>
                         <div className="bg-slate-900/60 border border-slate-600/60 rounded-xl overflow-hidden shadow-[0_0_0_1px_rgba(56,189,248,0.15),0_0_30px_rgba(56,189,248,0.1)]">
-                            <div className="px-4 py-3 border-b border-slate-700/80 flex items-center justify-between">
+                            <div className="px-5 py-4 border-b border-slate-700/80 flex items-center justify-between">
                                 <h4 className="text-sm font-semibold text-white">Ask AI about this dataset</h4>
                                 <span className="text-[11px] text-slate-400">Model: {ollamaConfig.model}</span>
                             </div>
 
-                            <div ref={chatContainerRef} className="h-[460px] overflow-y-auto p-4 space-y-3">
+                            <div ref={chatContainerRef} className="h-[380px] overflow-y-auto p-5 space-y-4">
                                 {chatMessages.map(message => (
                                     <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                                         <div
-                                            className={`max-w-[90%] rounded-2xl px-3 py-2 text-sm leading-relaxed border ${
+                                            className={`max-w-[90%] rounded-2xl px-4 py-3 text-sm leading-relaxed border ${
                                                 message.role === 'user'
                                                     ? 'bg-blue-600/20 border-blue-500/40 text-blue-100'
                                                     : 'bg-slate-800/90 border-slate-700 text-slate-200'
@@ -211,20 +211,20 @@ export default function DatasetQualityBreakdownPage() {
                                 ))}
                                 {isThinking && (
                                     <div className="flex justify-start">
-                                        <div className="max-w-[90%] rounded-2xl px-3 py-2 text-sm border bg-slate-800/90 border-slate-700 text-slate-300">
+                                        <div className="max-w-[90%] rounded-2xl px-4 py-3 text-sm border bg-slate-800/90 border-slate-700 text-slate-300">
                                             AI is thinking...
                                         </div>
                                     </div>
                                 )}
                             </div>
 
-                            <div className="border-t border-slate-700/80 p-3 space-y-2">
+                            <div className="border-t border-slate-700/80 p-4 space-y-3">
                                 {chatNotice && (
                                     <div className="text-xs text-amber-200 bg-amber-500/10 border border-amber-500/30 rounded-lg px-3 py-2">
                                         {chatNotice}
                                     </div>
                                 )}
-                                <div className="flex flex-col sm:flex-row gap-2">
+                                <div className="flex flex-col sm:flex-row gap-3">
                                     <input
                                         value={chatInput}
                                         onChange={(e) => setChatInput(e.target.value)}
@@ -235,12 +235,12 @@ export default function DatasetQualityBreakdownPage() {
                                             }
                                         }}
                                         placeholder="Ask about confidence, freshness, access policy..."
-                                        className="flex-1 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                                        className="flex-1 px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
                                     />
                                     <button
                                         onClick={handleSendChatMessage}
                                         disabled={isThinking}
-                                        className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold transition-colors"
+                                        className="px-5 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold transition-colors"
                                     >
                                         Send
                                     </button>
@@ -252,7 +252,7 @@ export default function DatasetQualityBreakdownPage() {
                         </p>
                     </div>
 
-                    <div className="bg-slate-800 border border-slate-700 rounded-2xl p-6 space-y-5">
+                    <div className="flex flex-col bg-slate-800 border border-slate-700 rounded-2xl p-7 space-y-5 shadow-[0_0_40px_rgba(56,189,248,0.04)]">
                         <div className="flex items-center justify-between">
                             <h3 className="text-xl font-semibold">AI Confidence Engine</h3>
                             <button
@@ -264,7 +264,7 @@ export default function DatasetQualityBreakdownPage() {
                         </div>
 
                         {showConfidence && (
-                            <div className="space-y-5">
+                            <div className="flex-1 space-y-5">
                                 <div className="bg-slate-900/60 border border-slate-700 rounded-xl p-6">
                                     <div className="flex items-start justify-between gap-4">
                                         <div>
@@ -303,14 +303,14 @@ export default function DatasetQualityBreakdownPage() {
                                     </div>
                                 </div>
 
-                                <div className="bg-slate-900/60 border border-slate-700 rounded-lg p-4 space-y-2">
+                                <div className="bg-slate-900/60 border border-slate-700 rounded-lg p-5 space-y-2">
                                     <div className="text-sm font-semibold text-white">AI evaluation summary</div>
                                     <p className="text-sm text-slate-300">
                                         Dataset shows high structural consistency and recent updates. Missing values exist in ~3% of records. Suitable for analytical workloads; access is gated to protect sensitive dimensions.
                                     </p>
                                 </div>
 
-                                <div className="bg-slate-900/60 border border-slate-700 rounded-lg p-4 space-y-2">
+                                <div className="bg-slate-900/60 border border-slate-700 rounded-lg p-5 space-y-2">
                                     <div className="text-sm font-semibold text-white">Risk flags</div>
                                     {dataset.preview.riskFlags.length === 0 ? (
                                         <div className="text-sm text-green-200">No active risks detected in preview checks.</div>
@@ -325,12 +325,12 @@ export default function DatasetQualityBreakdownPage() {
                                     )}
                                 </div>
 
-                                <div className="bg-slate-900/60 border border-slate-700 rounded-xl p-4 space-y-3">
+                                <div className="bg-slate-900/60 border border-slate-700 rounded-xl p-5 space-y-3">
                                     <div className="flex items-center justify-between">
                                         <span className="text-sm font-semibold text-white">Preview safety</span>
                                         <span className="text-xs text-slate-400">No raw rows shown</span>
                                     </div>
-                                    <div className="flex items-center justify-between rounded-lg border border-slate-700 bg-slate-950/40 px-3 py-2 text-xs">
+                                    <div className="flex items-center justify-between rounded-lg border border-slate-700 bg-slate-950/40 px-4 py-3 text-xs">
                                         <span className="text-slate-400">Record count range</span>
                                         <span className="text-slate-200">{dataset.preview.recordCountRange}</span>
                                     </div>
@@ -343,52 +343,186 @@ export default function DatasetQualityBreakdownPage() {
                 <details className="mt-8 rounded-2xl border border-slate-700 bg-slate-800/60 overflow-hidden">
                     <summary className="cursor-pointer select-none px-6 py-5 flex items-center justify-between">
                         <div>
-                            <div className="text-base font-semibold text-white">Schema Glimpse</div>
-                            <div className="text-xs text-slate-400 mt-1">Preview-only fields (no raw rows)</div>
+                            <div className="text-base font-semibold text-white">Schema Preview</div>
+                            <div className="text-xs text-slate-400 mt-1">Click to expand</div>
                         </div>
-                        <span className="text-xs text-slate-400">Click to expand</span>
+                        <span className="text-xs text-slate-400">Preview-only fields (no raw rows)</span>
                     </summary>
                     <div className="border-t border-slate-700 bg-slate-900/40 px-6 py-5">
+                        <div className="flex items-center justify-between mb-5 flex-wrap gap-4">
+                            <div className="flex items-center gap-4 text-xs">
+                                <span className="text-slate-400 font-medium">Risk Legend:</span>
+                                <span className="inline-flex items-center gap-1.5">
+                                    <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                                    <span className="text-emerald-200">Tier 1: Safe</span>
+                                </span>
+                                <span className="inline-flex items-center gap-1.5">
+                                    <span className="w-2 h-2 rounded-full bg-amber-400" />
+                                    <span className="text-amber-200">Gray Zone: DPO Review</span>
+                                </span>
+                                <span className="inline-flex items-center gap-1.5">
+                                    <span className="w-2 h-2 rounded-full bg-red-400" />
+                                    <span className="text-red-200">High Risk: PDPL Flagged</span>
+                                </span>
+                            </div>
+                            <div className="text-xs text-slate-300">
+                                <span className="text-slate-400">15 fields scanned</span>
+                                <span className="mx-2 text-slate-600">•</span>
+                                <span className="text-red-300">3 High Risk</span>
+                                <span className="mx-2 text-slate-600">•</span>
+                                <span className="text-amber-300">2 Gray Zone</span>
+                                <span className="mx-2 text-slate-600">•</span>
+                                <span className="text-emerald-300 font-medium">Overall Compliance: 94%</span>
+                            </div>
+                        </div>
                         <div className="overflow-x-auto">
                             <table className="min-w-full text-xs">
                                 <thead className="text-[10px] uppercase tracking-[0.1em] text-slate-400 border-b border-slate-700">
                                     <tr>
-                                        <th className="py-2 pr-3 text-left font-medium">Field</th>
-                                        <th className="py-2 px-3 text-left font-medium">Type</th>
-                                        <th className="py-2 px-3 text-left font-medium">Sample Value</th>
-                                        <th className="py-2 pl-3 text-left font-medium">Description</th>
+                                        <th className="py-3 pr-3 text-left font-medium">Field</th>
+                                        <th className="py-3 px-3 text-left font-medium">Type</th>
+                                        <th className="py-3 px-3 text-left font-medium">Sample Value</th>
+                                        <th className="py-3 px-3 text-left font-medium">Compliance & PII</th>
+                                        <th className="py-3 px-3 text-left font-medium">Access Level Required</th>
+                                        <th className="py-3 px-3 text-left font-medium">Residency</th>
+                                        <th className="py-3 pl-3 text-left font-medium">Null %</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-800">
                                     <tr>
-                                        <td className="py-2 pr-3 text-white">station_id</td>
-                                        <td className="py-2 px-3 text-slate-300">string</td>
-                                        <td className="py-2 px-3 text-slate-300">"STN-00142"</td>
-                                        <td className="py-2 pl-3 text-slate-400">Unique station identifier</td>
+                                        <td className="py-3 pr-3 text-white font-mono">device_id</td>
+                                        <td className="py-3 px-3 text-slate-300">String</td>
+                                        <td className="py-3 px-3 text-slate-300 font-mono">["DE-7829-XK", "AE-4512-QR"]</td>
+                                        <td className="py-3 px-3"><span className="inline-flex items-center px-2 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-200 text-[10px] font-medium">Tier 1: Safe</span></td>
+                                        <td className="py-3 px-3"><span className="inline-flex items-center px-2 py-1 rounded-full bg-slate-700/50 border border-slate-600 text-slate-300 text-[10px] font-medium">Metadata Only</span></td>
+                                        <td className="py-3 px-3 text-slate-300">🌐 Global Transfer Cleared</td>
+                                        <td className="py-3 pl-3 text-slate-300">0.0%</td>
                                     </tr>
                                     <tr>
-                                        <td className="py-2 pr-3 text-white">timestamp_utc</td>
-                                        <td className="py-2 px-3 text-slate-300">datetime</td>
-                                        <td className="py-2 px-3 text-slate-300">"2026-01-15 08:00:00"</td>
-                                        <td className="py-2 pl-3 text-slate-400">UTC timestamp of reading</td>
+                                        <td className="py-3 pr-3 text-white font-mono">timestamp_utc</td>
+                                        <td className="py-3 px-3 text-slate-300">Timestamp</td>
+                                        <td className="py-3 px-3 text-slate-300 font-mono">["2026-01-15T08:23:41Z"]</td>
+                                        <td className="py-3 px-3"><span className="inline-flex items-center px-2 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-200 text-[10px] font-medium">Tier 1: Safe</span></td>
+                                        <td className="py-3 px-3"><span className="inline-flex items-center px-2 py-1 rounded-full bg-slate-700/50 border border-slate-600 text-slate-300 text-[10px] font-medium">Metadata Only</span></td>
+                                        <td className="py-3 px-3 text-slate-300">🌐 Global Transfer Cleared</td>
+                                        <td className="py-3 pl-3 text-slate-300">0.0%</td>
                                     </tr>
                                     <tr>
-                                        <td className="py-2 pr-3 text-white">temperature_c</td>
-                                        <td className="py-2 px-3 text-slate-300">float</td>
-                                        <td className="py-2 px-3 text-slate-300">"23.4"</td>
-                                        <td className="py-2 pl-3 text-slate-400">Temperature in Celsius</td>
+                                        <td className="py-3 pr-3 text-white font-mono">flow_count</td>
+                                        <td className="py-3 px-3 text-slate-300">Integer</td>
+                                        <td className="py-3 px-3 text-slate-300 font-mono">[1247, 3892, 562]</td>
+                                        <td className="py-3 px-3"><span className="inline-flex items-center px-2 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-200 text-[10px] font-medium">Tier 1: Safe</span></td>
+                                        <td className="py-3 px-3"><span className="inline-flex items-center px-2 py-1 rounded-full bg-slate-700/50 border border-slate-600 text-slate-300 text-[10px] font-medium">Metadata Only</span></td>
+                                        <td className="py-3 px-3 text-slate-300">🌐 Global Transfer Cleared</td>
+                                        <td className="py-3 pl-3 text-slate-300">1.8%</td>
                                     </tr>
                                     <tr>
-                                        <td className="py-2 pr-3 text-white">precip_mm</td>
-                                        <td className="py-2 px-3 text-slate-300">float</td>
-                                        <td className="py-2 px-3 text-slate-300">"0.0"</td>
-                                        <td className="py-2 pl-3 text-slate-400">Precipitation in millimeters</td>
+                                        <td className="py-3 pr-3 text-white font-mono">blood_type</td>
+                                        <td className="py-3 px-3 text-slate-300">String</td>
+                                        <td className="py-3 px-3 text-slate-300 font-mono">["A+", "O-", "B+"]</td>
+                                        <td className="py-3 px-3"><span className="inline-flex items-center px-2 py-1 rounded-full bg-red-500/15 border border-red-500/30 text-red-200 text-[10px] font-medium">High Risk: PDPL Flagged</span></td>
+                                        <td className="py-3 px-3"><span className="inline-flex items-center px-2 py-1 rounded-full bg-red-500/15 border border-red-500/30 text-red-200 text-[10px] font-medium">Restricted</span></td>
+                                        <td className="py-3 px-3 text-amber-300">🇦🇪 Local Hosting Required</td>
+                                        <td className="py-3 pl-3 text-slate-300">0.0%</td>
                                     </tr>
                                     <tr>
-                                        <td className="py-2 pr-3 text-white">wind_speed_ms</td>
-                                        <td className="py-2 px-3 text-slate-300">float</td>
-                                        <td className="py-2 px-3 text-slate-300">"4.2"</td>
-                                        <td className="py-2 pl-3 text-slate-400">Wind speed in meters/second</td>
+                                        <td className="py-3 pr-3 text-white font-mono">national_id</td>
+                                        <td className="py-3 px-3 text-slate-300">String</td>
+                                        <td className="py-3 px-3 text-slate-300 font-mono">["784-1972-1234567-1"]</td>
+                                        <td className="py-3 px-3"><span className="inline-flex items-center px-2 py-1 rounded-full bg-red-500/15 border border-red-500/30 text-red-200 text-[10px] font-medium">High Risk: PDPL Flagged</span></td>
+                                        <td className="py-3 px-3"><span className="inline-flex items-center px-2 py-1 rounded-full bg-red-500/15 border border-red-500/30 text-red-200 text-[10px] font-medium">Restricted</span></td>
+                                        <td className="py-3 px-3 text-amber-300">🇦🇪 Local Hosting Required</td>
+                                        <td className="py-3 pl-3 text-slate-300">0.0%</td>
+                                    </tr>
+                                    <tr>
+                                        <td className="py-3 pr-3 text-white font-mono">location_lat</td>
+                                        <td className="py-3 px-3 text-slate-300">Float</td>
+                                        <td className="py-3 px-3 text-slate-300 font-mono">["24.4539", "25.2697"]</td>
+                                        <td className="py-3 px-3"><span className="inline-flex items-center px-2 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-200 text-[10px] font-medium">Gray Zone: DPO Review Pending</span></td>
+                                        <td className="py-3 px-3"><span className="inline-flex items-center px-2 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-200 text-[10px] font-medium">Aggregated Only</span></td>
+                                        <td className="py-3 px-3 text-amber-300">🇦🇪 Local Hosting Required</td>
+                                        <td className="py-3 pl-3 text-slate-300">2.1%</td>
+                                    </tr>
+                                    <tr>
+                                        <td className="py-3 pr-3 text-white font-mono">location_lon</td>
+                                        <td className="py-3 px-3 text-slate-300">Float</td>
+                                        <td className="py-3 px-3 text-slate-300 font-mono">["54.3773", "55.3092"]</td>
+                                        <td className="py-3 px-3"><span className="inline-flex items-center px-2 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-200 text-[10px] font-medium">Gray Zone: DPO Review Pending</span></td>
+                                        <td className="py-3 px-3"><span className="inline-flex items-center px-2 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-200 text-[10px] font-medium">Aggregated Only</span></td>
+                                        <td className="py-3 px-3 text-amber-300">🇦🇪 Local Hosting Required</td>
+                                        <td className="py-3 pl-3 text-slate-300">2.1%</td>
+                                    </tr>
+                                    <tr>
+                                        <td className="py-3 pr-3 text-white font-mono">salary_bracket</td>
+                                        <td className="py-3 px-3 text-slate-300">String</td>
+                                        <td className="py-3 px-3 text-slate-300 font-mono">["150000-200000 AED"]</td>
+                                        <td className="py-3 px-3"><span className="inline-flex items-center px-2 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-200 text-[10px] font-medium">Gray Zone: DPO Review Pending</span></td>
+                                        <td className="py-3 px-3"><span className="inline-flex items-center px-2 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-200 text-[10px] font-medium">Aggregated Only</span></td>
+                                        <td className="py-3 px-3 text-amber-300">🇦🇪 Local Hosting Required</td>
+                                        <td className="py-3 pl-3 text-slate-300">5.4%</td>
+                                    </tr>
+                                    <tr>
+                                        <td className="py-3 pr-3 text-white font-mono">email_hash</td>
+                                        <td className="py-3 px-3 text-slate-300">String</td>
+                                        <td className="py-3 px-3 text-slate-300 font-mono">["a7b3c9f2..."]</td>
+                                        <td className="py-3 px-3"><span className="inline-flex items-center px-2 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-200 text-[10px] font-medium">Tier 1: Safe</span></td>
+                                        <td className="py-3 px-3"><span className="inline-flex items-center px-2 py-1 rounded-full bg-slate-700/50 border border-slate-600 text-slate-300 text-[10px] font-medium">Metadata Only</span></td>
+                                        <td className="py-3 px-3 text-slate-300">🌐 Global Transfer Cleared</td>
+                                        <td className="py-3 pl-3 text-slate-300">0.0%</td>
+                                    </tr>
+                                    <tr>
+                                        <td className="py-3 pr-3 text-white font-mono">registration_date</td>
+                                        <td className="py-3 px-3 text-slate-300">Date</td>
+                                        <td className="py-3 px-3 text-slate-300 font-mono">["2024-03-12", "2025-01-08"]</td>
+                                        <td className="py-3 px-3"><span className="inline-flex items-center px-2 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-200 text-[10px] font-medium">Tier 1: Safe</span></td>
+                                        <td className="py-3 px-3"><span className="inline-flex items-center px-2 py-1 rounded-full bg-slate-700/50 border border-slate-600 text-slate-300 text-[10px] font-medium">Metadata Only</span></td>
+                                        <td className="py-3 px-3 text-slate-300">🌐 Global Transfer Cleared</td>
+                                        <td className="py-3 pl-3 text-slate-300">0.0%</td>
+                                    </tr>
+                                    <tr>
+                                        <td className="py-3 pr-3 text-white font-mono">ip_address</td>
+                                        <td className="py-3 px-3 text-slate-300">String</td>
+                                        <td className="py-3 px-3 text-slate-300 font-mono">["185.58.142.12"]</td>
+                                        <td className="py-3 px-3"><span className="inline-flex items-center px-2 py-1 rounded-full bg-red-500/15 border border-red-500/30 text-red-200 text-[10px] font-medium">High Risk: PDPL Flagged</span></td>
+                                        <td className="py-3 px-3"><span className="inline-flex items-center px-2 py-1 rounded-full bg-red-500/15 border border-red-500/30 text-red-200 text-[10px] font-medium">Restricted</span></td>
+                                        <td className="py-3 px-3 text-amber-300">🇦🇪 Local Hosting Required</td>
+                                        <td className="py-3 pl-3 text-slate-300">0.0%</td>
+                                    </tr>
+                                    <tr>
+                                        <td className="py-3 pr-3 text-white font-mono">passport_number</td>
+                                        <td className="py-3 px-3 text-slate-300">String</td>
+                                        <td className="py-3 px-3 text-slate-300 font-mono">["A12345678"]</td>
+                                        <td className="py-3 px-3"><span className="inline-flex items-center px-2 py-1 rounded-full bg-red-500/15 border border-red-500/30 text-red-200 text-[10px] font-medium">High Risk: PDPL Flagged</span></td>
+                                        <td className="py-3 px-3"><span className="inline-flex items-center px-2 py-1 rounded-full bg-red-500/15 border border-red-500/30 text-red-200 text-[10px] font-medium">Restricted</span></td>
+                                        <td className="py-3 px-3 text-amber-300">🇦🇪 Local Hosting Required</td>
+                                        <td className="py-3 pl-3 text-slate-300">0.0%</td>
+                                    </tr>
+                                    <tr>
+                                        <td className="py-3 pr-3 text-white font-mono">phone_prefix</td>
+                                        <td className="py-3 px-3 text-slate-300">String</td>
+                                        <td className="py-3 px-3 text-slate-300 font-mono">["+971-50", "+971-55"]</td>
+                                        <td className="py-3 px-3"><span className="inline-flex items-center px-2 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-200 text-[10px] font-medium">Gray Zone: DPO Review Pending</span></td>
+                                        <td className="py-3 px-3"><span className="inline-flex items-center px-2 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-200 text-[10px] font-medium">Aggregated Only</span></td>
+                                        <td className="py-3 px-3 text-amber-300">🇦🇪 Local Hosting Required</td>
+                                        <td className="py-3 pl-3 text-slate-300">0.0%</td>
+                                    </tr>
+                                    <tr>
+                                        <td className="py-3 pr-3 text-white font-mono">department_code</td>
+                                        <td className="py-3 px-3 text-slate-300">String</td>
+                                        <td className="py-3 px-3 text-slate-300 font-mono">["HR-FIN-001", "OPS-TECH-042"]</td>
+                                        <td className="py-3 px-3"><span className="inline-flex items-center px-2 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-200 text-[10px] font-medium">Tier 1: Safe</span></td>
+                                        <td className="py-3 px-3"><span className="inline-flex items-center px-2 py-1 rounded-full bg-slate-700/50 border border-slate-600 text-slate-300 text-[10px] font-medium">Metadata Only</span></td>
+                                        <td className="py-3 px-3 text-slate-300">🌐 Global Transfer Cleared</td>
+                                        <td className="py-3 pl-3 text-slate-300">0.0%</td>
+                                    </tr>
+                                    <tr>
+                                        <td className="py-3 pr-3 text-white font-mono">employee_id</td>
+                                        <td className="py-3 px-3 text-slate-300">String</td>
+                                        <td className="py-3 px-3 text-slate-300 font-mono">["EMP-2024-8891"]</td>
+                                        <td className="py-3 px-3"><span className="inline-flex items-center px-2 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-200 text-[10px] font-medium">Tier 1: Safe</span></td>
+                                        <td className="py-3 px-3"><span className="inline-flex items-center px-2 py-1 rounded-full bg-slate-700/50 border border-slate-600 text-slate-300 text-[10px] font-medium">Metadata Only</span></td>
+                                        <td className="py-3 px-3 text-slate-300">🌐 Global Transfer Cleared</td>
+                                        <td className="py-3 pl-3 text-slate-300">0.0%</td>
                                     </tr>
                                 </tbody>
                             </table>
