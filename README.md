@@ -1,5 +1,5 @@
 Redoubt — Trust-First Data Access Infrastructure
-Breach is a controlled data access platform built for regulated industries — Healthcare, Finance, and Government.
+Redoubt is a controlled data access platform built for regulated industries — Healthcare, Finance, and Government.
 The Problem
 Regulated industries need access to high-quality, verified data — but today's data marketplaces offer no guarantees on trustworthiness, compliance, or provider accountability. Buyers waste time vetting unreliable sources. Providers have no way to build credibility.
 The Solution
