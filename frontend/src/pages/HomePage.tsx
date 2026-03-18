@@ -703,68 +703,46 @@ export default function HomePage() {
                 </section>
 
                 {/* ═══════════════════════════════════════
-                    VALIDATED PARTNERS SECTION
+                    WHO CAN JOIN TODAY SECTION
                 ═══════════════════════════════════════ */}
                 <section className="py-20" style={{ background: 'linear-gradient(180deg, #050C1F 0%, #020817 100%)' }}>
                     <div className="container mx-auto px-4">
                         <div className="max-w-4xl mx-auto text-center mb-12">
-                            <p className="text-xs uppercase tracking-[0.25em] text-slate-500 mb-4">Validated Partners & Early Adopters</p>
+                            <p className="text-xs uppercase tracking-[0.25em] text-slate-500 mb-4">Who Can Join Today</p>
                             <h2 className="Redoubt-font text-3xl md:text-5xl font-bold text-white mb-4">
-                                Trusted by forward-thinking teams
+                                Built for teams who move fast on compliance
                             </h2>
                             <p className="text-slate-400 text-base md:text-lg">
-                                Early access participants across healthcare, finance, and research
+                                Redoubt is currently accepting verified participants from these sectors — no SOC 2 audit required on your end.
                             </p>
                         </div>
 
-                        <div className="grid gap-6 md:grid-cols-3">
+                        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                             {[
-                                { name: 'Northbridge Research Labs', category: 'Healthcare AI Research', logo: 'NR' },
-                                { name: 'Meridian Capital Group', category: 'Financial Risk Analytics', logo: 'MC' },
-                                { name: 'ClearPath Government Solutions', category: 'Public Sector Data', logo: 'CG' },
-                                { name: 'Atlas Climate Institute', category: 'Environmental Research', logo: 'AC' },
-                                { name: 'Vantage Health Systems', category: 'Clinical Data Science', logo: 'VH' },
-                                { name: 'Quantum Finance Ltd', category: 'Algorithmic Trading', logo: 'QF' }
-                            ].map((partner) => (
-                                <div key={partner.name} className="rounded-2xl border border-slate-800 bg-slate-900/70 p-5 shadow-xl">
-                                    <div className="flex items-start gap-4">
-                                        <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-slate-700 to-slate-800 border border-slate-600 flex items-center justify-center text-lg font-bold text-cyan-400 shrink-0">
-                                            {partner.logo}
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <h3 className="text-lg font-semibold text-white truncate">{partner.name}</h3>
-                                            <span className="mt-2 inline-flex items-center rounded-full border border-slate-700 bg-slate-800/60 px-3 py-1 text-xs text-slate-300">
-                                                {partner.category}
-                                            </span>
-                                        </div>
-                                        <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-200 shrink-0">
-                                            <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                                            Verified
-                                        </span>
-                                    </div>
+                                { icon: '🏥', title: 'Healthcare AI Startups', description: 'Clinical data, imaging, diagnostics pipelines' },
+                                { icon: '💳', title: 'Fintech Startups', description: 'Financial risk, fraud, market data' },
+                                { icon: '🔬', title: 'Research Institutions', description: 'Academic and clinical research datasets' },
+                                { icon: '🎓', title: 'Universities', description: 'Student research, scientific data sharing' },
+                                { icon: '🌍', title: 'Climate & Environmental Firms', description: 'Satellite, emissions, land use data' },
+                                { icon: '🧬', title: 'Early Stage Biotech', description: 'Genomics, drug discovery, trial data' }
+                            ].map((card) => (
+                                <div key={card.title} className="rounded-2xl border border-white/10 bg-[#0a1628] p-6 shadow-xl hover:border-emerald-500/30 transition-colors">
+                                    <div className="text-4xl mb-4">{card.icon}</div>
+                                    <h3 className="text-lg font-semibold text-white mb-2">{card.title}</h3>
+                                    <p className="text-sm text-slate-400 mb-4">{card.description}</p>
+                                    <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-200">
+                                        <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                                        Accepting Now
+                                    </span>
                                 </div>
                             ))}
                         </div>
 
-                        <div className="mt-10 max-w-md mx-auto">
-                            <div className="rounded-2xl border border-cyan-500/30 bg-cyan-500/5 p-6 text-center">
-                                <h3 className="text-lg font-semibold text-white mb-2">Become a Partner</h3>
-                                <p className="text-sm text-slate-400 mb-4">
-                                    Join our network of verified data providers and researchers
-                                </p>
-                                <button
-                                    type="button"
-                                    onClick={handleRequestPlatformAccess}
-                                    className="w-full sm:w-auto px-6 py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-semibold rounded-lg transition-colors"
-                                >
-                                    Join Waitlist
-                                </button>
-                            </div>
+                        <div className="mt-12 pt-8 border-t border-white/10">
+                            <p className="text-center text-xs text-slate-500">
+                                Large enterprises, government agencies, and regulated financial institutions will be onboarded following Redoubt's SOC 2 Type II certification — expected Q3 2027.
+                            </p>
                         </div>
-
-                        <p className="mt-6 text-center text-xs text-slate-500">
-                            All partners are verified Redoubt participants. Logos are representative of participant categories.
-                        </p>
                     </div>
                 </section>
 
