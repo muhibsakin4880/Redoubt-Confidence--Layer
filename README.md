@@ -23,4 +23,4 @@ React + TypeScript + Tailwind CSS (Frontend)
 Vite
 
 Status
-Currently in MVP / investor demo stage.
+Currently in Prototype / investor demo stage.
