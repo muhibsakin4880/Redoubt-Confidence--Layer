@@ -10,6 +10,7 @@ import SolutionsPage from './pages/SolutionsPage'
 import LoginPage from './pages/LoginPage'
 import AdminLoginPage from './pages/AdminLoginPage'
 import AdminDashboardPage from './pages/AdminDashboardPage'
+import AIInterrogationLogsPage from './pages/admin/AIInterrogationLogsPage'
 import OnboardingQueuePage from './pages/OnboardingQueuePage'
 import NotFoundPage from './pages/NotFoundPage'
 import OnboardingPage from './pages/OnboardingPage'
@@ -153,6 +154,7 @@ function App() {
                 <Route path="admin" element={<Navigate to="/admin/login" replace />} />
                 <Route path="admin/login" element={<AdminLoginPage />} />
                 <Route path="admin/dashboard" element={<AdminDashboardPage />} />
+                <Route path="admin/ai-interrogation-logs" element={<AIInterrogationLogsPage />} />
                 <Route path="admin/onboarding-queue" element={<OnboardingQueuePage />} />
                 <Route path="admin/incident-response" element={<IncidentResponsePage />} />
                 <Route path="admin/audit-trail" element={<AuditTrailPage />} />
