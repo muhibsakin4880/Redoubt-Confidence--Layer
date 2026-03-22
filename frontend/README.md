@@ -114,3 +114,7 @@ The project structure is ready for:
 - All pages are placeholder components ready to be expanded
 - The `services/` directory is prepared for future API calls
 - Tailwind CSS is configured with dark theme as default
+
+## Deployment Checklist
+
+- See `../docs/vercel-deployment-checklist.md` for production deploy and route troubleshooting steps.

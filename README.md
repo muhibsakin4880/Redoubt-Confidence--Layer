@@ -24,3 +24,6 @@ Vite
 
 Status
 Currently in Prototype / investor demo stage.
+
+Deployment
+- Vercel deployment checklist: `docs/vercel-deployment-checklist.md`
