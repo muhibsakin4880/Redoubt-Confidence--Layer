@@ -8,6 +8,9 @@ import DatasetDetailPage from './pages/DatasetDetailPage'
 import DatasetQualityBreakdownPage from './pages/DatasetQualityBreakdownPage'
 import SolutionsPage from './pages/SolutionsPage'
 import LoginPage from './pages/LoginPage'
+import AdminLoginPage from './pages/AdminLoginPage'
+import AdminDashboardPage from './pages/AdminDashboardPage'
+import OnboardingQueuePage from './pages/OnboardingQueuePage'
 import NotFoundPage from './pages/NotFoundPage'
 import OnboardingPage from './pages/OnboardingPage'
 import OnboardingStep1 from './pages/OnboardingStep1'
@@ -147,6 +150,12 @@ function App() {
                     <Route path="onboarding/confirmation" element={RequireOnboardingAccess(<OnboardingConfirmation />)} />
                 </Route>
 
+                <Route path="admin/login" element={<AdminLoginPage />} />
+                <Route path="admin/dashboard" element={<AdminDashboardPage />} />
+                <Route path="admin/onboarding-queue" element={<OnboardingQueuePage />} />
+                <Route path="admin/incident-response" element={<IncidentResponsePage />} />
+                <Route path="admin/audit-trail" element={<AuditTrailPage />} />
+
                 <Route element={RequireWorkspaceAccess(<AppLayout />)}>
                     <Route path="dashboard" element={<DashboardPage />} />
                     <Route path="datasets" element={<DatasetsPage />} />
@@ -163,7 +172,6 @@ function App() {
                     <Route path="pipelines" element={<PipelinesPage />} />
                     <Route path="usage-analytics" element={<UsageAnalyticsPage />} />
                     <Route path="rbac-console" element={<RBACConsolePage />} />
-                    <Route path="incident-response" element={<IncidentResponsePage />} />
                     <Route path="data-classification" element={<DataClassificationPage />} />
                     <Route path="secure-enclave" element={<SecureEnclavePage />} />
                     <Route path="security-ops" element={<SecurityOperationsPage />} />

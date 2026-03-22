@@ -55,9 +55,20 @@ export default function Footer() {
                 </div>
 
                 <div className="pt-6 border-t border-slate-800 flex flex-col sm:flex-row justify-between items-center gap-4">
-                    <p className="text-slate-400 text-sm" style={{ fontFamily: "'Inter', sans-serif" }}>
-                        © {currentYear} <span className="text-cyan-400" style={{ textShadow: '0 0 8px rgba(34, 211, 238, 0.4)' }}>Layered Defense for Data Confidence</span>. All rights reserved.
-                    </p>
+                    <div className="flex items-center gap-4">
+                        <p className="text-slate-400 text-sm" style={{ fontFamily: "'Inter', sans-serif" }}>
+                            © {currentYear} <span className="text-cyan-400" style={{ textShadow: '0 0 8px rgba(34, 211, 238, 0.4)' }}>Layered Defense for Data Confidence</span>. All rights reserved.
+                        </p>
+                        <a
+                            href="/admin/login"
+                            className="flex items-center gap-1 text-slate-600 hover:text-slate-400 text-xs transition-colors"
+                        >
+                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                            </svg>
+                            <span>System Admin</span>
+                        </a>
+                    </div>
                     <div className="flex items-center gap-2 cyber-glow" style={{ filter: 'drop-shadow(0 0 8px rgba(34, 211, 238, 0.5))' }}>
                         <LogoMark className="w-6 h-6" />
                         <span className="text-white font-semibold text-sm" style={{ fontFamily: "'Satoshi Black', 'Syne', sans-serif" }}>Redoubt</span>

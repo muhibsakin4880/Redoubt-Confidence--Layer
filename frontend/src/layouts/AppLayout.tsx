@@ -40,8 +40,7 @@ const navGroups: NavGroup[] = [
         title: 'Compliance Ops',
         items: [
             { label: 'Audit Trail', to: '/audit-trail' },
-            { label: 'Compliance', to: '/compliance-locker' },
-            { label: 'Incident Response', to: '/incident-response' }
+            { label: 'Compliance', to: '/compliance-locker' }
         ]
     },
     {
