@@ -76,6 +76,21 @@ export default function AdminLayout({ children, title, subtitle }: AdminLayoutPr
                 </nav>
 
                 <div className="p-3 border-t border-slate-800/60 mt-auto">
+                    <button
+                        onClick={() => navigate('/admin/settings')}
+                        className={`w-full flex items-center gap-2.5 px-2 py-2 text-[10px] font-medium tracking-wider rounded-md border transition-all duration-200 mb-3 ${
+                            isActive('/admin/settings')
+                                ? 'border-cyan-500/60 bg-cyan-500/15 text-cyan-200'
+                                : 'border-slate-800/60 text-slate-500 hover:text-slate-300 hover:border-slate-700/80 hover:bg-slate-900/60'
+                        }`}
+                    >
+                        <svg className="w-3.5 h-3.5 flex-shrink-0 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.427 1.756 2.925 0 3.352a1.724 1.724 0 00-1.066 2.572c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.427 1.756-2.925 1.756-3.352 0a1.724 1.724 0 00-2.572-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.427-1.756-2.925 0-3.352a1.724 1.724 0 001.066-2.572c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 15.75A3.75 3.75 0 1012 8.25a3.75 3.75 0 000 7.5z" />
+                        </svg>
+                        <span>SETTINGS</span>
+                    </button>
+
                     <div className="flex items-center gap-2 px-2 py-1.5 bg-slate-900/40 rounded-md border border-slate-800/30">
                         <svg className="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
