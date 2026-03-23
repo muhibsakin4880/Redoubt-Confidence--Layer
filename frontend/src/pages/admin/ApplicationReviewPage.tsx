@@ -4,6 +4,7 @@ import AdminLayout from '../../components/admin/AdminLayout'
 import { useAuth } from '../../contexts/AuthContext'
 
 type Tone = 'green' | 'amber' | 'red' | 'blue'
+type ParticipantRole = 'dataProvider' | 'dataConsumer' | 'complianceAuditor'
 
 type OverviewItem = {
     label: string
@@ -44,11 +45,49 @@ const decisionButtonClasses: Record<'approve' | 'flag' | 'reject', string> = {
     reject: 'border-red-500/50 bg-red-500/12 text-red-200 hover:bg-red-500/18'
 }
 
+const roleLabelByType: Record<ParticipantRole, string> = {
+    dataProvider: 'Data Provider (Contribute & Monetize)',
+    dataConsumer: 'Data Consumer (Ingest & Analyze)',
+    complianceAuditor: 'Compliance / Legal Auditor'
+}
+
+const participationFieldsByRole: Record<ParticipantRole, StepField[]> = {
+    dataProvider: [
+        { label: 'Role', value: 'Data Provider (Contribute & Monetize)' },
+        { label: 'Datasets planned for contribution', value: 'Synthetic transaction records, anonymized risk benchmark datasets' },
+        { label: 'Pricing intent', value: 'Declared (tiered subscription + volume-based licensing)' },
+        { label: 'Source description', value: 'First-party financial analytics feeds from internal enterprise systems' }
+    ],
+    dataConsumer: [
+        { label: 'Role', value: 'Data Consumer (Ingest & Analyze)' },
+        { label: 'Intended use', value: 'Declared for internal risk analysis and forecasting workflows' },
+        { label: 'Target dataset categories', value: 'Market signals, financial events, compliance indicators' },
+        { label: 'Purpose declaration', value: 'Non-resale analytical use under approved governance controls' }
+    ],
+    complianceAuditor: [
+        { label: 'Role', value: 'Compliance / Legal Auditor' },
+        { label: 'Audit scope', value: 'Declared (PDPL compliance validation, access-control and retention checks)' },
+        { label: 'Legal mandate', value: 'Provided and verified by authorized legal/compliance representative' }
+    ]
+}
+
+const applicantRoleById: Record<string, ParticipantRole> = {
+    'APP-3390': 'dataProvider',
+    'APP-7821': 'dataConsumer',
+    'APP-1156': 'dataConsumer',
+    'APP-8847': 'dataProvider',
+    'APP-2293': 'complianceAuditor',
+    'APP-5501': 'dataProvider',
+    'APP-6624': 'dataConsumer',
+    'APP-4471': 'dataProvider'
+}
+
 export default function ApplicationReviewPage() {
     const { isAuthenticated } = useAuth()
     const navigate = useNavigate()
     const { appId } = useParams<{ appId: string }>()
     const applicantId = appId ?? 'APP-3390'
+    const selectedRole = applicantRoleById[applicantId] ?? 'dataProvider'
 
     const [openSteps, setOpenSteps] = useState<Record<number, boolean>>({
         1: true,
@@ -61,7 +100,7 @@ export default function ApplicationReviewPage() {
     const overviewItems: OverviewItem[] = [
         { label: 'Organization', value: 'Meridian Systems' },
         { label: 'Applicant ID', value: applicantId },
-        { label: 'Access Type', value: 'Data Provider' },
+        { label: 'Access Type', value: roleLabelByType[selectedRole] },
         { label: 'Applied', value: '2026-03-23 09:38:02' },
         { label: 'Industry', value: 'Financial Analytics' },
         { label: 'Country', value: 'UAE' }
@@ -101,12 +140,7 @@ export default function ApplicationReviewPage() {
             title: 'Participation Intent',
             status: 'Signed ✅',
             tone: 'green',
-            fields: [
-                { label: 'Role', value: 'Data Provider (Contribute & Monetize)' },
-                { label: 'Legal acknowledgments', value: 'All 3 signed ✅' },
-                { label: 'Electronic signature', value: 'John Mitchell' },
-                { label: 'Signed at', value: '2026-03-23 09:35:44' }
-            ]
+            fields: participationFieldsByRole[selectedRole]
         },
         {
             id: 4,
