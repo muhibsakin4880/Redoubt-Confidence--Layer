@@ -316,8 +316,11 @@ export default function OnboardingQueuePage() {
                                                 <td className="px-5 py-4">{getStatusBadge(row.status)}</td>
                                                 <td className="px-5 py-4">
                                                     <div className="flex items-center gap-2">
-                                                        <button className="text-[9px] font-semibold uppercase tracking-wider px-2.5 py-1.5 rounded-md border border-cyan-500/30 text-cyan-400/80 hover:bg-cyan-500/10 hover:border-cyan-500/50 transition-all duration-200">
-                                                            Review
+                                                        <button
+                                                            onClick={() => navigate(`/admin/application-review/${row.applicantId}`)}
+                                                            className="text-[9px] font-semibold uppercase tracking-wider px-2.5 py-1.5 rounded-md border border-cyan-500/30 text-cyan-400/80 hover:bg-cyan-500/10 hover:border-cyan-500/50 transition-all duration-200"
+                                                        >
+                                                            REVIEW
                                                         </button>
                                                         <button className="text-[9px] font-semibold uppercase tracking-wider px-2.5 py-1.5 rounded-md border border-emerald-500/30 text-emerald-400/80 hover:bg-emerald-500/10 hover:border-emerald-500/50 transition-all duration-200">
                                                             Approve
