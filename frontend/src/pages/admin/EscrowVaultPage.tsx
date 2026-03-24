@@ -16,6 +16,7 @@ import DecisionGatePanel from '../../components/DecisionGatePanel'
 import AlertCenterPanel from '../../components/AlertCenterPanel'
 import PortfolioAlertBoard from '../../components/PortfolioAlertBoard'
 import RemediationQueuePanel from '../../components/RemediationQueuePanel'
+import ReadinessCertificationPanel from '../../components/ReadinessCertificationPanel'
 
 type SummaryTone = 'blue' | 'green' | 'amber' | 'red'
 type TransactionStatus = Extract<
@@ -351,6 +352,10 @@ export default function EscrowVaultPage() {
                 <RemediationQueuePanel
                     digests={adminPortfolioDigests}
                     title="Vault Remediation Queue"
+                />
+                <ReadinessCertificationPanel
+                    digests={adminPortfolioDigests}
+                    title="Vault Launch Certification"
                 />
 
                 <LifecycleGuidancePanel role="admin" state={focusedLifecycleState} title="Operations Guidance" />

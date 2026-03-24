@@ -15,6 +15,7 @@ import DecisionGatePanel from '../components/DecisionGatePanel'
 import AlertCenterPanel from '../components/AlertCenterPanel'
 import PortfolioAlertBoard from '../components/PortfolioAlertBoard'
 import RemediationQueuePanel from '../components/RemediationQueuePanel'
+import ReadinessCertificationPanel from '../components/ReadinessCertificationPanel'
 
 const STATUS_STEPS = [
     {
@@ -384,6 +385,11 @@ export default function DatasetDetailPage() {
                                 digests={singleContractDigest}
                                 compact
                                 title="Single Contract Remediation Queue"
+                            />
+                            <ReadinessCertificationPanel
+                                digests={singleContractDigest}
+                                compact
+                                title="Single Contract Launch Certification"
                             />
                             <ExecutionRunbookPanel
                                 contractId={`REQ-${dataset.id}`}

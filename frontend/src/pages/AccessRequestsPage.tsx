@@ -22,6 +22,7 @@ import DecisionGatePanel from '../components/DecisionGatePanel'
 import AlertCenterPanel from '../components/AlertCenterPanel'
 import PortfolioAlertBoard from '../components/PortfolioAlertBoard'
 import RemediationQueuePanel from '../components/RemediationQueuePanel'
+import ReadinessCertificationPanel from '../components/ReadinessCertificationPanel'
 
 type RiskLevel = 'Low Risk' | 'Medium Risk' | 'High Risk'
 
@@ -152,6 +153,11 @@ export default function AccessRequestsPage() {
                 digests={reviewerPortfolioDigests}
                 compact
                 title="Reviewer Remediation Queue"
+            />
+            <ReadinessCertificationPanel
+                digests={reviewerPortfolioDigests}
+                compact
+                title="Reviewer Launch Certification"
             />
 
             <section className="bg-slate-800/60 border border-slate-700 rounded-2xl p-6 shadow-xl">
