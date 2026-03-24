@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { DEFAULT_DATASET, DATASET_DETAILS, RequestStatus, confidenceLevel, decisionLabel } from '../data/datasetDetailData'
 import { requestReviewStateLabel, type ContractLifecycleState } from '../domain/accessContract'
 import LifecycleGuidancePanel from '../components/LifecycleGuidancePanel'
@@ -9,6 +9,7 @@ import ContractHealthPanel from '../components/ContractHealthPanel'
 import TransitionImpactPanel from '../components/TransitionImpactPanel'
 import ExecutionRunbookPanel from '../components/ExecutionRunbookPanel'
 import ControlTowerPanel from '../components/ControlTowerPanel'
+import ResilienceInsightsPanel from '../components/ResilienceInsightsPanel'
 
 const STATUS_STEPS = [
     {
@@ -75,6 +76,16 @@ export default function DatasetDetailPage() {
     const startEscrowGuardrail = canStartEscrowForRequest(requestStatus, escrowActive)
     const releasePaymentGuardrail = canPerformBuyerEscrowAction('release_payment', escrowLifecycleState)
     const disputeRefundGuardrail = canPerformBuyerEscrowAction('open_dispute', escrowLifecycleState)
+    const singleContractDigest = useMemo(
+        () => [
+            {
+                contractId: `REQ-${dataset.id}`,
+                state: escrowLifecycleState,
+                role: 'buyer' as const
+            }
+        ],
+        [dataset.id, escrowLifecycleState]
+    )
 
     const handleSubmitRequest = () => {
         setRequestStatus('REVIEW_IN_PROGRESS')
@@ -339,6 +350,11 @@ export default function DatasetDetailPage() {
                                 role="buyer"
                                 compact
                                 title="Access Control Tower"
+                            />
+                            <ResilienceInsightsPanel
+                                digests={singleContractDigest}
+                                compact
+                                title="Single Contract Resilience"
                             />
                             <ExecutionRunbookPanel
                                 contractId={`REQ-${dataset.id}`}

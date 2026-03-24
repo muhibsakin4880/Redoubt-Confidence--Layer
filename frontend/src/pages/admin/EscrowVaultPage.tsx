@@ -10,6 +10,7 @@ import ContractHealthPanel from '../../components/ContractHealthPanel'
 import TransitionImpactPanel from '../../components/TransitionImpactPanel'
 import ExecutionRunbookPanel from '../../components/ExecutionRunbookPanel'
 import ControlTowerPanel from '../../components/ControlTowerPanel'
+import ResilienceInsightsPanel from '../../components/ResilienceInsightsPanel'
 
 type SummaryTone = 'blue' | 'green' | 'amber' | 'red'
 type TransactionStatus = Extract<
@@ -291,6 +292,16 @@ export default function EscrowVaultPage() {
         return filteredTransactions[0]?.status ?? 'REVIEW_IN_PROGRESS'
     }, [activeFilter, filteredTransactions])
     const focusedEscrowId = useMemo(() => filteredTransactions[0]?.escId ?? 'ESC-2026-001', [filteredTransactions])
+    const adminPortfolioDigests = useMemo(
+        () =>
+            filteredTransactions.map(transaction => ({
+                contractId: transaction.escId,
+                state: transaction.status,
+                role: 'admin' as const,
+                pendingReleaseCount
+            })),
+        [filteredTransactions, pendingReleaseCount]
+    )
 
     if (!isAuthenticated) return <Navigate to="/admin/login" replace />
 
@@ -323,6 +334,11 @@ export default function EscrowVaultPage() {
                         </article>
                     ))}
                 </section>
+
+                <ResilienceInsightsPanel
+                    digests={adminPortfolioDigests}
+                    title="Vault Portfolio Resilience"
+                />
 
                 <LifecycleGuidancePanel role="admin" state={focusedLifecycleState} title="Operations Guidance" />
                 <ContractHealthPanel

@@ -7,6 +7,7 @@ import ContractHealthPanel from '../components/ContractHealthPanel'
 import TransitionImpactPanel from '../components/TransitionImpactPanel'
 import ExecutionRunbookPanel from '../components/ExecutionRunbookPanel'
 import ControlTowerPanel from '../components/ControlTowerPanel'
+import ResilienceInsightsPanel from '../components/ResilienceInsightsPanel'
 
 type EscrowStatus = Extract<
     ContractLifecycleState,
@@ -93,6 +94,15 @@ export default function EscrowCenterPage() {
         if (activeFilter === 'Disputed') return escrowTransactions.filter(t => t.status === 'DISPUTE_OPEN')
         return escrowTransactions.filter(t => t.status === 'RELEASED_TO_PROVIDER')
     }, [activeFilter])
+    const buyerPortfolioDigests = useMemo(
+        () =>
+            filteredTransactions.map(transaction => ({
+                contractId: transaction.id,
+                state: transaction.status,
+                role: 'buyer' as const
+            })),
+        [filteredTransactions]
+    )
 
     const totalPageValue = useMemo(() => {
         return filteredTransactions.reduce((sum, t) => sum + parseInt(t.amount.replace('$', ''), 10), 0)
@@ -155,6 +165,12 @@ export default function EscrowCenterPage() {
                     </div>
                 ))}
             </section>
+
+            <ResilienceInsightsPanel
+                digests={buyerPortfolioDigests}
+                compact
+                title="Buyer Portfolio Resilience"
+            />
 
             <section className="grid lg:grid-cols-[2fr_1fr] gap-6">
                 <div className="bg-slate-800/60 border border-slate-700 rounded-2xl overflow-hidden">

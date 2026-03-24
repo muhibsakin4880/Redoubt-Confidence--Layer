@@ -16,6 +16,7 @@ import ContractHealthPanel from '../components/ContractHealthPanel'
 import TransitionImpactPanel from '../components/TransitionImpactPanel'
 import ExecutionRunbookPanel from '../components/ExecutionRunbookPanel'
 import ControlTowerPanel from '../components/ControlTowerPanel'
+import ResilienceInsightsPanel from '../components/ResilienceInsightsPanel'
 
 type RiskLevel = 'Low Risk' | 'Medium Risk' | 'High Risk'
 
@@ -68,6 +69,15 @@ export default function AccessRequestsPage() {
 
     const riskScore = useMemo(() => (selectedRequest ? computeRiskScore(selectedRequest) : 72), [selectedRequest])
     const riskLevel = useMemo(() => computeRiskLevel(riskScore), [riskScore])
+    const reviewerPortfolioDigests = useMemo(
+        () =>
+            datasetRequests.map(request => ({
+                contractId: `REQ-${request.id}`,
+                state: request.status,
+                role: 'reviewer' as const
+            })),
+        []
+    )
 
     return (
         <div className="container mx-auto px-4 py-10 space-y-6 text-white">
@@ -122,6 +132,12 @@ export default function AccessRequestsPage() {
                     <RiskPanel selectedRequest={selectedRequest} riskScore={riskScore} riskLevel={riskLevel} />
                 </div>
             </section>
+
+            <ResilienceInsightsPanel
+                digests={reviewerPortfolioDigests}
+                compact
+                title="Reviewer Portfolio Resilience"
+            />
 
             <section className="bg-slate-800/60 border border-slate-700 rounded-2xl p-6 shadow-xl">
                 <div className="flex items-start justify-between mb-4">
