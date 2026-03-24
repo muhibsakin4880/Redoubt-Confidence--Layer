@@ -25,6 +25,7 @@ type TransactionStatus = Extract<
 >
 type FilterTab = 'all' | 'active' | 'fundsHeld' | 'pendingRelease' | 'disputed' | 'released'
 type ActionTone = 'blue' | 'green' | 'amber' | 'red' | 'slate'
+type VaultWorkspace = 'overview' | 'riskAssessment' | 'disputes' | 'releaseQueue' | 'financials'
 
 type SummaryCard = {
     label: string
@@ -227,6 +228,13 @@ const filterTabs: Array<{ key: FilterTab; label: string }> = [
     { key: 'disputed', label: 'Disputed' },
     { key: 'released', label: 'Released' }
 ]
+const workspaceTabs: Array<{ key: VaultWorkspace; label: string; hint: string }> = [
+    { key: 'overview', label: 'Overview', hint: 'Summary metrics, alerts, and live transactions.' },
+    { key: 'riskAssessment', label: 'Risk Assessment', hint: 'Governance controls, runbook, and audit timeline.' },
+    { key: 'disputes', label: 'Disputes', hint: 'Resolve active disputes with internal notes and actions.' },
+    { key: 'releaseQueue', label: 'Release Queue', hint: 'Execute pending release decisions in one queue.' },
+    { key: 'financials', label: 'Financials', hint: 'Monthly escrow GMV, fees, payouts, and net.' }
+]
 
 const summaryValueClasses: Record<SummaryTone, string> = {
     blue: 'text-cyan-300',
@@ -263,6 +271,7 @@ const disabledActionClass =
 export default function EscrowVaultPage() {
     const { isAuthenticated } = useAuth()
     const [activeFilter, setActiveFilter] = useState<FilterTab>('all')
+    const [activeWorkspace, setActiveWorkspace] = useState<VaultWorkspace>('overview')
     const pendingReleaseCount = useMemo(
         () => transactionRows.filter(row => row.status === 'RELEASE_PENDING').length,
         []
@@ -326,6 +335,12 @@ export default function EscrowVaultPage() {
                             ENCRYPTED
                         </span>
                         <span className="font-mono text-[11px] text-slate-500">{currentTimestamp}</span>
+                        <button
+                            onClick={() => setActiveWorkspace('riskAssessment')}
+                            className="rounded-md border border-cyan-500/60 bg-cyan-500/15 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-cyan-200 transition-colors hover:bg-cyan-500/25"
+                        >
+                            Risk Assessment
+                        </button>
                     </div>
                 </section>
 
@@ -341,78 +356,51 @@ export default function EscrowVaultPage() {
                     ))}
                 </section>
 
-                <ResilienceInsightsPanel
-                    digests={adminPortfolioDigests}
-                    title="Vault Portfolio Resilience"
-                />
-                <PortfolioAlertBoard
-                    digests={adminPortfolioDigests}
-                    title="Vault Portfolio Alerts"
-                />
-                <RemediationQueuePanel
-                    digests={adminPortfolioDigests}
-                    title="Vault Remediation Queue"
-                />
-                <ReadinessCertificationPanel
-                    digests={adminPortfolioDigests}
-                    title="Vault Launch Certification"
-                />
+                <section className="rounded-xl border border-slate-800/60 bg-slate-900/60 px-4 py-3 backdrop-blur-xl shadow-2xl shadow-black/25">
+                    <div className="flex flex-wrap gap-2">
+                        {workspaceTabs.map(tab => (
+                            <button
+                                key={tab.key}
+                                onClick={() => setActiveWorkspace(tab.key)}
+                                className={`rounded-md border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] transition-colors ${
+                                    activeWorkspace === tab.key
+                                        ? 'border-cyan-500/60 bg-cyan-500/15 text-cyan-200'
+                                        : 'border-slate-700/70 bg-slate-900/50 text-slate-400 hover:text-slate-200 hover:border-slate-600/80'
+                                }`}
+                            >
+                                {tab.label}
+                            </button>
+                        ))}
+                    </div>
+                    <p className="mt-2 text-xs text-slate-500">
+                        {workspaceTabs.find(tab => tab.key === activeWorkspace)?.hint}
+                    </p>
+                </section>
 
-                <LifecycleGuidancePanel role="admin" state={focusedLifecycleState} title="Operations Guidance" />
-                <ContractHealthPanel
-                    contractId={focusedEscrowId}
-                    state={focusedLifecycleState}
-                    title="Vault Integrity Monitor"
-                />
-                <TransitionImpactPanel
-                    contractId={focusedEscrowId}
-                    state={focusedLifecycleState}
-                    role="admin"
-                    pendingReleaseCount={pendingReleaseCount}
-                    title="Operation Impact Simulator"
-                />
-                <ControlTowerPanel
-                    contractId={focusedEscrowId}
-                    state={focusedLifecycleState}
-                    role="admin"
-                    pendingReleaseCount={pendingReleaseCount}
-                    title="Vault Control Tower"
-                />
-                <PolicyAttestationPanel
-                    contractId={focusedEscrowId}
-                    state={focusedLifecycleState}
-                    role="admin"
-                    pendingReleaseCount={pendingReleaseCount}
-                    title="Vault Policy Attestation"
-                />
-                <DecisionGatePanel
-                    contractId={focusedEscrowId}
-                    state={focusedLifecycleState}
-                    role="admin"
-                    pendingReleaseCount={pendingReleaseCount}
-                    title="Vault Decision Gate"
-                />
-                <AlertCenterPanel
-                    contractId={focusedEscrowId}
-                    state={focusedLifecycleState}
-                    role="admin"
-                    pendingReleaseCount={pendingReleaseCount}
-                    title="Vault Alert Center"
-                />
-                <ExecutionRunbookPanel
-                    contractId={focusedEscrowId}
-                    state={focusedLifecycleState}
-                    role="admin"
-                    pendingReleaseCount={pendingReleaseCount}
-                    title="Operation Runbook"
-                />
-                <SecurityAuditTimeline
-                    contractId={focusedEscrowId}
-                    state={focusedLifecycleState}
-                    title="Escrow Audit Timeline"
-                />
+                {activeWorkspace === 'overview' && (
+                    <>
+                        <ResilienceInsightsPanel
+                            digests={adminPortfolioDigests}
+                            compact
+                            title="Vault Portfolio Resilience"
+                        />
+                        <PortfolioAlertBoard
+                            digests={adminPortfolioDigests}
+                            compact
+                            title="Vault Portfolio Alerts"
+                        />
+                        <RemediationQueuePanel
+                            digests={adminPortfolioDigests}
+                            compact
+                            title="Vault Remediation Queue"
+                        />
+                        <ReadinessCertificationPanel
+                            digests={adminPortfolioDigests}
+                            compact
+                            title="Vault Launch Certification"
+                        />
 
-                <section className="rounded-xl border border-slate-800/60 bg-slate-900/60 backdrop-blur-xl shadow-2xl shadow-black/30">
+                        <section className="rounded-xl border border-slate-800/60 bg-slate-900/60 backdrop-blur-xl shadow-2xl shadow-black/30">
                     <div className="px-5 py-4 border-b border-slate-800/60">
                         <h2 className="text-[12px] uppercase tracking-[0.12em] font-semibold text-slate-300">Live Escrow Transactions</h2>
                         <div className="mt-3 flex flex-wrap gap-2">
@@ -484,9 +472,94 @@ export default function EscrowVaultPage() {
                             </tbody>
                         </table>
                     </div>
-                </section>
+                        </section>
+                    </>
+                )}
 
-                <section className="rounded-xl border border-slate-800/60 bg-slate-900/60 p-5 backdrop-blur-xl shadow-2xl shadow-black/30">
+                {activeWorkspace === 'riskAssessment' && (
+                    <>
+                        <section className="rounded-xl border border-slate-800/60 bg-slate-900/60 p-5 backdrop-blur-xl shadow-2xl shadow-black/25">
+                            <div className="space-y-1">
+                                <h2 className="text-[12px] uppercase tracking-[0.12em] font-semibold text-slate-300">Risk Assessment Workspace</h2>
+                                <p className="text-sm text-slate-400">
+                                    Focused escrow: <span className="font-mono text-cyan-300">{focusedEscrowId}</span>
+                                </p>
+                            </div>
+                            <div className="mt-3 flex flex-wrap gap-2">
+                                {filterTabs.map(tab => (
+                                    <button
+                                        key={tab.key}
+                                        onClick={() => setActiveFilter(tab.key)}
+                                        className={`rounded-md border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] transition-colors ${
+                                            activeFilter === tab.key
+                                                ? 'border-cyan-500/60 bg-cyan-500/15 text-cyan-200'
+                                                : 'border-slate-700/70 bg-slate-900/50 text-slate-400 hover:text-slate-200 hover:border-slate-600/80'
+                                        }`}
+                                    >
+                                        {tab.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </section>
+
+                        <LifecycleGuidancePanel role="admin" state={focusedLifecycleState} title="Operations Guidance" />
+                        <ContractHealthPanel
+                            contractId={focusedEscrowId}
+                            state={focusedLifecycleState}
+                            title="Vault Integrity Monitor"
+                        />
+                        <TransitionImpactPanel
+                            contractId={focusedEscrowId}
+                            state={focusedLifecycleState}
+                            role="admin"
+                            pendingReleaseCount={pendingReleaseCount}
+                            title="Operation Impact Simulator"
+                        />
+                        <ControlTowerPanel
+                            contractId={focusedEscrowId}
+                            state={focusedLifecycleState}
+                            role="admin"
+                            pendingReleaseCount={pendingReleaseCount}
+                            title="Vault Control Tower"
+                        />
+                        <PolicyAttestationPanel
+                            contractId={focusedEscrowId}
+                            state={focusedLifecycleState}
+                            role="admin"
+                            pendingReleaseCount={pendingReleaseCount}
+                            title="Vault Policy Attestation"
+                        />
+                        <DecisionGatePanel
+                            contractId={focusedEscrowId}
+                            state={focusedLifecycleState}
+                            role="admin"
+                            pendingReleaseCount={pendingReleaseCount}
+                            title="Vault Decision Gate"
+                        />
+                        <AlertCenterPanel
+                            contractId={focusedEscrowId}
+                            state={focusedLifecycleState}
+                            role="admin"
+                            pendingReleaseCount={pendingReleaseCount}
+                            title="Vault Alert Center"
+                        />
+                        <ExecutionRunbookPanel
+                            contractId={focusedEscrowId}
+                            state={focusedLifecycleState}
+                            role="admin"
+                            pendingReleaseCount={pendingReleaseCount}
+                            title="Operation Runbook"
+                        />
+                        <SecurityAuditTimeline
+                            contractId={focusedEscrowId}
+                            state={focusedLifecycleState}
+                            title="Escrow Audit Timeline"
+                        />
+                    </>
+                )}
+
+                {activeWorkspace === 'disputes' && (
+                    <section className="rounded-xl border border-slate-800/60 bg-slate-900/60 p-5 backdrop-blur-xl shadow-2xl shadow-black/30">
                     <div className="space-y-1">
                         <h2 className="text-[12px] uppercase tracking-[0.12em] font-semibold text-slate-300">Dispute Resolution Center</h2>
                         <p className="text-lg font-semibold text-slate-100">Active Disputes</p>
@@ -577,9 +650,11 @@ export default function EscrowVaultPage() {
                             )
                         })}
                     </div>
-                </section>
+                    </section>
+                )}
 
-                <section className="rounded-xl border border-slate-800/60 bg-slate-900/60 backdrop-blur-xl shadow-2xl shadow-black/30">
+                {activeWorkspace === 'releaseQueue' && (
+                    <section className="rounded-xl border border-slate-800/60 bg-slate-900/60 backdrop-blur-xl shadow-2xl shadow-black/30">
                     <div className="px-5 py-4 border-b border-slate-800/60 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div className="space-y-1">
                             <h2 className="text-[12px] uppercase tracking-[0.12em] font-semibold text-slate-300">Release Queue</h2>
@@ -644,9 +719,11 @@ export default function EscrowVaultPage() {
                             </tbody>
                         </table>
                     </div>
-                </section>
+                    </section>
+                )}
 
-                <section className="rounded-xl border border-slate-800/60 bg-slate-900/60 backdrop-blur-xl shadow-2xl shadow-black/30">
+                {activeWorkspace === 'financials' && (
+                    <section className="rounded-xl border border-slate-800/60 bg-slate-900/60 backdrop-blur-xl shadow-2xl shadow-black/30">
                     <div className="px-5 py-4 border-b border-slate-800/60 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div className="space-y-1">
                             <h2 className="text-[12px] uppercase tracking-[0.12em] font-semibold text-slate-300">Financial Summary</h2>
@@ -697,7 +774,8 @@ export default function EscrowVaultPage() {
                             </table>
                         </div>
                     </div>
-                </section>
+                    </section>
+                )}
             </div>
         </AdminLayout>
     )
