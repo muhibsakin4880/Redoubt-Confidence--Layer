@@ -165,6 +165,9 @@ export default function ContributionsPage() {
         allowAfterEscrow: true,
         maxDownloads: 1
     })
+    const [showTierReviewModal, setShowTierReviewModal] = useState(false)
+    const [tierReviewComment, setTierReviewComment] = useState('')
+    const [showTierReviewSuccess, setShowTierReviewSuccess] = useState(false)
 
     const toggleFieldExpansion = (field: string) => {
         setExpandedFields(prev => {
@@ -463,13 +466,126 @@ export default function ContributionsPage() {
                         <span className="px-2.5 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs text-slate-300">{schemaFieldData.length} fields detected</span>
                         <span className="px-2.5 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs text-slate-300">{Number((schemaFieldData.filter(f => f.nullRate > 0).reduce((acc, f) => acc + f.nullRate, 0) / schemaFieldData.length)).toFixed(1)}% avg null rate</span>
                         <span className="px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-xs text-emerald-200">AI Integrity Check: Passed ✨</span>
-                        <span className="px-2.5 py-1 rounded-full bg-cyan-500/15 border border-cyan-500/30 text-xs text-cyan-200">Classification: Tier 1 (Safe)</span>
                     </div>
+
+                    <div className="bg-slate-900/80 border border-slate-700 rounded-xl p-5">
+                        <div className="text-sm font-semibold text-slate-200 mb-4">AI Classification Result</div>
+                        <div className="grid md:grid-cols-2 gap-6">
+                            <div className="flex flex-col items-start">
+                                <span className="px-3 py-1.5 rounded-lg bg-blue-500/20 border border-blue-500/40 text-blue-300 text-lg font-semibold">
+                                    Tier 2 — Regulated
+                                </span>
+                                <p className="text-xs text-slate-500 mt-2">
+                                    Automatically assigned by Redoubt AI based on schema and field analysis
+                                </p>
+                            </div>
+                            <div>
+                                <div className="text-xs text-slate-400 mb-2">Classification Reasons</div>
+                                <ul className="space-y-1.5 text-xs">
+                                    <li className="flex items-center gap-2 text-slate-300">
+                                        <span className="w-2 h-2 rounded-full bg-blue-400" />
+                                        Financial data fields detected
+                                    </li>
+                                    <li className="flex items-center gap-2 text-slate-300">
+                                        <span className="w-2 h-2 rounded-full bg-amber-400" />
+                                        PII fields found: email_hash, phone_prefix
+                                    </li>
+                                    <li className="flex items-center gap-2 text-slate-300">
+                                        <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                                        No PHI detected
+                                    </li>
+                                    <li className="flex items-center gap-2 text-slate-300">
+                                        <span className="w-2 h-2 rounded-full bg-amber-400" />
+                                        Geographic data present: location_lat, location_lon
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div className="mt-5 pt-4 border-t border-slate-700">
+                            <div className="text-xs text-slate-400 mb-2">What this means for buyers:</div>
+                            <div className="grid sm:grid-cols-2 gap-2 text-xs">
+                                <div className="flex items-center gap-2 text-slate-300">
+                                    <span className="text-slate-500">Sample preview:</span>
+                                    <span>10 rows maximum</span>
+                                </div>
+                                <div className="flex items-center gap-2 text-slate-300">
+                                    <span className="text-slate-500">Download:</span>
+                                    <span>Requires your explicit consent</span>
+                                </div>
+                                <div className="flex items-center gap-2 text-slate-300">
+                                    <span className="text-slate-500">Escrow window:</span>
+                                    <span>24-48 hours</span>
+                                </div>
+                                <div className="flex items-center gap-2 text-slate-300">
+                                    <span className="text-slate-500">Audit level:</span>
+                                    <span>Full audit trail required</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="mt-4 pt-3 border-t border-slate-700">
+                            <div className="text-xs text-slate-500">Disagree with this classification?</div>
+                            <button
+                                onClick={() => setShowTierReviewModal(true)}
+                                className="mt-1 text-xs text-blue-300 hover:text-blue-200 border border-blue-500/40 rounded px-2 py-1 inline-block"
+                            >
+                                Request Tier Review →
+                            </button>
+                        </div>
+                    </div>
+
+                    {showTierReviewModal && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+                            <div className="bg-slate-800 border border-slate-700 rounded-xl p-5 w-full max-w-md">
+                                {showTierReviewSuccess ? (
+                                    <div className="text-center py-4">
+                                        <div className="text-emerald-400 text-2xl mb-2">✓</div>
+                                        <div className="text-sm font-semibold text-white">Review request submitted</div>
+                                        <div className="text-xs text-slate-400 mt-2">Redoubt team will respond within 48 hours.</div>
+                                        <button
+                                            onClick={() => { setShowTierReviewModal(false); setShowTierReviewSuccess(false); }}
+                                            className="mt-4 px-4 py-2 rounded-lg bg-slate-700 text-sm text-white hover:bg-slate-600"
+                                        >
+                                            Close
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <h3 className="text-lg font-semibold text-white">Request Classification Review</h3>
+                                        <p className="text-xs text-slate-400 mt-1">Explain why you believe this dataset should be reclassified</p>
+                                        <textarea
+                                            value={tierReviewComment}
+                                            onChange={(e) => setTierReviewComment(e.target.value)}
+                                            placeholder="Provide your reasoning..."
+                                            className="w-full h-24 mt-4 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-cyan-500/50"
+                                        />
+                                        <div className="mt-4 flex gap-3">
+                                            <button
+                                                onClick={() => setShowTierReviewModal(false)}
+                                                className="flex-1 rounded-lg border border-slate-600 px-3 py-2 text-sm font-medium text-slate-300 hover:text-white"
+                                            >
+                                                Cancel
+                                            </button>
+                                            <button
+                                                onClick={() => setShowTierReviewSuccess(true)}
+                                                className="flex-1 rounded-lg bg-blue-600 hover:bg-blue-500 px-3 py-2 text-sm font-medium text-white"
+                                            >
+                                                Submit Review Request
+                                            </button>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    )}
 
                     <div className="border-t border-slate-800 pt-6">
                         <div className="bg-slate-900/80 border border-slate-700 rounded-xl p-5">
                             <div className="text-center mb-6">
-                                <div className="text-xl font-semibold text-emerald-400 mb-1">Confidence Score: 88/100</div>
+                                <div className="text-xl font-semibold text-emerald-400 mb-1">
+                                    Confidence Score: 88/100 <span className="ml-2 px-2 py-0.5 rounded bg-blue-500/20 border border-blue-500/40 text-blue-300 text-xs font-medium">Tier 2</span>
+                                </div>
                                 <div className="text-xs text-slate-400">AI-generated quality assessment based on 4 factors</div>
                             </div>
 
