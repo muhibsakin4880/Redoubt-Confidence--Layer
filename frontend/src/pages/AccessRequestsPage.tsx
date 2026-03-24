@@ -13,6 +13,8 @@ import LifecycleGuidancePanel from '../components/LifecycleGuidancePanel'
 import { canPerformReviewerAction } from '../domain/actionGuardrails'
 import SecurityAuditTimeline from '../components/SecurityAuditTimeline'
 import ContractHealthPanel from '../components/ContractHealthPanel'
+import TransitionImpactPanel from '../components/TransitionImpactPanel'
+import ExecutionRunbookPanel from '../components/ExecutionRunbookPanel'
 
 type RiskLevel = 'Low Risk' | 'Medium Risk' | 'High Risk'
 
@@ -249,6 +251,24 @@ function RiskPanel({ selectedRequest, riskScore, riskLevel }: RiskPanelProps) {
                             state={currentReviewState}
                             compact
                             title="Review Integrity Monitor"
+                        />
+                    </div>
+                    <div className="mt-4">
+                        <TransitionImpactPanel
+                            contractId={`REQ-${selectedRequest.id}`}
+                            state={currentReviewState}
+                            role="reviewer"
+                            compact
+                            title="Decision Impact Simulator"
+                        />
+                    </div>
+                    <div className="mt-4">
+                        <ExecutionRunbookPanel
+                            contractId={`REQ-${selectedRequest.id}`}
+                            state={currentReviewState}
+                            role="reviewer"
+                            compact
+                            title="Decision Runbook"
                         />
                     </div>
                     <div className="mt-4">

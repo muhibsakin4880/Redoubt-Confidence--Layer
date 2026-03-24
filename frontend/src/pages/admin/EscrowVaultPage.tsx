@@ -7,6 +7,8 @@ import LifecycleGuidancePanel from '../../components/LifecycleGuidancePanel'
 import { canPerformAdminEscrowAction } from '../../domain/actionGuardrails'
 import SecurityAuditTimeline from '../../components/SecurityAuditTimeline'
 import ContractHealthPanel from '../../components/ContractHealthPanel'
+import TransitionImpactPanel from '../../components/TransitionImpactPanel'
+import ExecutionRunbookPanel from '../../components/ExecutionRunbookPanel'
 
 type SummaryTone = 'blue' | 'green' | 'amber' | 'red'
 type TransactionStatus = Extract<
@@ -326,6 +328,20 @@ export default function EscrowVaultPage() {
                     contractId={focusedEscrowId}
                     state={focusedLifecycleState}
                     title="Vault Integrity Monitor"
+                />
+                <TransitionImpactPanel
+                    contractId={focusedEscrowId}
+                    state={focusedLifecycleState}
+                    role="admin"
+                    pendingReleaseCount={pendingReleaseCount}
+                    title="Operation Impact Simulator"
+                />
+                <ExecutionRunbookPanel
+                    contractId={focusedEscrowId}
+                    state={focusedLifecycleState}
+                    role="admin"
+                    pendingReleaseCount={pendingReleaseCount}
+                    title="Operation Runbook"
                 />
                 <SecurityAuditTimeline
                     contractId={focusedEscrowId}

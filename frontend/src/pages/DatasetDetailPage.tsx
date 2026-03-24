@@ -6,6 +6,8 @@ import LifecycleGuidancePanel from '../components/LifecycleGuidancePanel'
 import { canPerformBuyerEscrowAction, canStartEscrowForRequest } from '../domain/actionGuardrails'
 import SecurityAuditTimeline from '../components/SecurityAuditTimeline'
 import ContractHealthPanel from '../components/ContractHealthPanel'
+import TransitionImpactPanel from '../components/TransitionImpactPanel'
+import ExecutionRunbookPanel from '../components/ExecutionRunbookPanel'
 
 const STATUS_STEPS = [
     {
@@ -322,6 +324,20 @@ export default function DatasetDetailPage() {
                                 state={escrowLifecycleState}
                                 compact
                                 title="Request Integrity Monitor"
+                            />
+                            <TransitionImpactPanel
+                                contractId={`REQ-${dataset.id}`}
+                                state={escrowLifecycleState}
+                                role="buyer"
+                                compact
+                                title="Access Impact Simulator"
+                            />
+                            <ExecutionRunbookPanel
+                                contractId={`REQ-${dataset.id}`}
+                                state={escrowLifecycleState}
+                                role="buyer"
+                                compact
+                                title="Access Runbook"
                             />
                             <SecurityAuditTimeline
                                 contractId={`REQ-${dataset.id}`}

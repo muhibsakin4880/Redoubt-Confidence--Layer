@@ -4,6 +4,8 @@ import LifecycleGuidancePanel from '../components/LifecycleGuidancePanel'
 import { canPerformBuyerEscrowAction } from '../domain/actionGuardrails'
 import SecurityAuditTimeline from '../components/SecurityAuditTimeline'
 import ContractHealthPanel from '../components/ContractHealthPanel'
+import TransitionImpactPanel from '../components/TransitionImpactPanel'
+import ExecutionRunbookPanel from '../components/ExecutionRunbookPanel'
 
 type EscrowStatus = Extract<
     ContractLifecycleState,
@@ -271,6 +273,20 @@ export default function EscrowCenterPage() {
                         state={selectedTransaction.status}
                         compact
                         title="Escrow Integrity Monitor"
+                    />
+                    <TransitionImpactPanel
+                        contractId={selectedTransaction.id}
+                        state={selectedTransaction.status}
+                        role="buyer"
+                        compact
+                        title="Action Impact Simulator"
+                    />
+                    <ExecutionRunbookPanel
+                        contractId={selectedTransaction.id}
+                        state={selectedTransaction.status}
+                        role="buyer"
+                        compact
+                        title="Execution Runbook"
                     />
 
                     <SecurityAuditTimeline
