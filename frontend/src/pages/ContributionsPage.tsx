@@ -158,6 +158,13 @@ export default function ContributionsPage() {
     const [submissionConfirmed, setSubmissionConfirmed] = useState(false)
     const [schemaSearchQuery, setSchemaSearchQuery] = useState('')
     const [expandedFields, setExpandedFields] = useState<Set<string>>(new Set())
+    const [accessMethod, setAccessMethod] = useState<'platform' | 'download'>('platform')
+    const [downloadConditions, setDownloadConditions] = useState({
+        requireReconfirmation: true,
+        notifyOnDownload: true,
+        allowAfterEscrow: true,
+        maxDownloads: 1
+    })
 
     const toggleFieldExpansion = (field: string) => {
         setExpandedFields(prev => {
@@ -458,6 +465,109 @@ export default function ContributionsPage() {
                         <span className="px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-xs text-emerald-200">AI Integrity Check: Passed ✨</span>
                         <span className="px-2.5 py-1 rounded-full bg-cyan-500/15 border border-cyan-500/30 text-xs text-cyan-200">Classification: Tier 1 (Safe)</span>
                     </div>
+
+                    <div className="border-t border-slate-800 pt-6">
+                        <div className="bg-slate-900/80 border border-slate-700 rounded-xl p-5">
+                            <div className="text-center mb-6">
+                                <div className="text-xl font-semibold text-emerald-400 mb-1">Confidence Score: 88/100</div>
+                                <div className="text-xs text-slate-400">AI-generated quality assessment based on 4 factors</div>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between gap-4">
+                                    <div className="flex-1">
+                                        <div className="flex items-center justify-between text-sm mb-1">
+                                            <span className="text-slate-200 font-medium">Schema Validity</span>
+                                            <span className="text-emerald-300 font-mono">92/100</span>
+                                        </div>
+                                        <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+                                            <div className="h-full bg-emerald-500 rounded-full" style={{ width: '92%' }} />
+                                        </div>
+                                        <div className="text-xs text-slate-400 mt-1">All declared fields present and correctly typed</div>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center justify-between gap-4">
+                                    <div className="flex-1">
+                                        <div className="flex items-center justify-between text-sm mb-1">
+                                            <span className="text-slate-200 font-medium">Completeness</span>
+                                            <span className="text-emerald-300 font-mono">85/100</span>
+                                        </div>
+                                        <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+                                            <div className="h-full bg-emerald-500 rounded-full" style={{ width: '85%' }} />
+                                        </div>
+                                        <div className="text-xs text-slate-400 mt-1">1.8% average null rate across all fields — within threshold</div>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center justify-between gap-4">
+                                    <div className="flex-1">
+                                        <div className="flex items-center justify-between text-sm mb-1">
+                                            <span className="text-slate-200 font-medium">PHI/PII Risk</span>
+                                            <span className="text-emerald-300 font-mono">90/100</span>
+                                        </div>
+                                        <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+                                            <div className="h-full bg-emerald-500 rounded-full" style={{ width: '90%' }} />
+                                        </div>
+                                        <div className="text-xs text-slate-400 mt-1">No high-risk sensitive fields detected in dataset</div>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center justify-between gap-4">
+                                    <div className="flex-1">
+                                        <div className="flex items-center justify-between text-sm mb-1">
+                                            <span className="text-slate-200 font-medium">Format Consistency</span>
+                                            <span className="text-emerald-300 font-mono">84/100</span>
+                                        </div>
+                                        <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+                                            <div className="h-full bg-emerald-500 rounded-full" style={{ width: '84%' }} />
+                                        </div>
+                                        <div className="text-xs text-slate-400 mt-1">Data formats consistent across all rows and columns</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="border-t border-slate-700 mt-5 pt-4">
+                                <div className="text-center mb-4">
+                                    <div className="text-lg font-bold text-emerald-400">Weighted Average: 88/100</div>
+                                    <div className="text-xs text-slate-500 mt-1">Each factor weighted equally at 25%</div>
+                                </div>
+                            </div>
+
+                            <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4">
+                                <div className="flex items-center justify-center gap-2 mb-2">
+                                    <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-xs font-medium text-emerald-300">High Confidence</span>
+                                </div>
+                                <div className="text-xs text-slate-300 text-center">Your dataset meets Redoubt's quality threshold. Buyers will see this score before requesting access.</div>
+                            </div>
+
+                            <div className="mt-4 pt-4 border-t border-slate-800">
+                                <div className="text-xs text-slate-400 mb-2">Score range legend:</div>
+                                <div className="grid grid-cols-2 gap-2 text-xs">
+                                    <div className="flex items-center gap-2">
+                                        <span className="w-3 h-3 rounded bg-emerald-500" />
+                                        <span className="text-slate-300">90-100: Exceptional</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="w-3 h-3 rounded bg-emerald-500" />
+                                        <span className="text-slate-300">75-89: High Confidence</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="w-3 h-3 rounded bg-amber-500" />
+                                        <span className="text-slate-300">50-74: Moderate — Review Suggested</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="w-3 h-3 rounded bg-rose-500" />
+                                        <span className="text-slate-300">0-49: Low — Revision Required</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="mt-4 pt-3 border-t border-slate-800">
+                                <div className="text-xs text-slate-500 italic">This score is recalculated automatically if you update your dataset. Final score may vary after full platform review.</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             )
         },
@@ -586,6 +696,142 @@ type="button"
                                     <option>AI Training Only</option>
                                 </select>
                             </div>
+                        </div>
+                    </div>
+
+                    <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
+                        <div className="text-[11px] uppercase tracking-[0.14em] text-slate-400 mb-3">Dataset Access Method</div>
+                        <div className="grid sm:grid-cols-2 gap-4">
+                            <button
+                                onClick={() => setAccessMethod('platform')}
+                                className={`rounded-lg border p-4 text-left transition-all ${
+                                    accessMethod === 'platform'
+                                        ? 'border-emerald-500/60 bg-emerald-500/10'
+                                        : 'border-slate-700 bg-slate-900/40 hover:border-slate-600'
+                                }`}
+                            >
+                                <div className="flex items-center justify-between mb-2">
+                                    <div className="flex items-center gap-2">
+                                        <svg className="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                        </svg>
+                                        <span className="text-slate-100 font-medium">Platform Only</span>
+                                    </div>
+                                    <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-[10px] font-medium">Recommended</span>
+                                </div>
+                                <div className="text-xs text-slate-400 mb-3">Buyers can only view your dataset within Redoubt's Secure Enclave. No download allowed.</div>
+                                <ul className="text-xs text-slate-300 space-y-1">
+                                    <li className="flex items-center gap-2"><span className="text-emerald-400">✓</span> Maximum data security</li>
+                                    <li className="flex items-center gap-2"><span className="text-emerald-400">✓</span> Full egress control</li>
+                                    <li className="flex items-center gap-2"><span className="text-emerald-400">✓</span> +5 Trust Score bonus</li>
+                                    <li className="flex items-center gap-2"><span className="text-emerald-400">✓</span> "Maximum Security Tier" badge</li>
+                                </ul>
+                            </button>
+
+                            <button
+                                onClick={() => setAccessMethod('download')}
+                                className={`rounded-lg border p-4 text-left transition-all ${
+                                    accessMethod === 'download'
+                                        ? 'border-blue-500/60 bg-blue-500/10'
+                                        : 'border-slate-700 bg-slate-900/40 hover:border-slate-600'
+                                }`}
+                            >
+                                <div className="flex items-center justify-between mb-2">
+                                    <div className="flex items-center gap-2">
+                                        <svg className="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                        </svg>
+                                        <span className="text-slate-100 font-medium">Platform + Download</span>
+                                    </div>
+                                </div>
+                                <div className="text-xs text-slate-400 mb-3">Buyers can view within Secure Enclave AND download an encrypted copy with your consent.</div>
+                                <ul className="text-xs text-amber-300 space-y-1">
+                                    <li className="flex items-center gap-2"><span className="text-amber-400">⚠</span> AES-256 encrypted only</li>
+                                    <li className="flex items-center gap-2"><span className="text-amber-400">⚠</span> Watermark mandatory</li>
+                                    <li className="flex items-center gap-2"><span className="text-amber-400">⚠</span> 1 download per license</li>
+                                    <li className="flex items-center gap-2"><span className="text-amber-400">⚠</span> 24-hour download link expiry</li>
+                                    <li className="flex items-center gap-2"><span className="text-amber-400">⚠</span> You are notified on each download</li>
+                                </ul>
+                            </button>
+                        </div>
+
+                        {accessMethod === 'download' && (
+                            <div className="mt-4 pt-4 border-t border-slate-700">
+                                <div className="text-sm font-medium text-slate-200 mb-3">Download Conditions</div>
+                                <div className="space-y-3">
+                                    <div className="flex items-center justify-between gap-4 rounded-lg border border-slate-700/80 bg-slate-900/80 px-3 py-3">
+                                        <div className="text-slate-100 text-sm">Require buyer re-confirmation before download</div>
+                                        <button
+                                            type="button"
+                                            aria-pressed={downloadConditions.requireReconfirmation}
+                                            onClick={() => setDownloadConditions(prev => ({ ...prev, requireReconfirmation: !prev.requireReconfirmation }))}
+                                            className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
+                                                downloadConditions.requireReconfirmation
+                                                    ? 'bg-cyan-500 ring-1 ring-cyan-300/40'
+                                                    : 'bg-slate-700 ring-1 ring-slate-500/60'
+                                            }`}
+                                        >
+                                            <span
+                                                className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${
+                                                    downloadConditions.requireReconfirmation ? 'translate-x-5' : 'translate-x-1'
+                                                }`}
+                                            />
+                                        </button>
+                                    </div>
+                                    <div className="flex items-center justify-between gap-4 rounded-lg border border-slate-700/80 bg-slate-900/80 px-3 py-3">
+                                        <div className="text-slate-100 text-sm">Notify me on each download</div>
+                                        <button
+                                            type="button"
+                                            aria-pressed={downloadConditions.notifyOnDownload}
+                                            onClick={() => setDownloadConditions(prev => ({ ...prev, notifyOnDownload: !prev.notifyOnDownload }))}
+                                            className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
+                                                downloadConditions.notifyOnDownload
+                                                    ? 'bg-cyan-500 ring-1 ring-cyan-300/40'
+                                                    : 'bg-slate-700 ring-1 ring-slate-500/60'
+                                            }`}
+                                        >
+                                            <span
+                                                className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${
+                                                    downloadConditions.notifyOnDownload ? 'translate-x-5' : 'translate-x-1'
+                                                }`}
+                                            />
+                                        </button>
+                                    </div>
+                                    <div className="flex items-center justify-between gap-4 rounded-lg border border-slate-700/80 bg-slate-900/80 px-3 py-3">
+                                        <div className="text-slate-100 text-sm">Allow download only after escrow window expires</div>
+                                        <button
+                                            type="button"
+                                            aria-pressed={downloadConditions.allowAfterEscrow}
+                                            onClick={() => setDownloadConditions(prev => ({ ...prev, allowAfterEscrow: !prev.allowAfterEscrow }))}
+                                            className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
+                                                downloadConditions.allowAfterEscrow
+                                                    ? 'bg-cyan-500 ring-1 ring-cyan-300/40'
+                                                    : 'bg-slate-700 ring-1 ring-slate-500/60'
+                                            }`}
+                                        >
+                                            <span
+                                                className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${
+                                                    downloadConditions.allowAfterEscrow ? 'translate-x-5' : 'translate-x-1'
+                                                }`}
+                                            />
+                                        </button>
+                                    </div>
+                                    <div className="flex items-center justify-between gap-4 rounded-lg border border-slate-700/80 bg-slate-900/80 px-3 py-3">
+                                        <div className="text-slate-100 text-sm">Max downloads per license</div>
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            value={downloadConditions.maxDownloads}
+                                            onChange={(e) => setDownloadConditions(prev => ({ ...prev, maxDownloads: parseInt(e.target.value) || 1 }))}
+                                            className="w-16 bg-slate-800 border border-slate-600 rounded-lg px-3 py-1.5 text-slate-100 text-sm text-center focus:outline-none focus:border-cyan-500/50"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="mt-4 pt-3 border-t border-slate-700">
+                            <div className="text-xs text-slate-500 italic">Platform Only providers receive a +5 Trust Score bonus and a Maximum Security Tier badge visible to all buyers.</div>
                         </div>
                     </div>
 

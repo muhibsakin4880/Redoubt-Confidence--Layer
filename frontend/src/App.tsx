@@ -34,6 +34,7 @@ import ContributionStatusDetailsPage from './pages/ContributionStatusDetailsPage
 import AccessRequestsPage from './pages/AccessRequestsPage'
 import AccessRequestDetailPage from './pages/AccessRequestDetailPage'
 import TrustProfilePage from './pages/TrustProfilePage'
+import TrustScoreHistoryPage from './pages/TrustScoreHistoryPage'
 import PipelinesPage from './pages/PipelinesPage'
 import SecurityOperationsPage from './pages/SecurityOperationsPage'
 import ComplianceLockerPage from './pages/ComplianceLockerPage'
@@ -179,6 +180,7 @@ function App() {
                     <Route path="requests" element={<Navigate to="/access-requests" replace />} />
                     <Route path="escrow-center" element={<EscrowCenterPage />} />
                     <Route path="trust-profile" element={<TrustProfilePage />} />
+                    <Route path="trust-score-history" element={<TrustScoreHistoryPage />} />
                     <Route path="contributions" element={<ContributionsPage />} />
                     <Route path="contributions/ds-1003" element={<ContributionDetailPage />} />
                     <Route path="contributions/:datasetId/status-details" element={<ContributionStatusDetailsPage />} />
