@@ -12,6 +12,7 @@ import {
 import LifecycleGuidancePanel from '../components/LifecycleGuidancePanel'
 import { canPerformReviewerAction } from '../domain/actionGuardrails'
 import SecurityAuditTimeline from '../components/SecurityAuditTimeline'
+import ContractHealthPanel from '../components/ContractHealthPanel'
 
 type RiskLevel = 'Low Risk' | 'Medium Risk' | 'High Risk'
 
@@ -241,6 +242,14 @@ function RiskPanel({ selectedRequest, riskScore, riskLevel }: RiskPanelProps) {
 
                     <div className="mt-4">
                         <LifecycleGuidancePanel role="admin" state={selectedRequest.status} compact title="Reviewer Workflow" />
+                    </div>
+                    <div className="mt-4">
+                        <ContractHealthPanel
+                            contractId={`REQ-${selectedRequest.id}`}
+                            state={currentReviewState}
+                            compact
+                            title="Review Integrity Monitor"
+                        />
                     </div>
                     <div className="mt-4">
                         <SecurityAuditTimeline

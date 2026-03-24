@@ -6,6 +6,7 @@ import { CONTRACT_STATE_LABELS, type ContractLifecycleState } from '../../domain
 import LifecycleGuidancePanel from '../../components/LifecycleGuidancePanel'
 import { canPerformAdminEscrowAction } from '../../domain/actionGuardrails'
 import SecurityAuditTimeline from '../../components/SecurityAuditTimeline'
+import ContractHealthPanel from '../../components/ContractHealthPanel'
 
 type SummaryTone = 'blue' | 'green' | 'amber' | 'red'
 type TransactionStatus = Extract<
@@ -321,6 +322,11 @@ export default function EscrowVaultPage() {
                 </section>
 
                 <LifecycleGuidancePanel role="admin" state={focusedLifecycleState} title="Operations Guidance" />
+                <ContractHealthPanel
+                    contractId={focusedEscrowId}
+                    state={focusedLifecycleState}
+                    title="Vault Integrity Monitor"
+                />
                 <SecurityAuditTimeline
                     contractId={focusedEscrowId}
                     state={focusedLifecycleState}

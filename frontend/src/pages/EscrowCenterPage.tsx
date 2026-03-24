@@ -3,6 +3,7 @@ import { CONTRACT_STATE_LABELS, type ContractLifecycleState } from '../domain/ac
 import LifecycleGuidancePanel from '../components/LifecycleGuidancePanel'
 import { canPerformBuyerEscrowAction } from '../domain/actionGuardrails'
 import SecurityAuditTimeline from '../components/SecurityAuditTimeline'
+import ContractHealthPanel from '../components/ContractHealthPanel'
 
 type EscrowStatus = Extract<
     ContractLifecycleState,
@@ -265,6 +266,12 @@ export default function EscrowCenterPage() {
                     </div>
 
                     <LifecycleGuidancePanel role="buyer" state={selectedTransaction.status} compact title="Contract Guidance" />
+                    <ContractHealthPanel
+                        contractId={selectedTransaction.id}
+                        state={selectedTransaction.status}
+                        compact
+                        title="Escrow Integrity Monitor"
+                    />
 
                     <SecurityAuditTimeline
                         contractId={selectedTransaction.id}

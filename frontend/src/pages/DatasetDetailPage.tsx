@@ -5,6 +5,7 @@ import { requestReviewStateLabel, type ContractLifecycleState } from '../domain/
 import LifecycleGuidancePanel from '../components/LifecycleGuidancePanel'
 import { canPerformBuyerEscrowAction, canStartEscrowForRequest } from '../domain/actionGuardrails'
 import SecurityAuditTimeline from '../components/SecurityAuditTimeline'
+import ContractHealthPanel from '../components/ContractHealthPanel'
 
 const STATUS_STEPS = [
     {
@@ -316,6 +317,12 @@ export default function DatasetDetailPage() {
                             </div>
 
                             <LifecycleGuidancePanel role="buyer" state={requestStatus} compact title="Request Workflow Guidance" />
+                            <ContractHealthPanel
+                                contractId={`REQ-${dataset.id}`}
+                                state={escrowLifecycleState}
+                                compact
+                                title="Request Integrity Monitor"
+                            />
                             <SecurityAuditTimeline
                                 contractId={`REQ-${dataset.id}`}
                                 state={escrowLifecycleState}
