@@ -18,6 +18,7 @@ import ExecutionRunbookPanel from '../components/ExecutionRunbookPanel'
 import ControlTowerPanel from '../components/ControlTowerPanel'
 import ResilienceInsightsPanel from '../components/ResilienceInsightsPanel'
 import PolicyAttestationPanel from '../components/PolicyAttestationPanel'
+import DecisionGatePanel from '../components/DecisionGatePanel'
 
 type RiskLevel = 'Low Risk' | 'Medium Risk' | 'High Risk'
 
@@ -296,6 +297,15 @@ function RiskPanel({ selectedRequest, riskScore, riskLevel }: RiskPanelProps) {
                             role="reviewer"
                             compact
                             title="Reviewer Policy Attestation"
+                        />
+                    </div>
+                    <div className="mt-4">
+                        <DecisionGatePanel
+                            contractId={`REQ-${selectedRequest.id}`}
+                            state={currentReviewState}
+                            role="reviewer"
+                            compact
+                            title="Reviewer Decision Gate"
                         />
                     </div>
                     <div className="mt-4">

@@ -9,6 +9,7 @@ import ExecutionRunbookPanel from '../components/ExecutionRunbookPanel'
 import ControlTowerPanel from '../components/ControlTowerPanel'
 import ResilienceInsightsPanel from '../components/ResilienceInsightsPanel'
 import PolicyAttestationPanel from '../components/PolicyAttestationPanel'
+import DecisionGatePanel from '../components/DecisionGatePanel'
 
 type EscrowStatus = Extract<
     ContractLifecycleState,
@@ -312,6 +313,13 @@ export default function EscrowCenterPage() {
                         role="buyer"
                         compact
                         title="Buyer Policy Attestation"
+                    />
+                    <DecisionGatePanel
+                        contractId={selectedTransaction.id}
+                        state={selectedTransaction.status}
+                        role="buyer"
+                        compact
+                        title="Buyer Decision Gate"
                     />
                     <ExecutionRunbookPanel
                         contractId={selectedTransaction.id}
