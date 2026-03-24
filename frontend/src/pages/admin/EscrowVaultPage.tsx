@@ -2,10 +2,14 @@ import { useMemo, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import AdminLayout from '../../components/admin/AdminLayout'
 import { useAuth } from '../../contexts/AuthContext'
+import { CONTRACT_STATE_LABELS, type ContractLifecycleState } from '../../domain/accessContract'
 
 type SummaryTone = 'blue' | 'green' | 'amber' | 'red'
-type TransactionStatus = 'active' | 'pendingRelease' | 'disputed' | 'released'
-type FilterTab = 'all' | 'active' | 'pendingRelease' | 'disputed' | 'released'
+type TransactionStatus = Extract<
+    ContractLifecycleState,
+    'ACCESS_ACTIVE' | 'FUNDS_HELD' | 'RELEASE_PENDING' | 'DISPUTE_OPEN' | 'RELEASED_TO_PROVIDER'
+>
+type FilterTab = 'all' | 'active' | 'fundsHeld' | 'pendingRelease' | 'disputed' | 'released'
 type ActionTone = 'blue' | 'green' | 'amber' | 'red' | 'slate'
 
 type SummaryCard = {
@@ -68,8 +72,8 @@ const transactionRows: TransactionRow[] = [
         provider: 'anon_provider_003',
         dataset: 'Global Climate 2020-2024',
         amount: '$299',
-        statusLabel: 'ACTIVE',
-        status: 'active',
+        statusLabel: CONTRACT_STATE_LABELS.ACCESS_ACTIVE,
+        status: 'ACCESS_ACTIVE',
         window: '47:23:11',
         actionLabel: 'REVIEW',
         actionTone: 'blue'
@@ -80,8 +84,8 @@ const transactionRows: TransactionRow[] = [
         provider: 'anon_provider_007',
         dataset: 'Financial Tick Data',
         amount: '$499',
-        statusLabel: 'PENDING RELEASE',
-        status: 'pendingRelease',
+        statusLabel: CONTRACT_STATE_LABELS.RELEASE_PENDING,
+        status: 'RELEASE_PENDING',
         window: '02:14:33',
         actionLabel: 'RELEASE',
         actionTone: 'green'
@@ -92,8 +96,8 @@ const transactionRows: TransactionRow[] = [
         provider: 'anon_provider_012',
         dataset: 'Clinical Outcomes Delta',
         amount: '$799',
-        statusLabel: 'DISPUTED',
-        status: 'disputed',
+        statusLabel: CONTRACT_STATE_LABELS.DISPUTE_OPEN,
+        status: 'DISPUTE_OPEN',
         window: 'Frozen',
         actionLabel: 'RESOLVE',
         actionTone: 'red'
@@ -104,8 +108,8 @@ const transactionRows: TransactionRow[] = [
         provider: 'anon_provider_005',
         dataset: 'Consumer Behavior Analytics',
         amount: '$399',
-        statusLabel: 'ACTIVE',
-        status: 'active',
+        statusLabel: CONTRACT_STATE_LABELS.FUNDS_HELD,
+        status: 'FUNDS_HELD',
         window: '23:45:00',
         actionLabel: 'REVIEW',
         actionTone: 'blue'
@@ -116,8 +120,8 @@ const transactionRows: TransactionRow[] = [
         provider: 'anon_provider_009',
         dataset: 'Genomics Research Dataset',
         amount: '$599',
-        statusLabel: 'PENDING RELEASE',
-        status: 'pendingRelease',
+        statusLabel: CONTRACT_STATE_LABELS.RELEASE_PENDING,
+        status: 'RELEASE_PENDING',
         window: '00:47:22',
         actionLabel: 'RELEASE',
         actionTone: 'green'
@@ -128,8 +132,8 @@ const transactionRows: TransactionRow[] = [
         provider: 'anon_provider_002',
         dataset: 'Satellite Land Use 2024',
         amount: '$249',
-        statusLabel: 'DISPUTED',
-        status: 'disputed',
+        statusLabel: CONTRACT_STATE_LABELS.DISPUTE_OPEN,
+        status: 'DISPUTE_OPEN',
         window: 'Frozen',
         actionLabel: 'RESOLVE',
         actionTone: 'red'
@@ -140,8 +144,8 @@ const transactionRows: TransactionRow[] = [
         provider: 'anon_provider_014',
         dataset: 'Healthcare IoT Stream',
         amount: '$899',
-        statusLabel: 'RELEASED',
-        status: 'released',
+        statusLabel: CONTRACT_STATE_LABELS.RELEASED_TO_PROVIDER,
+        status: 'RELEASED_TO_PROVIDER',
         window: 'Completed',
         actionLabel: 'VIEW',
         actionTone: 'slate'
@@ -152,8 +156,8 @@ const transactionRows: TransactionRow[] = [
         provider: 'anon_provider_008',
         dataset: 'Smart Grid Energy Data',
         amount: '$349',
-        statusLabel: 'ACTIVE',
-        status: 'active',
+        statusLabel: CONTRACT_STATE_LABELS.ACCESS_ACTIVE,
+        status: 'ACCESS_ACTIVE',
         window: '71:12:44',
         actionLabel: 'REVIEW',
         actionTone: 'blue'
@@ -204,6 +208,7 @@ const monthlyFinancialRows: MonthlyFinancialRow[] = [
 const filterTabs: Array<{ key: FilterTab; label: string }> = [
     { key: 'all', label: 'All' },
     { key: 'active', label: 'Active' },
+    { key: 'fundsHeld', label: 'Funds Held' },
     { key: 'pendingRelease', label: 'Pending Release' },
     { key: 'disputed', label: 'Disputed' },
     { key: 'released', label: 'Released' }
@@ -224,10 +229,11 @@ const summaryAccentClasses: Record<SummaryTone, string> = {
 }
 
 const statusBadgeClasses: Record<TransactionStatus, string> = {
-    active: 'border-cyan-500/40 bg-cyan-500/10 text-cyan-200',
-    pendingRelease: 'border-amber-500/40 bg-amber-500/10 text-amber-200',
-    disputed: 'border-red-500/40 bg-red-500/10 text-red-200',
-    released: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200'
+    ACCESS_ACTIVE: 'border-cyan-500/40 bg-cyan-500/10 text-cyan-200',
+    FUNDS_HELD: 'border-amber-500/40 bg-amber-500/10 text-amber-200',
+    RELEASE_PENDING: 'border-indigo-500/40 bg-indigo-500/10 text-indigo-200',
+    DISPUTE_OPEN: 'border-red-500/40 bg-red-500/10 text-red-200',
+    RELEASED_TO_PROVIDER: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200'
 }
 
 const actionButtonClasses: Record<ActionTone, string> = {
@@ -248,7 +254,11 @@ export default function EscrowVaultPage() {
 
     const filteredTransactions = useMemo(() => {
         if (activeFilter === 'all') return transactionRows
-        return transactionRows.filter(row => row.status === activeFilter)
+        if (activeFilter === 'active') return transactionRows.filter(row => row.status === 'ACCESS_ACTIVE')
+        if (activeFilter === 'fundsHeld') return transactionRows.filter(row => row.status === 'FUNDS_HELD')
+        if (activeFilter === 'pendingRelease') return transactionRows.filter(row => row.status === 'RELEASE_PENDING')
+        if (activeFilter === 'disputed') return transactionRows.filter(row => row.status === 'DISPUTE_OPEN')
+        return transactionRows.filter(row => row.status === 'RELEASED_TO_PROVIDER')
     }, [activeFilter])
 
     if (!isAuthenticated) return <Navigate to="/admin/login" replace />

@@ -1,3 +1,5 @@
+import type { RequestReviewState } from '../domain/accessContract'
+
 export type DatasetDetail = {
     id: string
     title: string
@@ -20,7 +22,7 @@ export type DatasetDetail = {
     accessNotes: string[]
     providerNotes: string[]
     access: {
-        status: 'pending' | 'approved' | 'rejected'
+        status: RequestReviewState
         allowedUsage: string[]
         instructions: string[]
         expiration: string
@@ -78,7 +80,7 @@ export const DATASET_DETAILS: Record<string, DatasetDetail> = {
             'Data pipeline monitored with integrity alerts and rollback paths.'
         ],
         access: {
-            status: 'pending',
+            status: 'REVIEW_IN_PROGRESS',
             allowedUsage: [
                 'Model training and validation',
                 'Exploratory analysis and dashboards',

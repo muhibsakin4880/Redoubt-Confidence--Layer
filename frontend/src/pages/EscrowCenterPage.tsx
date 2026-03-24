@@ -1,12 +1,10 @@
 import { useMemo, useState } from 'react'
+import { CONTRACT_STATE_LABELS, type ContractLifecycleState } from '../domain/accessContract'
 
-type EscrowStatus =
-    | 'REQUEST_SUBMITTED'
-    | 'ESCROW_PENDING'
-    | 'ESCROW_ACTIVE'
-    | 'IN_PROGRESS'
-    | 'ESCROW_RELEASED'
-    | 'ESCROW_DISPUTE'
+type EscrowStatus = Extract<
+    ContractLifecycleState,
+    'REQUEST_SUBMITTED' | 'FUNDS_HELD' | 'ACCESS_ACTIVE' | 'RELEASE_PENDING' | 'RELEASED_TO_PROVIDER' | 'DISPUTE_OPEN'
+>
 
 type AccessMethod = 'platform' | 'download'
 
@@ -20,33 +18,25 @@ type EscrowTransaction = {
     status: EscrowStatus
 }
 
-const summaryStats = [
-    { label: 'Active Escrows', value: '4' },
-    { label: 'Pending Approval', value: '2' },
-    { label: 'Released This Month', value: '12' },
-    { label: 'Disputes', value: '1' },
-    { label: 'Total Value in Escrow', value: '$8,420' }
-]
-
 const escrowTransactions: EscrowTransaction[] = [
     { id: 'ESC-2026-001', dataset: 'Global Climate 2020-2024', buyer: 'part_anon_042', provider: 'anon_provider_003', amount: '$299', accessMethod: 'platform', status: 'REQUEST_SUBMITTED' },
-    { id: 'ESC-2026-002', dataset: 'Financial Tick Data', buyer: 'part_anon_017', provider: 'anon_provider_007', amount: '$499', accessMethod: 'platform', status: 'ESCROW_PENDING' },
-    { id: 'ESC-2026-003', dataset: 'Clinical Outcomes Delta', buyer: 'part_anon_089', provider: 'anon_provider_012', amount: '$799', accessMethod: 'download', status: 'ESCROW_ACTIVE' },
-    { id: 'ESC-2026-004', dataset: 'Consumer Behavior Analytics', buyer: 'part_anon_031', provider: 'anon_provider_005', amount: '$399', accessMethod: 'platform', status: 'IN_PROGRESS' },
-    { id: 'ESC-2026-005', dataset: 'Genomics Research Dataset', buyer: 'part_anon_056', provider: 'anon_provider_009', amount: '$599', accessMethod: 'download', status: 'ESCROW_RELEASED' },
-    { id: 'ESC-2026-006', dataset: 'Satellite Land Use 2024', buyer: 'part_anon_008', provider: 'anon_provider_002', amount: '$249', accessMethod: 'platform', status: 'ESCROW_DISPUTE' },
-    { id: 'ESC-2026-007', dataset: 'Healthcare Claims 2023', buyer: 'part_anon_015', provider: 'anon_provider_011', amount: '$899', accessMethod: 'download', status: 'ESCROW_ACTIVE' },
-    { id: 'ESC-2026-008', dataset: 'IoT Sensor Network Data', buyer: 'part_anon_028', provider: 'anon_provider_004', amount: '$349', accessMethod: 'platform', status: 'IN_PROGRESS' },
-    { id: 'ESC-2026-009', dataset: 'Retail Transaction Logs', buyer: 'part_anon_063', provider: 'anon_provider_008', amount: '$449', accessMethod: 'platform', status: 'ESCROW_PENDING' }
+    { id: 'ESC-2026-002', dataset: 'Financial Tick Data', buyer: 'part_anon_017', provider: 'anon_provider_007', amount: '$499', accessMethod: 'platform', status: 'FUNDS_HELD' },
+    { id: 'ESC-2026-003', dataset: 'Clinical Outcomes Delta', buyer: 'part_anon_089', provider: 'anon_provider_012', amount: '$799', accessMethod: 'download', status: 'ACCESS_ACTIVE' },
+    { id: 'ESC-2026-004', dataset: 'Consumer Behavior Analytics', buyer: 'part_anon_031', provider: 'anon_provider_005', amount: '$399', accessMethod: 'platform', status: 'ACCESS_ACTIVE' },
+    { id: 'ESC-2026-005', dataset: 'Genomics Research Dataset', buyer: 'part_anon_056', provider: 'anon_provider_009', amount: '$599', accessMethod: 'download', status: 'RELEASED_TO_PROVIDER' },
+    { id: 'ESC-2026-006', dataset: 'Satellite Land Use 2024', buyer: 'part_anon_008', provider: 'anon_provider_002', amount: '$249', accessMethod: 'platform', status: 'DISPUTE_OPEN' },
+    { id: 'ESC-2026-007', dataset: 'Healthcare Claims 2023', buyer: 'part_anon_015', provider: 'anon_provider_011', amount: '$899', accessMethod: 'download', status: 'ACCESS_ACTIVE' },
+    { id: 'ESC-2026-008', dataset: 'IoT Sensor Network Data', buyer: 'part_anon_028', provider: 'anon_provider_004', amount: '$349', accessMethod: 'platform', status: 'RELEASE_PENDING' },
+    { id: 'ESC-2026-009', dataset: 'Retail Transaction Logs', buyer: 'part_anon_063', provider: 'anon_provider_008', amount: '$449', accessMethod: 'platform', status: 'FUNDS_HELD' }
 ]
 
 const statusStyles: Record<EscrowStatus, { badge: string; text: string }> = {
-    REQUEST_SUBMITTED: { badge: 'border-slate-500/40 bg-slate-500/10 text-slate-300', text: 'REQUEST_SUBMITTED' },
-    ESCROW_PENDING: { badge: 'border-amber-500/40 bg-amber-500/10 text-amber-300', text: 'ESCROW_PENDING' },
-    ESCROW_ACTIVE: { badge: 'border-blue-500/40 bg-blue-500/10 text-blue-300', text: 'ESCROW_ACTIVE' },
-    IN_PROGRESS: { badge: 'border-blue-500/40 bg-blue-500/10 text-blue-300', text: 'IN_PROGRESS' },
-    ESCROW_RELEASED: { badge: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300', text: 'ESCROW_RELEASED' },
-    ESCROW_DISPUTE: { badge: 'border-rose-500/40 bg-rose-500/10 text-rose-300', text: 'ESCROW_DISPUTE' }
+    REQUEST_SUBMITTED: { badge: 'border-slate-500/40 bg-slate-500/10 text-slate-300', text: CONTRACT_STATE_LABELS.REQUEST_SUBMITTED },
+    FUNDS_HELD: { badge: 'border-amber-500/40 bg-amber-500/10 text-amber-300', text: CONTRACT_STATE_LABELS.FUNDS_HELD },
+    ACCESS_ACTIVE: { badge: 'border-blue-500/40 bg-blue-500/10 text-blue-300', text: CONTRACT_STATE_LABELS.ACCESS_ACTIVE },
+    RELEASE_PENDING: { badge: 'border-indigo-500/40 bg-indigo-500/10 text-indigo-300', text: CONTRACT_STATE_LABELS.RELEASE_PENDING },
+    RELEASED_TO_PROVIDER: { badge: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300', text: CONTRACT_STATE_LABELS.RELEASED_TO_PROVIDER },
+    DISPUTE_OPEN: { badge: 'border-rose-500/40 bg-rose-500/10 text-rose-300', text: CONTRACT_STATE_LABELS.DISPUTE_OPEN }
 }
 
 const accessMethodStyles: Record<AccessMethod, { badge: string; icon: string }> = {
@@ -63,7 +53,8 @@ const timelineSteps = [
     { label: 'Clearance Ledger Updated', timestamp: 'Pending', state: 'pending' }
 ]
 
-const filterTabs = ['All', 'Active', 'Pending', 'Disputed', 'Released']
+const filterTabs = ['All', 'Active', 'Pending', 'Release Pending', 'Disputed', 'Released'] as const
+type FilterTab = (typeof filterTabs)[number]
 const feedbackTags = ['Accurate schema', 'Clean data', 'As described', 'Fast access', 'Schema mismatch', 'Poor quality']
 const activeDisputes = [
     { id: 'ESC-2026-006', dataset: 'Satellite Land Use 2024', raisedBy: 'part_anon_008', reason: 'Data schema mismatch from description', raised: '2026-03-09', status: 'Under Investigation' }
@@ -73,7 +64,7 @@ export default function EscrowCenterPage() {
     const [selectedId, setSelectedId] = useState('ESC-2026-003')
     const [currentPage, setCurrentPage] = useState(1)
     const [rowsPerPage, setRowsPerPage] = useState(10)
-    const [activeFilter, setActiveFilter] = useState('All')
+    const [activeFilter, setActiveFilter] = useState<FilterTab>('All')
     const [showFeedbackModal, setShowFeedbackModal] = useState(false)
     const [starRating, setStarRating] = useState(0)
     const [selectedTags, setSelectedTags] = useState<string[]>([])
@@ -84,8 +75,33 @@ export default function EscrowCenterPage() {
         return escrowTransactions.find(item => item.id === selectedId) ?? escrowTransactions[2]
     }, [selectedId])
 
+    const filteredTransactions = useMemo(() => {
+        if (activeFilter === 'All') return escrowTransactions
+        if (activeFilter === 'Active') return escrowTransactions.filter(t => t.status === 'ACCESS_ACTIVE')
+        if (activeFilter === 'Pending') return escrowTransactions.filter(t => t.status === 'REQUEST_SUBMITTED' || t.status === 'FUNDS_HELD')
+        if (activeFilter === 'Release Pending') return escrowTransactions.filter(t => t.status === 'RELEASE_PENDING')
+        if (activeFilter === 'Disputed') return escrowTransactions.filter(t => t.status === 'DISPUTE_OPEN')
+        return escrowTransactions.filter(t => t.status === 'RELEASED_TO_PROVIDER')
+    }, [activeFilter])
+
     const totalPageValue = useMemo(() => {
-        return escrowTransactions.reduce((sum, t) => sum + parseInt(t.amount.replace('$', '')), 0)
+        return filteredTransactions.reduce((sum, t) => sum + parseInt(t.amount.replace('$', ''), 10), 0)
+    }, [filteredTransactions])
+
+    const summaryStats = useMemo(() => {
+        const activeEscrows = escrowTransactions.filter(t => t.status === 'ACCESS_ACTIVE').length
+        const pendingReview = escrowTransactions.filter(t => t.status === 'REQUEST_SUBMITTED' || t.status === 'FUNDS_HELD').length
+        const released = escrowTransactions.filter(t => t.status === 'RELEASED_TO_PROVIDER').length
+        const disputes = escrowTransactions.filter(t => t.status === 'DISPUTE_OPEN').length
+        const totalValue = escrowTransactions.reduce((sum, t) => sum + parseInt(t.amount.replace('$', ''), 10), 0)
+
+        return [
+            { label: 'Access Active', value: `${activeEscrows}` },
+            { label: 'Pending Review/Hold', value: `${pendingReview}` },
+            { label: 'Released Cases', value: `${released}` },
+            { label: 'Disputes', value: `${disputes}` },
+            { label: 'Total Value in Escrow', value: `$${totalValue.toLocaleString()}` }
+        ]
     }, [])
 
     const toggleTag = (tag: string) => {
@@ -167,7 +183,7 @@ export default function EscrowCenterPage() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-800">
-                                {escrowTransactions.map(row => {
+                                {filteredTransactions.map(row => {
                                     const isSelected = row.id === selectedId
                                     const statusStyle = statusStyles[row.status]
                                     const accessStyle = accessMethodStyles[row.accessMethod]
@@ -189,7 +205,21 @@ export default function EscrowCenterPage() {
                                             </td>
                                             <td className="px-3 py-3">
                                                 <span className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] font-medium ${statusStyle.badge}`}>
-                                                    <span className={`h-1.5 w-1.5 rounded-full ${row.status === 'IN_PROGRESS' ? 'bg-blue-400 animate-pulse' : row.status === 'ESCROW_DISPUTE' ? 'bg-rose-400' : row.status === 'ESCROW_PENDING' ? 'bg-amber-400' : row.status === 'ESCROW_ACTIVE' ? 'bg-blue-400' : row.status === 'ESCROW_RELEASED' ? 'bg-emerald-400' : 'bg-slate-400'}`} />
+                                                    <span
+                                                        className={`h-1.5 w-1.5 rounded-full ${
+                                                            row.status === 'ACCESS_ACTIVE'
+                                                                ? 'bg-blue-400 animate-pulse'
+                                                                : row.status === 'DISPUTE_OPEN'
+                                                                  ? 'bg-rose-400'
+                                                                  : row.status === 'FUNDS_HELD' || row.status === 'REQUEST_SUBMITTED'
+                                                                    ? 'bg-amber-400'
+                                                                    : row.status === 'RELEASE_PENDING'
+                                                                      ? 'bg-indigo-400'
+                                                                      : row.status === 'RELEASED_TO_PROVIDER'
+                                                                        ? 'bg-emerald-400'
+                                                                        : 'bg-slate-400'
+                                                        }`}
+                                                    />
                                                     {statusStyle.text}
                                                 </span>
                                             </td>

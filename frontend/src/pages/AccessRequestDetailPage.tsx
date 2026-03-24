@@ -1,5 +1,5 @@
 import { Link, useParams } from 'react-router-dom'
-import { datasetRequests, statusStyles } from '../data/workspaceData'
+import { datasetRequests, requestStatusLabel, statusStyles } from '../data/workspaceData'
 
 export default function AccessRequestDetailPage() {
     const { requestId } = useParams()
@@ -23,12 +23,12 @@ export default function AccessRequestDetailPage() {
     }
 
     const reviewerReason =
-        request.status === 'Approved'
+        request.status === 'REQUEST_APPROVED'
             ? 'No reviewer feedback required after approval.'
             : request.reviewerFeedback || 'Reviewer feedback is still being prepared.'
 
     const expectedResolution =
-        request.status === 'Pending'
+        request.status === 'REVIEW_IN_PROGRESS'
             ? request.expectedResolution || 'Resolution timeline will be shared after reviewer assignment.'
             : 'Not applicable'
 
@@ -41,7 +41,7 @@ export default function AccessRequestDetailPage() {
                         <p className="text-slate-400 text-sm mt-1">Detailed review status and workflow context for this access request.</p>
                     </div>
                     <span className={`px-3 py-1 rounded-full border text-xs font-medium w-fit ${statusStyles[request.status]}`}>
-                        {request.status}
+                        {requestStatusLabel(request.status)}
                     </span>
                 </div>
 

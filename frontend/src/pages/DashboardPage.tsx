@@ -4,8 +4,8 @@ import { datasetRequests, participantTrust, trustLevel } from '../data/workspace
 export default function DashboardPage() {
     const misusePenalty = participantTrust.misuseWarning ? participantTrust.misusePenalty : 0
     const netTrustScore = Math.max(participantTrust.score - misusePenalty, 0)
-    const pendingRequests = datasetRequests.filter(item => item.status === 'Pending').length
-    const approvedAccess = datasetRequests.filter(item => item.status === 'Approved').length
+    const pendingRequests = datasetRequests.filter(item => item.status === 'REVIEW_IN_PROGRESS').length
+    const approvedAccess = datasetRequests.filter(item => item.status === 'REQUEST_APPROVED').length
     const trustSummary = trustLevel(netTrustScore)
 
     const executiveStats = [

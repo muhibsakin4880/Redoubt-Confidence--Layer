@@ -1,4 +1,6 @@
-export type RequestStatus = 'Approved' | 'Pending' | 'Rejected'
+import { requestReviewStateLabel, type RequestReviewState } from '../domain/accessContract'
+
+export type RequestStatus = RequestReviewState
 
 export type DatasetRequest = {
     id: string
@@ -47,7 +49,7 @@ export const datasetRequests: DatasetRequest[] = [
         requestNumber: 'AR-2026-320',
         name: 'Financial Market Tick Data',
         confidence: 95,
-        status: 'Approved',
+        status: 'REQUEST_APPROVED',
         submittedDate: '2026-02-02',
         lastUpdated: '2026-02-12',
         category: 'Finance',
@@ -59,7 +61,7 @@ export const datasetRequests: DatasetRequest[] = [
         requestNumber: 'AR-2026-204',
         name: 'Global Climate Observations 2020-2024',
         confidence: 96,
-        status: 'Pending',
+        status: 'REVIEW_IN_PROGRESS',
         submittedDate: '2026-02-06',
         lastUpdated: '2026-02-10',
         category: 'Climate Science',
@@ -73,7 +75,7 @@ export const datasetRequests: DatasetRequest[] = [
         requestNumber: 'AR-2026-118',
         name: 'Sentiment Analysis Corpus - Social Media',
         confidence: 89,
-        status: 'Pending',
+        status: 'REVIEW_IN_PROGRESS',
         submittedDate: '2026-02-04',
         lastUpdated: '2026-02-08',
         category: 'NLP & Text',
@@ -87,7 +89,7 @@ export const datasetRequests: DatasetRequest[] = [
         requestNumber: 'AR-2026-441',
         name: 'Medical Imaging Dataset - Chest X-Rays',
         confidence: 92,
-        status: 'Rejected',
+        status: 'REQUEST_REJECTED',
         submittedDate: '2026-01-29',
         lastUpdated: '2026-02-05',
         category: 'Healthcare',
@@ -100,7 +102,7 @@ export const datasetRequests: DatasetRequest[] = [
         requestNumber: 'AR-2026-147',
         name: 'Urban Traffic Flow Patterns',
         confidence: 91,
-        status: 'Approved',
+        status: 'REQUEST_APPROVED',
         submittedDate: '2026-01-31',
         lastUpdated: '2026-02-09',
         category: 'Smart Cities',
@@ -208,10 +210,12 @@ export const participantActivity: ParticipantActivityEvent[] = [
 ]
 
 export const statusStyles: Record<RequestStatus, string> = {
-    Approved: 'border-emerald-500/60 bg-emerald-500/10 text-emerald-200',
-    Pending: 'border-amber-400/60 bg-amber-500/10 text-amber-200',
-    Rejected: 'border-rose-500/60 bg-rose-500/10 text-rose-200'
+    REQUEST_APPROVED: 'border-emerald-500/60 bg-emerald-500/10 text-emerald-200',
+    REVIEW_IN_PROGRESS: 'border-amber-400/60 bg-amber-500/10 text-amber-200',
+    REQUEST_REJECTED: 'border-rose-500/60 bg-rose-500/10 text-rose-200'
 }
+
+export const requestStatusLabel = (status: RequestStatus) => requestReviewStateLabel(status)
 
 export const activityDot: Record<RecentActivityItem['type'], string> = {
     success: 'bg-emerald-400',

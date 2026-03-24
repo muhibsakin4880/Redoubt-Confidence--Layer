@@ -1,20 +1,21 @@
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { DEFAULT_DATASET, DATASET_DETAILS, RequestStatus, confidenceLevel, decisionLabel } from '../data/datasetDetailData'
+import { requestReviewStateLabel } from '../domain/accessContract'
 
 const STATUS_STEPS = [
     {
-        id: 'pending',
+        id: 'REVIEW_IN_PROGRESS',
         title: 'Pending review',
         description: 'Team reviews purpose, controls, and delivery options.'
     },
     {
-        id: 'approved',
+        id: 'REQUEST_APPROVED',
         title: 'Approved',
         description: 'Access configured with scoped keys and workspace policies.'
     },
     {
-        id: 'rejected',
+        id: 'REQUEST_REJECTED',
         title: 'Rejected',
         description: 'Request declined with rationale and alternatives.'
     }
@@ -59,7 +60,7 @@ export default function DatasetDetailPage() {
     }, [location.pathname, location.state, navigate])
 
     const handleSubmitRequest = () => {
-        setRequestStatus('pending')
+        setRequestStatus('REVIEW_IN_PROGRESS')
         setShowRequestModal(false)
     }
 
@@ -189,7 +190,7 @@ export default function DatasetDetailPage() {
                                 </div>
                                 <div className="text-[11px] uppercase tracking-[0.14em] text-slate-400 text-center">AI Confidence Verified Dataset</div>
                             </div>
-                            {requestStatus !== 'approved' && (
+                            {requestStatus !== 'REQUEST_APPROVED' && (
                                 <div className="text-xs text-slate-400 border border-slate-700 rounded-lg px-3 py-2 bg-slate-900/80">
                                     Preview only until access is approved. No raw data is exposed; provider identity stays private.
                                 </div>
@@ -284,24 +285,20 @@ export default function DatasetDetailPage() {
                                 <div className="flex items-center justify-between mb-3">
                                     <div className="text-sm text-slate-400">Current status</div>
                                     <span
-                                        className={`px-3 py-1 rounded-full border text-xs ${requestStatus === 'approved'
+                                        className={`px-3 py-1 rounded-full border text-xs ${requestStatus === 'REQUEST_APPROVED'
                                                 ? 'bg-green-500/15 border-green-400 text-green-200'
-                                                : requestStatus === 'pending'
+                                                : requestStatus === 'REVIEW_IN_PROGRESS'
                                                     ? 'bg-yellow-500/15 border-yellow-400 text-yellow-200'
                                                     : 'bg-red-500/15 border-red-400 text-red-200'
                                             }`}
                                     >
-                                        {requestStatus === 'approved'
-                                            ? 'Approved'
-                                            : requestStatus === 'pending'
-                                                ? 'Pending review'
-                                                : 'Rejected'}
+                                        {requestReviewStateLabel(requestStatus)}
                                     </span>
                                 </div>
                                 <p className="text-slate-300 text-sm">
-                                    {requestStatus === 'approved' && 'Access configured. Review scope and instructions below.'}
-                                    {requestStatus === 'pending' && 'We received your request. A reviewer will follow up with controls and delivery steps.'}
-                                    {requestStatus === 'rejected' && 'Request declined. We can suggest alternate sources or share summary stats.'}
+                                    {requestStatus === 'REQUEST_APPROVED' && 'Access configured. Review scope and instructions below.'}
+                                    {requestStatus === 'REVIEW_IN_PROGRESS' && 'We received your request. A reviewer will follow up with controls and delivery steps.'}
+                                    {requestStatus === 'REQUEST_REJECTED' && 'Request declined. We can suggest alternate sources or share summary stats.'}
                                 </p>
                             </div>
 
@@ -411,7 +408,7 @@ export default function DatasetDetailPage() {
                         </div>
                     </div>
 
-                    {requestStatus === 'approved' && (
+                    {requestStatus === 'REQUEST_APPROVED' && (
                                 <div className="bg-slate-900/60 border border-green-500/30 rounded-xl p-5">
                             <div className="flex items-center gap-2 text-green-200 mb-3">
                                 <span className="w-2 h-2 rounded-full bg-green-300" />

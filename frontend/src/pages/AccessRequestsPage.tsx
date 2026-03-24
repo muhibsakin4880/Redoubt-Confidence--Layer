@@ -5,6 +5,7 @@ import {
     confidenceColor,
     datasetRequests,
     recentActivity,
+    requestStatusLabel,
     statusStyles,
     type DatasetRequest
 } from '../data/workspaceData'
@@ -55,8 +56,8 @@ export default function AccessRequestsPage() {
     const [selectedRequest, setSelectedRequest] = useState<DatasetRequest | null>(null)
 
     const requestedCount = datasetRequests.length
-    const approvedCount = datasetRequests.filter(item => item.status === 'Approved').length
-    const pendingCount = datasetRequests.filter(item => item.status === 'Pending').length
+    const approvedCount = datasetRequests.filter(item => item.status === 'REQUEST_APPROVED').length
+    const pendingCount = datasetRequests.filter(item => item.status === 'REVIEW_IN_PROGRESS').length
 
     const riskScore = useMemo(() => (selectedRequest ? computeRiskScore(selectedRequest) : 72), [selectedRequest])
     const riskLevel = useMemo(() => computeRiskLevel(riskScore), [riskScore])
@@ -176,7 +177,7 @@ function RequestTableRow({ request, onSelect, riskScore, isSelected }: RequestTa
             </td>
             <td className="py-4 px-4">
                 <span className={`px-3 py-1 rounded-full border text-xs font-medium ${statusStyles[request.status]}`}>
-                    {request.status}
+                    {requestStatusLabel(request.status)}
                 </span>
             </td>
             <td className="py-4 px-4 text-slate-300">{request.lastUpdated}</td>
