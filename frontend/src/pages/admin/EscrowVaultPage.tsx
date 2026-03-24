@@ -5,6 +5,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import { CONTRACT_STATE_LABELS, type ContractLifecycleState } from '../../domain/accessContract'
 import LifecycleGuidancePanel from '../../components/LifecycleGuidancePanel'
 import { canPerformAdminEscrowAction } from '../../domain/actionGuardrails'
+import SecurityAuditTimeline from '../../components/SecurityAuditTimeline'
 
 type SummaryTone = 'blue' | 'green' | 'amber' | 'red'
 type TransactionStatus = Extract<
@@ -285,6 +286,7 @@ export default function EscrowVaultPage() {
         if (activeFilter === 'released') return 'RELEASED_TO_PROVIDER'
         return filteredTransactions[0]?.status ?? 'REVIEW_IN_PROGRESS'
     }, [activeFilter, filteredTransactions])
+    const focusedEscrowId = useMemo(() => filteredTransactions[0]?.escId ?? 'ESC-2026-001', [filteredTransactions])
 
     if (!isAuthenticated) return <Navigate to="/admin/login" replace />
 
@@ -319,6 +321,11 @@ export default function EscrowVaultPage() {
                 </section>
 
                 <LifecycleGuidancePanel role="admin" state={focusedLifecycleState} title="Operations Guidance" />
+                <SecurityAuditTimeline
+                    contractId={focusedEscrowId}
+                    state={focusedLifecycleState}
+                    title="Escrow Audit Timeline"
+                />
 
                 <section className="rounded-xl border border-slate-800/60 bg-slate-900/60 backdrop-blur-xl shadow-2xl shadow-black/30">
                     <div className="px-5 py-4 border-b border-slate-800/60">

@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { CONTRACT_STATE_LABELS, type ContractLifecycleState } from '../domain/accessContract'
 import LifecycleGuidancePanel from '../components/LifecycleGuidancePanel'
 import { canPerformBuyerEscrowAction } from '../domain/actionGuardrails'
+import SecurityAuditTimeline from '../components/SecurityAuditTimeline'
 
 type EscrowStatus = Extract<
     ContractLifecycleState,
@@ -45,15 +46,6 @@ const accessMethodStyles: Record<AccessMethod, { badge: string; icon: string }> 
     platform: { badge: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300', icon: '🔒' },
     download: { badge: 'border-blue-500/40 bg-blue-500/10 text-blue-300', icon: '⬇️' }
 }
-
-const timelineSteps = [
-    { label: 'Request Submitted', timestamp: '2026-03-08 09:14', state: 'complete' },
-    { label: 'Escrow Pending', timestamp: '2026-03-08 09:15', state: 'complete' },
-    { label: 'Provider Approved', timestamp: '2026-03-08 11:32', state: 'complete' },
-    { label: 'Escrow Active', timestamp: 'Since 2026-03-08 11:33', state: 'active', details: ['Controlled access granted', 'Monitoring active'] },
-    { label: 'Escrow Released', timestamp: 'Pending', state: 'pending' },
-    { label: 'Clearance Ledger Updated', timestamp: 'Pending', state: 'pending' }
-]
 
 const filterTabs = ['All', 'Active', 'Pending', 'Release Pending', 'Disputed', 'Released'] as const
 type FilterTab = (typeof filterTabs)[number]
@@ -274,41 +266,12 @@ export default function EscrowCenterPage() {
 
                     <LifecycleGuidancePanel role="buyer" state={selectedTransaction.status} compact title="Contract Guidance" />
 
-                    <div className="space-y-3">
-                        <div className="text-xs uppercase tracking-[0.14em] text-slate-500">Status Timeline</div>
-                        <div className="space-y-3">
-                            {timelineSteps.map((step, idx) => (
-                                <div key={step.label} className="flex items-start gap-3">
-                                    <div className="mt-0.5">
-                                        {step.state === 'complete' && (
-                                            <span className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-300 text-[10px]">✓</span>
-                                        )}
-                                        {step.state === 'active' && (
-                                            <span className="flex h-4 w-4 items-center justify-center rounded-full bg-blue-500/20">
-                                                <span className="h-2 w-2 rounded-full bg-blue-400 animate-pulse" />
-                                            </span>
-                                        )}
-                                        {step.state === 'pending' && (
-                                            <span className="flex h-4 w-4 items-center justify-center rounded-md border border-slate-600 text-slate-500">
-                                                <span className="h-1.5 w-1.5 rounded-sm bg-slate-600" />
-                                            </span>
-                                        )}
-                                    </div>
-                                    <div>
-                                        <div className="flex items-center gap-2 text-xs text-slate-300">
-                                            <span className="font-medium">{step.label}</span>
-                                            <span className="text-slate-500">— {step.timestamp}</span>
-                                        </div>
-                                        {'details' in step && step.details && (
-                                            <div className="text-[10px] text-slate-500 mt-0.5 space-y-0.5">
-                                                {step.details.map(d => <div key={d}>{d}</div>)}
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
+                    <SecurityAuditTimeline
+                        contractId={selectedTransaction.id}
+                        state={selectedTransaction.status}
+                        compact
+                        title="Status + Policy Timeline"
+                    />
 
                     <div className="bg-slate-900/70 border border-slate-700 rounded-lg p-3 space-y-2">
                         <div className="flex items-center justify-between text-sm">

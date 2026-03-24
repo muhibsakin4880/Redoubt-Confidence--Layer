@@ -4,6 +4,7 @@ import { DEFAULT_DATASET, DATASET_DETAILS, RequestStatus, confidenceLevel, decis
 import { requestReviewStateLabel, type ContractLifecycleState } from '../domain/accessContract'
 import LifecycleGuidancePanel from '../components/LifecycleGuidancePanel'
 import { canPerformBuyerEscrowAction, canStartEscrowForRequest } from '../domain/actionGuardrails'
+import SecurityAuditTimeline from '../components/SecurityAuditTimeline'
 
 const STATUS_STEPS = [
     {
@@ -315,6 +316,12 @@ export default function DatasetDetailPage() {
                             </div>
 
                             <LifecycleGuidancePanel role="buyer" state={requestStatus} compact title="Request Workflow Guidance" />
+                            <SecurityAuditTimeline
+                                contractId={`REQ-${dataset.id}`}
+                                state={escrowLifecycleState}
+                                compact
+                                title="Secure Access Audit Trail"
+                            />
 
                             <div className="bg-slate-900/80 border border-slate-700 rounded-xl p-5 space-y-5">
                                 <div className="flex items-center justify-between">
