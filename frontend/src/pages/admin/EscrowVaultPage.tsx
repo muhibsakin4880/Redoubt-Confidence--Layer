@@ -26,6 +26,16 @@ type TransactionStatus = Extract<
 type FilterTab = 'all' | 'active' | 'fundsHeld' | 'pendingRelease' | 'disputed' | 'released'
 type ActionTone = 'blue' | 'green' | 'amber' | 'red' | 'slate'
 type VaultWorkspace = 'overview' | 'riskAssessment' | 'disputes' | 'releaseQueue' | 'financials'
+type AdminRiskPanelKey =
+    | 'guidance'
+    | 'integrity'
+    | 'impact'
+    | 'controlTower'
+    | 'attestation'
+    | 'decisionGate'
+    | 'alertCenter'
+    | 'runbook'
+    | 'timeline'
 
 type SummaryCard = {
     label: string
@@ -235,6 +245,17 @@ const workspaceTabs: Array<{ key: VaultWorkspace; label: string; hint: string }>
     { key: 'releaseQueue', label: 'Release Queue', hint: 'Execute pending release decisions in one queue.' },
     { key: 'financials', label: 'Financials', hint: 'Monthly escrow GMV, fees, payouts, and net.' }
 ]
+const riskPanelTabs: Array<{ key: AdminRiskPanelKey; label: string }> = [
+    { key: 'guidance', label: 'Guidance' },
+    { key: 'integrity', label: 'Integrity' },
+    { key: 'impact', label: 'Impact' },
+    { key: 'controlTower', label: 'Control Tower' },
+    { key: 'attestation', label: 'Attestation' },
+    { key: 'decisionGate', label: 'Decision Gate' },
+    { key: 'alertCenter', label: 'Alert Center' },
+    { key: 'runbook', label: 'Runbook' },
+    { key: 'timeline', label: 'Timeline' }
+]
 
 const summaryValueClasses: Record<SummaryTone, string> = {
     blue: 'text-cyan-300',
@@ -272,6 +293,7 @@ export default function EscrowVaultPage() {
     const { isAuthenticated } = useAuth()
     const [activeFilter, setActiveFilter] = useState<FilterTab>('all')
     const [activeWorkspace, setActiveWorkspace] = useState<VaultWorkspace>('overview')
+    const [activeRiskPanel, setActiveRiskPanel] = useState<AdminRiskPanelKey>('guidance')
     const pendingReleaseCount = useMemo(
         () => transactionRows.filter(row => row.status === 'RELEASE_PENDING').length,
         []
@@ -317,6 +339,106 @@ export default function EscrowVaultPage() {
             })),
         [filteredTransactions, pendingReleaseCount]
     )
+    const activeRiskPanelLabel = useMemo(
+        () => riskPanelTabs.find(tab => tab.key === activeRiskPanel)?.label ?? 'Guidance',
+        [activeRiskPanel]
+    )
+
+    const renderActiveRiskPanel = () => {
+        if (activeRiskPanel === 'guidance') {
+            return <LifecycleGuidancePanel role="admin" state={focusedLifecycleState} compact title="Operations Guidance" />
+        }
+        if (activeRiskPanel === 'integrity') {
+            return (
+                <ContractHealthPanel
+                    contractId={focusedEscrowId}
+                    state={focusedLifecycleState}
+                    compact
+                    title="Vault Integrity Monitor"
+                />
+            )
+        }
+        if (activeRiskPanel === 'impact') {
+            return (
+                <TransitionImpactPanel
+                    contractId={focusedEscrowId}
+                    state={focusedLifecycleState}
+                    role="admin"
+                    pendingReleaseCount={pendingReleaseCount}
+                    compact
+                    title="Operation Impact Simulator"
+                />
+            )
+        }
+        if (activeRiskPanel === 'controlTower') {
+            return (
+                <ControlTowerPanel
+                    contractId={focusedEscrowId}
+                    state={focusedLifecycleState}
+                    role="admin"
+                    pendingReleaseCount={pendingReleaseCount}
+                    compact
+                    title="Vault Control Tower"
+                />
+            )
+        }
+        if (activeRiskPanel === 'attestation') {
+            return (
+                <PolicyAttestationPanel
+                    contractId={focusedEscrowId}
+                    state={focusedLifecycleState}
+                    role="admin"
+                    pendingReleaseCount={pendingReleaseCount}
+                    compact
+                    title="Vault Policy Attestation"
+                />
+            )
+        }
+        if (activeRiskPanel === 'decisionGate') {
+            return (
+                <DecisionGatePanel
+                    contractId={focusedEscrowId}
+                    state={focusedLifecycleState}
+                    role="admin"
+                    pendingReleaseCount={pendingReleaseCount}
+                    compact
+                    title="Vault Decision Gate"
+                />
+            )
+        }
+        if (activeRiskPanel === 'alertCenter') {
+            return (
+                <AlertCenterPanel
+                    contractId={focusedEscrowId}
+                    state={focusedLifecycleState}
+                    role="admin"
+                    pendingReleaseCount={pendingReleaseCount}
+                    compact
+                    title="Vault Alert Center"
+                />
+            )
+        }
+        if (activeRiskPanel === 'runbook') {
+            return (
+                <ExecutionRunbookPanel
+                    contractId={focusedEscrowId}
+                    state={focusedLifecycleState}
+                    role="admin"
+                    pendingReleaseCount={pendingReleaseCount}
+                    compact
+                    title="Operation Runbook"
+                />
+            )
+        }
+        return (
+            <SecurityAuditTimeline
+                contractId={focusedEscrowId}
+                state={focusedLifecycleState}
+                compact
+                title="Escrow Audit Timeline"
+            />
+        )
+    }
 
     if (!isAuthenticated) return <Navigate to="/admin/login" replace />
 
@@ -501,60 +623,34 @@ export default function EscrowVaultPage() {
                                 ))}
                             </div>
                         </section>
+                        <section className="rounded-xl border border-slate-800/60 bg-slate-900/60 p-5 backdrop-blur-xl shadow-2xl shadow-black/30">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                                <h3 className="text-[12px] uppercase tracking-[0.12em] font-semibold text-slate-300">
+                                    Active Panel: {activeRiskPanelLabel}
+                                </h3>
+                                <p className="text-xs text-slate-500">Switch views to inspect one control surface at a time.</p>
+                            </div>
 
-                        <LifecycleGuidancePanel role="admin" state={focusedLifecycleState} title="Operations Guidance" />
-                        <ContractHealthPanel
-                            contractId={focusedEscrowId}
-                            state={focusedLifecycleState}
-                            title="Vault Integrity Monitor"
-                        />
-                        <TransitionImpactPanel
-                            contractId={focusedEscrowId}
-                            state={focusedLifecycleState}
-                            role="admin"
-                            pendingReleaseCount={pendingReleaseCount}
-                            title="Operation Impact Simulator"
-                        />
-                        <ControlTowerPanel
-                            contractId={focusedEscrowId}
-                            state={focusedLifecycleState}
-                            role="admin"
-                            pendingReleaseCount={pendingReleaseCount}
-                            title="Vault Control Tower"
-                        />
-                        <PolicyAttestationPanel
-                            contractId={focusedEscrowId}
-                            state={focusedLifecycleState}
-                            role="admin"
-                            pendingReleaseCount={pendingReleaseCount}
-                            title="Vault Policy Attestation"
-                        />
-                        <DecisionGatePanel
-                            contractId={focusedEscrowId}
-                            state={focusedLifecycleState}
-                            role="admin"
-                            pendingReleaseCount={pendingReleaseCount}
-                            title="Vault Decision Gate"
-                        />
-                        <AlertCenterPanel
-                            contractId={focusedEscrowId}
-                            state={focusedLifecycleState}
-                            role="admin"
-                            pendingReleaseCount={pendingReleaseCount}
-                            title="Vault Alert Center"
-                        />
-                        <ExecutionRunbookPanel
-                            contractId={focusedEscrowId}
-                            state={focusedLifecycleState}
-                            role="admin"
-                            pendingReleaseCount={pendingReleaseCount}
-                            title="Operation Runbook"
-                        />
-                        <SecurityAuditTimeline
-                            contractId={focusedEscrowId}
-                            state={focusedLifecycleState}
-                            title="Escrow Audit Timeline"
-                        />
+                            <div className="mt-3 flex flex-wrap gap-2">
+                                {riskPanelTabs.map(tab => (
+                                    <button
+                                        key={tab.key}
+                                        onClick={() => setActiveRiskPanel(tab.key)}
+                                        className={`rounded-md border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.11em] transition-colors ${
+                                            activeRiskPanel === tab.key
+                                                ? 'border-cyan-500/60 bg-cyan-500/15 text-cyan-200'
+                                                : 'border-slate-700/70 bg-slate-900/50 text-slate-400 hover:text-slate-200 hover:border-slate-600/80'
+                                        }`}
+                                    >
+                                        {tab.label}
+                                    </button>
+                                ))}
+                            </div>
+
+                            <div className="mt-4 max-h-[70vh] overflow-y-auto pr-1">
+                                {renderActiveRiskPanel()}
+                            </div>
+                        </section>
                     </>
                 )}
 
