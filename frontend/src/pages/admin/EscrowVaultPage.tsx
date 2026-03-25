@@ -26,6 +26,7 @@ type TransactionStatus = Extract<
 type FilterTab = 'all' | 'active' | 'fundsHeld' | 'pendingRelease' | 'disputed' | 'released'
 type ActionTone = 'blue' | 'green' | 'amber' | 'red' | 'slate'
 type VaultWorkspace = 'overview' | 'riskAssessment' | 'disputes' | 'releaseQueue' | 'financials'
+type OverviewTab = 'resilience' | 'alerts' | 'remediation' | 'certification' | 'transactions'
 type AdminRiskPanelKey =
     | 'guidance'
     | 'integrity'
@@ -245,6 +246,13 @@ const workspaceTabs: Array<{ key: VaultWorkspace; label: string; hint: string }>
     { key: 'releaseQueue', label: 'Release Queue', hint: 'Execute pending release decisions in one queue.' },
     { key: 'financials', label: 'Financials', hint: 'Monthly escrow GMV, fees, payouts, and net.' }
 ]
+const overviewTabs: Array<{ key: OverviewTab; label: string }> = [
+    { key: 'resilience', label: 'Resilience' },
+    { key: 'alerts', label: 'Alerts' },
+    { key: 'remediation', label: 'Remediation' },
+    { key: 'certification', label: 'Certification' },
+    { key: 'transactions', label: 'Transactions' }
+]
 const riskPanelTabs: Array<{ key: AdminRiskPanelKey; label: string }> = [
     { key: 'guidance', label: 'Guidance' },
     { key: 'integrity', label: 'Integrity' },
@@ -293,6 +301,7 @@ export default function EscrowVaultPage() {
     const { isAuthenticated } = useAuth()
     const [activeFilter, setActiveFilter] = useState<FilterTab>('all')
     const [activeWorkspace, setActiveWorkspace] = useState<VaultWorkspace>('overview')
+    const [activeOverviewTab, setActiveOverviewTab] = useState<OverviewTab>('resilience')
     const [activeRiskPanel, setActiveRiskPanel] = useState<AdminRiskPanelKey>('guidance')
     const pendingReleaseCount = useMemo(
         () => transactionRows.filter(row => row.status === 'RELEASE_PENDING').length,
@@ -500,102 +509,131 @@ export default function EscrowVaultPage() {
                 </section>
 
                 {activeWorkspace === 'overview' && (
-                    <>
-                        <ResilienceInsightsPanel
-                            digests={adminPortfolioDigests}
-                            compact
-                            title="Vault Portfolio Resilience"
-                        />
-                        <PortfolioAlertBoard
-                            digests={adminPortfolioDigests}
-                            compact
-                            title="Vault Portfolio Alerts"
-                        />
-                        <RemediationQueuePanel
-                            digests={adminPortfolioDigests}
-                            compact
-                            title="Vault Remediation Queue"
-                        />
-                        <ReadinessCertificationPanel
-                            digests={adminPortfolioDigests}
-                            compact
-                            title="Vault Launch Certification"
-                        />
+                    <div className="space-y-6">
+                        <section className="rounded-xl border border-slate-800/60 bg-slate-900/60 px-4 py-3 backdrop-blur-xl shadow-2xl shadow-black/25">
+                            <div className="flex flex-wrap gap-2">
+                                {overviewTabs.map(tab => (
+                                    <button
+                                        key={tab.key}
+                                        onClick={() => setActiveOverviewTab(tab.key)}
+                                        className={`rounded-md border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] transition-colors ${
+                                            activeOverviewTab === tab.key
+                                                ? 'border-cyan-500/60 bg-cyan-500/15 text-cyan-200'
+                                                : 'border-slate-700/70 bg-slate-900/50 text-slate-400 hover:text-slate-200 hover:border-slate-600/80'
+                                        }`}
+                                    >
+                                        {tab.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </section>
 
-                        <section className="rounded-xl border border-slate-800/60 bg-slate-900/60 backdrop-blur-xl shadow-2xl shadow-black/30">
-                    <div className="px-5 py-4 border-b border-slate-800/60">
-                        <h2 className="text-[12px] uppercase tracking-[0.12em] font-semibold text-slate-300">Live Escrow Transactions</h2>
-                        <div className="mt-3 flex flex-wrap gap-2">
-                            {filterTabs.map(tab => (
-                                <button
-                                    key={tab.key}
-                                    onClick={() => setActiveFilter(tab.key)}
-                                    className={`rounded-md border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] transition-colors ${
-                                        activeFilter === tab.key
-                                            ? 'border-cyan-500/60 bg-cyan-500/15 text-cyan-200'
-                                            : 'border-slate-700/70 bg-slate-900/50 text-slate-400 hover:text-slate-200 hover:border-slate-600/80'
-                                    }`}
-                                >
-                                    {tab.label}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="overflow-x-auto">
-                        <table className="w-full min-w-[1180px]">
-                            <thead className="bg-slate-950/45">
-                                <tr className="text-[9px] font-semibold uppercase tracking-[0.13em] text-slate-500">
-                                    <th className="text-left px-4 py-3">Esc ID</th>
-                                    <th className="text-left px-4 py-3">Buyer</th>
-                                    <th className="text-left px-4 py-3">Provider</th>
-                                    <th className="text-left px-4 py-3">Dataset</th>
-                                    <th className="text-left px-4 py-3">Amount</th>
-                                    <th className="text-left px-4 py-3">Status</th>
-                                    <th className="text-left px-4 py-3">Window</th>
-                                    <th className="text-left px-4 py-3">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-800/50 font-mono text-[11px] text-slate-200">
-                                {filteredTransactions.map(row => {
-                                    const isReleaseAction = row.actionLabel === 'RELEASE'
-                                    const releaseNowGuardrail = canPerformAdminEscrowAction('release_now', row.status)
-                                    const actionDisabled = isReleaseAction && !releaseNowGuardrail.allowed
-
-                                    return (
-                                        <tr key={row.escId} className="hover:bg-slate-800/25 transition-colors">
-                                            <td className="px-4 py-3 whitespace-nowrap text-cyan-300">{row.escId}</td>
-                                            <td className="px-4 py-3 whitespace-nowrap">{row.buyer}</td>
-                                            <td className="px-4 py-3 whitespace-nowrap">{row.provider}</td>
-                                            <td className="px-4 py-3 text-slate-300">{row.dataset}</td>
-                                            <td className="px-4 py-3 whitespace-nowrap text-slate-100">{row.amount}</td>
-                                            <td className="px-4 py-3 whitespace-nowrap">
-                                                <span className={`inline-flex items-center rounded-md border px-2.5 py-1 text-[10px] font-semibold tracking-wide ${statusBadgeClasses[row.status]}`}>
-                                                    {row.statusLabel}
-                                                </span>
-                                            </td>
-                                            <td className="px-4 py-3 whitespace-nowrap text-slate-300">{row.window}</td>
-                                            <td className="px-4 py-3 whitespace-nowrap">
+                        <div className="max-h-[calc(100vh-340px)] overflow-y-auto pr-1">
+                            {activeOverviewTab === 'resilience' && (
+                                <ResilienceInsightsPanel
+                                    digests={adminPortfolioDigests}
+                                    compact
+                                    title="Vault Portfolio Resilience"
+                                />
+                            )}
+                            {activeOverviewTab === 'alerts' && (
+                                <PortfolioAlertBoard
+                                    digests={adminPortfolioDigests}
+                                    compact
+                                    title="Vault Portfolio Alerts"
+                                />
+                            )}
+                            {activeOverviewTab === 'remediation' && (
+                                <RemediationQueuePanel
+                                    digests={adminPortfolioDigests}
+                                    compact
+                                    title="Vault Remediation Queue"
+                                />
+                            )}
+                            {activeOverviewTab === 'certification' && (
+                                <ReadinessCertificationPanel
+                                    digests={adminPortfolioDigests}
+                                    compact
+                                    title="Vault Launch Certification"
+                                />
+                            )}
+                            {activeOverviewTab === 'transactions' && (
+                                <section className="rounded-xl border border-slate-800/60 bg-slate-900/60 backdrop-blur-xl shadow-2xl shadow-black/30">
+                                    <div className="px-5 py-4 border-b border-slate-800/60">
+                                        <h2 className="text-[12px] uppercase tracking-[0.12em] font-semibold text-slate-300">Live Escrow Transactions</h2>
+                                        <div className="mt-3 flex flex-wrap gap-2">
+                                            {filterTabs.map(tab => (
                                                 <button
-                                                    disabled={actionDisabled}
+                                                    key={tab.key}
+                                                    onClick={() => setActiveFilter(tab.key)}
                                                     className={`rounded-md border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] transition-colors ${
-                                                        actionDisabled ? disabledActionClass : actionButtonClasses[row.actionTone]
+                                                        activeFilter === tab.key
+                                                            ? 'border-cyan-500/60 bg-cyan-500/15 text-cyan-200'
+                                                            : 'border-slate-700/70 bg-slate-900/50 text-slate-400 hover:text-slate-200 hover:border-slate-600/80'
                                                     }`}
                                                 >
-                                                    {row.actionLabel}
+                                                    {tab.label}
                                                 </button>
-                                                {actionDisabled && (
-                                                    <p className="mt-1 max-w-[180px] text-[10px] text-amber-300">{releaseNowGuardrail.reason}</p>
-                                                )}
-                                            </td>
-                                        </tr>
-                                    )
-                                })}
-                            </tbody>
-                        </table>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full min-w-[1180px]">
+                                            <thead className="bg-slate-950/45">
+                                                <tr className="text-[9px] font-semibold uppercase tracking-[0.13em] text-slate-500">
+                                                    <th className="text-left px-4 py-3">Esc ID</th>
+                                                    <th className="text-left px-4 py-3">Buyer</th>
+                                                    <th className="text-left px-4 py-3">Provider</th>
+                                                    <th className="text-left px-4 py-3">Dataset</th>
+                                                    <th className="text-left px-4 py-3">Amount</th>
+                                                    <th className="text-left px-4 py-3">Status</th>
+                                                    <th className="text-left px-4 py-3">Window</th>
+                                                    <th className="text-left px-4 py-3">Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-slate-800/50 font-mono text-[11px] text-slate-200">
+                                                {filteredTransactions.map(row => {
+                                                    const isReleaseAction = row.actionLabel === 'RELEASE'
+                                                    const releaseNowGuardrail = canPerformAdminEscrowAction('release_now', row.status)
+                                                    const actionDisabled = isReleaseAction && !releaseNowGuardrail.allowed
+
+                                                    return (
+                                                        <tr key={row.escId} className="hover:bg-slate-800/25 transition-colors">
+                                                            <td className="px-4 py-3 whitespace-nowrap text-cyan-300">{row.escId}</td>
+                                                            <td className="px-4 py-3 whitespace-nowrap">{row.buyer}</td>
+                                                            <td className="px-4 py-3 whitespace-nowrap">{row.provider}</td>
+                                                            <td className="px-4 py-3 text-slate-300">{row.dataset}</td>
+                                                            <td className="px-4 py-3 whitespace-nowrap text-slate-100">{row.amount}</td>
+                                                            <td className="px-4 py-3 whitespace-nowrap">
+                                                                <span className={`inline-flex items-center rounded-md border px-2.5 py-1 text-[10px] font-semibold tracking-wide ${statusBadgeClasses[row.status]}`}>
+                                                                    {row.statusLabel}
+                                                                </span>
+                                                            </td>
+                                                            <td className="px-4 py-3 whitespace-nowrap text-slate-300">{row.window}</td>
+                                                            <td className="px-4 py-3 whitespace-nowrap">
+                                                                <button
+                                                                    disabled={actionDisabled}
+                                                                    className={`rounded-md border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] transition-colors ${
+                                                                        actionDisabled ? disabledActionClass : actionButtonClasses[row.actionTone]
+                                                                    }`}
+                                                                >
+                                                                    {row.actionLabel}
+                                                                </button>
+                                                                {actionDisabled && (
+                                                                    <p className="mt-1 max-w-[180px] text-[10px] text-amber-300">{releaseNowGuardrail.reason}</p>
+                                                                )}
+                                                            </td>
+                                                        </tr>
+                                                    )
+                                                })}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </section>
+                            )}
+                        </div>
                     </div>
-                        </section>
-                    </>
                 )}
 
                 {activeWorkspace === 'riskAssessment' && (
