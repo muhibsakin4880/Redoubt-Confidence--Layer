@@ -20,6 +20,7 @@ import ProviderDatasetManagementPage from './pages/admin/ProviderDatasetManageme
 import SecurityCompliancePage from './pages/admin/SecurityCompliancePage'
 import OperationsPage from './pages/admin/OperationsPage'
 import NotificationsPage from './pages/admin/NotificationsPage'
+import AdminAuditTrailPage from './pages/admin/AdminAuditTrailPage'
 import OnboardingQueuePage from './pages/OnboardingQueuePage'
 import ApplicationReviewPage from './pages/admin/ApplicationReviewPage'
 import NotFoundPage from './pages/NotFoundPage'
@@ -178,7 +179,7 @@ function App() {
                 <Route path="admin/onboarding-queue" element={<OnboardingQueuePage />} />
                 <Route path="admin/application-review/:appId" element={<ApplicationReviewPage />} />
                 <Route path="admin/incident-response" element={<IncidentResponsePage />} />
-                <Route path="admin/audit-trail" element={<AuditTrailPage />} />
+                <Route path="admin/audit-trail" element={<AdminAuditTrailPage />} />
 
                 <Route element={RequireWorkspaceAccess(<AppLayout />)}>
                     <Route path="dashboard" element={<DashboardPage />} />
