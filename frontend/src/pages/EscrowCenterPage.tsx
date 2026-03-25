@@ -22,6 +22,20 @@ type EscrowStatus = Extract<
 
 type AccessMethod = 'platform' | 'download'
 type EscrowWorkspace = 'overview' | 'transactions' | 'riskControls' | 'disputes'
+type RiskPanelKey =
+    | 'portfolioResilience'
+    | 'portfolioAlerts'
+    | 'remediationQueue'
+    | 'readiness'
+    | 'guidance'
+    | 'integrity'
+    | 'impact'
+    | 'controlTower'
+    | 'attestation'
+    | 'decisionGate'
+    | 'alertCenter'
+    | 'runbook'
+    | 'timeline'
 
 type EscrowTransaction = {
     id: string
@@ -68,6 +82,21 @@ const workspaceTabs: Array<{ key: EscrowWorkspace; label: string; hint: string }
     { key: 'disputes', label: 'Disputes', hint: 'Review and resolve escalations requiring action.' }
 ]
 const rowsPerPageOptions = [6, 8, 10, 12]
+const riskPanelTabs: Array<{ key: RiskPanelKey; label: string }> = [
+    { key: 'guidance', label: 'Guidance' },
+    { key: 'integrity', label: 'Integrity' },
+    { key: 'impact', label: 'Impact' },
+    { key: 'controlTower', label: 'Control Tower' },
+    { key: 'attestation', label: 'Attestation' },
+    { key: 'decisionGate', label: 'Decision Gate' },
+    { key: 'alertCenter', label: 'Alert Center' },
+    { key: 'runbook', label: 'Runbook' },
+    { key: 'timeline', label: 'Timeline' },
+    { key: 'portfolioResilience', label: 'Resilience' },
+    { key: 'portfolioAlerts', label: 'Portfolio Alerts' },
+    { key: 'remediationQueue', label: 'Remediation' },
+    { key: 'readiness', label: 'Readiness' }
+]
 const feedbackTags = ['Accurate schema', 'Clean data', 'As described', 'Fast access', 'Schema mismatch', 'Poor quality']
 const activeDisputes = [
     { id: 'ESC-2026-006', dataset: 'Satellite Land Use 2024', raisedBy: 'part_anon_008', reason: 'Data schema mismatch from description', raised: '2026-03-09', status: 'Under Investigation' }
@@ -79,6 +108,7 @@ export default function EscrowCenterPage() {
     const [rowsPerPage, setRowsPerPage] = useState(8)
     const [activeFilter, setActiveFilter] = useState<FilterTab>('All')
     const [activeWorkspace, setActiveWorkspace] = useState<EscrowWorkspace>('overview')
+    const [activeRiskPanel, setActiveRiskPanel] = useState<RiskPanelKey>('guidance')
     const [searchQuery, setSearchQuery] = useState('')
     const [showFeedbackModal, setShowFeedbackModal] = useState(false)
     const [starRating, setStarRating] = useState(0)
@@ -192,6 +222,109 @@ export default function EscrowCenterPage() {
     const pageEndIndex = Math.min(currentPage * rowsPerPage, filteredTransactions.length)
     const hasFilteredResults = filteredTransactions.length > 0
     const selectedWorkspaceHint = workspaceTabs.find(tab => tab.key === activeWorkspace)?.hint ?? ''
+    const activeRiskPanelLabel = riskPanelTabs.find(panel => panel.key === activeRiskPanel)?.label ?? 'Guidance'
+
+    const renderActiveRiskPanel = () => {
+        if (activeRiskPanel === 'portfolioResilience') {
+            return <ResilienceInsightsPanel digests={buyerPortfolioDigests} compact title="Buyer Portfolio Resilience" />
+        }
+        if (activeRiskPanel === 'portfolioAlerts') {
+            return <PortfolioAlertBoard digests={buyerPortfolioDigests} compact title="Buyer Portfolio Alerts" />
+        }
+        if (activeRiskPanel === 'remediationQueue') {
+            return <RemediationQueuePanel digests={buyerPortfolioDigests} compact title="Buyer Remediation Queue" />
+        }
+        if (activeRiskPanel === 'readiness') {
+            return <ReadinessCertificationPanel digests={buyerPortfolioDigests} compact title="Buyer Launch Certification" />
+        }
+        if (activeRiskPanel === 'guidance') {
+            return <LifecycleGuidancePanel role="buyer" state={selectedTransaction.status} compact title="Contract Guidance" />
+        }
+        if (activeRiskPanel === 'integrity') {
+            return (
+                <ContractHealthPanel
+                    contractId={selectedTransaction.id}
+                    state={selectedTransaction.status}
+                    compact
+                    title="Escrow Integrity Monitor"
+                />
+            )
+        }
+        if (activeRiskPanel === 'impact') {
+            return (
+                <TransitionImpactPanel
+                    contractId={selectedTransaction.id}
+                    state={selectedTransaction.status}
+                    role="buyer"
+                    compact
+                    title="Action Impact Simulator"
+                />
+            )
+        }
+        if (activeRiskPanel === 'controlTower') {
+            return (
+                <ControlTowerPanel
+                    contractId={selectedTransaction.id}
+                    state={selectedTransaction.status}
+                    role="buyer"
+                    compact
+                    title="Buyer Control Tower"
+                />
+            )
+        }
+        if (activeRiskPanel === 'attestation') {
+            return (
+                <PolicyAttestationPanel
+                    contractId={selectedTransaction.id}
+                    state={selectedTransaction.status}
+                    role="buyer"
+                    compact
+                    title="Buyer Policy Attestation"
+                />
+            )
+        }
+        if (activeRiskPanel === 'decisionGate') {
+            return (
+                <DecisionGatePanel
+                    contractId={selectedTransaction.id}
+                    state={selectedTransaction.status}
+                    role="buyer"
+                    compact
+                    title="Buyer Decision Gate"
+                />
+            )
+        }
+        if (activeRiskPanel === 'alertCenter') {
+            return (
+                <AlertCenterPanel
+                    contractId={selectedTransaction.id}
+                    state={selectedTransaction.status}
+                    role="buyer"
+                    compact
+                    title="Buyer Alert Center"
+                />
+            )
+        }
+        if (activeRiskPanel === 'runbook') {
+            return (
+                <ExecutionRunbookPanel
+                    contractId={selectedTransaction.id}
+                    state={selectedTransaction.status}
+                    role="buyer"
+                    compact
+                    title="Execution Runbook"
+                />
+            )
+        }
+        return (
+            <SecurityAuditTimeline
+                contractId={selectedTransaction.id}
+                state={selectedTransaction.status}
+                compact
+                title="Status + Policy Timeline"
+            />
+        )
+    }
 
     return (
         <div className="container mx-auto px-4 py-10 space-y-6 text-white">
@@ -526,70 +659,29 @@ export default function EscrowCenterPage() {
                         <p className="mt-1 text-xs text-slate-500">Use the Transactions workspace to change the focused escrow record.</p>
                     </section>
 
-                    <section className="grid gap-6 xl:grid-cols-2">
-                        <ResilienceInsightsPanel digests={buyerPortfolioDigests} compact title="Buyer Portfolio Resilience" />
-                        <PortfolioAlertBoard digests={buyerPortfolioDigests} compact title="Buyer Portfolio Alerts" />
-                        <RemediationQueuePanel digests={buyerPortfolioDigests} compact title="Buyer Remediation Queue" />
-                        <ReadinessCertificationPanel digests={buyerPortfolioDigests} compact title="Buyer Launch Certification" />
-                    </section>
+                    <section className="rounded-xl border border-slate-700 bg-slate-900/55 p-4">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                            <h3 className="text-sm font-semibold text-slate-100">Active Panel: {activeRiskPanelLabel}</h3>
+                            <p className="text-xs text-slate-500">Switch views to inspect one control surface at a time.</p>
+                        </div>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                            {riskPanelTabs.map(tab => (
+                                <button
+                                    key={tab.key}
+                                    onClick={() => setActiveRiskPanel(tab.key)}
+                                    className={`rounded-md border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.11em] transition-colors ${
+                                        activeRiskPanel === tab.key
+                                            ? 'border-cyan-500/60 bg-cyan-500/15 text-cyan-200'
+                                            : 'border-slate-700 text-slate-400 hover:border-slate-600 hover:text-slate-200'
+                                    }`}
+                                >
+                                    {tab.label}
+                                </button>
+                            ))}
+                        </div>
 
-                    <section className="grid gap-6 xl:grid-cols-2">
-                        <LifecycleGuidancePanel role="buyer" state={selectedTransaction.status} compact title="Contract Guidance" />
-                        <ContractHealthPanel
-                            contractId={selectedTransaction.id}
-                            state={selectedTransaction.status}
-                            compact
-                            title="Escrow Integrity Monitor"
-                        />
-                        <TransitionImpactPanel
-                            contractId={selectedTransaction.id}
-                            state={selectedTransaction.status}
-                            role="buyer"
-                            compact
-                            title="Action Impact Simulator"
-                        />
-                        <ControlTowerPanel
-                            contractId={selectedTransaction.id}
-                            state={selectedTransaction.status}
-                            role="buyer"
-                            compact
-                            title="Buyer Control Tower"
-                        />
-                        <PolicyAttestationPanel
-                            contractId={selectedTransaction.id}
-                            state={selectedTransaction.status}
-                            role="buyer"
-                            compact
-                            title="Buyer Policy Attestation"
-                        />
-                        <DecisionGatePanel
-                            contractId={selectedTransaction.id}
-                            state={selectedTransaction.status}
-                            role="buyer"
-                            compact
-                            title="Buyer Decision Gate"
-                        />
-                        <AlertCenterPanel
-                            contractId={selectedTransaction.id}
-                            state={selectedTransaction.status}
-                            role="buyer"
-                            compact
-                            title="Buyer Alert Center"
-                        />
-                        <ExecutionRunbookPanel
-                            contractId={selectedTransaction.id}
-                            state={selectedTransaction.status}
-                            role="buyer"
-                            compact
-                            title="Execution Runbook"
-                        />
-                        <div className="xl:col-span-2">
-                            <SecurityAuditTimeline
-                                contractId={selectedTransaction.id}
-                                state={selectedTransaction.status}
-                                compact
-                                title="Status + Policy Timeline"
-                            />
+                        <div className="mt-4 max-h-[70vh] overflow-y-auto pr-1">
+                            {renderActiveRiskPanel()}
                         </div>
                     </section>
                 </>
