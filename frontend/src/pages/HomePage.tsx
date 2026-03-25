@@ -530,7 +530,7 @@ export default function HomePage() {
                                 </div>
                                 
                                 <h1 className="redoubt-font text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-4">
-                                    Data You Can <span className="text-cyan-400">Trust</span>
+                                    Redoubt
                                 </h1>
                                 
                                 <p className="text-slate-400 text-lg md:text-xl max-w-lg mx-auto md:mx-0 mb-8">
@@ -553,16 +553,18 @@ export default function HomePage() {
                                     </button>
                                 </div>
 
-                                <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-3 justify-center md:justify-start text-sm text-slate-500">
-                                    {['SOC 2 Certified', 'ISO 27001', 'HIPAA', 'GDPR'].map((certification) => (
-                                        <span key={certification} className="inline-flex items-center gap-2">
-                                            <svg className="w-4 h-4 text-emerald-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/></svg>
-                                            <span className="leading-tight">
-                                                <span className="block">{certification}</span>
-                                                <span className="block text-[10px] tracking-wide text-slate-600">via AWS</span>
+                                <div className="mt-10">
+                                    <div className="flex flex-wrap items-center gap-x-6 gap-y-3 justify-center md:justify-start text-sm text-slate-500">
+                                        {['SOC 2 Type II certified', 'ISO 27001 certified', 'HIPAA eligible', 'GDPR compliant'].map((certification) => (
+                                            <span key={certification} className="inline-flex items-center gap-2">
+                                                <svg className="w-4 h-4 text-emerald-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/></svg>
+                                                <span>{certification}</span>
                                             </span>
-                                        </span>
-                                    ))}
+                                        ))}
+                                    </div>
+                                    <p className="mt-2 text-[10px] tracking-wide text-slate-600 text-center md:text-left">
+                                        *via AWS shared responsibility model
+                                    </p>
                                 </div>
                             </div>
 
