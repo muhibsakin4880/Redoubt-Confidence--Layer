@@ -554,7 +554,7 @@ export default function HomePage() {
 
                             <p className="mt-5 max-w-2xl text-sm leading-7 text-slate-300/90 sm:text-base md:text-lg md:leading-8">
                                 Secure data access with verified provenance, AI-backed confidence scoring,
-                                and zero-trust controls &mdash; built exclusively for trusted participants.
+                                and zero-trust controls &mdash; built for trusted participants on an AWS shared-responsibility foundation.
                             </p>
 
                             <div className="mt-8 grid w-full max-w-3xl gap-3 sm:grid-cols-3">
@@ -569,7 +569,7 @@ export default function HomePage() {
                                     },
                                     {
                                         title: 'Zero-Trust Controls',
-                                        detail: 'Gate access by role, purpose, and continuously validated risk.',
+                                        detail: 'Gate access by role, purpose, and continuously validated risk on top of AWS shared-responsibility controls.',
                                     },
                                 ].map((item) => (
                                     <div
@@ -602,7 +602,7 @@ export default function HomePage() {
                             </div>
 
                             <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
-                                {['SOC2', 'End-to-End Encrypted', 'Zero Marketplace Risk'].map((item) => (
+                                {['SOC2', 'AWS Shared Responsibility', 'End-to-End Encrypted', 'Zero Marketplace Risk'].map((item) => (
                                     <span
                                         key={item}
                                         className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-4 py-2 text-xs font-medium tracking-[0.12em] text-emerald-100 uppercase"
