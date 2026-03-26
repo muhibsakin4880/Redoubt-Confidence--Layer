@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import AdminLayout from '../../components/admin/AdminLayout'
 import SecurityAuditTimeline from '../../components/SecurityAuditTimeline'
@@ -416,8 +416,29 @@ export default function EscrowVaultPage() {
     const [activeGovernanceTab, setActiveGovernanceTab] = useState<GovernanceTab>('policy')
     const [selectedEscrowId, setSelectedEscrowId] = useState(transactionRows[0].escId)
     const [selectedDisputeId, setSelectedDisputeId] = useState(disputeCards[0].escId)
+    const [queueSearch, setQueueSearch] = useState('')
 
-    const filteredTransactions = useMemo(() => getTransactionsForFilter(activeFilter), [activeFilter])
+    const filterScopedTransactions = useMemo(() => getTransactionsForFilter(activeFilter), [activeFilter])
+    const normalizedQueueSearch = useMemo(() => queueSearch.trim().toLowerCase(), [queueSearch])
+    const filteredTransactions = useMemo(() => {
+        if (!normalizedQueueSearch) return filterScopedTransactions
+
+        return filterScopedTransactions.filter(row =>
+            [
+                row.escId,
+                row.dataset,
+                row.buyer,
+                row.provider,
+                row.owner,
+                row.policyHold,
+                row.requiredAction,
+                row.sector
+            ]
+                .join(' ')
+                .toLowerCase()
+                .includes(normalizedQueueSearch)
+        )
+    }, [filterScopedTransactions, normalizedQueueSearch])
     const pendingReleaseRows = useMemo(
         () => transactionRows.filter(row => row.status === 'RELEASE_PENDING'),
         []
@@ -430,10 +451,12 @@ export default function EscrowVaultPage() {
     const selectedTransaction = useMemo(
         () =>
             filteredTransactions.find(row => row.escId === selectedEscrowId) ??
-            transactionRows.find(row => row.escId === selectedEscrowId) ??
             filteredTransactions[0] ??
+            filterScopedTransactions.find(row => row.escId === selectedEscrowId) ??
+            filterScopedTransactions[0] ??
+            transactionRows.find(row => row.escId === selectedEscrowId) ??
             transactionRows[0],
-        [filteredTransactions, selectedEscrowId]
+        [filterScopedTransactions, filteredTransactions, selectedEscrowId]
     )
 
     const selectedDispute = useMemo(
@@ -487,6 +510,10 @@ export default function EscrowVaultPage() {
                 row => row.status === 'RELEASE_PENDING' || row.status === 'DISPUTE_OPEN' || row.risk === 'high'
             ),
         []
+    )
+    const filteredTransactionAmount = useMemo(
+        () => filteredTransactions.reduce((sum, row) => sum + row.amount, 0),
+        [filteredTransactions]
     )
 
     const summaryCards: SummaryCard[] = useMemo(
@@ -583,6 +610,22 @@ export default function EscrowVaultPage() {
         ],
         [disputeCards.length, missingEvidenceCount, pendingReleaseRows.length]
     )
+    const workspaceCounts = useMemo<Record<WorkspaceTab, string>>(
+        () => ({
+            operations: `${filteredTransactions.length} contracts`,
+            disputes: `${disputeCards.length} open cases`,
+            governance: `${focusContracts.length} focused reviews`,
+            reporting: `${reportingArtifacts.length} outputs`
+        }),
+        [filteredTransactions.length, disputeCards.length, focusContracts.length]
+    )
+
+    useEffect(() => {
+        if (!filteredTransactions.length) return
+        if (!filteredTransactions.some(row => row.escId === selectedEscrowId)) {
+            setSelectedEscrowId(filteredTransactions[0].escId)
+        }
+    }, [filteredTransactions, selectedEscrowId])
 
     const handleFilterChange = (filter: FilterTab) => {
         setActiveFilter(filter)
@@ -602,279 +645,238 @@ export default function EscrowVaultPage() {
     return (
         <AdminLayout title="ESCROW OPERATIONS" subtitle="SETTLEMENT CONTROL & EVIDENCE">
             <div className="space-y-6">
-                <section className={`${panelClass} overflow-hidden p-6`}>
-                    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-                        <div className="max-w-3xl">
-                            <span className="inline-flex items-center rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-cyan-200">
-                                Settlement Operations
-                            </span>
-                            <h1 className="mt-4 text-3xl font-semibold tracking-tight text-slate-100">Escrow Operations</h1>
-                            <p className="mt-2 text-sm text-slate-400">
-                                Release approvals, dispute handling, and control evidence across regulated data access contracts.
-                            </p>
-                        </div>
+                <section className={`${panelClass} relative overflow-hidden`}>
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.12),transparent_38%),radial-gradient(circle_at_88%_14%,rgba(14,165,233,0.08),transparent_30%),linear-gradient(135deg,rgba(2,6,23,0.9),rgba(2,6,23,0.72))]" />
+                    <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/45 to-transparent" />
 
-                        <div className="rounded-xl border border-slate-800/80 bg-slate-950/50 p-4">
-                            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Control Posture</p>
-                            <div className="mt-4 space-y-3">
-                                <StatusRow
-                                    label="Release policy"
-                                    value="Dual approval enforced"
-                                    detail="Pending releases cannot settle without recorded admin sign-off."
-                                />
-                                <StatusRow
-                                    label="Open exceptions"
-                                    value={`${disputeCards.length} case(s)`}
-                                    detail="Dispute freezes and evidence gaps are routed to manual review."
-                                />
-                                <StatusRow
-                                    label="Evidence cadence"
-                                    value="Daily settlement export"
-                                    detail={`Last control sync ${currentTimestamp}`}
-                                />
-                            </div>
-                            <button
-                                onClick={() => setActiveWorkspace(disputeCards.length > 0 ? 'disputes' : 'operations')}
-                                className="mt-4 w-full rounded-md border border-cyan-500/60 bg-cyan-500/15 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-cyan-200 transition-colors hover:bg-cyan-500/25"
-                            >
-                                Review Exceptions
-                            </button>
-                        </div>
-                    </div>
-
-                    <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                        {summaryCards.map(card => (
-                            <article
-                                key={card.label}
-                                className={`rounded-xl border p-4 ${summaryAccentClasses[card.tone]}`}
-                            >
-                                <p className="text-[10px] uppercase tracking-[0.14em] text-slate-500">{card.label}</p>
-                                <p className={`mt-2 text-2xl font-semibold ${summaryValueClasses[card.tone]}`}>{card.value}</p>
-                                <p className="mt-2 text-xs leading-relaxed text-slate-400">{card.detail}</p>
-                            </article>
-                        ))}
-                    </div>
-
-                    <div className="mt-6 rounded-xl border border-slate-800/80 bg-slate-950/40 p-4">
-                        <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+                    <div className="relative p-6">
+                        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_360px]">
                             <div>
-                                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Operational Attention</p>
-                                <p className="mt-1 text-sm text-slate-300">
-                                    Items requiring human review before funds move or cases close.
+                                <span className="inline-flex items-center rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-cyan-200">
+                                    Escrow Command Center
+                                </span>
+                                <h1 className="mt-4 text-3xl font-semibold tracking-tight text-slate-100">Escrow Vault</h1>
+                                <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-400">
+                                    Coordinate release approvals, frozen disputes, and settlement evidence with a cleaner view of where funds are held and what needs human sign-off next.
                                 </p>
-                            </div>
-                            <span className="text-[11px] font-mono text-slate-500">Last control sync {currentTimestamp}</span>
-                        </div>
-                        <div className="mt-3 grid gap-3 md:grid-cols-3">
-                            {attentionItems.map(item => (
-                                <article key={item.title} className="rounded-lg border border-slate-800/70 bg-slate-900/55 p-3">
-                                    <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">{item.title}</p>
-                                    <p className="mt-1 text-lg font-semibold text-slate-100">{item.value}</p>
-                                    <p className="mt-1 text-xs text-slate-400">{item.detail}</p>
-                                </article>
-                            ))}
-                        </div>
-                    </div>
 
-                    <div className="mt-6 border-t border-slate-800/70 pt-4">
-                        <div className="flex flex-wrap gap-2">
-                            {workspaceTabs.map(tab => (
+                                <div className="mt-5 flex flex-wrap gap-2">
+                                    <MetricChip label="Focused contract" value={selectedTransaction.escId} />
+                                    <MetricChip label="Pending releases" value={`${pendingReleaseRows.length}`} />
+                                    <MetricChip label="Open disputes" value={`${disputeCards.length}`} />
+                                    <MetricChip label="Control sync" value={currentTimestamp} />
+                                </div>
+
+                                <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                                    {summaryCards.map(card => (
+                                        <article
+                                            key={card.label}
+                                            className={`rounded-2xl border p-4 backdrop-blur-sm ${summaryAccentClasses[card.tone]}`}
+                                        >
+                                            <p className="text-[10px] uppercase tracking-[0.14em] text-slate-500">{card.label}</p>
+                                            <p className={`mt-2 text-2xl font-semibold ${summaryValueClasses[card.tone]}`}>{card.value}</p>
+                                            <p className="mt-2 text-xs leading-relaxed text-slate-400">{card.detail}</p>
+                                        </article>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div>
+                                <section className="rounded-2xl border border-slate-800/80 bg-slate-950/60 p-5 shadow-[0_18px_40px_rgba(2,6,23,0.35)]">
+                                    <div className="flex flex-wrap items-start justify-between gap-3">
+                                        <div>
+                                            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Current focus</p>
+                                            <h2 className="mt-1 text-lg font-semibold text-slate-100">{selectedTransaction.dataset}</h2>
+                                            <p className="mt-1 text-xs text-slate-500">
+                                                {selectedTransaction.escId} · {selectedTransaction.buyer} to {selectedTransaction.provider}
+                                            </p>
+                                        </div>
+                                        <div className="flex flex-wrap gap-2">
+                                            <span className={`rounded-full border px-2.5 py-1 text-[10px] font-semibold tracking-wide ${statusBadgeClasses[selectedTransaction.status]}`}>
+                                                {CONTRACT_STATE_LABELS[selectedTransaction.status]}
+                                            </span>
+                                            <span className={`rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.1em] ${riskBadgeClasses[selectedTransaction.risk]}`}>
+                                                {selectedTransaction.risk} risk
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                                        <DetailTile label="Amount at stake" value={formatCurrency(selectedTransaction.amount)} />
+                                        <DetailTile label="Review window" value={selectedTransaction.window} />
+                                        <DetailTile label="Queue owner" value={selectedTransaction.owner} />
+                                        <DetailTile label="Next action" value={selectedTransaction.requiredAction} />
+                                    </div>
+
+                                    <div className="mt-4 rounded-xl border border-slate-800/70 bg-slate-950/55 p-3">
+                                        <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">Latest event</p>
+                                        <p className="mt-1 text-sm leading-relaxed text-slate-200">{selectedTransaction.lastEvent}</p>
+                                    </div>
+                                </section>
+                            </div>
+                        </div>
+
+                        <section className="mt-6 rounded-2xl border border-slate-800/80 bg-slate-950/45 p-4">
+                            <div className="flex flex-wrap items-center justify-between gap-3">
+                                <div>
+                                    <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Priority watchlist</p>
+                                    <p className="mt-1 text-xs text-slate-400">
+                                        The highest-friction items before funds move or disputes close.
+                                    </p>
+                                </div>
                                 <button
-                                    key={tab.key}
-                                    onClick={() => setActiveWorkspace(tab.key)}
-                                    className={`rounded-md border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] transition-colors ${
-                                        activeWorkspace === tab.key
-                                            ? 'border-cyan-500/60 bg-cyan-500/15 text-cyan-200'
-                                            : 'border-slate-700/70 bg-slate-900/50 text-slate-400 hover:border-slate-600/80 hover:text-slate-200'
-                                    }`}
+                                    onClick={() => setActiveWorkspace(disputeCards.length > 0 ? 'disputes' : 'operations')}
+                                    className="rounded-md border border-cyan-500/60 bg-cyan-500/15 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-cyan-200 transition-colors hover:bg-cyan-500/25"
                                 >
-                                    {tab.label}
+                                    Review Exceptions
                                 </button>
+                            </div>
+
+                            <div className="mt-4 grid gap-3 md:grid-cols-3">
+                                {attentionItems.map(item => (
+                                    <StatusRow key={item.title} label={item.title} value={item.value} detail={item.detail} />
+                                ))}
+                            </div>
+                        </section>
+
+                        <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                            {workspaceTabs.map(tab => (
+                                <WorkspaceTabCard
+                                    key={tab.key}
+                                    label={tab.label}
+                                    hint={tab.hint}
+                                    value={workspaceCounts[tab.key]}
+                                    active={activeWorkspace === tab.key}
+                                    onClick={() => setActiveWorkspace(tab.key)}
+                                />
                             ))}
                         </div>
-                        <p className="mt-2 text-xs text-slate-500">
-                            {workspaceTabs.find(tab => tab.key === activeWorkspace)?.hint}
-                        </p>
                     </div>
                 </section>
 
                 {activeWorkspace === 'operations' && (
-                    <section className="grid gap-6 xl:grid-cols-[minmax(0,1.55fr)_380px]">
-                        <div className="space-y-6">
-                            <section className={panelClass}>
-                                <div className="border-b border-slate-800/70 px-5 py-4">
-                                    <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-                                        <div>
-                                            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Action Queue</p>
-                                            <h2 className="mt-1 text-lg font-semibold text-slate-100">Contracts requiring review</h2>
-                                            <p className="mt-1 text-sm text-slate-400">
-                                                Prioritize release decisions, frozen disputes, and active contracts with policy risk.
-                                            </p>
-                                        </div>
-                                        <div className="flex flex-wrap gap-2">
-                                            {filterTabs.map(tab => (
-                                                <button
-                                                    key={tab.key}
-                                                    onClick={() => handleFilterChange(tab.key)}
-                                                    className={`rounded-md border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] transition-colors ${
-                                                        activeFilter === tab.key
-                                                            ? 'border-cyan-500/60 bg-cyan-500/15 text-cyan-200'
-                                                            : 'border-slate-700/70 bg-slate-900/50 text-slate-400 hover:border-slate-600/80 hover:text-slate-200'
-                                                    }`}
-                                                >
-                                                    {tab.label}
-                                                </button>
-                                            ))}
-                                        </div>
+                    <section className="space-y-4">
+                        <section className={panelClass}>
+                            <div className="border-b border-slate-800/70 px-5 py-4">
+                                <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+                                    <div>
+                                        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Action Queue</p>
+                                        <h2 className="mt-1 text-lg font-semibold text-slate-100">Contracts requiring review</h2>
+                                        <p className="mt-1 text-sm text-slate-400">
+                                            Prioritize release decisions, frozen disputes, and active contracts with policy risk.
+                                        </p>
+                                    </div>
+                                    <div className="flex flex-wrap gap-2">
+                                        <MetricChip label="Visible" value={`${filteredTransactions.length}`} />
+                                        <MetricChip label="Exposure" value={formatCurrency(filteredTransactionAmount)} />
                                     </div>
                                 </div>
 
-                                <div className="overflow-x-auto">
-                                    <table className="w-full min-w-[1220px]">
-                                        <thead className="bg-slate-950/45">
-                                            <tr className="text-[9px] font-semibold uppercase tracking-[0.13em] text-slate-500">
-                                                <th className="px-4 py-3 text-left">Contract</th>
-                                                <th className="px-4 py-3 text-left">Dataset</th>
-                                                <th className="px-4 py-3 text-left">Amount</th>
-                                                <th className="px-4 py-3 text-left">Status</th>
-                                                <th className="px-4 py-3 text-left">Policy Checkpoint</th>
-                                                <th className="px-4 py-3 text-left">Owner</th>
-                                                <th className="px-4 py-3 text-left">Due</th>
-                                                <th className="px-4 py-3 text-left">Action</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-slate-800/50 text-[11px] text-slate-200">
-                                            {filteredTransactions.map(row => (
-                                                <tr
-                                                    key={row.escId}
-                                                    onClick={() => setSelectedEscrowId(row.escId)}
-                                                    className={`cursor-pointer transition-colors ${
-                                                        selectedTransaction.escId === row.escId
-                                                            ? 'bg-cyan-500/8'
-                                                            : 'hover:bg-slate-800/25'
-                                                    }`}
-                                                >
-                                                    <td className="px-4 py-3">
-                                                        <div className="space-y-1">
-                                                            <p className="font-mono text-cyan-300">{row.escId}</p>
-                                                            <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">{row.sector}</p>
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-4 py-3">
-                                                        <p className="font-medium text-slate-100">{row.dataset}</p>
-                                                        <p className="mt-1 text-[10px] text-slate-500">{row.requiredAction}</p>
-                                                    </td>
-                                                    <td className="px-4 py-3 whitespace-nowrap font-mono text-slate-100">
-                                                        {formatCurrency(row.amount)}
-                                                    </td>
-                                                    <td className="px-4 py-3 whitespace-nowrap">
-                                                        <div className="flex flex-col gap-1">
-                                                            <span className={`inline-flex w-fit rounded-full border px-2.5 py-1 text-[10px] font-semibold tracking-wide ${statusBadgeClasses[row.status]}`}>
-                                                                {CONTRACT_STATE_LABELS[row.status]}
-                                                            </span>
-                                                            <span className={`inline-flex w-fit rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] ${riskBadgeClasses[row.risk]}`}>
-                                                                {row.risk} risk
-                                                            </span>
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-4 py-3 text-slate-300">{row.policyHold}</td>
-                                                    <td className="px-4 py-3 whitespace-nowrap font-mono text-slate-300">{row.owner}</td>
-                                                    <td className="px-4 py-3 whitespace-nowrap text-slate-300">{row.window}</td>
-                                                    <td className="px-4 py-3 whitespace-nowrap">
-                                                        <button
-                                                            onClick={event => {
-                                                                event.stopPropagation()
-                                                                setSelectedEscrowId(row.escId)
-                                                            }}
-                                                            className={`rounded-md border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] transition-colors ${actionButtonClasses[row.actionTone]}`}
-                                                        >
-                                                            {row.actionLabel}
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </section>
-
-                            <section className={panelClass}>
-                                <div className="border-b border-slate-800/70 px-5 py-4">
-                                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                                        <div>
-                                            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Release Queue</p>
-                                            <h2 className="mt-1 text-lg font-semibold text-slate-100">Pending payouts awaiting admin release</h2>
-                                            <p className="mt-1 text-sm text-slate-400">
-                                                Move only the contracts that have met policy, signer, and evidence requirements.
-                                            </p>
-                                        </div>
-                                        <div className="sm:text-right">
+                                <div className="mt-4 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+                                    <label className="relative block w-full xl:max-w-sm">
+                                        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">
+                                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}>
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-4.35-4.35m1.85-5.15a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z" />
+                                            </svg>
+                                        </span>
+                                        <input
+                                            type="search"
+                                            value={queueSearch}
+                                            onChange={event => setQueueSearch(event.target.value)}
+                                            placeholder="Search contract ID, dataset, buyer, provider, owner"
+                                            className="w-full rounded-full border border-slate-700/80 bg-slate-950/70 py-2 pl-9 pr-10 text-sm text-slate-100 placeholder:text-slate-500 focus:border-cyan-500/60 focus:outline-none"
+                                        />
+                                        {queueSearch && (
                                             <button
-                                                disabled={!releaseAllPendingGuardrail.allowed}
-                                                className={`rounded-md border px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.12em] transition-colors ${
-                                                    releaseAllPendingGuardrail.allowed ? actionButtonClasses.green : disabledActionClass
+                                                type="button"
+                                                onClick={() => setQueueSearch('')}
+                                                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full border border-slate-700/80 bg-slate-900/80 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-300 transition-colors hover:border-slate-600/80 hover:text-slate-100"
+                                            >
+                                                Clear
+                                            </button>
+                                        )}
+                                    </label>
+
+                                    <div className="flex flex-wrap gap-2">
+                                        {filterTabs.map(tab => (
+                                            <button
+                                                key={tab.key}
+                                                onClick={() => handleFilterChange(tab.key)}
+                                                className={`rounded-full border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] transition-colors ${
+                                                    activeFilter === tab.key
+                                                        ? 'border-cyan-500/60 bg-cyan-500/15 text-cyan-200'
+                                                        : 'border-slate-700/70 bg-slate-900/50 text-slate-400 hover:border-slate-600/80 hover:text-slate-200'
                                                 }`}
                                             >
-                                                Approve All Ready Releases
+                                                {tab.label}
                                             </button>
-                                            <p className={`mt-2 text-[10px] ${releaseAllPendingGuardrail.allowed ? 'text-slate-500' : 'text-amber-300'}`}>
-                                                {releaseAllPendingGuardrail.allowed
-                                                    ? `${pendingReleaseRows.length} contract(s) can move once signers complete review.`
-                                                    : releaseAllPendingGuardrail.reason}
-                                            </p>
-                                        </div>
+                                        ))}
                                     </div>
                                 </div>
+                            </div>
 
-                                <div className="overflow-x-auto">
-                                    <table className="w-full min-w-[980px]">
-                                        <thead className="bg-slate-950/45">
-                                            <tr className="text-[9px] font-semibold uppercase tracking-[0.13em] text-slate-500">
-                                                <th className="px-4 py-3 text-left">Contract</th>
-                                                <th className="px-4 py-3 text-left">Dataset</th>
-                                                <th className="px-4 py-3 text-left">Amount</th>
-                                                <th className="px-4 py-3 text-left">Trigger</th>
-                                                <th className="px-4 py-3 text-left">Readiness</th>
-                                                <th className="px-4 py-3 text-left">Action</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-slate-800/50 text-[11px] text-slate-200">
-                                            {pendingReleaseRows.map(row => {
-                                                const releaseNowGuardrail = canPerformAdminEscrowAction('release_now', row.status)
-                                                return (
-                                                    <tr key={row.escId} className="hover:bg-slate-800/25 transition-colors">
-                                                        <td className="px-4 py-3 font-mono text-cyan-300">{row.escId}</td>
-                                                        <td className="px-4 py-3">
-                                                            <p className="font-medium text-slate-100">{row.dataset}</p>
-                                                            <p className="mt-1 text-[10px] text-slate-500">{row.window} remaining</p>
-                                                        </td>
-                                                        <td className="px-4 py-3 whitespace-nowrap font-mono">{formatCurrency(row.amount)}</td>
-                                                        <td className="px-4 py-3 text-slate-300">{row.releaseTrigger}</td>
-                                                        <td className="px-4 py-3 text-slate-300">{row.releaseReadiness}</td>
-                                                        <td className="px-4 py-3 whitespace-nowrap">
-                                                            <button
-                                                                disabled={!releaseNowGuardrail.allowed}
-                                                                onClick={() => setSelectedEscrowId(row.escId)}
-                                                                className={`rounded-md border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] transition-colors ${
-                                                                    releaseNowGuardrail.allowed ? actionButtonClasses.green : disabledActionClass
-                                                                }`}
-                                                            >
-                                                                Release Now
-                                                            </button>
-                                                            {!releaseNowGuardrail.allowed && (
-                                                                <p className="mt-1 max-w-[200px] text-[10px] text-amber-300">{releaseNowGuardrail.reason}</p>
-                                                            )}
-                                                        </td>
-                                                    </tr>
-                                                )
-                                            })}
-                                        </tbody>
-                                    </table>
+                            <div className="space-y-2 overflow-y-auto p-5 pr-3 xl:max-h-[calc(100vh-22rem)]">
+                                {filteredTransactions.length > 0 ? (
+                                    filteredTransactions.map(row => (
+                                        <ContractQueueCard
+                                            key={row.escId}
+                                            row={row}
+                                            isSelected={selectedTransaction.escId === row.escId}
+                                            onSelect={() => setSelectedEscrowId(row.escId)}
+                                        />
+                                    ))
+                                ) : (
+                                    <div className="rounded-xl border border-dashed border-slate-700/80 bg-slate-950/45 px-4 py-10 text-center">
+                                        <p className="text-sm font-semibold text-slate-200">No contracts match this search.</p>
+                                        <p className="mt-2 text-xs text-slate-500">
+                                            Try another contract ID, dataset, buyer, provider, or owner keyword.
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        </section>
+
+                        <section className={panelClass}>
+                            <div className="border-b border-slate-800/70 px-5 py-4">
+                                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                    <div>
+                                        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Release Queue</p>
+                                        <h2 className="mt-1 text-lg font-semibold text-slate-100">Pending payouts awaiting admin release</h2>
+                                        <p className="mt-1 text-sm text-slate-400">
+                                            Move only the contracts that have met policy, signer, and evidence requirements.
+                                        </p>
+                                    </div>
+                                    <div className="sm:text-right">
+                                        <button
+                                            disabled={!releaseAllPendingGuardrail.allowed}
+                                            className={`rounded-md border px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.12em] transition-colors ${
+                                                releaseAllPendingGuardrail.allowed ? actionButtonClasses.green : disabledActionClass
+                                            }`}
+                                        >
+                                            Approve All Ready Releases
+                                        </button>
+                                        <p className={`mt-2 text-[10px] ${releaseAllPendingGuardrail.allowed ? 'text-slate-500' : 'text-amber-300'}`}>
+                                            {releaseAllPendingGuardrail.allowed
+                                                ? `${pendingReleaseRows.length} contract(s) can move once signers complete review.`
+                                                : releaseAllPendingGuardrail.reason}
+                                        </p>
+                                    </div>
                                 </div>
-                            </section>
-                        </div>
+                            </div>
 
-                        <div className="space-y-6">
+                            <div className="grid gap-3 overflow-y-auto p-5 pr-3 lg:grid-cols-2 xl:max-h-[23rem]">
+                                {pendingReleaseRows.map(row => (
+                                    <ReleaseQueueCard
+                                        key={row.escId}
+                                        row={row}
+                                        isSelected={selectedTransaction.escId === row.escId}
+                                        onSelect={() => setSelectedEscrowId(row.escId)}
+                                    />
+                                ))}
+                            </div>
+                        </section>
+
+                        <section className="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1fr)]">
                             <section className={`${panelClass} p-5`}>
                                 <div className="flex flex-wrap items-start justify-between gap-3">
                                     <div>
@@ -889,19 +891,24 @@ export default function EscrowVaultPage() {
                                         <span className={`rounded-full border px-2.5 py-1 text-[10px] font-semibold tracking-wide ${statusBadgeClasses[selectedTransaction.status]}`}>
                                             {CONTRACT_STATE_LABELS[selectedTransaction.status]}
                                         </span>
+                                        <span className={`rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.1em] ${riskBadgeClasses[selectedTransaction.risk]}`}>
+                                            {selectedTransaction.risk} risk
+                                        </span>
                                     </div>
                                 </div>
 
                                 <div className="mt-4 grid gap-3 sm:grid-cols-2">
                                     <DetailTile label="Amount at stake" value={formatCurrency(selectedTransaction.amount)} />
                                     <DetailTile label="Queue owner" value={selectedTransaction.owner} />
+                                    <DetailTile label="Counterparties" value={`${selectedTransaction.buyer} → ${selectedTransaction.provider}`} />
+                                    <DetailTile label="Review window" value={selectedTransaction.window} />
                                     <DetailTile label="Policy checkpoint" value={selectedTransaction.policyHold} />
                                     <DetailTile label="Next required action" value={selectedTransaction.requiredAction} />
                                 </div>
 
                                 <div className="mt-4 rounded-lg border border-slate-800/70 bg-slate-950/45 p-3">
                                     <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">Latest event</p>
-                                    <p className="mt-1 text-sm text-slate-200">{selectedTransaction.lastEvent}</p>
+                                    <p className="mt-1 text-sm leading-relaxed text-slate-200">{selectedTransaction.lastEvent}</p>
                                 </div>
 
                                 <div className="mt-4">
@@ -936,7 +943,7 @@ export default function EscrowVaultPage() {
                                 compact
                                 title="Contract Alerts"
                             />
-                        </div>
+                        </section>
                     </section>
                 )}
 
@@ -1333,5 +1340,207 @@ function DetailTile({ label, value }: DetailTileProps) {
             <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">{label}</p>
             <p className="mt-1 text-sm text-slate-200">{value}</p>
         </div>
+    )
+}
+
+type MetricChipProps = {
+    label: string
+    value: string
+}
+
+function MetricChip({ label, value }: MetricChipProps) {
+    return (
+        <span className="inline-flex items-center gap-2 rounded-full border border-slate-700/70 bg-slate-950/70 px-3 py-1.5 text-[10px] text-slate-300">
+            <span className="uppercase tracking-[0.12em] text-slate-500">{label}</span>
+            <span className="font-medium text-slate-100">{value}</span>
+        </span>
+    )
+}
+
+type WorkspaceTabCardProps = {
+    label: string
+    hint: string
+    value: string
+    active: boolean
+    onClick: () => void
+}
+
+function WorkspaceTabCard({ label, hint, value, active, onClick }: WorkspaceTabCardProps) {
+    return (
+        <button
+            onClick={onClick}
+            className={`rounded-2xl border p-4 text-left transition-colors ${
+                active
+                    ? 'border-cyan-500/50 bg-cyan-500/10 shadow-[0_18px_35px_rgba(8,47,73,0.28)]'
+                    : 'border-slate-800/80 bg-slate-950/45 hover:border-slate-700/90 hover:bg-slate-900/60'
+            }`}
+        >
+            <div className="flex items-start justify-between gap-3">
+                <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">{label}</p>
+                    <p className="mt-2 text-xs leading-relaxed text-slate-500">{hint}</p>
+                </div>
+                <span
+                    className={`rounded-full border px-2.5 py-1 text-[10px] font-semibold ${
+                        active
+                            ? 'border-cyan-500/40 bg-cyan-500/15 text-cyan-100'
+                            : 'border-slate-700/80 bg-slate-950/80 text-slate-300'
+                    }`}
+                >
+                    {value}
+                </span>
+            </div>
+        </button>
+    )
+}
+
+type ContractQueueCardProps = {
+    row: TransactionRow
+    isSelected: boolean
+    onSelect: () => void
+}
+
+function ContractQueueCard({ row, isSelected, onSelect }: ContractQueueCardProps) {
+    return (
+        <article
+            role="button"
+            tabIndex={0}
+            onClick={onSelect}
+            onKeyDown={event => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault()
+                    onSelect()
+                }
+            }}
+            className={`rounded-xl border p-3.5 text-left transition-colors ${
+                isSelected
+                    ? 'border-cyan-500/50 bg-cyan-500/8 shadow-[0_12px_28px_rgba(8,47,73,0.22)]'
+                    : 'border-slate-800/80 bg-slate-950/40 hover:border-slate-700/90 hover:bg-slate-900/55'
+            }`}
+        >
+            <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+                <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-mono text-[11px] text-cyan-300">{row.escId}</span>
+                        <span className="rounded-full border border-slate-700/80 bg-slate-950/80 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-300">
+                            {row.sector}
+                        </span>
+                        <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-wide ${statusBadgeClasses[row.status]}`}>
+                            {CONTRACT_STATE_LABELS[row.status]}
+                        </span>
+                        <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] ${riskBadgeClasses[row.risk]}`}>
+                            {row.risk} risk
+                        </span>
+                    </div>
+
+                    <h3 className="mt-2 text-sm font-semibold text-slate-100">{row.dataset}</h3>
+                    <p className="mt-1 text-[11px] text-slate-500">
+                        {row.buyer} to {row.provider}
+                    </p>
+
+                    <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                        <div className="rounded-lg border border-slate-800/70 bg-slate-950/55 px-3 py-2">
+                            <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">Amount</p>
+                            <p className="mt-1 font-mono text-sm text-slate-100">{formatCurrency(row.amount)}</p>
+                        </div>
+                        <div className="rounded-lg border border-slate-800/70 bg-slate-950/55 px-3 py-2">
+                            <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">Window</p>
+                            <p className="mt-1 text-sm text-slate-100">{row.window}</p>
+                        </div>
+                        <div className="rounded-lg border border-slate-800/70 bg-slate-950/55 px-3 py-2">
+                            <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">Owner</p>
+                            <p className="mt-1 font-mono text-sm text-slate-200">{row.owner}</p>
+                        </div>
+                    </div>
+
+                    <div className="mt-3 rounded-lg border border-slate-800/70 bg-slate-950/55 px-3 py-2">
+                        <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">Checkpoint</p>
+                        <p className="mt-1 text-sm text-slate-200">{row.policyHold}</p>
+                    </div>
+
+                    <div className="mt-2 flex flex-wrap items-center gap-2 text-[10px] text-slate-500">
+                        <span className="uppercase tracking-[0.12em]">Action</span>
+                        <span className="text-slate-600">|</span>
+                        <span>{row.requiredAction}</span>
+                        <span className="text-slate-600">|</span>
+                        <span>{row.controls.length} controls active</span>
+                    </div>
+                </div>
+
+                <div className="flex w-full shrink-0 flex-row gap-2 xl:w-auto xl:flex-col">
+                    <button
+                        onClick={event => {
+                            event.stopPropagation()
+                            onSelect()
+                        }}
+                        className={`w-full rounded-md border px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.12em] transition-colors xl:min-w-[140px] ${actionButtonClasses[row.actionTone]}`}
+                    >
+                        {row.actionLabel}
+                    </button>
+                    <div className="rounded-md border border-slate-800/70 bg-slate-950/55 px-3 py-2 text-[10px] text-slate-400 xl:max-w-[140px]">
+                        {row.lastEvent}
+                    </div>
+                </div>
+            </div>
+        </article>
+    )
+}
+
+type ReleaseQueueCardProps = {
+    row: TransactionRow
+    isSelected: boolean
+    onSelect: () => void
+}
+
+function ReleaseQueueCard({ row, isSelected, onSelect }: ReleaseQueueCardProps) {
+    const releaseNowGuardrail = canPerformAdminEscrowAction('release_now', row.status)
+
+    return (
+        <article
+            className={`rounded-xl border p-3.5 transition-colors ${
+                isSelected
+                    ? 'border-cyan-500/50 bg-cyan-500/8'
+                    : 'border-slate-800/80 bg-slate-950/45 hover:border-slate-700/90 hover:bg-slate-900/55'
+            }`}
+        >
+            <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                    <p className="font-mono text-[11px] text-cyan-300">{row.escId}</p>
+                    <h3 className="mt-1 text-sm font-semibold text-slate-100">{row.dataset}</h3>
+                    <p className="mt-1 text-xs text-slate-500">{row.window} remaining</p>
+                </div>
+                <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-semibold text-emerald-200">
+                    {formatCurrency(row.amount)}
+                </span>
+            </div>
+
+            <div className="mt-3 grid gap-2">
+                <div className="rounded-lg border border-slate-800/70 bg-slate-950/60 px-3 py-2">
+                    <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">Release trigger</p>
+                    <p className="mt-1 text-sm text-slate-200">{row.releaseTrigger}</p>
+                </div>
+                <div className="rounded-lg border border-slate-800/70 bg-slate-950/60 px-3 py-2">
+                    <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">Readiness</p>
+                    <p className="mt-1 text-sm text-slate-200">{row.releaseReadiness}</p>
+                </div>
+            </div>
+
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                <button
+                    disabled={!releaseNowGuardrail.allowed}
+                    onClick={onSelect}
+                    className={`rounded-md border px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.12em] transition-colors ${
+                        releaseNowGuardrail.allowed ? actionButtonClasses.green : disabledActionClass
+                    }`}
+                >
+                    Release Now
+                </button>
+                <span className="text-[10px] uppercase tracking-[0.12em] text-slate-500">{row.owner}</span>
+            </div>
+
+            {!releaseNowGuardrail.allowed && (
+                <p className="mt-2 text-[10px] text-amber-300">{releaseNowGuardrail.reason}</p>
+            )}
+        </article>
     )
 }
