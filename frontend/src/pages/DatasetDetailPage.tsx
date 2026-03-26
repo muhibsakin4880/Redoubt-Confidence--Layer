@@ -426,6 +426,13 @@ export default function DatasetDetailPage() {
                                     >
                                         Build Rights Quote
                                     </Link>
+                                    <Link
+                                        to={`/datasets/${dataset.id}/escrow-checkout`}
+                                        state={latestSavedQuote ? { quoteId: latestSavedQuote.id } : undefined}
+                                        className="rounded-xl border border-emerald-400/40 bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-emerald-100 hover:bg-emerald-500/20"
+                                    >
+                                        Escrow-Native Checkout
+                                    </Link>
                                 </div>
                             </div>
 
@@ -578,6 +585,13 @@ export default function DatasetDetailPage() {
                                             })}
                                         </div>
                                         <div className="mt-4 flex flex-wrap gap-2">
+                                            <Link
+                                                to={`/datasets/${dataset.id}/escrow-checkout`}
+                                                state={{ quoteId: latestSavedQuote.id }}
+                                                className="rounded-lg bg-emerald-500 px-3 py-2 text-xs font-semibold text-slate-950 hover:bg-emerald-400"
+                                            >
+                                                Checkout Quote
+                                            </Link>
                                             <button
                                                 onClick={() => {
                                                     applyRequestPrefill(buildRequestPrefillFromQuote(latestSavedQuote, compliancePassport))
@@ -605,6 +619,12 @@ export default function DatasetDetailPage() {
                                             className="mt-4 inline-flex rounded-lg border border-cyan-400/40 bg-cyan-500/10 px-3 py-2 text-xs font-semibold text-cyan-100 hover:bg-cyan-500/20"
                                         >
                                             Build Rights Quote
+                                        </Link>
+                                        <Link
+                                            to={`/datasets/${dataset.id}/escrow-checkout`}
+                                            className="mt-2 inline-flex rounded-lg border border-emerald-400/40 bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-100 hover:bg-emerald-500/20"
+                                        >
+                                            Start Escrow Checkout
                                         </Link>
                                     </div>
                                 )}

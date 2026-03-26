@@ -60,6 +60,7 @@ import GuidedTourPage from './pages/GuidedTourPage'
 import DataLineagePage from './pages/DataLineagePage'
 import CompliancePassportPage from './pages/CompliancePassportPage'
 import RightsQuoteBuilderPage from './pages/RightsQuoteBuilderPage'
+import EscrowCheckoutPage from './pages/EscrowCheckoutPage'
 
 import { useAuth } from './contexts/AuthContext'
 
@@ -188,6 +189,7 @@ function App() {
                     <Route path="datasets" element={<DatasetsPage />} />
                     <Route path="datasets/:id" element={<DatasetDetailPage />} />
                     <Route path="datasets/:id/rights-quote" element={<RightsQuoteBuilderPage />} />
+                    <Route path="datasets/:id/escrow-checkout" element={<EscrowCheckoutPage />} />
                     <Route path="datasets/:id/quality-breakdown" element={<DatasetQualityBreakdownPage />} />
                     <Route path="access-requests" element={<AccessRequestsPage />} />
                     <Route path="access-requests/:requestId" element={<AccessRequestDetailPage />} />

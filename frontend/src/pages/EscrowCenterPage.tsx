@@ -14,6 +14,7 @@ import AlertCenterPanel from '../components/AlertCenterPanel'
 import PortfolioAlertBoard from '../components/PortfolioAlertBoard'
 import RemediationQueuePanel from '../components/RemediationQueuePanel'
 import ReadinessCertificationPanel from '../components/ReadinessCertificationPanel'
+import { loadEscrowCheckoutTransactions } from '../domain/escrowCheckout'
 
 type EscrowStatus = Extract<
     ContractLifecycleState,
@@ -47,7 +48,7 @@ type EscrowTransaction = {
     status: EscrowStatus
 }
 
-const escrowTransactions: EscrowTransaction[] = [
+const seedEscrowTransactions: EscrowTransaction[] = [
     { id: 'ESC-2026-001', dataset: 'Global Climate 2020-2024', buyer: 'part_anon_042', provider: 'anon_provider_003', amount: '$299', accessMethod: 'platform', status: 'REQUEST_SUBMITTED' },
     { id: 'ESC-2026-002', dataset: 'Financial Tick Data', buyer: 'part_anon_017', provider: 'anon_provider_007', amount: '$499', accessMethod: 'platform', status: 'FUNDS_HELD' },
     { id: 'ESC-2026-003', dataset: 'Clinical Outcomes Delta', buyer: 'part_anon_089', provider: 'anon_provider_012', amount: '$799', accessMethod: 'download', status: 'ACCESS_ACTIVE' },
@@ -103,6 +104,10 @@ const activeDisputes = [
 ]
 
 export default function EscrowCenterPage() {
+    const escrowTransactions = useMemo(
+        () => [...loadEscrowCheckoutTransactions(), ...seedEscrowTransactions],
+        []
+    )
     const [selectedId, setSelectedId] = useState('ESC-2026-003')
     const [currentPage, setCurrentPage] = useState(1)
     const [rowsPerPage, setRowsPerPage] = useState(8)

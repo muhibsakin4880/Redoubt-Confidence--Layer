@@ -3,7 +3,6 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { DATASET_DETAILS, DEFAULT_DATASET } from '../data/datasetDetailData'
 import { buildCompliancePassport, passportStatusMeta } from '../domain/compliancePassport'
 import {
-    buildRequestPrefillFromQuote,
     buildRightsQuote,
     deliveryModeOptions,
     durationOptions,
@@ -59,10 +58,9 @@ export default function RightsQuoteBuilderPage() {
 
     const handleProceedToCheckout = () => {
         const savedQuote = persistQuote()
-        navigate(`/datasets/${dataset.id}`, {
+        navigate(`/datasets/${dataset.id}/escrow-checkout`, {
             state: {
-                openAccessRequest: true,
-                prefillAccessRequest: buildRequestPrefillFromQuote(savedQuote, passport)
+                quoteId: savedQuote.id
             }
         })
     }

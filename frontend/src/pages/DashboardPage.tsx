@@ -399,6 +399,13 @@ export default function DashboardPage() {
                                     <span>→</span>
                                 </Link>
                                 <Link
+                                    to="/datasets/1/escrow-checkout"
+                                    className="inline-flex items-center justify-between rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-emerald-200 hover:bg-emerald-500/15"
+                                >
+                                    Escrow Checkout
+                                    <span>→</span>
+                                </Link>
+                                <Link
                                     to="/guided-tour"
                                     className="inline-flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-slate-200 hover:bg-white/10"
                                 >
