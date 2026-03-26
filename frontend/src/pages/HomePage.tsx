@@ -602,7 +602,7 @@ export default function HomePage() {
                             </div>
 
                             <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
-                                {['SOC2', 'AWS Shared Responsibility', 'End-to-End Encrypted', 'Zero Marketplace Risk'].map((item) => (
+                                {['SOC2', 'End-to-End Encrypted', 'Zero Marketplace Risk'].map((item) => (
                                     <span
                                         key={item}
                                         className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-4 py-2 text-xs font-medium tracking-[0.12em] text-emerald-100 uppercase"
@@ -612,6 +612,10 @@ export default function HomePage() {
                                     </span>
                                 ))}
                             </div>
+
+                            <p className="mt-5 text-xs font-medium tracking-[0.08em] text-slate-500 sm:text-sm">
+                                Built on AWS under the AWS Shared Responsibility Model.
+                            </p>
                         </div>
                     </div>
                 </section>
