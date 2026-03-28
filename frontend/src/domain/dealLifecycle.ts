@@ -586,6 +586,104 @@ const buildNextAction = (
     }
 }
 
+const deriveTriageScore = (
+    stage: DealLifecycleStage,
+    riskScore: number,
+    urgencyScore: number,
+    approvalDisposition: DealApprovalDisposition,
+    blockers: string[]
+) => {
+    let score = urgencyScore + Math.round(riskScore * 0.6) + blockers.length * 8
+
+    if (approvalDisposition === 'human_review') score += 14
+    if (approvalDisposition === 'blocked') score += 24
+    if (stage === 'release_ready') score += 12
+    if (stage === 'awaiting_validation') score += 8
+
+    return Math.min(score, 100)
+}
+
+const deriveTriageLane = (
+    stage: DealLifecycleStage,
+    risk: DealRiskLevel,
+    urgency: DealUrgencyLevel,
+    approvalDisposition: DealApprovalDisposition
+): DealTriageLane => {
+    if (approvalDisposition === 'blocked' || stage === 'credited' || stage === 'disputed') {
+        return 'blocked'
+    }
+
+    if (approvalDisposition === 'human_review') return 'human_approval'
+
+    if (
+        stage === 'release_ready' ||
+        stage === 'awaiting_validation' ||
+        urgency === 'critical' ||
+        (urgency === 'high' && risk !== 'low')
+    ) {
+        return 'review_now'
+    }
+
+    if (
+        stage === 'quote_prepared' ||
+        stage === 'checkout_funded' ||
+        stage === 'workspace_provisioning' ||
+        stage === 'evaluation_live' ||
+        urgency === 'elevated' ||
+        risk === 'medium' ||
+        risk === 'high'
+    ) {
+        return 'watch'
+    }
+
+    return 'auto_advance'
+}
+
+const buildTriageReason = (
+    lane: DealTriageLane,
+    stage: DealLifecycleStage,
+    blockers: string[],
+    quote?: RightsQuote | null,
+    checkoutRecord?: EscrowCheckoutRecord | null
+) => {
+    if (lane === 'blocked') {
+        return blockers[0] ?? 'Deal is policy-blocked until a human resolves the active issue.'
+    }
+
+    if (lane === 'human_approval') {
+        if (quote?.input.exclusivity !== 'none') return 'Exclusivity terms require manual approval.'
+        if (quote?.input.usageRight === 'customer_facing') return 'Customer-facing usage rights require manual approval.'
+        if (quote?.input.geography === 'global') return 'Global rights package requires manual approval.'
+        return 'Risky commercial terms require manual approval before the next step.'
+    }
+
+    if (lane === 'review_now') {
+        if (stage === 'release_ready') return 'Buyer validation is complete and release is now in the payout window.'
+        if (stage === 'awaiting_validation') return 'Engine passed and buyer validation should be chased now.'
+        if (checkoutRecord?.configuration.reviewWindowHours === 24) {
+            return 'Short review window keeps this deal in the same-day review lane.'
+        }
+        return 'High urgency signals pushed this deal into immediate operator review.'
+    }
+
+    if (lane === 'watch') {
+        if (stage === 'evaluation_live') return 'Protected evaluation is active and should remain visible while the engine runs.'
+        if (stage === 'workspace_provisioning') return 'Provisioning is still in flight and should stay in the watch lane.'
+        if (stage === 'quote_prepared') return 'Quoted deal is ready for the next step but does not need immediate intervention.'
+        return 'Signals are stable, but the deal should remain in active monitoring.'
+    }
+
+    return 'Deal can continue automatically because the current signals are within policy thresholds.'
+}
+
+const buildTriageSla = (lane: DealTriageLane, urgency: DealUrgencyLevel) => {
+    if (lane === 'blocked') return 'Immediate'
+    if (lane === 'human_approval') return urgency === 'high' || urgency === 'critical' ? '4 hours' : 'Today'
+    if (lane === 'review_now') return urgency === 'critical' ? '2 hours' : '4 hours'
+    if (lane === 'watch') return 'Monitor today'
+    return 'No manual SLA'
+}
+
 const buildRecordId = (
     passport: CompliancePassport,
     quote?: RightsQuote | null,
@@ -599,10 +697,14 @@ export const buildSharedDealLifecycleRecord = ({
 }: BuildSharedDealLifecycleInput): SharedDealLifecycleRecord => {
     const stage = deriveDealLifecycleStage(passport, quote, checkoutRecord)
     const riskScore = deriveRiskScore(passport, quote, checkoutRecord)
+    const risk = deriveRiskLevel(riskScore)
     const urgencyScore = deriveUrgencyScore(stage, quote, checkoutRecord)
+    const urgency = deriveUrgencyLevel(urgencyScore)
     const approvalDisposition = deriveApprovalDisposition(stage, passport, quote, checkoutRecord)
     const blockers = buildBlockers(stage, passport, quote, checkoutRecord)
     const queue = deriveQueue(stage, approvalDisposition)
+    const triageScore = deriveTriageScore(stage, riskScore, urgencyScore, approvalDisposition, blockers)
+    const triageLane = deriveTriageLane(stage, risk, urgency, approvalDisposition)
 
     return {
         id: buildRecordId(passport, quote, checkoutRecord),
@@ -614,9 +716,9 @@ export const buildSharedDealLifecycleRecord = ({
         createdAt: checkoutRecord?.createdAt ?? quote?.createdAt ?? passport.issuedAt,
         updatedAt: checkoutRecord?.updatedAt ?? quote?.createdAt ?? passport.issuedAt,
         stage,
-        risk: deriveRiskLevel(riskScore),
+        risk,
         riskScore,
-        urgency: deriveUrgencyLevel(urgencyScore),
+        urgency,
         urgencyScore,
         approvalDisposition,
         requiresHumanApproval: approvalDisposition !== 'auto_advance',
@@ -633,6 +735,10 @@ export const buildSharedDealLifecycleRecord = ({
         engineStatus: checkoutRecord?.outcomeProtection.engine.status ?? null,
         reviewWindowHours: checkoutRecord?.configuration.reviewWindowHours ?? quote?.input.validationWindowHours ?? null,
         outcomeCreditUsd: checkoutRecord?.outcomeProtection.credits.amountUsd ?? 0,
+        triageLane,
+        triageScore,
+        triageReason: buildTriageReason(triageLane, stage, blockers, quote, checkoutRecord),
+        triageSla: buildTriageSla(triageLane, urgency),
         source: {
             passport,
             quote,
@@ -712,5 +818,50 @@ export const buildDealLifecycleSummary = (
     }
 }
 
+export const buildDealTriageSummary = (
+    records: SharedDealLifecycleRecord[]
+): DealTriageSummary => {
+    const laneCounts = emptyTriageLaneCounts()
+    const lanes: Record<DealTriageLane, SharedDealLifecycleRecord[]> = {
+        blocked: [],
+        human_approval: [],
+        review_now: [],
+        watch: [],
+        auto_advance: []
+    }
+
+    records.forEach(record => {
+        laneCounts[record.triageLane] += 1
+        lanes[record.triageLane].push(record)
+    })
+
+    const sortLane = (items: SharedDealLifecycleRecord[]) =>
+        [...items].sort((left, right) => {
+            if (right.triageScore !== left.triageScore) return right.triageScore - left.triageScore
+            if (right.urgencyScore !== left.urgencyScore) return right.urgencyScore - left.urgencyScore
+            return parseDateSafe(right.updatedAt) - parseDateSafe(left.updatedAt)
+        })
+
+    return {
+        laneCounts,
+        lanes: {
+            blocked: sortLane(lanes.blocked),
+            human_approval: sortLane(lanes.human_approval),
+            review_now: sortLane(lanes.review_now),
+            watch: sortLane(lanes.watch),
+            auto_advance: sortLane(lanes.auto_advance)
+        },
+        actionableQueue: sortLane(
+            records.filter(record => record.triageLane !== 'auto_advance' && record.triageLane !== 'watch')
+        ),
+        automatedCount: laneCounts.auto_advance,
+        manualCount: laneCounts.human_approval + laneCounts.review_now,
+        blockedCount: laneCounts.blocked
+    }
+}
+
 export const getDealLifecycleSummary = () =>
     buildDealLifecycleSummary(loadSharedDealLifecycleRecords())
+
+export const getDealTriageSummary = () =>
+    buildDealTriageSummary(loadSharedDealLifecycleRecords())

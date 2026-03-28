@@ -2,10 +2,13 @@ import { Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import LogoMark from '../components/LogoMark'
 import {
+    buildDealLifecycleSummary,
+    buildDealTriageSummary,
     dealLifecycleStageMeta,
     dealRiskMeta,
+    dealTriageMeta,
     dealUrgencyMeta,
-    getDealLifecycleSummary
+    loadSharedDealLifecycleRecords
 } from '../domain/dealLifecycle'
 
 const menuItems = [
@@ -44,8 +47,10 @@ export default function AdminDashboard() {
     const { isAuthenticated, signOut } = useAuth()
     const navigate = useNavigate()
     const location = useLocation()
-    const dealLifecycleSummary = getDealLifecycleSummary()
-    const priorityDeals = dealLifecycleSummary.priorityQueue.slice(0, 3)
+    const dealRecords = loadSharedDealLifecycleRecords()
+    const dealLifecycleSummary = buildDealLifecycleSummary(dealRecords)
+    const dealTriageSummary = buildDealTriageSummary(dealRecords)
+    const triageActionQueue = dealTriageSummary.actionableQueue.slice(0, 4)
 
     if (!isAuthenticated) return <Navigate to="/admin/login" replace />
 
@@ -361,16 +366,35 @@ export default function AdminDashboard() {
                         <div className="col-span-5 bg-slate-900/60 backdrop-blur-xl border border-slate-800/50 rounded-xl overflow-hidden shadow-2xl shadow-black/30">
                             <div className="px-5 py-4 border-b border-slate-800/60 flex items-center justify-between">
                                 <div>
-                                    <h2 className="text-[11px] font-semibold text-slate-300 tracking-[0.1em] uppercase">Priority Deal Queue</h2>
-                                    <p className="text-[10px] text-slate-500 mt-1">Highest urgency records scored from shared lifecycle, risk, and blocker signals.</p>
+                                    <h2 className="text-[11px] font-semibold text-slate-300 tracking-[0.1em] uppercase">Automated Deal Triage</h2>
+                                    <p className="text-[10px] text-slate-500 mt-1">Deals are now routed automatically by stage, risk, urgency, and approval policy.</p>
                                 </div>
-                                <div className="text-[9px] text-slate-600 tracking-wider">TOP 3</div>
+                                <div className="text-[9px] text-slate-600 tracking-wider">
+                                    {dealTriageSummary.manualCount} manual
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-5 gap-2 px-5 py-4 border-b border-slate-800/40">
+                                {(['blocked', 'human_approval', 'review_now', 'watch', 'auto_advance'] as const).map((lane) => {
+                                    const meta = dealTriageMeta[lane]
+                                    return (
+                                        <div key={lane} className="rounded-lg border border-slate-800/60 bg-slate-950/45 p-2.5">
+                                            <div className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[8px] font-semibold tracking-[0.14em] uppercase ${getToneClasses(meta.tone)}`}>
+                                                {meta.label}
+                                            </div>
+                                            <div className="mt-2 text-xl font-semibold text-slate-100">
+                                                {dealTriageSummary.laneCounts[lane]}
+                                            </div>
+                                            <p className="mt-1 text-[8px] leading-relaxed text-slate-600">{meta.detail}</p>
+                                        </div>
+                                    )
+                                })}
                             </div>
                             <div className="divide-y divide-slate-800/30">
-                                {priorityDeals.map((deal) => {
+                                {triageActionQueue.map((deal) => {
                                     const stageMeta = dealLifecycleStageMeta[deal.stage]
                                     const riskMeta = dealRiskMeta[deal.risk]
                                     const urgencyMeta = dealUrgencyMeta[deal.urgency]
+                                    const triageMeta = dealTriageMeta[deal.triageLane]
 
                                     return (
                                         <div key={deal.id} className="px-5 py-4">
@@ -378,11 +402,16 @@ export default function AdminDashboard() {
                                                 <div>
                                                     <div className="text-[11px] font-semibold text-slate-200">{deal.datasetTitle}</div>
                                                     <div className="mt-1 text-[9px] uppercase tracking-[0.12em] text-slate-600">
-                                                        {deal.recommendedOwner} · {deal.queue.replace('_', ' ')}
+                                                        {deal.recommendedOwner} · {deal.queue.replace('_', ' ')} · SLA {deal.triageSla}
                                                     </div>
                                                 </div>
-                                                <div className={`inline-flex items-center rounded-md border px-2 py-1 text-[9px] font-semibold tracking-wider ${getToneClasses(stageMeta.tone)}`}>
-                                                    {stageMeta.label}
+                                                <div className="flex flex-col items-end gap-2">
+                                                    <div className={`inline-flex items-center rounded-md border px-2 py-1 text-[9px] font-semibold tracking-wider ${getToneClasses(triageMeta.tone)}`}>
+                                                        {triageMeta.label}
+                                                    </div>
+                                                    <div className={`inline-flex items-center rounded-md border px-2 py-1 text-[8px] font-semibold tracking-wider ${getToneClasses(stageMeta.tone)}`}>
+                                                        {stageMeta.label}
+                                                    </div>
                                                 </div>
                                             </div>
 
@@ -399,11 +428,19 @@ export default function AdminDashboard() {
                                             </div>
 
                                             <p className="mt-3 text-[10px] leading-relaxed text-slate-400">
-                                                {deal.blockers[0] ?? deal.nextAction}
+                                                {deal.triageReason}
+                                            </p>
+                                            <p className="mt-2 text-[9px] leading-relaxed text-slate-600">
+                                                Next: {deal.nextAction}
                                             </p>
                                         </div>
                                     )
                                 })}
+                                {triageActionQueue.length === 0 && (
+                                    <div className="px-5 py-5 text-[10px] text-slate-500">
+                                        No manual triage items are active. Current deals can continue in watch or auto-advance lanes.
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
