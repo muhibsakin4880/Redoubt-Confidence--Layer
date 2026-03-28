@@ -1,4 +1,5 @@
 import React from 'react'
+import AdminLayout from '../components/admin/AdminLayout'
 
 type StepStatus = 'done' | 'current' | 'pending'
 
@@ -67,10 +68,11 @@ const stepDot: Record<StepStatus, string> = {
 
 export default function IncidentResponsePage() {
     return (
-        <div className="relative min-h-screen bg-[#040812] text-white">
-            <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_15%_10%,rgba(16,185,129,0.12),transparent_40%),radial-gradient(circle_at_80%_10%,rgba(59,130,246,0.14),transparent_35%),radial-gradient(circle_at_50%_80%,rgba(251,191,36,0.08),transparent_40%)]" />
-            <div className="relative mx-auto max-w-7xl px-6 py-10 lg:px-10">
-                <header className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <AdminLayout title="INCIDENT RESPONSE" subtitle="RUNBOOK EXECUTION & SLA MANAGEMENT">
+            <div className="relative -m-6 overflow-hidden bg-[#040812] px-6 py-10 text-white lg:px-10">
+                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_10%,rgba(16,185,129,0.12),transparent_40%),radial-gradient(circle_at_80%_10%,rgba(59,130,246,0.14),transparent_35%),radial-gradient(circle_at_50%_80%,rgba(251,191,36,0.08),transparent_40%)]" />
+                <div className="relative mx-auto max-w-7xl">
+                    <header className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                     <div>
                         <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
                             Security & Compliance
@@ -83,45 +85,45 @@ export default function IncidentResponsePage() {
                     <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100 shadow-[0_0_24px_rgba(16,185,129,0.25)]">
                         SLA compliance 100% - Last incident closed 14 days ago
                     </div>
-                </header>
+                    </header>
 
-                <section className="mt-8">
-                    <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 via-emerald-500/8 to-emerald-400/10 px-5 py-4 shadow-[0_12px_40px_rgba(16,185,129,0.2)]">
-                        <div className="flex items-center gap-3">
-                            <span className="h-3 w-3 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.9)]" />
-                            <div>
-                                <p className="text-sm font-semibold text-white">No Active Incidents - All systems operational</p>
-                                <p className="text-xs text-emerald-100/80">Last incident closed: 14 days ago</p>
-                            </div>
-                        </div>
-                        <span className="rounded-full border border-emerald-400/40 bg-emerald-500/20 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-100">
-                            SLA compliance: 100%
-                        </span>
-                    </div>
-                </section>
-
-                <section className="mt-8">
-                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                        {incidentStats.map(stat => (
-                            <article
-                                key={stat.label}
-                                className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-5 shadow-[0_10px_30px_rgba(0,0,0,0.25)]"
-                            >
-                                <div className="absolute inset-0 opacity-50 bg-[radial-gradient(circle_at_20%_20%,rgba(59,130,246,0.18),transparent_45%)]" />
-                                <div className="relative flex items-start justify-between gap-3">
-                                    <div>
-                                        <p className="text-xs uppercase tracking-[0.14em] text-slate-500">{stat.label}</p>
-                                        <p className="mt-3 text-3xl font-semibold text-white">{stat.value}</p>
-                                        <p className="mt-1 text-xs text-slate-400">{stat.hint}</p>
-                                    </div>
-                                    <span className="h-2 w-2 rounded-full bg-cyan-400 shadow-[0_0_12px_rgba(34,211,238,0.9)]" />
+                    <section className="mt-8">
+                        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 via-emerald-500/8 to-emerald-400/10 px-5 py-4 shadow-[0_12px_40px_rgba(16,185,129,0.2)]">
+                            <div className="flex items-center gap-3">
+                                <span className="h-3 w-3 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.9)]" />
+                                <div>
+                                    <p className="text-sm font-semibold text-white">No Active Incidents - All systems operational</p>
+                                    <p className="text-xs text-emerald-100/80">Last incident closed: 14 days ago</p>
                                 </div>
-                            </article>
-                        ))}
-                    </div>
-                </section>
+                            </div>
+                            <span className="rounded-full border border-emerald-400/40 bg-emerald-500/20 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-100">
+                                SLA compliance: 100%
+                            </span>
+                        </div>
+                    </section>
 
-                <section className="mt-10">
+                    <section className="mt-8">
+                        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                            {incidentStats.map(stat => (
+                                <article
+                                    key={stat.label}
+                                    className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-5 shadow-[0_10px_30px_rgba(0,0,0,0.25)]"
+                                >
+                                    <div className="absolute inset-0 opacity-50 bg-[radial-gradient(circle_at_20%_20%,rgba(59,130,246,0.18),transparent_45%)]" />
+                                    <div className="relative flex items-start justify-between gap-3">
+                                        <div>
+                                            <p className="text-xs uppercase tracking-[0.14em] text-slate-500">{stat.label}</p>
+                                            <p className="mt-3 text-3xl font-semibold text-white">{stat.value}</p>
+                                            <p className="mt-1 text-xs text-slate-400">{stat.hint}</p>
+                                        </div>
+                                        <span className="h-2 w-2 rounded-full bg-cyan-400 shadow-[0_0_12px_rgba(34,211,238,0.9)]" />
+                                    </div>
+                                </article>
+                            ))}
+                        </div>
+                    </section>
+
+                    <section className="mt-10">
                     <article className="rounded-2xl border border-white/10 bg-[#0a1424] p-6 shadow-[0_12px_40px_rgba(0,0,0,0.28)]">
                         <div className="flex items-center justify-between gap-3 flex-wrap">
                             <div>
@@ -184,9 +186,9 @@ export default function IncidentResponsePage() {
                             </div>
                         </div>
                     </article>
-                </section>
+                    </section>
 
-                <section className="mt-10 grid gap-6 xl:grid-cols-[2fr_1fr]">
+                    <section className="mt-10 grid gap-6 xl:grid-cols-[2fr_1fr]">
                     <article className="rounded-2xl border border-white/10 bg-[#0a1424] p-6 shadow-[0_12px_40px_rgba(0,0,0,0.28)]">
                         <div className="flex items-center justify-between gap-3 flex-wrap">
                             <div>
@@ -257,9 +259,9 @@ export default function IncidentResponsePage() {
                             Notify All
                         </button>
                     </article>
-                </section>
+                    </section>
 
-                <section className="mt-10">
+                    <section className="mt-10">
                     <article className="rounded-2xl border border-white/10 bg-[#0a1424] p-6 shadow-[0_12px_40px_rgba(0,0,0,0.28)]">
                         <div className="flex items-center justify-between gap-3 flex-wrap">
                             <div>
@@ -296,9 +298,10 @@ export default function IncidentResponsePage() {
                             </table>
                         </div>
                     </article>
-                </section>
+                    </section>
+                </div>
             </div>
-        </div>
+        </AdminLayout>
     )
 }
 

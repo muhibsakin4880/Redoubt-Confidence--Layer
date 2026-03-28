@@ -1,3 +1,4 @@
+import { Suspense, lazy } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import MainLayout from './layouts/MainLayout'
 import AppLayout from './layouts/AppLayout'
@@ -9,20 +10,6 @@ import DatasetQualityBreakdownPage from './pages/DatasetQualityBreakdownPage'
 import SolutionsPage from './pages/SolutionsPage'
 import LoginPage from './pages/LoginPage'
 import AdminLoginPage from './pages/AdminLoginPage'
-import AdminDashboardPage from './pages/AdminDashboardPage'
-import AIInterrogationLogsPage from './pages/admin/AIInterrogationLogsPage'
-import AIReportPage from './pages/admin/AIReportPage'
-import AdminSettingsPage from './pages/admin/AdminSettingsPage'
-import EscrowVaultPage from './pages/admin/EscrowVaultPage'
-import ActiveEphemeralTokensPage from './pages/admin/ActiveEphemeralTokensPage'
-import UserManagementPage from './pages/admin/UserManagementPage'
-import ProviderDatasetManagementPage from './pages/admin/ProviderDatasetManagementPage'
-import SecurityCompliancePage from './pages/admin/SecurityCompliancePage'
-import OperationsPage from './pages/admin/OperationsPage'
-import NotificationsPage from './pages/admin/NotificationsPage'
-import AdminAuditTrailPage from './pages/admin/AdminAuditTrailPage'
-import OnboardingQueuePage from './pages/OnboardingQueuePage'
-import ApplicationReviewPage from './pages/admin/ApplicationReviewPage'
 import NotFoundPage from './pages/NotFoundPage'
 import OnboardingPage from './pages/OnboardingPage'
 import OnboardingStep1 from './pages/OnboardingStep1'
@@ -51,7 +38,6 @@ import ConsentTrackerPage from './pages/ConsentTrackerPage'
 import RedTeamModePage from './pages/RedTeamModePage'
 import RBACConsolePage from './pages/RBACConsolePage'
 import UsageAnalyticsPage from './pages/UsageAnalyticsPage'
-import IncidentResponsePage from './pages/IncidentResponsePage'
 import DataClassificationPage from './pages/DataClassificationPage'
 import SecureEnclavePage from './pages/SecureEnclavePage'
 import StatusPage from './pages/StatusPage'
@@ -66,6 +52,22 @@ import EscrowCheckoutPage from './pages/EscrowCheckoutPage'
 
 import { useAuth } from './contexts/AuthContext'
 
+const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage'))
+const AIInterrogationLogsPage = lazy(() => import('./pages/admin/AIInterrogationLogsPage'))
+const AIReportPage = lazy(() => import('./pages/admin/AIReportPage'))
+const AdminSettingsPage = lazy(() => import('./pages/admin/AdminSettingsPage'))
+const EscrowVaultPage = lazy(() => import('./pages/admin/EscrowVaultPage'))
+const ActiveEphemeralTokensPage = lazy(() => import('./pages/admin/ActiveEphemeralTokensPage'))
+const UserManagementPage = lazy(() => import('./pages/admin/UserManagementPage'))
+const ProviderDatasetManagementPage = lazy(() => import('./pages/admin/ProviderDatasetManagementPage'))
+const SecurityCompliancePage = lazy(() => import('./pages/admin/SecurityCompliancePage'))
+const OperationsPage = lazy(() => import('./pages/admin/OperationsPage'))
+const NotificationsPage = lazy(() => import('./pages/admin/NotificationsPage'))
+const AdminAuditTrailPage = lazy(() => import('./pages/admin/AdminAuditTrailPage'))
+const OnboardingQueuePage = lazy(() => import('./pages/OnboardingQueuePage'))
+const ApplicationReviewPage = lazy(() => import('./pages/admin/ApplicationReviewPage'))
+const IncidentResponsePage = lazy(() => import('./pages/IncidentResponsePage'))
+
 type AccessIntentAuth = ReturnType<typeof useAuth> & {
     accessIntentPromptPending?: boolean
     submitAccessIntent?: () => void
@@ -73,6 +75,16 @@ type AccessIntentAuth = ReturnType<typeof useAuth> & {
 }
 
 const MOCK_AUTH = (import.meta.env.VITE_MOCK_AUTH ?? 'true') === 'true'
+
+function RouteLoader() {
+    return (
+        <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
+            <div className="rounded-xl border border-slate-800 bg-slate-900/80 px-5 py-4 text-sm text-slate-300">
+                Loading page...
+            </div>
+        </div>
+    )
+}
 
 function AccessIntentModal({
     onContinue,
@@ -155,6 +167,12 @@ function App() {
         return element
     }
 
+    const withLazyRoute = (element: JSX.Element) => (
+        <Suspense fallback={<RouteLoader />}>
+            {element}
+        </Suspense>
+    )
+
     return (
         <Router>
             <Routes>
@@ -175,21 +193,21 @@ function App() {
 
                 <Route path="admin" element={<Navigate to="/admin/login" replace />} />
                 <Route path="admin/login" element={<AdminLoginPage />} />
-                <Route path="admin/dashboard" element={RequireAdminAccess(<AdminDashboardPage />)} />
-                <Route path="admin/ai-interrogation-logs" element={RequireAdminAccess(<AIInterrogationLogsPage />)} />
-                <Route path="admin/ai-report/:reportId" element={RequireAdminAccess(<AIReportPage />)} />
-                <Route path="admin/settings" element={RequireAdminAccess(<AdminSettingsPage />)} />
-                <Route path="admin/escrow-vault" element={RequireAdminAccess(<EscrowVaultPage />)} />
-                <Route path="admin/ephemeral-tokens" element={RequireAdminAccess(<ActiveEphemeralTokensPage />)} />
-                <Route path="admin/user-management" element={RequireAdminAccess(<UserManagementPage />)} />
-                <Route path="admin/provider-dataset" element={RequireAdminAccess(<ProviderDatasetManagementPage />)} />
-                <Route path="admin/security-compliance" element={RequireAdminAccess(<SecurityCompliancePage />)} />
-                <Route path="admin/operations" element={RequireAdminAccess(<OperationsPage />)} />
-                <Route path="admin/notifications" element={RequireAdminAccess(<NotificationsPage />)} />
-                <Route path="admin/onboarding-queue" element={RequireAdminAccess(<OnboardingQueuePage />)} />
-                <Route path="admin/application-review/:appId" element={RequireAdminAccess(<ApplicationReviewPage />)} />
-                <Route path="admin/incident-response" element={RequireAdminAccess(<IncidentResponsePage />)} />
-                <Route path="admin/audit-trail" element={RequireAdminAccess(<AdminAuditTrailPage />)} />
+                <Route path="admin/dashboard" element={RequireAdminAccess(withLazyRoute(<AdminDashboardPage />))} />
+                <Route path="admin/ai-interrogation-logs" element={RequireAdminAccess(withLazyRoute(<AIInterrogationLogsPage />))} />
+                <Route path="admin/ai-report/:reportId" element={RequireAdminAccess(withLazyRoute(<AIReportPage />))} />
+                <Route path="admin/settings" element={RequireAdminAccess(withLazyRoute(<AdminSettingsPage />))} />
+                <Route path="admin/escrow-vault" element={RequireAdminAccess(withLazyRoute(<EscrowVaultPage />))} />
+                <Route path="admin/ephemeral-tokens" element={RequireAdminAccess(withLazyRoute(<ActiveEphemeralTokensPage />))} />
+                <Route path="admin/user-management" element={RequireAdminAccess(withLazyRoute(<UserManagementPage />))} />
+                <Route path="admin/provider-dataset" element={RequireAdminAccess(withLazyRoute(<ProviderDatasetManagementPage />))} />
+                <Route path="admin/security-compliance" element={RequireAdminAccess(withLazyRoute(<SecurityCompliancePage />))} />
+                <Route path="admin/operations" element={RequireAdminAccess(withLazyRoute(<OperationsPage />))} />
+                <Route path="admin/notifications" element={RequireAdminAccess(withLazyRoute(<NotificationsPage />))} />
+                <Route path="admin/onboarding-queue" element={RequireAdminAccess(withLazyRoute(<OnboardingQueuePage />))} />
+                <Route path="admin/application-review/:appId" element={RequireAdminAccess(withLazyRoute(<ApplicationReviewPage />))} />
+                <Route path="admin/incident-response" element={RequireAdminAccess(withLazyRoute(<IncidentResponsePage />))} />
+                <Route path="admin/audit-trail" element={RequireAdminAccess(withLazyRoute(<AdminAuditTrailPage />))} />
 
                 <Route element={RequireWorkspaceAccess(<AppLayout />)}>
                     <Route path="dashboard" element={<DashboardPage />} />
