@@ -70,7 +70,7 @@ export default function DashboardPage() {
     }
 
     return (
-        <div className="relative min-h-screen bg-[#010915] text-white overflow-x-hidden">
+        <div className="relative min-h-screen bg-slate-900 text-white overflow-x-hidden">
             <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(ellipse_at_25%_0%,rgba(16,185,129,0.12),transparent_50%),radial-gradient(ellipse_at_80%_20%,rgba(59,130,246,0.08),transparent_45%)]" />
             <div className="pointer-events-none fixed inset-0 bg-[linear-gradient(to_bottom,transparent_0%,rgba(1,9,21,0.3)_100%)]" />
 

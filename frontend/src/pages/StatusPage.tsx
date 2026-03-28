@@ -43,7 +43,7 @@ const badgeStyles: Record<Tone, string> = {
 
 export default function StatusPage() {
     return (
-        <div className="relative min-h-screen bg-[#010915] text-white">
+        <div className="relative min-h-screen bg-slate-900 text-white">
             <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_18%_20%,rgba(52,211,153,0.12),transparent_40%),radial-gradient(circle_at_82%_0%,rgba(59,130,246,0.08),transparent_35%)]" />
             <div className="relative mx-auto max-w-7xl px-6 py-10 lg:px-10">
                 <header className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">

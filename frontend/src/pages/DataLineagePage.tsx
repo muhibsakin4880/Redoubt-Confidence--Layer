@@ -60,7 +60,7 @@ const toneStyles: Record<string, { card: string; badge: string }> = {
 
 export default function DataLineagePage() {
     return (
-        <div className="relative min-h-screen bg-[#050b15] text-white">
+        <div className="relative min-h-screen bg-slate-900 text-white">
             <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_12%_18%,rgba(34,211,238,0.12),transparent_40%),radial-gradient(circle_at_88%_0%,rgba(59,130,246,0.1),transparent_38%)]" />
             <div className="relative mx-auto max-w-7xl px-6 py-10 lg:px-10">
                 <header className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">

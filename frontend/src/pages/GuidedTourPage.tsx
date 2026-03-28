@@ -167,7 +167,7 @@ export default function GuidedTourPage() {
                                 className={`cursor-pointer rounded-2xl border p-5 shadow-[0_10px_30px_rgba(0,0,0,0.2)] ${
                                     selectedPersona === persona.id
                                         ? 'border-blue-500/50 bg-blue-500/10'
-                                        : 'border-white/10 bg-[#0a1628]'
+                                        : 'border-white/10 bg-slate-900'
                                 }`}
                             >
                                 <div className="flex items-start justify-between gap-3">
@@ -188,7 +188,7 @@ export default function GuidedTourPage() {
                 </section>
 
                 <section className="mt-10 grid gap-6 lg:grid-cols-[2fr_1fr]">
-                    <div className="rounded-2xl border border-white/10 bg-[#0a1628] p-6 shadow-[0_10px_40px_rgba(0,0,0,0.25)]">
+                    <div className="rounded-2xl border border-white/10 bg-slate-900 p-6 shadow-[0_10px_40px_rgba(0,0,0,0.25)]">
                         <div className="flex flex-col gap-2">
                             <h2 className="text-2xl font-semibold text-white">Your recommended workflow</h2>
                             <p className="text-sm text-slate-400">Follow these steps to get the most out of Redoubt</p>
@@ -225,7 +225,7 @@ export default function GuidedTourPage() {
                         </div>
                     </div>
 
-                    <aside className="rounded-2xl border border-white/10 bg-[#0a1628] p-6 shadow-[0_10px_40px_rgba(0,0,0,0.25)]">
+                    <aside className="rounded-2xl border border-white/10 bg-slate-900 p-6 shadow-[0_10px_40px_rgba(0,0,0,0.25)]">
                         <h2 className="text-xl font-semibold text-white">Your Progress</h2>
                         <div className="mt-5 space-y-3 text-sm text-slate-300">
                             <div className="flex items-center justify-between rounded-lg border border-white/5 bg-white/5 px-4 py-2.5">

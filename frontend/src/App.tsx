@@ -37,6 +37,8 @@ import ProfilePage from './pages/ProfilePage'
 import ContributionsPage from './pages/ContributionsPage'
 import ContributionDetailPage from './pages/ContributionDetailPage'
 import ContributionStatusDetailsPage from './pages/ContributionStatusDetailsPage'
+import ProviderDashboardPage from './pages/ProviderDashboardPage'
+import ProviderOnboardingPage from './pages/ProviderOnboardingPage'
 import AccessRequestsPage from './pages/AccessRequestsPage'
 import AccessRequestDetailPage from './pages/AccessRequestDetailPage'
 import TrustProfilePage from './pages/TrustProfilePage'
@@ -148,6 +150,11 @@ function App() {
         return element
     }
 
+    const RequireAdminAccess = (element: JSX.Element) => {
+        if (!isAuthenticated) return <Navigate to="/admin/login" replace />
+        return element
+    }
+
     return (
         <Router>
             <Routes>
@@ -168,24 +175,26 @@ function App() {
 
                 <Route path="admin" element={<Navigate to="/admin/login" replace />} />
                 <Route path="admin/login" element={<AdminLoginPage />} />
-                <Route path="admin/dashboard" element={<AdminDashboardPage />} />
-                <Route path="admin/ai-interrogation-logs" element={<AIInterrogationLogsPage />} />
-                <Route path="admin/ai-report/:reportId" element={<AIReportPage />} />
-                <Route path="admin/settings" element={<AdminSettingsPage />} />
-                <Route path="admin/escrow-vault" element={<EscrowVaultPage />} />
-<Route path="admin/ephemeral-tokens" element={<ActiveEphemeralTokensPage />} />
-                <Route path="admin/user-management" element={<UserManagementPage />} />
-                <Route path="admin/provider-dataset" element={<ProviderDatasetManagementPage />} />
-                <Route path="admin/security-compliance" element={<SecurityCompliancePage />} />
-                <Route path="admin/operations" element={<OperationsPage />} />
-                <Route path="admin/notifications" element={<NotificationsPage />} />
-                <Route path="admin/onboarding-queue" element={<OnboardingQueuePage />} />
-                <Route path="admin/application-review/:appId" element={<ApplicationReviewPage />} />
-                <Route path="admin/incident-response" element={<IncidentResponsePage />} />
-                <Route path="admin/audit-trail" element={<AdminAuditTrailPage />} />
+                <Route path="admin/dashboard" element={RequireAdminAccess(<AdminDashboardPage />)} />
+                <Route path="admin/ai-interrogation-logs" element={RequireAdminAccess(<AIInterrogationLogsPage />)} />
+                <Route path="admin/ai-report/:reportId" element={RequireAdminAccess(<AIReportPage />)} />
+                <Route path="admin/settings" element={RequireAdminAccess(<AdminSettingsPage />)} />
+                <Route path="admin/escrow-vault" element={RequireAdminAccess(<EscrowVaultPage />)} />
+                <Route path="admin/ephemeral-tokens" element={RequireAdminAccess(<ActiveEphemeralTokensPage />)} />
+                <Route path="admin/user-management" element={RequireAdminAccess(<UserManagementPage />)} />
+                <Route path="admin/provider-dataset" element={RequireAdminAccess(<ProviderDatasetManagementPage />)} />
+                <Route path="admin/security-compliance" element={RequireAdminAccess(<SecurityCompliancePage />)} />
+                <Route path="admin/operations" element={RequireAdminAccess(<OperationsPage />)} />
+                <Route path="admin/notifications" element={RequireAdminAccess(<NotificationsPage />)} />
+                <Route path="admin/onboarding-queue" element={RequireAdminAccess(<OnboardingQueuePage />)} />
+                <Route path="admin/application-review/:appId" element={RequireAdminAccess(<ApplicationReviewPage />)} />
+                <Route path="admin/incident-response" element={RequireAdminAccess(<IncidentResponsePage />)} />
+                <Route path="admin/audit-trail" element={RequireAdminAccess(<AdminAuditTrailPage />)} />
 
                 <Route element={RequireWorkspaceAccess(<AppLayout />)}>
                     <Route path="dashboard" element={<DashboardPage />} />
+                    <Route path="provider/dashboard" element={<ProviderDashboardPage />} />
+                    <Route path="provider/onboarding" element={<ProviderOnboardingPage />} />
                     <Route path="datasets" element={<DatasetsPage />} />
                     <Route path="datasets/:id" element={<DatasetDetailPage />} />
                     <Route path="datasets/:id/rights-quote" element={<RightsQuoteBuilderPage />} />
@@ -199,7 +208,7 @@ function App() {
                     <Route path="compliance-passport" element={<CompliancePassportPage />} />
                     <Route path="trust-score-history" element={<TrustScoreHistoryPage />} />
                     <Route path="contributions" element={<ContributionsPage />} />
-                    <Route path="contributions/ds-1003" element={<ContributionDetailPage />} />
+                    <Route path="contributions/:id" element={<ContributionDetailPage />} />
                     <Route path="contributions/:datasetId/status-details" element={<ContributionStatusDetailsPage />} />
                     <Route path="pipelines" element={<PipelinesPage />} />
                     <Route path="usage-analytics" element={<UsageAnalyticsPage />} />

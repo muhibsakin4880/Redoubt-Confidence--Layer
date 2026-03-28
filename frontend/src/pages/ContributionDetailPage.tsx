@@ -1,6 +1,7 @@
-import { Link } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 
 export default function ContributionDetailPage() {
+    const { id } = useParams<{ id: string }>()
     const buyerActivity = [
         { id: 'buyer_anon_001', date: '2026-02-20', amount: '$299', status: 'Active' },
         { id: 'buyer_anon_002', date: '2026-02-18', amount: '$299', status: 'Active' },
@@ -8,7 +9,7 @@ export default function ContributionDetailPage() {
     ]
 
     return (
-        <div className="container mx-auto px-4 py-10 text-white space-y-8">
+        <div data-contribution-id={id} className="container mx-auto px-4 py-10 text-white space-y-8">
             <Link
                 to="/contributions"
                 className="inline-flex items-center text-sm text-slate-400 hover:text-white transition-colors"

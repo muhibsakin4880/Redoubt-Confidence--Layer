@@ -79,7 +79,7 @@ export default function RightsQuoteBuilderPage() {
     }
 
     return (
-        <div className="min-h-screen bg-[#030814] text-white">
+        <div className="min-h-screen bg-slate-900 text-white">
             <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_16%_18%,rgba(34,211,238,0.14),transparent_35%),radial-gradient(circle_at_78%_0%,rgba(59,130,246,0.12),transparent_30%),radial-gradient(circle_at_48%_80%,rgba(16,185,129,0.08),transparent_35%)]" />
             <div className="relative mx-auto max-w-7xl px-6 py-10 lg:px-10">
                 <div className="flex items-center gap-2 text-sm text-slate-400">

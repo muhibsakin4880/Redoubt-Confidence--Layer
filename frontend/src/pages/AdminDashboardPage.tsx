@@ -77,7 +77,7 @@ export default function AdminDashboard() {
     }
 
     return (
-        <div className="min-h-screen bg-[#030712] flex">
+        <div className="min-h-screen bg-slate-950 flex">
             <aside className="w-56 bg-gradient-to-b from-slate-950/95 to-slate-950 border-r border-slate-800/50 flex flex-col backdrop-blur-xl overflow-hidden">
                 <div className="p-5 border-b border-slate-800/60">
                     <div className="flex items-center gap-3">

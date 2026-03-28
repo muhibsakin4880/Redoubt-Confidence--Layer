@@ -128,7 +128,7 @@ const isStatusDetailsClickable = (status: ContributionStatus) => clickableStatus
 
 const getStatusLink = (dataset: UploadedDataset) => {
     if (dataset.id === 'cn-1003') {
-        return '/contributions/ds-1003'
+        return `/contributions/${dataset.id}`
     }
     return `/contributions/${dataset.id}/status-details`
 }
