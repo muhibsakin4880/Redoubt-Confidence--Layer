@@ -10,6 +10,8 @@ import AlertCenterPanel from '../../components/AlertCenterPanel'
 import { useAuth } from '../../contexts/AuthContext'
 import { CONTRACT_STATE_LABELS, type ContractLifecycleState } from '../../domain/accessContract'
 import { canPerformAdminEscrowAction } from '../../domain/actionGuardrails'
+import { buildDisputePrepSummary } from '../../domain/adminAutomation'
+import { loadSharedDealLifecycleRecords } from '../../domain/dealLifecycle'
 
 type SummaryTone = 'cyan' | 'emerald' | 'amber' | 'rose'
 type TransactionStatus = Extract<
@@ -417,6 +419,8 @@ export default function EscrowVaultPage() {
     const [selectedEscrowId, setSelectedEscrowId] = useState(transactionRows[0].escId)
     const [selectedDisputeId, setSelectedDisputeId] = useState(disputeCards[0].escId)
     const [queueSearch, setQueueSearch] = useState('')
+    const dealRecords = useMemo(() => loadSharedDealLifecycleRecords(), [])
+    const disputePrepSummary = useMemo(() => buildDisputePrepSummary(dealRecords), [dealRecords])
 
     const filterScopedTransactions = useMemo(() => getTransactionsForFilter(activeFilter), [activeFilter])
     const normalizedQueueSearch = useMemo(() => queueSearch.trim().toLowerCase(), [queueSearch])
@@ -462,6 +466,13 @@ export default function EscrowVaultPage() {
     const selectedDispute = useMemo(
         () => disputeCards.find(dispute => dispute.escId === selectedDisputeId) ?? disputeCards[0],
         [selectedDisputeId]
+    )
+    const selectedPrepPacket = useMemo(
+        () =>
+            disputePrepSummary.packets.find(packet => packet.escrowId === selectedDispute.escId) ??
+            disputePrepSummary.packets[0] ??
+            null,
+        [disputePrepSummary.packets, selectedDispute.escId]
     )
 
     const selectedDisputeState = useMemo<TransactionStatus>(
@@ -1079,6 +1090,90 @@ export default function EscrowVaultPage() {
                                         <p className="text-[10px] text-amber-300">Legal escalation: {escalateLegalGuardrail.reason}</p>
                                     )}
                                 </div>
+                            </section>
+
+                            <section className={`${panelClass} p-5`}>
+                                <div className="flex flex-wrap items-start justify-between gap-3">
+                                    <div>
+                                        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Automated Dispute Prep</p>
+                                        <h2 className="mt-1 text-lg font-semibold text-slate-100">Evidence packet builder</h2>
+                                        <p className="mt-1 text-sm text-slate-400">
+                                            Shared deal context, outcome findings, and recommended next actions grouped into one prep packet.
+                                        </p>
+                                    </div>
+                                    <div className="flex flex-wrap gap-2">
+                                        <MetricChip label="Packets" value={`${disputePrepSummary.packets.length}`} />
+                                        <MetricChip label="High severity" value={`${disputePrepSummary.highSeverityCount}`} />
+                                        <MetricChip label="Evidence gaps" value={`${disputePrepSummary.pendingEvidenceCount}`} />
+                                    </div>
+                                </div>
+
+                                {selectedPrepPacket ? (
+                                    <>
+                                        <div className="mt-4 rounded-lg border border-slate-800/70 bg-slate-950/45 p-4">
+                                            <div className="flex flex-wrap items-start justify-between gap-3">
+                                                <div>
+                                                    <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">Prepared packet</p>
+                                                    <h3 className="mt-1 text-base font-semibold text-slate-100">{selectedPrepPacket.escrowId}</h3>
+                                                    <p className="mt-1 text-sm text-slate-400">
+                                                        {selectedPrepPacket.dataset} · {selectedPrepPacket.buyer} to {selectedPrepPacket.provider}
+                                                    </p>
+                                                </div>
+                                                <span className={`rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.1em] ${
+                                                    selectedPrepPacket.severity === 'high'
+                                                        ? 'border-rose-500/40 bg-rose-500/10 text-rose-200'
+                                                        : 'border-amber-500/40 bg-amber-500/10 text-amber-200'
+                                                }`}>
+                                                    {selectedPrepPacket.severity} severity
+                                                </span>
+                                            </div>
+                                            <p className="mt-3 text-sm leading-relaxed text-slate-200">{selectedPrepPacket.summary}</p>
+                                            <p className="mt-3 text-xs text-slate-500">
+                                                Exposure: {formatCurrency(selectedPrepPacket.amountUsd)}
+                                            </p>
+                                        </div>
+
+                                        <div className="mt-4 space-y-3">
+                                            {selectedPrepPacket.evidence.map(item => (
+                                                <div key={item.label} className="rounded-lg border border-slate-800/70 bg-slate-950/45 px-4 py-3">
+                                                    <div className="flex flex-wrap items-center justify-between gap-3">
+                                                        <p className="text-[12px] text-slate-200">{item.label}</p>
+                                                        <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] ${
+                                                            item.status === 'ready'
+                                                                ? 'border-emerald-500/35 bg-emerald-500/10 text-emerald-200'
+                                                                : item.status === 'warning'
+                                                                    ? 'border-amber-500/35 bg-amber-500/10 text-amber-200'
+                                                                    : 'border-rose-500/35 bg-rose-500/10 text-rose-200'
+                                                        }`}>
+                                                            {item.status}
+                                                        </span>
+                                                    </div>
+                                                    <p className="mt-2 text-sm text-slate-400">{item.detail}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        <div className="mt-4 rounded-lg border border-cyan-500/20 bg-cyan-500/8 p-4">
+                                            <p className="text-[10px] uppercase tracking-[0.12em] text-cyan-300/90">Next action</p>
+                                            <p className="mt-1 text-sm text-cyan-100">{selectedPrepPacket.nextAction}</p>
+                                        </div>
+
+                                        <div className="mt-4 space-y-2">
+                                            {selectedPrepPacket.recommendedActions.map(action => (
+                                                <div key={action} className="rounded-lg border border-slate-800/70 bg-slate-950/45 px-4 py-3 text-sm text-slate-300">
+                                                    {action}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="mt-4 rounded-lg border border-dashed border-slate-700/80 bg-slate-950/35 px-4 py-8 text-center">
+                                        <p className="text-sm font-semibold text-slate-200">No automated dispute packets are ready yet.</p>
+                                        <p className="mt-2 text-xs text-slate-500">
+                                            Packets appear here when protected deals are frozen by outcome or dispute workflows.
+                                        </p>
+                                    </div>
+                                )}
                             </section>
 
                             <ExecutionRunbookPanel

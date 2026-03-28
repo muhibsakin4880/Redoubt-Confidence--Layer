@@ -1,5 +1,7 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import AdminLayout from '../../components/admin/AdminLayout'
+import { buildAuditDigestSummary } from '../../domain/adminAutomation'
+import { loadSharedDealLifecycleRecords } from '../../domain/dealLifecycle'
 
 type EventTone = 'ok' | 'warn'
 
@@ -32,7 +34,16 @@ const badgeTone: Record<EventTone, string> = {
 
 export default function AdminAuditTrailPage() {
     const [selectedType, setSelectedType] = useState('All Event Types')
-    const eventTypes = ['All Event Types', 'Access', 'Request', 'Contribution', 'Security', 'Compliance']
+    const auditDigest = useMemo(
+        () => buildAuditDigestSummary(loadSharedDealLifecycleRecords()),
+        []
+    )
+    const eventTypes = ['All Event Types', 'Release', 'Credit', 'Rights', 'Token', 'Dispute']
+
+    const displayedEvents = useMemo(() => {
+        if (selectedType === 'All Event Types') return auditDigest.events
+        return auditDigest.events.filter(row => row.event.startsWith(selectedType.toUpperCase()))
+    }, [auditDigest.events, selectedType])
 
     return (
         <AdminLayout title="AUDIT TRAIL" subtitle="PLATFORM EVENT MONITORING">
@@ -49,21 +60,32 @@ export default function AdminAuditTrailPage() {
                     </header>
 
                     <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-4">
-                        <div className="rounded-lg border border-white/10 bg-slate-900/50 p-4">
-                            <p className="text-xs uppercase tracking-wider text-slate-500">Total Events</p>
-                            <p className="mt-1 text-2xl font-semibold text-slate-200">14,847</p>
+                        {auditDigest.cards.map(card => (
+                            <div key={card.label} className="rounded-lg border border-white/10 bg-slate-900/50 p-4">
+                                <p className="text-xs uppercase tracking-wider text-slate-500">{card.label}</p>
+                                <p className="mt-1 text-2xl font-semibold text-slate-200">{card.value}</p>
+                                <p className="mt-2 text-xs text-slate-500">{card.detail}</p>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="mt-6 rounded-xl border border-white/10 bg-slate-900/35 p-5">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                            <div>
+                                <p className="text-xs uppercase tracking-[0.14em] text-cyan-400">Daily Admin Digest</p>
+                                <h2 className="mt-2 text-xl font-semibold text-slate-100">Summarized platform exceptions and automated controls</h2>
+                            </div>
+                            <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-200">
+                                {auditDigest.flaggedCount} flagged highlight(s)
+                            </span>
                         </div>
-                        <div className="rounded-lg border border-white/10 bg-slate-900/50 p-4">
-                            <p className="text-xs uppercase tracking-wider text-slate-500">Datasets Accessed</p>
-                            <p className="mt-1 text-2xl font-semibold text-slate-200">312</p>
-                        </div>
-                        <div className="rounded-lg border border-white/10 bg-slate-900/50 p-4">
-                            <p className="text-xs uppercase tracking-wider text-slate-500">Unique Participants</p>
-                            <p className="mt-1 text-2xl font-semibold text-slate-200">89</p>
-                        </div>
-                        <div className="rounded-lg border border-white/10 bg-slate-900/50 p-4">
-                            <p className="text-xs uppercase tracking-wider text-slate-500">Flagged Events</p>
-                            <p className="mt-1 text-2xl font-semibold text-amber-200">3</p>
+                        <div className="mt-4 grid gap-3 md:grid-cols-3">
+                            {auditDigest.highlights.map(highlight => (
+                                <article key={highlight.title} className="rounded-lg border border-slate-800/70 bg-slate-950/45 p-4">
+                                    <p className="text-xs uppercase tracking-[0.12em] text-slate-500">{highlight.title}</p>
+                                    <p className="mt-2 text-sm leading-relaxed text-slate-300">{highlight.detail}</p>
+                                </article>
+                            ))}
                         </div>
                     </div>
 
@@ -107,21 +129,28 @@ export default function AdminAuditTrailPage() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-800/50">
-                                {auditRows.map((row, idx) => (
-                                    <tr key={idx} className="hover:bg-slate-800/30">
+                                {displayedEvents.map((row, idx) => (
+                                    <tr key={`${row.hash}-${idx}`} className="hover:bg-slate-800/30">
                                         <td className="px-4 py-3 font-mono text-xs text-slate-400">{row.timestamp}</td>
                                         <td className="px-4 py-3 text-slate-300">{row.event}</td>
                                         <td className="px-4 py-3 text-slate-300">{row.participant}</td>
                                         <td className="px-4 py-3 text-slate-300">{row.dataset}</td>
                                         <td className="px-4 py-3 text-slate-400">{row.purpose}</td>
                                         <td className="px-4 py-3">
-                                            <span className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[10px] font-medium ${row.status === 'CLEARED' ? badgeTone.ok : badgeTone.warn}`}>
+                                            <span className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[10px] font-medium ${row.tone === 'ok' ? badgeTone.ok : badgeTone.warn}`}>
                                                 {row.status}
                                             </span>
                                         </td>
                                         <td className="px-4 py-3 font-mono text-xs text-slate-500">{row.hash}</td>
                                     </tr>
                                 ))}
+                                {displayedEvents.length === 0 && (
+                                    <tr>
+                                        <td colSpan={7} className="px-4 py-8 text-center text-xs text-slate-500">
+                                            No digest events match this filter.
+                                        </td>
+                                    </tr>
+                                )}
                             </tbody>
                         </table>
                     </div>

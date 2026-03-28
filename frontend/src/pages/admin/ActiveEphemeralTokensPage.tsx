@@ -2,10 +2,12 @@ import { useEffect, useMemo, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import AdminLayout from '../../components/admin/AdminLayout'
 import { useAuth } from '../../contexts/AuthContext'
+import { buildTokenControlSummary } from '../../domain/adminAutomation'
+import { loadSharedDealLifecycleRecords } from '../../domain/dealLifecycle'
 
 type SummaryTone = 'blue' | 'green' | 'amber' | 'red' | 'gray'
-type TokenStatus = 'active' | 'expiring' | 'suspicious'
-type FeedFilter = 'all' | 'active' | 'expiring' | 'suspicious' | 'revoked'
+type TokenStatus = 'planned' | 'active' | 'expiring' | 'frozen' | 'revoked'
+type FeedFilter = 'all' | 'planned' | 'active' | 'expiring' | 'frozen' | 'revoked'
 type ActionTone = 'redSolid' | 'redOutline' | 'amber' | 'blueOutline'
 
 type SummaryCard = {
@@ -21,10 +23,12 @@ type TokenFeedRow = {
     issued: string
     expires: string
     scope: string
+    dealStage: string
     statusLabel: string
     status: TokenStatus
     actionLabel: string
     actionTone: ActionTone
+    autoAction: string
 }
 
 type AlertCard = {
@@ -57,7 +61,7 @@ const summaryCards: SummaryCard[] = [
     { label: 'Suspicious Activity', value: '7', tone: 'red' }
 ]
 
-const tokenFeedRows: TokenFeedRow[] = [
+const tokenFeedRows = [
     {
         tokenId: 'TKN-a3f8b2c1',
         participant: 'part_anon_042',
@@ -193,10 +197,10 @@ const anomalyCards: AlertCard[] = [
 ]
 
 const policyRows: PolicyRow[] = [
-    { policy: 'Default Token TTL', value: '60 minutes' },
-    { policy: 'Max Concurrent Tokens per Participant', value: '3' },
-    { policy: 'Auto-revoke on IP Change', value: 'Enabled' },
-    { policy: 'Scope Violation Auto-revoke', value: 'Enabled' }
+    { policy: 'Evaluation tokens', value: 'Monitor until buyer validation or TTL expiry' },
+    { policy: 'Validated tokens', value: 'Force read-only until payout release completes' },
+    { policy: 'Frozen tokens', value: 'Auto-freeze on dispute or outcome-engine miss' },
+    { policy: 'Released tokens', value: 'Auto-revoke and archive after settlement closes' }
 ]
 
 const revocationRows: RevocationRow[] = [
@@ -224,9 +228,11 @@ const summaryToneClasses: Record<SummaryTone, string> = {
 }
 
 const statusBadgeClasses: Record<TokenStatus, string> = {
+    planned: 'border-slate-500/40 bg-slate-500/10 text-slate-200',
     active: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200',
     expiring: 'border-amber-500/40 bg-amber-500/10 text-amber-200',
-    suspicious: 'border-red-500/40 bg-red-500/10 text-red-200'
+    frozen: 'border-red-500/40 bg-red-500/10 text-red-200',
+    revoked: 'border-slate-500/40 bg-slate-500/10 text-slate-300'
 }
 
 const actionButtonClasses: Record<ActionTone, string> = {
@@ -238,9 +244,10 @@ const actionButtonClasses: Record<ActionTone, string> = {
 
 const filterTabs: Array<{ key: FeedFilter; label: string }> = [
     { key: 'all', label: 'All' },
+    { key: 'planned', label: 'Planned' },
     { key: 'active', label: 'Active' },
     { key: 'expiring', label: 'Expiring Soon' },
-    { key: 'suspicious', label: 'Suspicious' },
+    { key: 'frozen', label: 'Frozen' },
     { key: 'revoked', label: 'Revoked' }
 ]
 
@@ -253,6 +260,89 @@ export default function ActiveEphemeralTokensPage() {
     const navigate = useNavigate()
     const [activeFilter, setActiveFilter] = useState<FeedFilter>('all')
     const [currentTimestamp, setCurrentTimestamp] = useState(() => formatUtcTimestamp(new Date()))
+    const tokenControlSummary = useMemo(
+        () => buildTokenControlSummary(loadSharedDealLifecycleRecords()),
+        []
+    )
+
+    const dashboardSummaryCards = useMemo<SummaryCard[]>(() => [
+        {
+            label: 'Evaluation Stage',
+            value: `${tokenControlSummary.dealStageCounts.evaluation}`,
+            tone: 'blue'
+        },
+        {
+            label: 'Validated Stage',
+            value: `${tokenControlSummary.dealStageCounts.validated}`,
+            tone: 'green'
+        },
+        {
+            label: 'Frozen Controls',
+            value: `${tokenControlSummary.controlStateCounts.frozen}`,
+            tone: 'red'
+        },
+        {
+            label: 'Revoked Tokens',
+            value: `${tokenControlSummary.controlStateCounts.revoked}`,
+            tone: 'gray'
+        },
+        {
+            label: 'Expiring Soon',
+            value: `${tokenControlSummary.controlStateCounts.expiring}`,
+            tone: 'amber'
+        }
+    ], [tokenControlSummary])
+
+    const tokenRows = useMemo<TokenFeedRow[]>(() =>
+        tokenControlSummary.rows.map(row => ({
+            tokenId: row.tokenId,
+            participant: row.participant,
+            dataset: row.dataset,
+            issued: row.issued,
+            expires: row.expires,
+            scope: row.scope,
+            dealStage: row.stageLabel,
+            statusLabel: row.stateLabel,
+            status: row.controlState,
+            actionLabel:
+                row.controlState === 'frozen'
+                    ? 'FREEZE'
+                    : row.controlState === 'revoked'
+                        ? 'ARCHIVED'
+                        : row.dealStage === 'validated'
+                            ? 'HOLD'
+                            : 'MONITOR',
+            actionTone:
+                row.controlState === 'frozen'
+                    ? 'redSolid'
+                    : row.controlState === 'revoked'
+                        ? 'blueOutline'
+                        : row.controlState === 'expiring'
+                            ? 'amber'
+                            : 'redOutline',
+            autoAction: row.autoAction
+        })),
+    [tokenControlSummary])
+
+    const anomalyCardsDynamic = useMemo<AlertCard[]>(() =>
+        tokenControlSummary.anomalyRows.map(row => ({
+            tone: row.controlState === 'frozen' ? 'red' : 'amber',
+            token: row.tokenId,
+            participant: row.participant,
+            flag: row.controlReason,
+            actions:
+                row.controlState === 'frozen'
+                    ? [
+                        { label: 'Revoke Token', tone: 'redSolid' },
+                        { label: 'Block Participant', tone: 'redOutline' },
+                        { label: 'Investigate', tone: 'amber' }
+                    ]
+                    : [
+                        { label: 'Tighten Scope', tone: 'amber' },
+                        { label: 'Investigate', tone: 'blueOutline' }
+                    ]
+        })),
+    [tokenControlSummary])
 
     useEffect(() => {
         const interval = window.setInterval(() => {
@@ -262,10 +352,9 @@ export default function ActiveEphemeralTokensPage() {
     }, [])
 
     const filteredRows = useMemo(() => {
-        if (activeFilter === 'all') return tokenFeedRows
-        if (activeFilter === 'revoked') return []
-        return tokenFeedRows.filter(row => row.status === activeFilter)
-    }, [activeFilter])
+        if (activeFilter === 'all') return tokenRows
+        return tokenRows.filter(row => row.status === activeFilter)
+    }, [activeFilter, tokenRows])
 
     if (!isAuthenticated) return <Navigate to="/admin/login" replace />
 
@@ -289,7 +378,7 @@ export default function ActiveEphemeralTokensPage() {
                 </section>
 
                 <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
-                    {summaryCards.map(card => (
+                    {dashboardSummaryCards.map(card => (
                         <article
                             key={card.label}
                             className={`rounded-xl border p-4 backdrop-blur-xl shadow-2xl shadow-black/25 ${summaryToneClasses[card.tone]}`}
@@ -321,16 +410,18 @@ export default function ActiveEphemeralTokensPage() {
                     </div>
 
                     <div className="overflow-x-auto">
-                        <table className="w-full min-w-[1180px]">
+                        <table className="w-full min-w-[1360px]">
                             <thead className="bg-slate-950/45">
                                 <tr className="text-[9px] font-semibold uppercase tracking-[0.13em] text-slate-500">
                                     <th className="px-4 py-3 text-left">Token ID</th>
                                     <th className="px-4 py-3 text-left">Participant</th>
                                     <th className="px-4 py-3 text-left">Dataset</th>
+                                    <th className="px-4 py-3 text-left">Deal Stage</th>
                                     <th className="px-4 py-3 text-left">Issued</th>
                                     <th className="px-4 py-3 text-left">Expires</th>
                                     <th className="px-4 py-3 text-left">Scope</th>
                                     <th className="px-4 py-3 text-left">Status</th>
+                                    <th className="px-4 py-3 text-left">Auto Control</th>
                                     <th className="px-4 py-3 text-left">Action</th>
                                 </tr>
                             </thead>
@@ -340,6 +431,11 @@ export default function ActiveEphemeralTokensPage() {
                                         <td className="whitespace-nowrap px-4 py-3 font-mono text-cyan-300">{row.tokenId}</td>
                                         <td className="whitespace-nowrap px-4 py-3">{row.participant}</td>
                                         <td className="px-4 py-3 text-slate-300">{row.dataset}</td>
+                                        <td className="whitespace-nowrap px-4 py-3">
+                                            <span className="inline-flex items-center rounded-md border border-slate-700/70 bg-slate-900/60 px-2.5 py-1 text-[10px] font-semibold tracking-[0.11em] text-slate-200">
+                                                {row.dealStage}
+                                            </span>
+                                        </td>
                                         <td className="whitespace-nowrap px-4 py-3 font-mono text-slate-300">{row.issued}</td>
                                         <td className="whitespace-nowrap px-4 py-3 font-mono text-slate-300">{row.expires}</td>
                                         <td className="whitespace-nowrap px-4 py-3">{row.scope}</td>
@@ -348,6 +444,7 @@ export default function ActiveEphemeralTokensPage() {
                                                 {row.statusLabel}
                                             </span>
                                         </td>
+                                        <td className="px-4 py-3 text-slate-400">{row.autoAction}</td>
                                         <td className="whitespace-nowrap px-4 py-3">
                                             <button className={`rounded-md border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] transition-colors ${actionButtonClasses[row.actionTone]}`}>
                                                 {row.actionLabel}
@@ -357,7 +454,7 @@ export default function ActiveEphemeralTokensPage() {
                                 ))}
                                 {filteredRows.length === 0 && (
                                     <tr>
-                                        <td colSpan={8} className="px-4 py-8 text-center text-[11px] text-slate-500">
+                                        <td colSpan={10} className="px-4 py-8 text-center text-[11px] text-slate-500">
                                             No tokens in this filter.
                                         </td>
                                     </tr>
@@ -371,11 +468,11 @@ export default function ActiveEphemeralTokensPage() {
                     <div className="space-y-1">
                         <h2 className="text-[12px] font-semibold uppercase tracking-[0.12em] text-slate-300">Suspicious Token Activity</h2>
                         <p className="text-lg font-semibold text-slate-100">Anomaly Alerts</p>
-                        <p className="text-sm text-slate-400">7 tokens flagged for unusual behaviour</p>
+                        <p className="text-sm text-slate-400">{anomalyCardsDynamic.length} tokens flagged for stage-aware control review</p>
                     </div>
 
                     <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-3">
-                        {anomalyCards.map(card => (
+                        {anomalyCardsDynamic.map(card => (
                             <article
                                 key={card.token}
                                 className={`rounded-lg border bg-slate-950/45 p-4 ${card.tone === 'red' ? 'border-red-500/45' : 'border-amber-500/45'}`}
@@ -416,6 +513,11 @@ export default function ActiveEphemeralTokensPage() {
                                 </div>
                             </article>
                         ))}
+                        {anomalyCardsDynamic.length === 0 && (
+                            <div className="rounded-lg border border-slate-800/70 bg-slate-950/45 px-4 py-8 text-center text-sm text-slate-500 xl:col-span-3">
+                                No token anomalies require admin attention right now.
+                            </div>
+                        )}
                     </div>
                 </section>
 
@@ -453,7 +555,7 @@ export default function ActiveEphemeralTokensPage() {
                         <div className="space-y-1">
                             <h2 className="text-[12px] font-semibold uppercase tracking-[0.12em] text-slate-300">Revocation Log</h2>
                             <p className="text-lg font-semibold text-slate-100">Recent Revocations</p>
-                            <p className="text-sm text-slate-400">34 tokens revoked today</p>
+                            <p className="text-sm text-slate-400">{tokenControlSummary.revocations.length} stage-driven revocation or freeze events</p>
                         </div>
                         <button className={`rounded-md border px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.12em] transition-colors ${actionButtonClasses.blueOutline}`}>
                             Export Revocation Log
@@ -472,7 +574,7 @@ export default function ActiveEphemeralTokensPage() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-800/50 text-[11px] text-slate-200">
-                                {revocationRows.map(row => (
+                                {tokenControlSummary.revocations.map(row => (
                                     <tr key={row.tokenId} className="hover:bg-slate-800/25 transition-colors">
                                         <td className="whitespace-nowrap px-4 py-3 font-mono text-cyan-300">{row.tokenId}</td>
                                         <td className="whitespace-nowrap px-4 py-3">{row.participant}</td>
@@ -481,6 +583,13 @@ export default function ActiveEphemeralTokensPage() {
                                         <td className="whitespace-nowrap px-4 py-3 font-mono text-slate-300">{row.timestamp}</td>
                                     </tr>
                                 ))}
+                                {tokenControlSummary.revocations.length === 0 && (
+                                    <tr>
+                                        <td colSpan={5} className="px-4 py-8 text-center text-[11px] text-slate-500">
+                                            No stage-based revocation events have been recorded yet.
+                                        </td>
+                                    </tr>
+                                )}
                             </tbody>
                         </table>
                     </div>
