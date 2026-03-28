@@ -8,6 +8,7 @@ export type EscrowPaymentMethod = 'wallet' | 'wire' | 'card'
 export type EscrowReviewWindowHours = 24 | 48 | 72
 
 export type OutcomeIssueType = 'schema_mismatch' | 'freshness_miss'
+export type OutcomeEngineStatus = 'not_started' | 'passed' | 'failed'
 
 type EscrowCheckoutLifecycle = Extract<
     ContractLifecycleState,
@@ -80,6 +81,14 @@ export type EscrowCheckoutRecord = {
             freshnessCommitment: string
             confidenceFloor: number
         }
+        engine: {
+            status: OutcomeEngineStatus
+            summary: string
+            findings: string[]
+            actualFieldCount?: number
+            actualFreshnessScore?: number
+            lastRunAt?: string
+        }
         validation: {
             status: OutcomeValidationStatus
             issueTypes: OutcomeIssueType[]
@@ -149,6 +158,13 @@ const buildSchemaVersion = (dataset: DatasetDetail) =>
     buildStableHash(dataset.preview.sampleSchema.map(field => `${field.field}:${field.type}`).join('|'))
 
 const buildEvaluationFee = (quote: RightsQuote) => roundToNearest25(Math.max(quote.totalUsd * 0.18, 250))
+
+const expectedFieldCountFromQuote = (quote: RightsQuote, dataset: DatasetDetail) => {
+    const totalFields = dataset.preview.sampleSchema.length
+    if (quote.input.fieldPack === 'core') return Math.max(3, totalFields - 2)
+    if (quote.input.fieldPack === 'analytics') return Math.max(4, totalFields - 1)
+    return totalFields
+}
 
 const creditRateForIssues = (issueTypes: OutcomeIssueType[]) => {
     const normalized = Array.from(new Set(issueTypes))
@@ -352,9 +368,14 @@ export const buildEscrowCheckoutRecord = (
             stage: 'evaluation_pending',
             commitments: {
                 schemaVersion: buildSchemaVersion(dataset),
-                expectedFieldCount: dataset.preview.sampleSchema.length,
+                expectedFieldCount: expectedFieldCountFromQuote(quote, dataset),
                 freshnessCommitment: dataset.preview.freshnessLabel,
-                confidenceFloor: Math.max(80, dataset.confidenceScore - 4)
+                confidenceFloor: Math.max(75, dataset.quality.freshnessScore - 3)
+            },
+            engine: {
+                status: 'not_started',
+                summary: 'Outcome engine will run automatically once the governed evaluation workspace is live.',
+                findings: []
             },
             validation: {
                 status: 'pending',
@@ -396,6 +417,11 @@ export const issueEscrowScopedCredentials = (record: EscrowCheckoutRecord): Escr
         outcomeProtection: {
             ...record.outcomeProtection,
             stage: 'evaluation_active',
+            engine: {
+                ...record.outcomeProtection.engine,
+                status: 'not_started',
+                summary: 'Protected evaluation is live. Engine scan will compare committed schema and freshness before buyer validation.'
+            },
             validation: {
                 ...record.outcomeProtection.validation,
                 updatedAt: issuedAt.toISOString()
@@ -419,6 +445,112 @@ export const confirmOutcomeValidation = (record: EscrowCheckoutRecord, note?: st
                 issueTypes: [],
                 note,
                 updatedAt
+            }
+        }
+    }
+}
+
+const buildActualFieldCount = (
+    dataset: DatasetDetail,
+    quote: RightsQuote,
+    record: EscrowCheckoutRecord
+) => {
+    let drift = 0
+    if ((quote.input.fieldPack === 'full_schema' || quote.input.fieldPack === 'sensitive_review') && dataset.preview.structureQuality < 95) {
+        drift += 1
+    }
+    if (record.configuration.accessMode === 'encrypted_download' && dataset.preview.structureQuality < 94) {
+        drift += 1
+    }
+
+    return Math.max(0, record.outcomeProtection.commitments.expectedFieldCount - drift)
+}
+
+const buildActualFreshnessScore = (
+    dataset: DatasetDetail,
+    quote: RightsQuote,
+    record: EscrowCheckoutRecord
+) => {
+    let penalty = 0
+    if (record.configuration.accessMode === 'aggregated_export') penalty += 1
+    if (record.configuration.accessMode === 'encrypted_download') penalty += 4
+    if (quote.input.geography === 'global') penalty += 2
+    if (quote.riskBand === 'heightened') penalty += 1
+    if (quote.riskBand === 'strict') penalty += 2
+    return Math.max(0, dataset.quality.freshnessScore - penalty)
+}
+
+export const runOutcomeProtectionEngine = (
+    record: EscrowCheckoutRecord,
+    dataset: DatasetDetail,
+    quote: RightsQuote
+): EscrowCheckoutRecord => {
+    const updatedAt = nowIso()
+    const actualFieldCount = buildActualFieldCount(dataset, quote, record)
+    const actualFreshnessScore = buildActualFreshnessScore(dataset, quote, record)
+    const issueTypes: OutcomeIssueType[] = []
+    const findings: string[] = []
+
+    if (actualFieldCount < record.outcomeProtection.commitments.expectedFieldCount) {
+        issueTypes.push('schema_mismatch')
+        findings.push(
+            `Expected ${record.outcomeProtection.commitments.expectedFieldCount} contracted field(s), but evaluation surfaced ${actualFieldCount}.`
+        )
+    }
+
+    if (actualFreshnessScore < record.outcomeProtection.commitments.confidenceFloor) {
+        issueTypes.push('freshness_miss')
+        findings.push(
+            `Freshness signal scored ${actualFreshnessScore}% against a contracted floor of ${record.outcomeProtection.commitments.confidenceFloor}%.`
+        )
+    }
+
+    if (issueTypes.length === 0) {
+        return {
+            ...record,
+            updatedAt,
+            outcomeProtection: {
+                ...record.outcomeProtection,
+                engine: {
+                    status: 'passed',
+                    summary: `Outcome engine verified ${actualFieldCount}/${record.outcomeProtection.commitments.expectedFieldCount} field(s) and freshness ${actualFreshnessScore}% against a floor of ${record.outcomeProtection.commitments.confidenceFloor}%.`,
+                    findings: ['Committed schema and freshness checks passed.'],
+                    actualFieldCount,
+                    actualFreshnessScore,
+                    lastRunAt: updatedAt
+                }
+            }
+        }
+    }
+
+    const amountUsd = roundToNearest25(record.funding.amountUsd * creditRateForIssues(issueTypes))
+
+    return {
+        ...record,
+        updatedAt,
+        lifecycleState: 'DISPUTE_OPEN',
+        outcomeProtection: {
+            ...record.outcomeProtection,
+            stage: 'credit_issued',
+            engine: {
+                status: 'failed',
+                summary: `Outcome engine detected ${issueSummary(issueTypes)} during protected evaluation.`,
+                findings,
+                actualFieldCount,
+                actualFreshnessScore,
+                lastRunAt: updatedAt
+            },
+            validation: {
+                status: 'issue_reported',
+                issueTypes,
+                note: `Protection engine automatically opened review because ${issueSummary(issueTypes)}.`,
+                updatedAt
+            },
+            credits: {
+                status: 'issued',
+                amountUsd,
+                reason: `Automatic credit issued because ${issueSummary(issueTypes)}.`,
+                issuedAt: updatedAt
             }
         }
     }

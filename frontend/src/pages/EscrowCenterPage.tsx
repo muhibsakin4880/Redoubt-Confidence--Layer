@@ -670,7 +670,7 @@ export default function EscrowCenterPage() {
                                 <div>Schema version: {selectedCheckoutRecord.outcomeProtection.commitments.schemaVersion}</div>
                                 <div>Expected fields: {selectedCheckoutRecord.outcomeProtection.commitments.expectedFieldCount}</div>
                                 <div>Freshness: {selectedCheckoutRecord.outcomeProtection.commitments.freshnessCommitment}</div>
-                                <div>Confidence floor: {selectedCheckoutRecord.outcomeProtection.commitments.confidenceFloor}%</div>
+                                <div>Freshness floor: {selectedCheckoutRecord.outcomeProtection.commitments.confidenceFloor}%</div>
                             </div>
                             {selectedCheckoutRecord.outcomeProtection.credits.status === 'issued' && (
                                 <div className="rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-100">

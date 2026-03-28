@@ -2,6 +2,7 @@ import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
 import { DEFAULT_DATASET, DATASET_DETAILS, RequestStatus, confidenceLevel, decisionLabel } from '../data/datasetDetailData'
 import { requestReviewStateLabel, type ContractLifecycleState } from '../domain/accessContract'
+import DealProgressTracker from '../components/DealProgressTracker'
 import LifecycleGuidancePanel from '../components/LifecycleGuidancePanel'
 import { canPerformBuyerEscrowAction, canStartEscrowForRequest } from '../domain/actionGuardrails'
 import SecurityAuditTimeline from '../components/SecurityAuditTimeline'
@@ -21,9 +22,13 @@ import {
     buildRequestPrefillFromPassport,
     passportStatusMeta
 } from '../domain/compliancePassport'
+import { buildDealProgressModel } from '../domain/dealProgress'
+import { getOutcomeEvaluationFee, loadEscrowCheckouts } from '../domain/escrowCheckout'
 import {
+    buildRightsQuote,
     buildRequestPrefillFromQuote,
     formatUsd,
+    getDefaultRightsQuoteForm,
     loadRightsQuotes
 } from '../domain/rightsQuoteBuilder'
 
@@ -63,6 +68,28 @@ export default function DatasetDetailPage() {
     const compliancePassport = useMemo(() => buildCompliancePassport(), [location.key])
     const passportStatus = useMemo(() => passportStatusMeta(compliancePassport.status), [compliancePassport.status])
     const latestSavedQuote = useMemo(() => loadRightsQuotes(dataset.id)[0] ?? null, [dataset.id, location.key])
+    const fallbackQuote = useMemo(
+        () => buildRightsQuote(dataset, getDefaultRightsQuoteForm(compliancePassport), compliancePassport),
+        [compliancePassport, dataset]
+    )
+    const recentEscrowCheckouts = useMemo(() => loadEscrowCheckouts(dataset.id), [dataset.id, location.key])
+    const latestCheckout = useMemo(() => {
+        if (latestSavedQuote) {
+            return recentEscrowCheckouts.find(record => record.quoteId === latestSavedQuote.id) ?? recentEscrowCheckouts[0] ?? null
+        }
+        return recentEscrowCheckouts[0] ?? null
+    }, [latestSavedQuote, recentEscrowCheckouts])
+    const recommendedQuote = latestSavedQuote ?? fallbackQuote
+    const evaluationFeeUsd = useMemo(() => getOutcomeEvaluationFee(recommendedQuote), [recommendedQuote])
+    const dealProgress = useMemo(
+        () =>
+            buildDealProgressModel({
+                passport: compliancePassport,
+                quote: latestSavedQuote ?? (latestCheckout ? recommendedQuote : null),
+                checkoutRecord: latestCheckout
+            }),
+        [compliancePassport, latestCheckout, latestSavedQuote, recommendedQuote]
+    )
     const [requestStatus, setRequestStatus] = useState<RequestStatus>(dataset.access.status)
     const [showRequestModal, setShowRequestModal] = useState(false)
     const [showRiskAssessment, setShowRiskAssessment] = useState(false)
@@ -302,26 +329,100 @@ export default function DatasetDetailPage() {
                                 </div>
                             </div>
 
-                            <div className="mt-8">
-                                <div className="flex flex-wrap gap-3">
-                                    <Link
-                                        to={`/datasets/${dataset.id}/quality-breakdown`}
-                                        className="inline-flex items-center px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-colors"
-                                    >
-                                        Free Metadata Preview
-                                    </Link>
-                                    <Link
-                                        to={`/datasets/${dataset.id}/escrow-checkout`}
-                                        state={latestSavedQuote ? { quoteId: latestSavedQuote.id } : undefined}
-                                        className="inline-flex items-center px-4 py-2 rounded-lg border border-emerald-400/40 bg-emerald-500/10 text-emerald-100 font-semibold transition-colors hover:bg-emerald-500/20"
-                                    >
-                                        Start Paid Evaluation
-                                    </Link>
+                            <section className="mt-8 rounded-2xl border border-slate-700 bg-slate-900/70 p-5 shadow-[0_12px_35px_rgba(0,0,0,0.18)]">
+                                <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+                                    <div>
+                                        <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+                                            Decision Block
+                                        </div>
+                                        <h2 className="mt-3 text-xl font-semibold text-white">Choose free preview or protected evaluation</h2>
+                                        <p className="mt-2 max-w-2xl text-sm text-slate-400">
+                                            Buyers can stay in zero-cost metadata review, or move into a governed clean-room evaluation with escrow protection,
+                                            buyer validation, and automatic credits when commitments miss.
+                                        </p>
+                                    </div>
+                                    <div className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-100">
+                                        {latestCheckout ? `Deal ${latestCheckout.escrowId} in progress` : 'No payout until validation'}
+                                    </div>
                                 </div>
-                                <p className="mt-3 text-xs text-slate-400">
-                                    Metadata preview is free. Paid clean-room evaluation unlocks buyer validation, escrow release gates, and automatic credits if schema or freshness commitments miss.
-                                </p>
-                            </div>
+
+                                <div className="mt-5 grid gap-4 xl:grid-cols-2">
+                                    <article className="rounded-2xl border border-cyan-500/25 bg-cyan-500/8 p-5">
+                                        <div className="flex items-start justify-between gap-4">
+                                            <div>
+                                                <div className="rounded-full border border-cyan-400/35 bg-cyan-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-cyan-100">
+                                                    Free
+                                                </div>
+                                                <h3 className="mt-3 text-lg font-semibold text-white">Metadata Preview</h3>
+                                                <p className="mt-2 text-sm text-slate-200/85">
+                                                    Inspect quality, schema shape, and AI summaries before touching paid workflows.
+                                                </p>
+                                            </div>
+                                            <div className="text-right">
+                                                <div className="text-2xl font-semibold text-white">$0</div>
+                                                <div className="mt-1 text-xs text-slate-400">Always available</div>
+                                            </div>
+                                        </div>
+
+                                        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                                            <DecisionValue label="Confidence score" value={`${dataset.confidenceScore}%`} />
+                                            <DecisionValue label="Freshness" value={dataset.preview.freshnessLabel} />
+                                            <DecisionValue label="Schema fields" value={`${dataset.preview.sampleSchema.length} fields`} />
+                                            <DecisionValue label="Access" value="Metadata only" />
+                                        </div>
+
+                                        <div className="mt-4 rounded-xl border border-white/8 bg-slate-950/45 px-4 py-3 text-sm text-slate-300">
+                                            {dataset.preview.aiSummary}
+                                        </div>
+
+                                        <Link
+                                            to={`/datasets/${dataset.id}/quality-breakdown`}
+                                            className="mt-4 inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
+                                        >
+                                            Open Free Metadata Preview
+                                        </Link>
+                                    </article>
+
+                                    <article className="rounded-2xl border border-emerald-500/25 bg-emerald-500/8 p-5 shadow-[0_0_30px_rgba(16,185,129,0.08)]">
+                                        <div className="flex items-start justify-between gap-4">
+                                            <div>
+                                                <div className="rounded-full border border-emerald-400/35 bg-emerald-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-emerald-100">
+                                                    Protected
+                                                </div>
+                                                <h3 className="mt-3 text-lg font-semibold text-white">Paid Clean-Room Evaluation</h3>
+                                                <p className="mt-2 text-sm text-slate-200/85">
+                                                    Enter escrow-native checkout, provision a governed workspace, and let the protection engine verify the contracted outcome before payout.
+                                                </p>
+                                            </div>
+                                            <div className="text-right">
+                                                <div className="text-2xl font-semibold text-white">{formatUsd(evaluationFeeUsd)}</div>
+                                                <div className="mt-1 text-xs text-slate-400">Evaluation fee</div>
+                                            </div>
+                                        </div>
+
+                                        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                                            <DecisionValue label="Escrow hold" value={formatUsd(recommendedQuote.escrowHoldUsd)} />
+                                            <DecisionValue label="Review window" value={`${latestCheckout?.configuration.reviewWindowHours ?? recommendedQuote.input.validationWindowHours} hours`} />
+                                            <DecisionValue label="Access mode" value="Governed workspace" />
+                                            <DecisionValue label="Protection" value="Auto credits enabled" />
+                                        </div>
+
+                                        <div className="mt-4 rounded-xl border border-white/8 bg-slate-950/45 px-4 py-3 text-sm text-slate-300">
+                                            {latestSavedQuote
+                                                ? `Quote ${latestSavedQuote.id} is ready for protected evaluation and escrow-native checkout.`
+                                                : 'Checkout will generate a passport-based starter quote if you have not saved one yet.'}
+                                        </div>
+
+                                        <Link
+                                            to={`/datasets/${dataset.id}/escrow-checkout`}
+                                            state={latestSavedQuote ? { quoteId: latestSavedQuote.id } : undefined}
+                                            className="mt-4 inline-flex items-center rounded-lg border border-emerald-400/40 bg-emerald-500/10 px-4 py-2 text-sm font-semibold text-emerald-100 transition-colors hover:bg-emerald-500/20"
+                                        >
+                                            Enter Protected Evaluation
+                                        </Link>
+                                    </article>
+                                </div>
+                            </section>
                         </div>
 
                         {/* Confidence Panel */}
@@ -386,6 +487,10 @@ export default function DatasetDetailPage() {
                                 </div>
                             )}
                         </div>
+                    </div>
+
+                    <div className="mt-8">
+                        <DealProgressTracker model={dealProgress} compact />
                     </div>
                 </div>
             </div>
@@ -956,6 +1061,15 @@ export default function DatasetDetailPage() {
                     </div>
                 </div>
             )}
+        </div>
+    )
+}
+
+function DecisionValue({ label, value }: { label: string; value: string }) {
+    return (
+        <div className="rounded-xl border border-white/8 bg-slate-950/45 px-4 py-3">
+            <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">{label}</div>
+            <div className="mt-2 text-sm font-semibold text-white">{value}</div>
         </div>
     )
 }

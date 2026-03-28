@@ -1,7 +1,10 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import DealProgressTracker from '../components/DealProgressTracker'
 import { DATASET_DETAILS, DEFAULT_DATASET } from '../data/datasetDetailData'
 import { buildCompliancePassport, passportStatusMeta } from '../domain/compliancePassport'
+import { buildDealProgressModel } from '../domain/dealProgress'
+import { loadEscrowCheckoutByQuoteId } from '../domain/escrowCheckout'
 import {
     buildRightsQuote,
     deliveryModeOptions,
@@ -38,6 +41,16 @@ export default function RightsQuoteBuilderPage() {
 
     const quote = useMemo(() => buildRightsQuote(dataset, form, passport), [dataset, form, passport, quoteVersion])
     const savedQuotes = useMemo(() => loadRightsQuotes(dataset.id), [dataset.id, quoteVersion])
+    const persistedCheckout = useMemo(() => loadEscrowCheckoutByQuoteId(quote.id), [quote.id, quoteVersion])
+    const dealProgress = useMemo(
+        () =>
+            buildDealProgressModel({
+                passport,
+                quote,
+                checkoutRecord: persistedCheckout
+            }),
+        [passport, persistedCheckout, quote]
+    )
 
     const updateForm = <T extends keyof RightsQuoteForm>(field: T, value: RightsQuoteForm[T]) => {
         setForm(current => ({ ...current, [field]: value }))
@@ -94,7 +107,11 @@ export default function RightsQuoteBuilderPage() {
                     </div>
                 </header>
 
-                <section className="mt-8 grid gap-6 xl:grid-cols-[1.25fr_0.75fr]">
+                <div className="mt-8">
+                    <DealProgressTracker model={dealProgress} compact />
+                </div>
+
+                <section className="mt-6 grid gap-6 xl:grid-cols-[1.25fr_0.75fr]">
                     <div className="space-y-6">
                         <div className="rounded-3xl border border-cyan-500/25 bg-cyan-500/8 p-5 shadow-[0_0_30px_rgba(34,211,238,0.12)]">
                             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">

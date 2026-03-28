@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router-dom'
 import { DATASET_DETAILS, DEFAULT_DATASET } from '../data/datasetDetailData'
+import DealProgressTracker from '../components/DealProgressTracker'
 import { buildCompliancePassport, passportStatusMeta } from '../domain/compliancePassport'
+import { buildDealProgressModel } from '../domain/dealProgress'
 import {
     buildEscrowCheckoutRecord,
     buildEscrowDueUseAgreement,
@@ -13,20 +15,18 @@ import {
     getPlannedWorkspaceLaunchPath,
     getPlannedWorkspaceName,
     getRecommendedCheckoutConfig,
-    issueAutomaticOutcomeCredit,
     issueEscrowScopedCredentials,
     loadEscrowCheckoutByQuoteId,
-    outcomeIssueMeta,
     outcomeStageMeta,
     paymentMethodMeta,
     provisionEscrowWorkspace,
     releaseEscrowToProvider,
     reviewWindowOptions,
+    runOutcomeProtectionEngine,
     saveEscrowCheckout,
     type EscrowCheckoutConfig,
     type EscrowCheckoutRecord,
     type EscrowCheckoutAccessMode,
-    type OutcomeIssueType,
     type EscrowPaymentMethod,
     type EscrowReviewWindowHours
 } from '../domain/escrowCheckout'
@@ -89,7 +89,9 @@ export default function EscrowCheckoutPage() {
         if (persistedCheckout) {
             setConfig(persistedCheckout.configuration)
             setDuaAccepted(Boolean(persistedCheckout.dua.accepted))
-            setNotice(`Escrow checkout ${persistedCheckout.escrowId} is already in progress for this quote.`)
+            if (!checkoutRecord || checkoutRecord.id !== persistedCheckout.id) {
+                setNotice(`Escrow checkout ${persistedCheckout.escrowId} is already in progress for this quote.`)
+            }
             return
         }
 
@@ -100,7 +102,7 @@ export default function EscrowCheckoutPage() {
                 ? 'No saved quote was found for this dataset, so checkout is using a rights package generated from your passport defaults.'
                 : null
         )
-    }, [persistedCheckout, savedQuotes.length, selectedQuote])
+    }, [checkoutRecord, persistedCheckout, savedQuotes.length, selectedQuote])
 
     const duaPreview = useMemo(
         () => buildEscrowDueUseAgreement(dataset, selectedQuote, passport, config),
@@ -110,6 +112,15 @@ export default function EscrowCheckoutPage() {
         () => getPlannedCredentialScopes(selectedQuote, config.accessMode),
         [config.accessMode, selectedQuote]
     )
+    const dealProgress = useMemo(
+        () =>
+            buildDealProgressModel({
+                passport,
+                quote: selectedQuote,
+                checkoutRecord
+            }),
+        [checkoutRecord, passport, selectedQuote]
+    )
     const configurationLocked = checkoutRecord !== null
     const acceptedForFunding = checkoutRecord ? checkoutRecord.dua.accepted : duaAccepted
     const workspaceReady = checkoutRecord?.workspace.status === 'ready'
@@ -118,10 +129,15 @@ export default function EscrowCheckoutPage() {
     const outcomeStatus = outcomeStageMeta[outcomeStage]
     const evaluationFeeUsd = checkoutRecord?.outcomeProtection.evaluationFeeUsd ?? getOutcomeEvaluationFee(selectedQuote)
     const outcomeValidation = checkoutRecord?.outcomeProtection.validation ?? {
-        status: 'pending',
-        issueTypes: [] as OutcomeIssueType[],
+        status: 'pending' as const,
+        issueTypes: [] as EscrowCheckoutRecord['outcomeProtection']['validation']['issueTypes'],
         note: undefined,
         updatedAt: undefined
+    }
+    const outcomeEngine: EscrowCheckoutRecord['outcomeProtection']['engine'] = checkoutRecord?.outcomeProtection.engine ?? {
+        status: 'not_started',
+        summary: 'Outcome engine will run automatically once scoped credentials activate the evaluation workspace.',
+        findings: []
     }
     const outcomeCredits = checkoutRecord?.outcomeProtection.credits ?? {
         status: 'none',
@@ -129,6 +145,19 @@ export default function EscrowCheckoutPage() {
         reason: undefined,
         issuedAt: undefined
     }
+
+    useEffect(() => {
+        if (!checkoutRecord || checkoutRecord.credentials.status !== 'issued') return
+        if (checkoutRecord.outcomeProtection.engine.status !== 'not_started') return
+
+        const nextRecord = runOutcomeProtectionEngine(checkoutRecord, dataset, selectedQuote)
+        saveRecord(
+            nextRecord,
+            nextRecord.outcomeProtection.engine.status === 'failed'
+                ? `${nextRecord.outcomeProtection.engine.summary} ${formatUsd(nextRecord.outcomeProtection.credits.amountUsd)} automatic credit applied and provider payout remains frozen.`
+                : `${nextRecord.outcomeProtection.engine.summary} Buyer confirmation is now required before escrow release.`
+        )
+    }, [checkoutRecord, dataset, selectedQuote])
 
     const updateConfig = <T extends keyof EscrowCheckoutConfig>(field: T, value: EscrowCheckoutConfig[T]) => {
         if (configurationLocked) return
@@ -185,19 +214,6 @@ export default function EscrowCheckoutPage() {
         )
     }
 
-    const handleIssueCredit = (issueTypes: OutcomeIssueType[]) => {
-        if (!checkoutRecord || !credentialsIssued) return
-        const nextRecord = issueAutomaticOutcomeCredit(
-            checkoutRecord,
-            issueTypes,
-            `Buyer reported ${issueTypes.map(issueType => outcomeIssueMeta[issueType].label.toLowerCase()).join(' and ')} during protected evaluation.`
-        )
-        saveRecord(
-            nextRecord,
-            `${formatUsd(nextRecord.outcomeProtection.credits.amountUsd)} automatic credit issued. Escrow remains held while the miss is reviewed.`
-        )
-    }
-
     const handleReleaseEscrow = () => {
         if (!checkoutRecord || checkoutRecord.lifecycleState !== 'RELEASE_PENDING') return
         const nextRecord = releaseEscrowToProvider(checkoutRecord)
@@ -238,7 +254,11 @@ export default function EscrowCheckoutPage() {
                     </div>
                 </header>
 
-                <section className="mt-8 grid gap-6 xl:grid-cols-[1.25fr_0.75fr]">
+                <div className="mt-8">
+                    <DealProgressTracker model={dealProgress} />
+                </div>
+
+                <section className="mt-6 grid gap-6 xl:grid-cols-[1.25fr_0.75fr]">
                     <div className="space-y-6">
                         <section className="rounded-3xl border border-white/10 bg-[#0a1526]/88 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.28)] backdrop-blur-xl">
                             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -540,10 +560,87 @@ export default function EscrowCheckoutPage() {
                                         value={checkoutRecord?.outcomeProtection.commitments.freshnessCommitment ?? dataset.preview.freshnessLabel}
                                     />
                                     <SummaryStat
-                                        label="Confidence floor"
-                                        value={`${checkoutRecord?.outcomeProtection.commitments.confidenceFloor ?? Math.max(80, dataset.confidenceScore - 4)}%`}
+                                        label="Freshness floor"
+                                        value={`${checkoutRecord?.outcomeProtection.commitments.confidenceFloor ?? Math.max(75, dataset.quality.freshnessScore - 3)}%`}
                                     />
                                 </div>
+                            </div>
+
+                            <div className="mt-5 rounded-2xl border border-white/8 bg-slate-950/45 p-4">
+                                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                                    <div>
+                                        <div className="text-sm font-semibold text-white">Protection engine</div>
+                                        <div className="mt-1 text-xs text-slate-400">
+                                            Schema count and freshness commitments are checked automatically once the governed workspace is live.
+                                        </div>
+                                    </div>
+                                    <span className={`rounded-full border px-3 py-1 text-[11px] font-semibold ${
+                                        outcomeEngine.status === 'passed'
+                                            ? 'border-emerald-500/35 bg-emerald-500/10 text-emerald-200'
+                                            : outcomeEngine.status === 'failed'
+                                                ? 'border-rose-500/35 bg-rose-500/10 text-rose-200'
+                                                : 'border-amber-500/35 bg-amber-500/10 text-amber-200'
+                                    }`}>
+                                        {outcomeEngine.status === 'passed'
+                                            ? 'Checks passed'
+                                            : outcomeEngine.status === 'failed'
+                                                ? 'Commitment miss'
+                                                : 'Armed for evaluation'}
+                                    </span>
+                                </div>
+
+                                {credentialsIssued ? (
+                                    <div className="mt-4 space-y-4">
+                                        <div className={`rounded-xl border px-4 py-3 text-sm ${
+                                            outcomeEngine.status === 'failed'
+                                                ? 'border-rose-500/25 bg-rose-500/10 text-rose-100'
+                                                : outcomeEngine.status === 'passed'
+                                                    ? 'border-emerald-500/25 bg-emerald-500/10 text-emerald-100'
+                                                    : 'border-white/8 bg-slate-900/60 text-slate-300'
+                                        }`}>
+                                            {outcomeEngine.summary}
+                                        </div>
+
+                                        {(outcomeEngine.actualFieldCount !== undefined || outcomeEngine.actualFreshnessScore !== undefined) && (
+                                            <div className="grid gap-3 sm:grid-cols-2">
+                                                <SummaryStat
+                                                    label="Observed fields"
+                                                    value={String(outcomeEngine.actualFieldCount ?? 0)}
+                                                />
+                                                <SummaryStat
+                                                    label="Observed freshness"
+                                                    value={outcomeEngine.actualFreshnessScore !== undefined ? `${outcomeEngine.actualFreshnessScore}%` : 'Pending'}
+                                                />
+                                            </div>
+                                        )}
+
+                                        {outcomeEngine.findings.length > 0 && (
+                                            <div className="grid gap-3">
+                                                {outcomeEngine.findings.map(finding => (
+                                                    <div key={finding} className="rounded-xl border border-white/8 bg-slate-900/60 px-4 py-3 text-sm text-slate-300">
+                                                        {finding}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        {outcomeEngine.lastRunAt && (
+                                            <div className="text-xs text-slate-500">
+                                                Last engine run{' '}
+                                                {new Date(outcomeEngine.lastRunAt).toLocaleString('en-US', {
+                                                    month: 'short',
+                                                    day: 'numeric',
+                                                    hour: 'numeric',
+                                                    minute: '2-digit'
+                                                })}
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <div className="mt-4 rounded-xl border border-white/8 bg-slate-900/60 px-4 py-3 text-sm text-slate-300">
+                                        The protection engine arms itself after scoped credentials are issued for paid clean-room evaluation.
+                                    </div>
+                                )}
                             </div>
 
                             <div className="mt-5 rounded-2xl border border-white/8 bg-slate-950/45 p-4">
@@ -571,56 +668,27 @@ export default function EscrowCheckoutPage() {
 
                                 {credentialsIssued ? (
                                     <div className="mt-4 grid gap-3">
-                                        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                                        {outcomeEngine.status === 'passed' && outcomeValidation.status === 'pending' && (
                                             <button
                                                 type="button"
-                                                disabled={outcomeValidation.status !== 'pending'}
                                                 onClick={handleConfirmOutcome}
-                                                className={`rounded-xl px-4 py-3 text-sm font-semibold transition-colors ${
-                                                    outcomeValidation.status !== 'pending'
-                                                        ? 'cursor-not-allowed border border-slate-700 bg-slate-900/80 text-slate-500'
-                                                        : 'bg-emerald-500 text-slate-950 hover:bg-emerald-400'
-                                                }`}
+                                                className="rounded-xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-slate-950 transition-colors hover:bg-emerald-400"
                                             >
-                                                Confirm Commitments Met
+                                                Confirm Buyer Validation
                                             </button>
-                                            <button
-                                                type="button"
-                                                disabled={outcomeValidation.status !== 'pending'}
-                                                onClick={() => handleIssueCredit(['schema_mismatch'])}
-                                                className={`rounded-xl px-4 py-3 text-sm font-semibold transition-colors ${
-                                                    outcomeValidation.status !== 'pending'
-                                                        ? 'cursor-not-allowed border border-slate-700 bg-slate-900/80 text-slate-500'
-                                                        : 'border border-rose-400/45 bg-rose-500/10 text-rose-100 hover:bg-rose-500/20'
-                                                }`}
-                                            >
-                                                Report Schema Mismatch
-                                            </button>
-                                            <button
-                                                type="button"
-                                                disabled={outcomeValidation.status !== 'pending'}
-                                                onClick={() => handleIssueCredit(['freshness_miss'])}
-                                                className={`rounded-xl px-4 py-3 text-sm font-semibold transition-colors ${
-                                                    outcomeValidation.status !== 'pending'
-                                                        ? 'cursor-not-allowed border border-slate-700 bg-slate-900/80 text-slate-500'
-                                                        : 'border border-amber-400/45 bg-amber-500/10 text-amber-100 hover:bg-amber-500/20'
-                                                }`}
-                                            >
-                                                Report Freshness Miss
-                                            </button>
-                                            <button
-                                                type="button"
-                                                disabled={outcomeValidation.status !== 'pending'}
-                                                onClick={() => handleIssueCredit(['schema_mismatch', 'freshness_miss'])}
-                                                className={`rounded-xl px-4 py-3 text-sm font-semibold transition-colors ${
-                                                    outcomeValidation.status !== 'pending'
-                                                        ? 'cursor-not-allowed border border-slate-700 bg-slate-900/80 text-slate-500'
-                                                        : 'border border-fuchsia-400/45 bg-fuchsia-500/10 text-fuchsia-100 hover:bg-fuchsia-500/20'
-                                                }`}
-                                            >
-                                                Report Both Misses
-                                            </button>
-                                        </div>
+                                        )}
+
+                                        {outcomeEngine.status === 'not_started' && (
+                                            <div className="rounded-xl border border-white/8 bg-slate-900/60 px-4 py-3 text-sm text-slate-300">
+                                                Protected evaluation is live. The engine is still completing its automatic schema and freshness scan.
+                                            </div>
+                                        )}
+
+                                        {outcomeEngine.status === 'failed' && (
+                                            <div className="rounded-xl border border-rose-500/25 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
+                                                Buyer validation is locked because the protection engine already detected a committed outcome miss and issued automatic credits.
+                                            </div>
+                                        )}
 
                                         {outcomeValidation.note && (
                                             <div className="rounded-xl border border-white/8 bg-slate-900/60 px-4 py-3 text-sm text-slate-300">
@@ -689,9 +757,14 @@ export default function EscrowCheckoutPage() {
                                     detail="Ephemeral credentials activate access with audit and TTL enforcement."
                                 />
                                 <StepRow
-                                    label="Outcome validated"
-                                    complete={outcomeValidation.status === 'confirmed'}
-                                    detail="Buyer confirms commitments before release or triggers automatic credits."
+                                    label="Outcome engine run"
+                                    complete={outcomeEngine.status !== 'not_started'}
+                                    detail="Schema count and freshness commitments are checked automatically inside the workspace."
+                                />
+                                <StepRow
+                                    label="Buyer validation"
+                                    complete={outcomeValidation.status === 'confirmed' || outcomeCredits.status === 'issued'}
+                                    detail="Buyer confirms a passing outcome or the platform resolves the miss with automatic credits."
                                 />
                             </div>
 
