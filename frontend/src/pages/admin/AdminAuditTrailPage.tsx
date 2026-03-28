@@ -1,36 +1,144 @@
 import { useMemo, useState } from 'react'
 import AdminLayout from '../../components/admin/AdminLayout'
-import { buildAuditDigestSummary } from '../../domain/adminAutomation'
+import { buildAuditDigestSummary, type AuditDigestSummary } from '../../domain/adminAutomation'
 import { loadSharedDealLifecycleRecords } from '../../domain/dealLifecycle'
 
 type EventTone = 'ok' | 'warn'
-
-type AuditRow = {
-    timestamp: string
-    event: string
-    participant: string
-    dataset: string
-    purpose: string
-    status: string
-    hash: string
-    verified: boolean
-}
-
-const auditRows: AuditRow[] = [
-    { timestamp: '2026-03-10 09:14', event: 'Dataset Access', participant: 'part_anon_042', dataset: 'Global Climate 2020-2024', purpose: 'ML Training', status: 'CLEARED', hash: 'a3f8...d291', verified: true },
-    { timestamp: '2026-03-10 08:47', event: 'Access Request', participant: 'part_anon_017', dataset: 'Financial Tick Data', purpose: 'Risk Modeling', status: 'CLEARED', hash: 'b7c2...e445', verified: true },
-    { timestamp: '2026-03-10 07:23', event: 'Dataset Access', participant: 'part_anon_089', dataset: 'Consumer Behavior Analytics', purpose: 'Research', status: 'CLEARED', hash: 'c9d1...f332', verified: true },
-    { timestamp: '2026-03-09 22:11', event: 'Security Alert', participant: 'part_anon_031', dataset: 'Genomics Research Dataset', purpose: '—', status: 'PII ANOMALY', hash: 'd2e4...a118', verified: false },
-    { timestamp: '2026-03-09 18:34', event: 'Contribution', participant: 'part_anon_056', dataset: 'Smart Grid Energy Data', purpose: '—', status: 'CLEARED', hash: 'e5f7...b229', verified: true },
-    { timestamp: '2026-03-09 15:02', event: 'Access Request', participant: 'part_anon_008', dataset: 'Clinical Outcomes Delta', purpose: 'Healthcare Analytics', status: 'PENDING', hash: 'f8a3...c440', verified: true },
-    { timestamp: '2026-03-09 11:47', event: 'Dataset Access', participant: 'part_anon_073', dataset: 'Satellite Land Use 2024', purpose: 'Urban Planning', status: 'CLEARED', hash: 'g1b6...d551', verified: true },
-    { timestamp: '2026-03-09 09:15', event: 'Compliance Event', participant: 'part_anon_019', dataset: 'Financial Tick Data', purpose: '—', status: 'CLEARED', hash: 'h4c9...e662', verified: true }
-]
 
 const badgeTone: Record<EventTone, string> = {
     ok: 'text-emerald-200 bg-emerald-500/10 border-emerald-500/30',
     warn: 'text-amber-200 bg-amber-500/10 border-amber-500/30'
 }
+
+const fallbackDigest = {
+    cards: [
+        {
+            label: 'Digest Events',
+            value: '8',
+            detail: 'Presentation-ready admin digest events covering release, rights, token, and dispute flows.'
+        },
+        {
+            label: 'Release Decisions',
+            value: '3',
+            detail: 'Two release checks cleared and one payout still held for human approval.'
+        },
+        {
+            label: 'Rights Reviews',
+            value: '2',
+            detail: 'Two rights packages remain visible in governance review lanes.'
+        },
+        {
+            label: 'Flagged Exceptions',
+            value: '4',
+            detail: 'Credits, token controls, and dispute prep events requiring closer review.'
+        }
+    ],
+    highlights: [
+        {
+            title: 'Release digest',
+            detail: 'One governed payout is ready, one is held for manual approval, and one remains blocked by a protected outcome miss.'
+        },
+        {
+            title: 'Token controls digest',
+            detail: 'The system already demonstrates stage-aware token freezing during dispute states and automatic revocation after release.'
+        },
+        {
+            title: 'Dispute prep digest',
+            detail: 'A dispute evidence packet is prepared with DUA, quote, engine findings, and recommended next actions for resolution.'
+        }
+    ],
+    events: [
+        {
+            timestamp: '2026-03-28 14:42 UTC',
+            event: 'RELEASE_READY',
+            participant: 'part_anon_042',
+            dataset: 'Multi-Region Oncology Outcomes',
+            purpose: 'Settlement release',
+            status: 'CLEARED',
+            hash: 'rel8...a103',
+            verified: true,
+            tone: 'ok' as const
+        },
+        {
+            timestamp: '2026-03-28 14:08 UTC',
+            event: 'RELEASE_HELD',
+            participant: 'part_anon_017',
+            dataset: 'Consolidated Market Tick Archive',
+            purpose: 'Settlement release',
+            status: 'REVIEW',
+            hash: 'rel2...c811',
+            verified: true,
+            tone: 'warn' as const
+        },
+        {
+            timestamp: '2026-03-28 13:40 UTC',
+            event: 'CREDIT_ISSUED',
+            participant: 'part_anon_089',
+            dataset: 'Payer Claims Benchmark Delta',
+            purpose: 'Outcome protection',
+            status: 'FLAGGED',
+            hash: 'crd3...e220',
+            verified: true,
+            tone: 'warn' as const
+        },
+        {
+            timestamp: '2026-03-28 13:11 UTC',
+            event: 'RIGHTS_FLAGGED',
+            participant: 'CP-602441',
+            dataset: 'Genomics Validation Cohort',
+            purpose: 'Rights governance',
+            status: 'REVIEW',
+            hash: 'rgt7...b114',
+            verified: true,
+            tone: 'warn' as const
+        },
+        {
+            timestamp: '2026-03-28 12:58 UTC',
+            event: 'RIGHTS_APPROVED',
+            participant: 'CP-602441',
+            dataset: 'Consumer Credit Risk Signals',
+            purpose: 'Rights governance',
+            status: 'CLEARED',
+            hash: 'rgt1...d905',
+            verified: true,
+            tone: 'ok' as const
+        },
+        {
+            timestamp: '2026-03-28 12:30 UTC',
+            event: 'TOKEN_FROZEN',
+            participant: 'part_anon_089',
+            dataset: 'Scoped credential',
+            purpose: 'Token control',
+            status: 'CONTROLLED',
+            hash: 'tok5...f610',
+            verified: true,
+            tone: 'warn' as const
+        },
+        {
+            timestamp: '2026-03-28 11:47 UTC',
+            event: 'TOKEN_REVOKED',
+            participant: 'part_anon_021',
+            dataset: 'Scoped credential',
+            purpose: 'Token control',
+            status: 'CONTROLLED',
+            hash: 'tok9...a874',
+            verified: true,
+            tone: 'ok' as const
+        },
+        {
+            timestamp: '2026-03-28 11:12 UTC',
+            event: 'DISPUTE_PACKET_READY',
+            participant: 'part_anon_089',
+            dataset: 'Payer Claims Benchmark Delta',
+            purpose: 'Dispute prep',
+            status: 'ESCALATE',
+            hash: 'dsp4...c552',
+            verified: true,
+            tone: 'warn' as const
+        }
+    ],
+    flaggedCount: 4
+} satisfies AuditDigestSummary
 
 export default function AdminAuditTrailPage() {
     const [selectedType, setSelectedType] = useState('All Event Types')
@@ -38,12 +146,13 @@ export default function AdminAuditTrailPage() {
         () => buildAuditDigestSummary(loadSharedDealLifecycleRecords()),
         []
     )
+    const effectiveDigest = auditDigest.events.length > 0 ? auditDigest : fallbackDigest
     const eventTypes = ['All Event Types', 'Release', 'Credit', 'Rights', 'Token', 'Dispute']
 
     const displayedEvents = useMemo(() => {
-        if (selectedType === 'All Event Types') return auditDigest.events
-        return auditDigest.events.filter(row => row.event.startsWith(selectedType.toUpperCase()))
-    }, [auditDigest.events, selectedType])
+        if (selectedType === 'All Event Types') return effectiveDigest.events
+        return effectiveDigest.events.filter(row => row.event.startsWith(selectedType.toUpperCase()))
+    }, [effectiveDigest.events, selectedType])
 
     return (
         <AdminLayout title="AUDIT TRAIL" subtitle="PLATFORM EVENT MONITORING">
@@ -60,7 +169,7 @@ export default function AdminAuditTrailPage() {
                     </header>
 
                     <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-4">
-                        {auditDigest.cards.map(card => (
+                        {effectiveDigest.cards.map(card => (
                             <div key={card.label} className="rounded-lg border border-white/10 bg-slate-900/50 p-4">
                                 <p className="text-xs uppercase tracking-wider text-slate-500">{card.label}</p>
                                 <p className="mt-1 text-2xl font-semibold text-slate-200">{card.value}</p>
@@ -76,11 +185,11 @@ export default function AdminAuditTrailPage() {
                                 <h2 className="mt-2 text-xl font-semibold text-slate-100">Summarized platform exceptions and automated controls</h2>
                             </div>
                             <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-200">
-                                {auditDigest.flaggedCount} flagged highlight(s)
+                                {effectiveDigest.flaggedCount} flagged highlight(s)
                             </span>
                         </div>
                         <div className="mt-4 grid gap-3 md:grid-cols-3">
-                            {auditDigest.highlights.map(highlight => (
+                            {effectiveDigest.highlights.map(highlight => (
                                 <article key={highlight.title} className="rounded-lg border border-slate-800/70 bg-slate-950/45 p-4">
                                     <p className="text-xs uppercase tracking-[0.12em] text-slate-500">{highlight.title}</p>
                                     <p className="mt-2 text-sm leading-relaxed text-slate-300">{highlight.detail}</p>

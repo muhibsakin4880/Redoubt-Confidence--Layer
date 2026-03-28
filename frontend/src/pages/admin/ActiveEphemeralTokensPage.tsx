@@ -53,110 +53,126 @@ type RevocationRow = {
     timestamp: string
 }
 
-const summaryCards: SummaryCard[] = [
-    { label: 'Active Tokens', value: '8,472', tone: 'blue' },
-    { label: 'Expiring Soon (< 1hr)', value: '247', tone: 'amber' },
-    { label: 'Expired Today', value: '1,893', tone: 'gray' },
-    { label: 'Revoked Today', value: '34', tone: 'red' },
-    { label: 'Suspicious Activity', value: '7', tone: 'red' }
+const fallbackDashboardSummaryCards: SummaryCard[] = [
+    { label: 'Evaluation Stage', value: '3', tone: 'blue' },
+    { label: 'Validated Stage', value: '3', tone: 'green' },
+    { label: 'Frozen Controls', value: '1', tone: 'red' },
+    { label: 'Revoked Tokens', value: '1', tone: 'gray' },
+    { label: 'Expiring Soon', value: '2', tone: 'amber' }
 ]
 
-const tokenFeedRows = [
+const fallbackTokenRows: TokenFeedRow[] = [
     {
         tokenId: 'TKN-a3f8b2c1',
         participant: 'part_anon_042',
-        dataset: 'Clinical Outcomes Delta',
-        issued: '14:32:07',
-        expires: '15:32:07',
+        dataset: 'Multi-Region Oncology Outcomes',
+        issued: '2026-03-28 14:32 UTC',
+        expires: '2026-03-28 15:32 UTC',
         scope: 'Read-only',
+        dealStage: 'EVALUATION',
         statusLabel: 'ACTIVE',
         status: 'active',
-        actionLabel: 'REVOKE',
-        actionTone: 'redOutline'
+        actionLabel: 'MONITOR',
+        actionTone: 'blueOutline',
+        autoAction: 'Monitor evaluation access and expire on schedule.'
     },
     {
         tokenId: 'TKN-d9e2f4a7',
         participant: 'part_anon_017',
-        dataset: 'Financial Tick Data',
-        issued: '14:28:44',
-        expires: '14:58:44',
-        scope: 'Read + Export',
+        dataset: 'Consolidated Market Tick Archive',
+        issued: '2026-03-28 14:28 UTC',
+        expires: '2026-03-28 14:58 UTC',
+        scope: 'Read-only',
+        dealStage: 'VALIDATED',
         statusLabel: 'EXPIRING',
         status: 'expiring',
-        actionLabel: 'REVOKE',
-        actionTone: 'redOutline'
+        actionLabel: 'HOLD',
+        actionTone: 'amber',
+        autoAction: 'Keep token read-only until payout release completes.'
     },
     {
         tokenId: 'TKN-b7c1e3d5',
         participant: 'part_anon_089',
-        dataset: 'Genomics Research Dataset',
-        issued: '13:14:22',
-        expires: '14:14:22',
+        dataset: 'Payer Claims Benchmark Delta',
+        issued: '2026-03-28 13:14 UTC',
+        expires: '2026-03-28 14:14 UTC',
         scope: 'Read-only',
-        statusLabel: 'SUSPICIOUS',
-        status: 'suspicious',
-        actionLabel: 'REVOKE',
-        actionTone: 'redSolid'
+        dealStage: 'FROZEN',
+        statusLabel: 'FROZEN',
+        status: 'frozen',
+        actionLabel: 'FREEZE',
+        actionTone: 'redSolid',
+        autoAction: 'Freeze token and revoke egress immediately.'
     },
     {
         tokenId: 'TKN-f2a9c8e1',
         participant: 'part_anon_031',
-        dataset: 'Consumer Behavior Analytics',
-        issued: '14:01:33',
-        expires: '16:01:33',
+        dataset: 'Consumer Credit Risk Signals',
+        issued: '2026-03-28 14:01 UTC',
+        expires: '2026-03-28 16:01 UTC',
         scope: 'Read-only',
+        dealStage: 'VALIDATED',
         statusLabel: 'ACTIVE',
         status: 'active',
-        actionLabel: 'REVOKE',
-        actionTone: 'redOutline'
+        actionLabel: 'HOLD',
+        actionTone: 'redOutline',
+        autoAction: 'Keep token read-only until payout release completes.'
     },
     {
         tokenId: 'TKN-e4d7b3f9',
         participant: 'part_anon_056',
-        dataset: 'Global Climate 2020-2024',
-        issued: '13:55:18',
-        expires: '15:55:18',
-        scope: 'Read + Export',
+        dataset: 'Global Climate Exposure Grid',
+        issued: '2026-03-28 13:55 UTC',
+        expires: '2026-03-28 15:55 UTC',
+        scope: 'Read-only',
+        dealStage: 'EVALUATION',
         statusLabel: 'ACTIVE',
         status: 'active',
-        actionLabel: 'REVOKE',
-        actionTone: 'redOutline'
+        actionLabel: 'MONITOR',
+        actionTone: 'blueOutline',
+        autoAction: 'Monitor evaluation access and expire on schedule.'
     },
     {
         tokenId: 'TKN-c8f1a2d4',
         participant: 'part_anon_008',
         dataset: 'Healthcare IoT Stream',
-        issued: '14:44:02',
-        expires: '14:59:02',
+        issued: '2026-03-28 14:44 UTC',
+        expires: '2026-03-28 14:59 UTC',
         scope: 'Read-only',
+        dealStage: 'EVALUATION',
         statusLabel: 'EXPIRING',
         status: 'expiring',
-        actionLabel: 'REVOKE',
-        actionTone: 'redOutline'
+        actionLabel: 'MONITOR',
+        actionTone: 'amber',
+        autoAction: 'Monitor evaluation access and expire on schedule.'
+    },
+    {
+        tokenId: 'TKN-g4a1d7c9',
+        participant: 'part_anon_064',
+        dataset: 'Renewables Siting Demand Index',
+        issued: 'Pending',
+        expires: 'Pending',
+        scope: 'Provisioning',
+        dealStage: 'VALIDATED',
+        statusLabel: 'PLANNED',
+        status: 'planned',
+        actionLabel: 'PROVISION',
+        actionTone: 'blueOutline',
+        autoAction: 'Provision credential after workspace and DUA checks clear.'
     },
     {
         tokenId: 'TKN-a1b4c7e2',
         participant: 'part_anon_021',
         dataset: 'Satellite Land Use 2024',
-        issued: '12:33:47',
-        expires: '14:33:47',
+        issued: '2026-03-28 12:33 UTC',
+        expires: '2026-03-28 14:33 UTC',
         scope: 'Read-only',
-        statusLabel: 'SUSPICIOUS',
-        status: 'suspicious',
-        actionLabel: 'REVOKE',
-        actionTone: 'redSolid'
-    },
-    {
-        tokenId: 'TKN-d3e6f8b5',
-        participant: 'part_anon_063',
-        dataset: 'Financial Tick Data',
-        issued: '14:12:09',
-        expires: '15:12:09',
-        scope: 'Read-only',
-        statusLabel: 'ACTIVE',
-        status: 'active',
-        actionLabel: 'REVOKE',
-        actionTone: 'redOutline'
+        dealStage: 'RELEASED',
+        statusLabel: 'REVOKED',
+        status: 'revoked',
+        actionLabel: 'ARCHIVED',
+        actionTone: 'blueOutline',
+        autoAction: 'Revoke token and archive credential after settlement.'
     }
 ]
 
@@ -165,19 +181,7 @@ const anomalyCards: AlertCard[] = [
         tone: 'red',
         token: 'TKN-b7c1e3d5',
         participant: 'part_anon_089',
-        flag: 'Token accessed from 3 different IP addresses within 10 minutes',
-        ipList: ['185.58.142.12', '92.14.233.44', '103.21.58.97'],
-        actions: [
-            { label: 'Revoke Token', tone: 'redSolid' },
-            { label: 'Block Participant', tone: 'redOutline' },
-            { label: 'Investigate', tone: 'amber' }
-        ]
-    },
-    {
-        tone: 'red',
-        token: 'TKN-a1b4c7e2',
-        participant: 'part_anon_021',
-        flag: 'Unusual bulk query pattern: 847 records accessed in 2 minutes. Threshold: 100 records/minute',
+        flag: 'Outcome engine froze the evaluation token after schema mismatch evidence was attached to the protected deal.',
         actions: [
             { label: 'Revoke Token', tone: 'redSolid' },
             { label: 'Block Participant', tone: 'redOutline' },
@@ -186,11 +190,21 @@ const anomalyCards: AlertCard[] = [
     },
     {
         tone: 'amber',
-        token: 'TKN-f9c2e5a3',
-        participant: 'part_anon_077',
-        flag: 'Token scope exceeded: Export attempted on Read-only token',
+        token: 'TKN-d9e2f4a7',
+        participant: 'part_anon_017',
+        flag: 'Validated-stage token expires in under 30 minutes while payout remains held for final release checks.',
         actions: [
-            { label: 'Revoke Token', tone: 'redSolid' },
+            { label: 'Tighten Scope', tone: 'amber' },
+            { label: 'Investigate', tone: 'amber' }
+        ]
+    },
+    {
+        tone: 'amber',
+        token: 'TKN-g4a1d7c9',
+        participant: 'part_anon_064',
+        flag: 'Credential provisioning is delayed because final workspace checks have not cleared yet.',
+        actions: [
+            { label: 'Provision Token', tone: 'blueOutline' },
             { label: 'Investigate', tone: 'amber' }
         ]
     }
@@ -204,11 +218,10 @@ const policyRows: PolicyRow[] = [
 ]
 
 const revocationRows: RevocationRow[] = [
-    { tokenId: 'TKN-x9f2c4a1', participant: 'part_anon_033', reason: 'IP anomaly detected', revokedBy: 'Auto-revoke', timestamp: '14:29:44' },
-    { tokenId: 'TKN-b3e7d2f8', participant: 'part_anon_071', reason: 'Scope violation', revokedBy: 'Auto-revoke', timestamp: '14:17:22' },
-    { tokenId: 'TKN-c1a4f9e6', participant: 'part_anon_019', reason: 'Admin manual revoke', revokedBy: 'admin_001', timestamp: '13:55:08' },
-    { tokenId: 'TKN-d8b2e5c3', participant: 'part_anon_044', reason: 'Bulk access threshold exceeded', revokedBy: 'Auto-revoke', timestamp: '13:41:33' },
-    { tokenId: 'TKN-e5f7a1b9', participant: 'part_anon_088', reason: 'Session timeout', revokedBy: 'Auto-revoke', timestamp: '13:28:17' }
+    { tokenId: 'TKN-b7c1e3d5', participant: 'part_anon_089', reason: 'Outcome engine freeze after schema mismatch evidence', revokedBy: 'Auto-freeze', timestamp: '2026-03-28 14:29 UTC' },
+    { tokenId: 'TKN-a1b4c7e2', participant: 'part_anon_021', reason: 'Settlement closed and scoped credential archived', revokedBy: 'Auto-revoke', timestamp: '2026-03-28 13:55 UTC' },
+    { tokenId: 'TKN-r8e2m5q4', participant: 'part_anon_071', reason: 'Rights scope violation on export-restricted deal', revokedBy: 'Auto-revoke', timestamp: '2026-03-28 13:41 UTC' },
+    { tokenId: 'TKN-c1a4f9e6', participant: 'part_anon_019', reason: 'Manual admin revoke after participant review escalation', revokedBy: 'admin_001', timestamp: '2026-03-28 13:28 UTC' }
 ]
 
 const summaryValueClasses: Record<SummaryTone, string> = {
@@ -343,6 +356,11 @@ export default function ActiveEphemeralTokensPage() {
                     ]
         })),
     [tokenControlSummary])
+    const isUsingFallbackFeed = tokenRows.length === 0
+    const effectiveSummaryCards = isUsingFallbackFeed ? fallbackDashboardSummaryCards : dashboardSummaryCards
+    const effectiveTokenRows = isUsingFallbackFeed ? fallbackTokenRows : tokenRows
+    const effectiveAnomalyCards = isUsingFallbackFeed ? anomalyCards : anomalyCardsDynamic
+    const effectiveRevocationRows = isUsingFallbackFeed ? revocationRows : tokenControlSummary.revocations
 
     useEffect(() => {
         const interval = window.setInterval(() => {
@@ -352,9 +370,9 @@ export default function ActiveEphemeralTokensPage() {
     }, [])
 
     const filteredRows = useMemo(() => {
-        if (activeFilter === 'all') return tokenRows
-        return tokenRows.filter(row => row.status === activeFilter)
-    }, [activeFilter, tokenRows])
+        if (activeFilter === 'all') return effectiveTokenRows
+        return effectiveTokenRows.filter(row => row.status === activeFilter)
+    }, [activeFilter, effectiveTokenRows])
 
     if (!isAuthenticated) return <Navigate to="/admin/login" replace />
 
@@ -378,7 +396,7 @@ export default function ActiveEphemeralTokensPage() {
                 </section>
 
                 <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
-                    {dashboardSummaryCards.map(card => (
+                    {effectiveSummaryCards.map(card => (
                         <article
                             key={card.label}
                             className={`rounded-xl border p-4 backdrop-blur-xl shadow-2xl shadow-black/25 ${summaryToneClasses[card.tone]}`}
@@ -391,7 +409,21 @@ export default function ActiveEphemeralTokensPage() {
 
                 <section className="rounded-xl border border-slate-800/60 bg-slate-900/60 backdrop-blur-xl shadow-2xl shadow-black/30">
                     <div className="border-b border-slate-800/60 px-5 py-4">
-                        <h2 className="text-[12px] font-semibold uppercase tracking-[0.12em] text-slate-300">Live Token Feed</h2>
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                            <div>
+                                <h2 className="text-[12px] font-semibold uppercase tracking-[0.12em] text-slate-300">Live Token Feed</h2>
+                                {isUsingFallbackFeed && (
+                                    <p className="mt-2 text-[11px] text-slate-500">
+                                        Showing presentation feed until checkout-backed credentials are issued in this local session.
+                                    </p>
+                                )}
+                            </div>
+                            {isUsingFallbackFeed && (
+                                <span className="inline-flex items-center rounded-md border border-cyan-500/35 bg-cyan-500/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-cyan-200">
+                                    Presentation Feed
+                                </span>
+                            )}
+                        </div>
                         <div className="mt-3 flex flex-wrap gap-2">
                             {filterTabs.map(tab => (
                                 <button
@@ -468,11 +500,11 @@ export default function ActiveEphemeralTokensPage() {
                     <div className="space-y-1">
                         <h2 className="text-[12px] font-semibold uppercase tracking-[0.12em] text-slate-300">Suspicious Token Activity</h2>
                         <p className="text-lg font-semibold text-slate-100">Anomaly Alerts</p>
-                        <p className="text-sm text-slate-400">{anomalyCardsDynamic.length} tokens flagged for stage-aware control review</p>
+                        <p className="text-sm text-slate-400">{effectiveAnomalyCards.length} tokens flagged for stage-aware control review</p>
                     </div>
 
                     <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-3">
-                        {anomalyCardsDynamic.map(card => (
+                        {effectiveAnomalyCards.map(card => (
                             <article
                                 key={card.token}
                                 className={`rounded-lg border bg-slate-950/45 p-4 ${card.tone === 'red' ? 'border-red-500/45' : 'border-amber-500/45'}`}
@@ -513,7 +545,7 @@ export default function ActiveEphemeralTokensPage() {
                                 </div>
                             </article>
                         ))}
-                        {anomalyCardsDynamic.length === 0 && (
+                        {effectiveAnomalyCards.length === 0 && (
                             <div className="rounded-lg border border-slate-800/70 bg-slate-950/45 px-4 py-8 text-center text-sm text-slate-500 xl:col-span-3">
                                 No token anomalies require admin attention right now.
                             </div>
@@ -555,7 +587,7 @@ export default function ActiveEphemeralTokensPage() {
                         <div className="space-y-1">
                             <h2 className="text-[12px] font-semibold uppercase tracking-[0.12em] text-slate-300">Revocation Log</h2>
                             <p className="text-lg font-semibold text-slate-100">Recent Revocations</p>
-                            <p className="text-sm text-slate-400">{tokenControlSummary.revocations.length} stage-driven revocation or freeze events</p>
+                            <p className="text-sm text-slate-400">{effectiveRevocationRows.length} stage-driven revocation or freeze events</p>
                         </div>
                         <button className={`rounded-md border px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.12em] transition-colors ${actionButtonClasses.blueOutline}`}>
                             Export Revocation Log
@@ -574,7 +606,7 @@ export default function ActiveEphemeralTokensPage() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-800/50 text-[11px] text-slate-200">
-                                {tokenControlSummary.revocations.map(row => (
+                                {effectiveRevocationRows.map(row => (
                                     <tr key={row.tokenId} className="hover:bg-slate-800/25 transition-colors">
                                         <td className="whitespace-nowrap px-4 py-3 font-mono text-cyan-300">{row.tokenId}</td>
                                         <td className="whitespace-nowrap px-4 py-3">{row.participant}</td>
@@ -583,7 +615,7 @@ export default function ActiveEphemeralTokensPage() {
                                         <td className="whitespace-nowrap px-4 py-3 font-mono text-slate-300">{row.timestamp}</td>
                                     </tr>
                                 ))}
-                                {tokenControlSummary.revocations.length === 0 && (
+                                {effectiveRevocationRows.length === 0 && (
                                     <tr>
                                         <td colSpan={5} className="px-4 py-8 text-center text-[11px] text-slate-500">
                                             No stage-based revocation events have been recorded yet.
