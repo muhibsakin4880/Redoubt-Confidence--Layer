@@ -337,8 +337,8 @@ export default function DatasetDetailPage() {
                                         </div>
                                         <h2 className="mt-3 text-xl font-semibold text-white">Choose free preview or protected evaluation</h2>
                                         <p className="mt-2 max-w-2xl text-sm text-slate-400">
-                                            Buyers can stay in zero-cost metadata review, or move into a governed clean-room evaluation with escrow protection,
-                                            buyer validation, and automatic credits when commitments miss.
+                                            Organizations can stay in zero-cost metadata review, or move into a governed clean-room evaluation with escrow protection,
+                                            evaluation org validation, and automatic credits when commitments miss.
                                         </p>
                                     </div>
                                     <div className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-100">
@@ -391,7 +391,7 @@ export default function DatasetDetailPage() {
                                                 </div>
                                                 <h3 className="mt-3 text-lg font-semibold text-white">Paid Clean-Room Evaluation</h3>
                                                 <p className="mt-2 text-sm text-slate-200/85">
-                                                    Enter escrow-native checkout, provision a governed workspace, and let the protection engine verify the contracted outcome before payout. Preview and quote generation stay free until this step.
+                                                    Enter protected evaluation setup, provision a governed workspace, and let the protection engine verify the contracted outcome before payout. Preview and terms generation stay free until this step.
                                                 </p>
                                             </div>
                                             <div className="text-right">
@@ -409,8 +409,8 @@ export default function DatasetDetailPage() {
 
                                         <div className="mt-4 rounded-xl border border-white/8 bg-slate-950/45 px-4 py-3 text-sm text-slate-300">
                                             {latestSavedQuote
-                                                ? `Quote ${latestSavedQuote.id} is ready for protected evaluation and escrow-native checkout.`
-                                                : 'Checkout will generate a passport-based starter quote if you have not saved one yet.'}
+                                                ? `Terms ${latestSavedQuote.id} is ready for protected evaluation.`
+                                                : 'Evaluation setup will generate passport-based starter terms if you have not saved any yet.'}
                                         </div>
 
                                         <Link
@@ -722,26 +722,26 @@ export default function DatasetDetailPage() {
                                                 to={`/datasets/${dataset.id}/rights-quote`}
                                                 className="rounded-lg border border-white/15 px-3 py-2 text-xs font-semibold text-white hover:border-cyan-400/50 hover:bg-white/5"
                                             >
-                                                Refine Quote
+                                                Refine Terms
                                             </Link>
                                         </div>
                                     </>
                                 ) : (
                                     <div className="mt-3">
                                         <p className="text-xs text-slate-400">
-                                            No quote saved yet. Build one to turn delivery, usage, term, and exclusivity into a reusable commercial package.
+                                            No terms saved yet. Build evaluation terms to turn delivery, usage, term, and exclusivity into a reusable package.
                                         </p>
                                         <Link
                                             to={`/datasets/${dataset.id}/rights-quote`}
                                             className="mt-4 inline-flex rounded-lg border border-cyan-400/40 bg-cyan-500/10 px-3 py-2 text-xs font-semibold text-cyan-100 hover:bg-cyan-500/20"
                                         >
-                                            Build Rights Quote
+                                            Build Evaluation Terms
                                         </Link>
                                         <Link
                                             to={`/datasets/${dataset.id}/escrow-checkout`}
                                             className="mt-2 inline-flex rounded-lg border border-emerald-400/40 bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-100 hover:bg-emerald-500/20"
                                         >
-                                            Start Escrow Checkout
+                                            Start Protected Evaluation
                                         </Link>
                                     </div>
                                 )}
@@ -836,7 +836,7 @@ export default function DatasetDetailPage() {
                                 </div>
 
                                 <p className="text-[11px] text-slate-500 leading-relaxed">
-                                    Redoubt holds payment in escrow and releases to provider only after buyer confirmation or window expiry.
+                                    Redoubt holds payment in escrow and releases to provider only after evaluation org confirmation or window expiry.
                                 </p>
 
                                 {escrowActive && (

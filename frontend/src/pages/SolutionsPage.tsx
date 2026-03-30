@@ -145,9 +145,9 @@ export default function SolutionsPage() {
                             to="/pilot-walkthrough"
                             className="rounded-2xl bg-cyan-400 px-5 py-4 text-slate-950 transition-colors hover:bg-cyan-300"
                         >
-                            <div className="text-sm font-semibold">View Public Pilot Walkthrough</div>
+                            <div className="text-sm font-semibold">Open Pilot Walkthrough</div>
                             <div className="mt-1 text-xs font-medium text-slate-900/80">
-                                Review the narrative path from first dataset review to pilot decision
+                                Start with the public path from first dataset review to pilot decision
                             </div>
                         </Link>
                         <Link
@@ -323,13 +323,13 @@ export default function SolutionsPage() {
                             to="/pilot-walkthrough"
                             className="inline-flex items-center justify-center rounded-xl bg-emerald-400 px-5 py-3 text-sm font-semibold text-slate-950 transition-colors hover:bg-emerald-300"
                         >
-                            Open Guided Demo
+                            Open Pilot Walkthrough
                         </Link>
                         <Link
                             to="/protected-evaluation"
                             className="inline-flex items-center justify-center rounded-xl border border-white/15 px-5 py-3 text-sm font-semibold text-white transition-colors hover:border-emerald-400/50 hover:bg-white/5"
                         >
-                            Review Protected Evaluation Surfaces
+                            Review Protected Evaluation Model
                         </Link>
                     </div>
                 </section>

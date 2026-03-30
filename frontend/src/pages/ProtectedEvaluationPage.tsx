@@ -169,22 +169,28 @@ export default function ProtectedEvaluationPage() {
                 </section>
 
                 <section className="mt-10 rounded-3xl border border-emerald-500/15 bg-emerald-500/8 p-8">
-                    <h2 className="text-2xl font-semibold text-white">Related public pages</h2>
+                    <h2 className="text-2xl font-semibold text-white">Continue the public review path</h2>
                     <p className="mt-3 max-w-3xl text-slate-300">
-                        Use the public walkthrough page for the broader pilot narrative, and keep this page as the control-focused companion surface.
+                        Keep the walkthrough as the narrative overview, and use the Trust Center for the broader controls, audit, deployment, and approval model.
                     </p>
                     <div className="mt-8 flex flex-col gap-4 sm:flex-row">
                         <Link
-                            to="/pilot-walkthrough"
+                            to="/trust-center"
                             className="inline-flex items-center justify-center rounded-xl bg-emerald-400 px-5 py-3 text-sm font-semibold text-slate-950 transition-colors hover:bg-emerald-300"
                         >
-                            Open Guided Demo
+                            Open Trust Center
+                        </Link>
+                        <Link
+                            to="/pilot-walkthrough"
+                            className="inline-flex items-center justify-center rounded-xl border border-white/15 px-5 py-3 text-sm font-semibold text-white transition-colors hover:border-emerald-400/50 hover:bg-white/5"
+                        >
+                            Open Pilot Walkthrough
                         </Link>
                         <Link
                             to="/solutions"
                             className="inline-flex items-center justify-center rounded-xl border border-white/15 px-5 py-3 text-sm font-semibold text-white transition-colors hover:border-emerald-400/50 hover:bg-white/5"
                         >
-                            Return to Pilot Page
+                            Return to Solutions
                         </Link>
                     </div>
                 </section>

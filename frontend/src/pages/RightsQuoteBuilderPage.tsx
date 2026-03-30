@@ -66,7 +66,7 @@ export default function RightsQuoteBuilderPage() {
 
     const handleSaveQuote = () => {
         const savedQuote = persistQuote()
-        setNotice(`Quote ${savedQuote.id} saved. It is valid until ${new Date(savedQuote.expiresAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}.`)
+        setNotice(`Terms ${savedQuote.id} saved. Valid until ${new Date(savedQuote.expiresAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}.`)
     }
 
     const handleProceedToCheckout = () => {
@@ -87,18 +87,18 @@ export default function RightsQuoteBuilderPage() {
                     <span>/</span>
                     <Link to={`/datasets/${dataset.id}`} className="hover:text-white transition-colors">{dataset.title}</Link>
                     <span>/</span>
-                    <span className="text-slate-200">Rights Quote Builder</span>
+                    <span className="text-slate-200">Evaluation Terms</span>
                 </div>
 
                 <header className="mt-5 flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
                     <div>
                         <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
-                            Rights-Based Quote Builder
+                            Evaluation Terms Builder
                         </div>
-                        <h1 className="mt-4 text-4xl font-bold tracking-tight text-white sm:text-5xl">Configure Rights, Then Price The Deal</h1>
+                        <h1 className="mt-4 text-4xl font-bold tracking-tight text-white sm:text-5xl">Configure Evaluation Terms</h1>
                         <p className="mt-2 max-w-3xl text-slate-400">
-                            This quote builder prices the rights package instead of only the dataset: delivery mode, field access,
-                            usage rights, exclusivity, geography, term, and support expectations are all commercial inputs. Creating and saving quotes is free; buyer charges begin only when protected evaluation starts.
+                            This builder defines the evaluation terms: delivery mode, field access,
+                            usage rights, exclusivity, geography, term, and support expectations. Creating and saving terms is free; evaluation fees begin only when protected evaluation starts.
                         </p>
                     </div>
                     <div className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold ${statusMeta.classes}`}>
@@ -154,7 +154,7 @@ export default function RightsQuoteBuilderPage() {
 
                         <BuilderSection
                             title="Usage Rights"
-                            description="Rights move the quote much more than raw volume in regulated data deals."
+                            description="Rights terms have more impact than raw volume in regulated data evaluations."
                         >
                             <OptionGrid
                                 options={usageRightOptions}
@@ -193,7 +193,7 @@ export default function RightsQuoteBuilderPage() {
                                 />
                             </BuilderSection>
 
-                            <BuilderSection title="Support Tier" description="Standard support is included. Priority and mission-critical support are usually tied to annual or enterprise buyer agreements.">
+                            <BuilderSection title="Support Tier" description="Standard support is included. Priority and mission-critical support are usually tied to annual or enterprise evaluation agreements.">
                                 <OptionGrid
                                     compact
                                     options={supportOptions}
@@ -205,7 +205,7 @@ export default function RightsQuoteBuilderPage() {
 
                         <BuilderSection
                             title="Team Scope & Validation Window"
-                            description="These settings shape checkout and escrow behavior."
+                            description="These settings shape evaluation and escrow behavior."
                         >
                             <div className="grid gap-5 lg:grid-cols-2">
                                 <div>
@@ -245,7 +245,7 @@ export default function RightsQuoteBuilderPage() {
                         <section className="rounded-3xl border border-white/10 bg-[#0a1526]/92 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.3)] backdrop-blur-xl">
                             <div className="flex items-center justify-between gap-3">
                                 <div>
-                                    <div className="text-xs uppercase tracking-[0.14em] text-slate-500">Live Quote</div>
+                                    <div className="text-xs uppercase tracking-[0.14em] text-slate-500">Estimated Terms</div>
                                     <h2 className="mt-1 text-2xl font-semibold text-white">{formatUsd(quote.totalUsd)}</h2>
                                 </div>
                                 <span
@@ -264,13 +264,13 @@ export default function RightsQuoteBuilderPage() {
                             <div className="mt-4 grid gap-3 sm:grid-cols-2">
                                 <SummaryStat label="Escrow hold" value={formatUsd(quote.escrowHoldUsd)} />
                                 <SummaryStat label="Evaluation fee" value={formatUsd(Math.max(quote.totalUsd * 0.1, 750))} />
-                                <SummaryStat label="Quote expires" value={new Date(quote.expiresAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} />
+                                <SummaryStat label="Terms expire" value={new Date(quote.expiresAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} />
                                 <SummaryStat label="Discount" value={quote.discountUsd > 0 ? formatUsd(quote.discountUsd) : 'None'} />
                                 <SummaryStat label="Passport applied" value={quote.passportApplied ? 'Yes' : 'No'} />
                             </div>
 
                             <div className="mt-4 rounded-2xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
-                                Quote generation is free. The buyer pays only when this package moves into protected evaluation, and provider settlement fees are applied only after a successful deal.
+                                Terms generation is free. Evaluation fees begin only when this package moves into protected evaluation, and provider settlement fees are applied only after a successful engagement.
                             </div>
 
                             <div className="mt-5 rounded-2xl border border-white/8 bg-slate-950/45 p-4">
@@ -310,14 +310,14 @@ export default function RightsQuoteBuilderPage() {
                                     onClick={handleSaveQuote}
                                     className="rounded-xl border border-cyan-400/50 bg-cyan-500/10 px-4 py-3 text-sm font-semibold text-cyan-100 hover:bg-cyan-500/20"
                                 >
-                                    Save Free Quote
+                                    Save Free Terms
                                 </button>
                                 <button
                                     type="button"
                                     onClick={handleProceedToCheckout}
                                     className="rounded-xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-slate-950 shadow-[0_12px_30px_rgba(16,185,129,0.22)] hover:bg-emerald-400"
                                 >
-                                    Proceed To Escrow-Native Checkout
+                                    Proceed To Protected Evaluation
                                 </button>
                             </div>
                         </section>
@@ -325,8 +325,8 @@ export default function RightsQuoteBuilderPage() {
                         <section className="rounded-3xl border border-white/10 bg-[#0a1526]/92 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.3)] backdrop-blur-xl">
                             <div className="flex items-center justify-between gap-3">
                                 <div>
-                                    <h2 className="text-xl font-semibold text-white">Saved Quotes</h2>
-                                    <p className="mt-1 text-sm text-slate-400">Recent saved packages for this dataset. Saving quotes does not start billing.</p>
+                                    <h2 className="text-xl font-semibold text-white">Saved Terms</h2>
+                                    <p className="mt-1 text-sm text-slate-400">Recent saved packages for this dataset. Saving terms does not start billing.</p>
                                 </div>
                                 <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-semibold text-slate-300">
                                     {savedQuotes.length}

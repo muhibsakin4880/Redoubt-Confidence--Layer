@@ -95,7 +95,7 @@ const buildProviderSteps = (prefix: string): GuidedStep[] => [
     {
         id: 3,
         title: 'Review Incoming Requests',
-        description: 'Approve or reject purpose-driven access requests from verified buyers',
+        description: 'Approve or reject purpose-driven access requests from verified organizations',
         buttonLabel: 'Go to Access Requests →',
         to: joinPath(prefix, '/access-requests'),
         highlight: 'Action required'

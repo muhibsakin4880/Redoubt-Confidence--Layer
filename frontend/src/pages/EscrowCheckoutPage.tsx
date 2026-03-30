@@ -75,7 +75,7 @@ export default function EscrowCheckoutPage() {
     )
     const [duaAccepted, setDuaAccepted] = useState(Boolean(persistedCheckout?.dua.accepted))
     const [notice, setNotice] = useState<string | null>(
-        savedQuotes.length === 0 ? 'No saved quote was found for this dataset, so checkout is using a rights package generated from your passport defaults.' : null
+        savedQuotes.length === 0 ? 'No saved terms were found for this dataset, so evaluation is using a terms package generated from your passport defaults.' : null
     )
 
     useEffect(() => {
@@ -90,7 +90,7 @@ export default function EscrowCheckoutPage() {
             setConfig(persistedCheckout.configuration)
             setDuaAccepted(Boolean(persistedCheckout.dua.accepted))
             if (!checkoutRecord || checkoutRecord.id !== persistedCheckout.id) {
-                setNotice(`Escrow checkout ${persistedCheckout.escrowId} is already in progress for this quote.`)
+                setNotice(`Escrow evaluation ${persistedCheckout.escrowId} is already in progress for these terms.`)
             }
             return
         }
@@ -99,7 +99,7 @@ export default function EscrowCheckoutPage() {
         setDuaAccepted(false)
         setNotice(
             savedQuotes.length === 0
-                ? 'No saved quote was found for this dataset, so checkout is using a rights package generated from your passport defaults.'
+                ? 'No saved terms were found for this dataset, so evaluation is using a terms package generated from your passport defaults.'
                 : null
         )
     }, [checkoutRecord, persistedCheckout, savedQuotes.length, selectedQuote])
@@ -232,20 +232,18 @@ export default function EscrowCheckoutPage() {
                     <span>/</span>
                     <Link to={`/datasets/${dataset.id}`} className="hover:text-white transition-colors">{dataset.title}</Link>
                     <span>/</span>
-                    <span className="text-slate-200">Escrow-Native Checkout</span>
+                    <span className="text-slate-200">Protected Evaluation Setup</span>
                 </div>
 
                 <header className="mt-5 flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
                     <div>
                         <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
-                            Escrow-Native Checkout
+                            Protected Evaluation Setup
                         </div>
-                        <h1 className="mt-4 text-4xl font-bold tracking-tight text-white sm:text-5xl">
-                            Fund Escrow, Lock The DUA, Provision Access
-                        </h1>
+                        <h1 className="mt-4 text-4xl font-bold tracking-tight text-white sm:text-5xl">Evaluation Setup</h1>
                         <p className="mt-2 max-w-3xl text-slate-400">
-                            This checkout turns the deal into a governed transaction: it funds escrow, generates the DUA,
-                            chooses access mode, sets the buyer review window, provisions the workspace, and issues scoped credentials. Metadata review and quote creation are free; this is the point where buyer-paid protected evaluation begins.
+                            This setup turns the evaluation into a governed engagement: it funds escrow, generates the DUA,
+                            chooses access mode, sets the review window, provisions the workspace, and issues scoped credentials. Metadata review and terms creation are free; this is the point where evaluation fees begin.
                         </p>
                     </div>
                     <div className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold ${passportStatus.classes}`}>
@@ -265,14 +263,14 @@ export default function EscrowCheckoutPage() {
                                 <div>
                                     <h2 className="text-xl font-semibold text-white">Rights Package</h2>
                                     <p className="mt-1 text-sm text-slate-400">
-                                        Checkout is anchored to a configurable rights package rather than a flat dataset purchase.
+                                        Evaluation is anchored to a configurable rights package rather than a flat dataset access.
                                     </p>
                                 </div>
                                 <Link
                                     to={`/datasets/${dataset.id}/rights-quote`}
                                     className="rounded-lg border border-cyan-400/35 bg-cyan-500/10 px-3 py-2 text-xs font-semibold text-cyan-100 hover:bg-cyan-500/20"
                                 >
-                                    Refine quote
+                                    Refine terms
                                 </Link>
                             </div>
 
@@ -314,7 +312,7 @@ export default function EscrowCheckoutPage() {
                         <section className="rounded-3xl border border-white/10 bg-[#0a1526]/88 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.28)] backdrop-blur-xl">
                             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                                 <div>
-                                    <h2 className="text-xl font-semibold text-white">Checkout Configuration</h2>
+                                    <h2 className="text-xl font-semibold text-white">Evaluation Configuration</h2>
                                     <p className="mt-1 text-sm text-slate-400">
                                         These settings are frozen once escrow is funded and become part of the DUA.
                                     </p>
@@ -402,7 +400,7 @@ export default function EscrowCheckoutPage() {
                                 <div>
                                     <h2 className="text-xl font-semibold text-white">Generated DUA</h2>
                                     <p className="mt-1 text-sm text-slate-400">
-                                        The agreement is assembled from the quote, passport, escrow window, and access path.
+                                        The agreement is assembled from the terms, passport, escrow window, and access path.
                                     </p>
                                 </div>
                                 <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-semibold text-slate-300">
@@ -510,8 +508,8 @@ export default function EscrowCheckoutPage() {
                                 <div>
                                     <h2 className="text-xl font-semibold text-white">Outcome Protection</h2>
                                     <p className="mt-1 text-sm text-slate-400">
-                                        Metadata preview is free, clean-room evaluation is paid, payout waits for buyer validation,
-                                        and schema or freshness misses automatically create buyer credits.
+                                        Metadata preview is free, clean-room evaluation is paid, payout waits for evaluation org validation,
+                                        and schema or freshness misses automatically create evaluation credits.
                                     </p>
                                 </div>
                                 <span className="rounded-full border border-emerald-500/35 bg-emerald-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-emerald-200">
@@ -648,7 +646,7 @@ export default function EscrowCheckoutPage() {
                                     <div>
                                         <div className="text-sm font-semibold text-white">Buyer validation gate</div>
                                         <div className="mt-1 text-xs text-slate-400">
-                                            Escrow cannot release until the buyer validates the contracted schema and freshness outcome.
+                                            Escrow cannot release until the evaluating organization validates the contracted schema and freshness outcome.
                                         </div>
                                     </div>
                                     <span className={`rounded-full border px-3 py-1 text-[11px] font-semibold ${
@@ -662,7 +660,7 @@ export default function EscrowCheckoutPage() {
                                             ? 'Validated'
                                             : outcomeValidation.status === 'issue_reported'
                                                 ? 'Issue reported'
-                                                : 'Awaiting buyer validation'}
+                                                : 'Awaiting evaluation org validation'}
                                     </span>
                                 </div>
 

@@ -260,7 +260,7 @@ export default function ContributionsPage() {
                             />
                             <span className="text-slate-400 text-sm">USD per access</span>
                         </div>
-                        <div className="text-slate-500 text-xs mt-1">Participant and dataset onboarding are free. Redoubt applies a provider settlement fee only after a successful deal: 15% at launch, then 12% after volume ramps, then 10% for large repeat providers.</div>
+                        <div className="text-slate-500 text-xs mt-1">Participant and dataset onboarding are free. Redoubt applies a provider settlement fee only after a successful engagement: 15% at launch, then 12% after volume ramps, then 10% for large repeat providers.</div>
                     </div>
                 </div>
             )
@@ -503,7 +503,7 @@ export default function ContributionsPage() {
                         </div>
 
                         <div className="mt-5 pt-4 border-t border-slate-700">
-                            <div className="text-xs text-slate-400 mb-2">What this means for buyers:</div>
+                            <div className="text-xs text-slate-400 mb-2">What this means for evaluating organizations:</div>
                             <div className="grid sm:grid-cols-2 gap-2 text-xs">
                                 <div className="flex items-center gap-2 text-slate-300">
                                     <span className="text-slate-500">Sample preview:</span>
@@ -876,7 +876,7 @@ type="button"
                                 <div className="text-sm font-medium text-slate-200 mb-3">Download Conditions</div>
                                 <div className="space-y-3">
                                     <div className="flex items-center justify-between gap-4 rounded-lg border border-slate-700/80 bg-slate-900/80 px-3 py-3">
-                                        <div className="text-slate-100 text-sm">Require buyer re-confirmation before download</div>
+                                        <div className="text-slate-100 text-sm">Require evaluation org re-confirmation before download</div>
                                         <button
                                             type="button"
                                             aria-pressed={downloadConditions.requireReconfirmation}
@@ -947,7 +947,7 @@ type="button"
                         )}
 
                         <div className="mt-4 pt-3 border-t border-slate-700">
-                            <div className="text-xs text-slate-500 italic">Platform Only providers receive a +5 Trust Score bonus and a Maximum Security Tier badge visible to all buyers.</div>
+                            <div className="text-xs text-slate-500 italic">Platform Only providers receive a +5 Trust Score bonus and a Maximum Security Tier badge visible to all evaluating organizations.</div>
                         </div>
                     </div>
 
@@ -988,7 +988,7 @@ type="button"
                         </div>
                     </div>
                     <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-emerald-100">
-                        No participant onboarding fee and no dataset onboarding fee. Revenue starts only when a buyer enters protected evaluation and the deal later settles successfully.
+                        No participant onboarding fee and no dataset onboarding fee. Revenue starts only when an evaluating organization enters protected evaluation and the engagement later settles successfully.
                     </div>
                     <div className="grid sm:grid-cols-2 gap-3">
                         <div className="bg-slate-900/70 border border-slate-700 rounded-lg p-3">
@@ -1036,7 +1036,7 @@ type="button"
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div className="space-y-2">
                     <h1 className="text-3xl font-bold">Dataset Contribution & Validation</h1>
-                    <p className="text-slate-400">Onboard participants and datasets at no charge, monitor validation pipeline status, and review quality/compliance feedback before any buyer-paid evaluation begins.</p>
+                    <p className="text-slate-400">Onboard participants and datasets at no charge, monitor validation pipeline status, and review quality/compliance feedback before any evaluation begins.</p>
                 </div>
                 {isUploadViewOpen ? (
                     <button

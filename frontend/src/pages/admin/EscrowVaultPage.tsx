@@ -157,7 +157,7 @@ const transactionRows: TransactionRow[] = [
         window: '23h 45m',
         owner: 'settlement_ops',
         risk: 'medium',
-        policyHold: 'Funding confirmed, buyer validation window still open',
+        policyHold: 'Funding confirmed, evaluation org validation window still open',
         requiredAction: 'Track access completion and prepare next release check',
         actionLabel: 'Open Review',
         actionTone: 'blue',
@@ -195,11 +195,11 @@ const transactionRows: TransactionRow[] = [
         window: 'Frozen',
         owner: 'dispute_admin_02',
         risk: 'medium',
-        policyHold: 'Evidence request outstanding with buyer',
+        policyHold: 'Evidence request outstanding with evaluating organization',
         requiredAction: 'Collect missing evidence or dismiss dispute',
         actionLabel: 'Resolve Case',
         actionTone: 'red',
-        lastEvent: 'Quality challenge filed and buyer asked to upload supporting artifacts.',
+        lastEvent: 'Quality challenge filed and evaluating organization asked to upload supporting artifacts.',
         controls: ['Case freeze', 'Evidence due timer', 'Manual payout path only']
     },
     {
@@ -794,7 +794,7 @@ export default function EscrowVaultPage() {
                                             type="search"
                                             value={queueSearch}
                                             onChange={event => setQueueSearch(event.target.value)}
-                                            placeholder="Search contract ID, dataset, buyer, provider, owner"
+                                            placeholder="Search contract ID, dataset, org, provider, owner"
                                             className="w-full rounded-full border border-slate-700/80 bg-slate-950/70 py-2 pl-9 pr-10 text-sm text-slate-100 placeholder:text-slate-500 focus:border-cyan-500/60 focus:outline-none"
                                         />
                                         {queueSearch && (
@@ -840,7 +840,7 @@ export default function EscrowVaultPage() {
                                     <div className="rounded-xl border border-dashed border-slate-700/80 bg-slate-950/45 px-4 py-10 text-center">
                                         <p className="text-sm font-semibold text-slate-200">No contracts match this search.</p>
                                         <p className="mt-2 text-xs text-slate-500">
-                                            Try another contract ID, dataset, buyer, provider, or owner keyword.
+                                            Try another contract ID, dataset, org, provider, or owner keyword.
                                         </p>
                                     </div>
                                 )}
