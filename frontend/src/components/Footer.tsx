@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import LogoMark from './LogoMark'
+import TrustBadges from './TrustBadges'
 
 export default function Footer() {
     const currentYear = new Date().getFullYear()
@@ -54,6 +55,8 @@ export default function Footer() {
                         </div>
                     </div>
                 </div>
+
+                <TrustBadges />
 
                 <div className="pt-6 border-t border-slate-800 flex flex-col sm:flex-row justify-between items-center gap-4">
                     <div className="flex items-center gap-4">
