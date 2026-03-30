@@ -5,28 +5,6 @@ import { useAuth } from '../contexts/AuthContext'
 // ──────────────────────────────────────────────────────────────
 // HOOKS
 // ──────────────────────────────────────────────────────────────
-function useCountUp(target: number, duration = 1600, start = false) {
-    const [count, setCount] = useState(0)
-    useEffect(() => {
-        if (!start) return
-        if (duration <= 0) {
-            setCount(target)
-            return
-        }
-        let startTime: number | null = null
-        let animationId = 0
-        const step = (timestamp: number) => {
-            if (!startTime) startTime = timestamp
-            const progress = Math.min((timestamp - startTime) / duration, 1)
-            setCount(Math.floor(progress * target))
-            if (progress < 1) animationId = requestAnimationFrame(step)
-        }
-        animationId = requestAnimationFrame(step)
-        return () => cancelAnimationFrame(animationId)
-    }, [target, duration, start])
-    return count
-}
-
 function useInView(threshold = 0.25, rootMargin = '0px 0px -12% 0px') {
     const ref = useRef<HTMLDivElement>(null)
     const [inView, setInView] = useState(false)
@@ -494,7 +472,6 @@ export default function HomePage() {
     const [wizardStep,  setWizardStep]  = useState(1)
     const [heroVisible, setHeroVisible] = useState(false)
 
-    const statsRef = useInView(0.2)
     const howItWorksRef = useInView(0.18)
     const trustRef = useInView(0.18)
     const solutionsRef = useInView(0.18)
@@ -507,64 +484,84 @@ export default function HomePage() {
     }, [prefersReducedMotion])
 
     const heroReady = prefersReducedMotion || heroVisible
-    const taglineText = 'Layered Defense for Data Confidence'
+    const taglineText = 'The Missing Layer Between Data Discovery and Trusted Deployment'
     const taglineTyped = useTypingEffect(taglineText, prefersReducedMotion ? 0 : 32, heroReady)
-
-    const datasetsCount = useCountUp(12400, prefersReducedMotion ? 0 : 1600, statsRef.inView)
-    const verifiedCount = useCountUp(98, prefersReducedMotion ? 0 : 1100, statsRef.inView)
-    const partnersCount = useCountUp(340, prefersReducedMotion ? 0 : 1400, statsRef.inView)
 
     const heroHighlights = [
         {
-            title: 'Verified Provenance',
-            detail: 'Chain every dataset to auditable origin and policy context.',
+            title: 'Confidence Before Access',
+            detail: 'Review dataset fit, provenance, and handling constraints before a dataset moves into pilot review.',
         },
         {
-            title: 'AI Confidence Scoring',
-            detail: 'Expose trust signals before a request ever reaches production.',
+            title: 'Protected Evaluation',
+            detail: 'Move from metadata preview into governed evaluation with scoped controls before broader access is expanded.',
         },
         {
-            title: 'Zero-Trust Controls',
-            detail: 'Gate access by role, purpose, and continuously validated risk on top of AWS shared-responsibility controls.',
+            title: 'Policy & Approval Alignment',
+            detail: 'Keep requesting teams, contributing institutions, privacy, legal, and governance reviewers aligned in one controlled workflow.',
         },
     ]
 
-    const trustSignals = ['SOC2', 'End-to-End Encrypted', 'Zero Marketplace Risk']
+    const trustSignals = ['Secure Evaluation', 'Approval Gates', 'Residency-Aware']
 
-    const stats = [
-        { value: `${datasetsCount.toLocaleString()}+`, label: 'Verified Datasets' },
-        { value: `${verifiedCount}%`, label: 'Accuracy Rate' },
-        { value: `${partnersCount}+`, label: 'Trusted Partners' },
+    const sharedResponsibilityCards = [
+        {
+            title: 'AWS',
+            detail: 'Shared responsibility baseline for infrastructure security, resilience, and cloud control inheritance.',
+        },
+        {
+            title: 'Azure',
+            detail: 'Shared responsibility model for regulated workloads, identity controls, and regional deployment governance.',
+        },
+        {
+            title: 'Google Cloud',
+            detail: 'Shared responsibility approach for cloud operations, data protection posture, and controlled analytics environments.',
+        },
+        {
+            title: 'OCI',
+            detail: 'Shared security model for residency-sensitive deployment, infrastructure controls, and enterprise isolation patterns.',
+        },
     ]
 
     const workflowSteps = [
-        { num: '01', title: 'Submit', desc: 'Upload datasets with metadata and governance documentation.' },
-        { num: '02', title: 'Validate', desc: 'AI-powered quality checks detect anomalies and bias before handoff.' },
-        { num: '03', title: 'Score', desc: 'Receive transparent confidence scores based on multiple trust factors.' },
-        { num: '04', title: 'Access', desc: 'Zero-trust RBAC controls every session with a complete audit trail.' },
+        { num: '01', title: 'Review', desc: 'Examine dataset fit, provenance, and handling requirements.' },
+        { num: '02', title: 'Scope', desc: 'Configure rights, geography, duration, and evaluation boundaries before commercial review.' },
+        { num: '03', title: 'Request', desc: 'Route the access request through purpose, governance, and approval checkpoints.' },
+        { num: '04', title: 'Evaluate', desc: 'Enter protected evaluation with audit visibility before any broader rollout is approved.' },
     ]
 
     const trustFeatures = [
-        { title: 'AI Validation', desc: 'Real-time quality and bias detection.' },
-        { title: 'Provider Vetting', desc: 'Identity, ownership, and credential verification.' },
-        { title: 'Confidence Engine', desc: 'Live trust scoring with transparent rationale.' },
-        { title: 'Zero-Trust Access', desc: 'Revocable sessions with immutable logging.' },
+        { title: 'Dataset Provenance', desc: 'Expose origin, preparation context, and handling notes before a team enters a pilot review.' },
+        { title: 'Governed Evaluation', desc: 'Let teams validate dataset fit without treating the first step like a full procurement event.' },
+        { title: 'Clean-Room Controls', desc: 'Support protected evaluation with egress controls, temporary credentials, and audit visibility.' },
+        { title: 'Residency-Aware Options', desc: 'Handle organizations that need deployment and review paths aligned to stricter enterprise policies.' },
     ]
 
     const solutionCards = [
-        { title: 'Researchers', desc: 'Academic and clinical datasets with provenance built in.' },
-        { title: 'AI/ML Teams', desc: 'High-quality training data with policy-aware access.' },
-        { title: 'Enterprises', desc: 'Regulated production pipelines that need trust on demand.' },
-        { title: 'Contributors', desc: 'Earn from verified contributions without marketplace ambiguity.' },
+        { title: 'Provenance Layer', desc: 'Surface origin, handling context, and confidence signals before teams escalate a dataset into formal review.' },
+        { title: 'Rights & Policy Layer', desc: 'Scope duration, geography, delivery mode, and permitted use before access terms become operational.' },
+        { title: 'Protected Evaluation Layer', desc: 'Move from metadata review into a controlled clean-room or governed evaluation step before broader rollout.' },
+        { title: 'Audit & Residency Layer', desc: 'Keep evidence, approval flow, and deployment constraints visible across cross-organization collaboration.' },
     ]
 
-    const joinSegments = [
-        'Healthcare AI Startups',
-        'Fintech & Risk Teams',
-        'Research Institutions',
-        'Universities & Labs',
-        'Climate & Environment',
-        'Early-Stage Biotech',
+const joinSegments = [
+        'Quant research and risk analytics teams',
+        'Data residency & stewardship',
+        'Climate and geospatial product teams',
+        'Healthcare AI and research leads',
+        'Mobility and smart city analytics teams',
+        'Utilities and smart-grid analytics teams',
+        'Consumer, retail, and commerce analytics teams',
+        'NLP, text-corpus, and social-media intelligence teams',
+        'Contributing research institutions',
+        'Industrial and IoT sensor analytics teams',
+    ]
+
+    const workflowContexts = [
+        'Privacy and sensitive-data review programs',
+        'Consent-heavy research and legal-basis workflows',
+        'Third-party data intake and DUA-first diligence workflows',
+        'Public-sector and civic data programs (secondary fit)',
     ]
 
     const handleRequestPlatformAccess = () => { startOnboarding(); navigate('/onboarding') }
@@ -578,9 +575,7 @@ export default function HomePage() {
 
             {/* ── GLOBAL STYLES ── */}
             <style>{`
-                @import url('https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap');
-
-                .redoubt-font { font-family: 'Syne', sans-serif; }
+                .redoubt-font { font-family: 'Syne', 'Inter', system-ui, -apple-system, sans-serif; line-height: 1.2; }
                 .body-font    { font-family: 'Inter', system-ui, sans-serif; }
 
                 @keyframes logoSpinCW  { from { transform: rotate(0deg) }   to { transform: rotate(360deg) }  }
@@ -779,7 +774,7 @@ export default function HomePage() {
                 {/* ════════════════════════════════════════
                     HERO
                 ════════════════════════════════════════ */}
-                <section className="relative overflow-hidden pt-28 pb-16 md:pt-36 md:pb-24">
+                <section className="relative overflow-hidden pt-32 pb-20 md:pt-40 md:pb-28">
                     <div className="absolute inset-0 bg-[#020814]" />
                     <div className="hero-grid-lines motion-safe-home absolute inset-0 opacity-60" />
                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_14%,rgba(34,211,238,0.16)_0%,rgba(34,211,238,0.08)_18%,rgba(5,12,31,0)_56%)]" />
@@ -811,7 +806,7 @@ export default function HomePage() {
                             </MotionReveal>
 
                             <MotionReveal inView={heroReady} reducedMotion={prefersReducedMotion} delay={80}>
-                                <h1 className="hero-wordmark motion-safe-home redoubt-font bg-gradient-to-b from-white via-cyan-100 to-[#67E8F9] bg-clip-text text-[clamp(3.2rem,8vw,5.75rem)] font-extrabold leading-none tracking-[0.16em] text-transparent [text-shadow:0_0_20px_rgba(103,232,249,0.5),0_0_70px_rgba(14,165,233,0.24)]">
+                                <h1 className="hero-wordmark motion-safe-home redoubt-font bg-gradient-to-b from-white via-cyan-100 to-[#67E8F9] bg-clip-text text-[clamp(3.2rem,8vw,5.75rem)] font-extrabold leading-tight tracking-[0.16em] text-transparent [text-shadow:0_0_20px_rgba(103,232,249,0.5),0_0_70px_rgba(14,165,233,0.24)]">
                                     REDOUBT
                                 </h1>
                             </MotionReveal>
@@ -827,8 +822,8 @@ export default function HomePage() {
 
                             <MotionReveal inView={heroReady} reducedMotion={prefersReducedMotion} delay={230}>
                                 <p className="mt-5 max-w-2xl text-xs leading-7 text-slate-300/90 sm:text-sm md:text-base md:leading-8">
-                                    Secure data access with verified provenance, AI-backed confidence scoring,
-                                    and zero-trust controls &mdash; built for trusted participants on an AWS shared-responsibility foundation.
+                                    Redoubt is a data confidence layer for governed access, helping organizations evaluate
+                                    sensitive external datasets with provenance, policy, and audit context before a pilot begins.
                                 </p>
                             </MotionReveal>
 
@@ -894,115 +889,115 @@ export default function HomePage() {
                                 ))}
                             </div>
 
-                            <MotionReveal inView={heroReady} reducedMotion={prefersReducedMotion} delay={860}>
-                                <p className="mt-5 text-xs font-medium tracking-[0.08em] text-slate-500 sm:text-sm">
-                                    Built on AWS under the AWS Shared Responsibility Model.
-                                </p>
+                            <MotionReveal inView={heroReady} reducedMotion={prefersReducedMotion} delay={860} className="w-full">
+                                <div className="mt-6 w-full max-w-4xl rounded-2xl border border-white/10 bg-white/[0.03] p-4 backdrop-blur-md">
+                                    <div className="mb-4 text-center text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                                        Shared Responsibility Models
+                                    </div>
+                                    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                                        {sharedResponsibilityCards.map((card) => (
+                                            <div
+                                                key={card.title}
+                                                className="rounded-xl border border-cyan-400/10 bg-slate-950/45 px-4 py-4 text-left"
+                                            >
+                                                <div className="text-sm font-semibold text-cyan-100">{card.title}</div>
+                                                <p className="mt-2 text-xs leading-6 text-slate-400">{card.detail}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
                             </MotionReveal>
                         </div>
                     </div>
                 </section>
 
-                {/* ════════════════════════════════════════
-                    STATS
-                ════════════════════════════════════════ */}
-                <section className="relative py-14 md:py-16 border-y border-white/10 bg-slate-950/60">
-                    <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/20 to-transparent" />
-                    <div ref={statsRef.ref} className="max-w-6xl mx-auto px-6">
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-8">
-                            {stats.map((stat, index) => (
-                                <MotionReveal
-                                    key={stat.label}
-                                    inView={statsRef.inView}
-                                    reducedMotion={prefersReducedMotion}
-                                    delay={index * 110}
-                                >
-                                    <TiltCard disabled={prefersReducedMotion}>
-                                        <div className="landing-panel rounded-2xl border border-white/5 bg-gradient-to-b from-slate-900/80 to-slate-900/35 px-4 py-5 text-center shadow-[0_0_35px_rgba(2,8,20,0.2)]">
-                                            <div className="redoubt-font mb-1 text-3xl font-bold text-white md:text-4xl">{stat.value}</div>
-                                            <div className="text-sm uppercase tracking-[0.12em] text-slate-400">{stat.label}</div>
-                                        </div>
-                                    </TiltCard>
-                                </MotionReveal>
-                            ))}
-                        </div>
-                    </div>
-                </section>
+                <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-700/50 to-transparent" />
 
                 {/* ════════════════════════════════════════
                     HOW IT WORKS
                 ════════════════════════════════════════ */}
-                <section id="how-it-works" className="py-24 bg-slate-950">
-                    <div ref={howItWorksRef.ref} className="max-w-6xl mx-auto px-6">
+                <section id="how-it-works" className="py-32 bg-slate-950 relative">
+                    <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent_0%,rgba(6,182,212,0.02)_50%,transparent_100%)]" />
+                    <div ref={howItWorksRef.ref} className="max-w-6xl mx-auto px-6 relative">
                         <MotionReveal inView={howItWorksRef.inView} reducedMotion={prefersReducedMotion}>
-                            <div className="text-center mb-12">
-                                <h2 className="redoubt-font text-3xl font-semibold text-white">How Redoubt Works</h2>
+                            <div className="text-center mb-16">
+                                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-400 text-xs font-medium mb-4">
+                                    <span className="signal-dot motion-safe-home h-2 w-2 rounded-full bg-cyan-400"></span>
+                                    Workflow
+                                </div>
+                                <h2 className="redoubt-font text-3xl md:text-4xl font-semibold text-white">Your Governed Path Forward</h2>
                                 <p className="text-slate-400 mt-3 max-w-2xl mx-auto">
-                                    A streamlined pipeline from dataset submission to verified, secure access.
+                                    A focused workflow for regulated analytics teams reviewing external datasets before moving into a pilot.
                                 </p>
                             </div>
                         </MotionReveal>
-                        <div className="grid gap-6 md:grid-cols-4">
-                            {workflowSteps.map((step, index) => (
-                                <MotionReveal
-                                    key={step.num}
-                                    inView={howItWorksRef.inView}
-                                    reducedMotion={prefersReducedMotion}
-                                    delay={90 + index * 110}
-                                    className="h-full"
-                                >
-                                    <div className="landing-panel relative h-full rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
-                                        <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-cyan-400/10 bg-cyan-400/5 px-3 py-1">
-                                            <span
-                                                className="signal-dot motion-safe-home h-2 w-2 rounded-full bg-cyan-300"
-                                                style={{ animationDelay: `${index * 0.18}s` }}
-                                            />
-                                            <span className="text-xs font-mono tracking-[0.18em] text-cyan-300">STEP {step.num}</span>
+                        <div className="relative">
+                            <div className="absolute left-8 right-8 top-8 top-[4.5rem] h-0.5 bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent hidden md:block" />
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                                {workflowSteps.map((step, index) => (
+                                    <MotionReveal
+                                        key={step.num}
+                                        inView={howItWorksRef.inView}
+                                        reducedMotion={prefersReducedMotion}
+                                        delay={90 + index * 110}
+                                    >
+                                        <div className="relative flex flex-col items-center h-full">
+                                            <div className="relative z-10 flex h-16 w-16 items-center justify-center rounded-full border-2 border-cyan-400/40 bg-slate-900 shadow-[0_0_30px_rgba(6,182,212,0.2)]">
+                                                <span className="text-lg font-bold text-cyan-300">{step.num}</span>
+                                            </div>
+                                            <div className="mt-6 rounded-2xl border border-slate-700/50 bg-slate-800/30 p-6 w-full backdrop-blur-sm flex-1">
+                                                <h3 className="text-lg font-semibold text-white mb-2">{step.title}</h3>
+                                                <p className="text-sm leading-6 text-slate-400">{step.desc}</p>
+                                            </div>
                                         </div>
-                                        <h3 className="text-lg font-semibold text-white mb-2">{step.title}</h3>
-                                        <p className="text-sm leading-6 text-slate-400">{step.desc}</p>
-                                        {index < workflowSteps.length - 1 && (
-                                            <div className="step-link motion-safe-home absolute right-[-0.9rem] top-1/2 hidden h-px w-6 -translate-y-1/2 bg-gradient-to-r from-cyan-400/70 to-transparent md:block" />
-                                        )}
-                                    </div>
-                                </MotionReveal>
-                            ))}
+                                    </MotionReveal>
+                                ))}
+                            </div>
                         </div>
                     </div>
                 </section>
 
+                <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-700/50 to-transparent" />
+
                 {/* ════════════════════════════════════════
                     TRUST & VERIFICATION
                 ════════════════════════════════════════ */}
-                <section id="security" className="relative py-24 bg-slate-900/95">
-                    <div className="absolute left-0 top-20 h-44 w-44 rounded-full bg-cyan-400/5 blur-[100px]" />
-                    <div ref={trustRef.ref} className="relative max-w-6xl mx-auto px-6">
+<section id="security" className="relative py-32 bg-slate-900/95 overflow-hidden">
+                    <div className="absolute inset-0 opacity-30" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(148,163,184,0.1) 1px, transparent 0)', backgroundSize: '40px 40px' }} />
+                    <div className="absolute left-0 top-20 h-64 w-64 rounded-full bg-cyan-400/5 blur-[120px]" />
+                    <div className="absolute right-0 bottom-20 h-48 w-48 rounded-full bg-blue-500/5 blur-[100px]" />
+                    <div ref={trustRef.ref} className="relative max-w-4xl mx-auto px-6">
                         <MotionReveal inView={trustRef.inView} reducedMotion={prefersReducedMotion}>
-                            <div className="text-center mb-12">
-                                <h2 className="redoubt-font text-3xl font-semibold text-white">Trust by Design</h2>
+                            <div className="text-center mb-16">
+                                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-medium mb-4">
+                                    <span className="signal-dot motion-safe-home h-2 w-2 rounded-full bg-emerald-400"></span>
+                                    Security
+                                </div>
+                                <h2 className="redoubt-font text-3xl md:text-4xl font-semibold text-white">Trust by Design</h2>
                                 <p className="text-slate-400 mt-3 max-w-2xl mx-auto">
-                                    Every dataset is validated, scored, and secured before it ever reaches you.
+                                    Redoubt is not trying to be a generic data catalog first. It is a controlled review and evaluation workflow for high-stakes data decisions.
                                 </p>
                             </div>
                         </MotionReveal>
-                        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {trustFeatures.map((item, index) => (
                                 <MotionReveal
                                     key={item.title}
                                     inView={trustRef.inView}
                                     reducedMotion={prefersReducedMotion}
                                     delay={90 + index * 90}
-                                    className="h-full"
                                 >
-                                    <TiltCard disabled={prefersReducedMotion} className="h-full">
-                                        <div className="landing-panel group h-full rounded-2xl border border-slate-700 bg-slate-900/85 p-6">
-                                            <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-cyan-500/10 text-cyan-400 transition-transform duration-300 group-hover:scale-110 group-hover:bg-cyan-400/15">
-                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                                                </svg>
+                                    <TiltCard disabled={prefersReducedMotion}>
+                                        <div className="landing-panel group h-[180px] rounded-2xl border border-slate-700/60 bg-slate-800/40 p-6 backdrop-blur-sm flex flex-col">
+                                            <div className="flex items-center gap-3 mb-3">
+                                                <div className="flex-shrink-0 flex h-10 w-10 items-center justify-center rounded-lg bg-cyan-500/10 text-cyan-400">
+                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                                                    </svg>
+                                                </div>
+                                                <h3 className="text-lg font-semibold text-white">{item.title}</h3>
                                             </div>
-                                            <h3 className="text-lg font-medium text-white mb-2">{item.title}</h3>
-                                            <p className="text-slate-400 text-sm leading-6">{item.desc}</p>
+                                            <p className="text-sm text-slate-400 leading-relaxed">{item.desc}</p>
                                         </div>
                                     </TiltCard>
                                 </MotionReveal>
@@ -1011,17 +1006,27 @@ export default function HomePage() {
                     </div>
                 </section>
 
+                <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-700/50 to-transparent" />
+
                 {/* ════════════════════════════════════════
                     SOLUTIONS
                 ════════════════════════════════════════ */}
-                <section id="solutions" className="py-24 bg-slate-950">
-                    <div ref={solutionsRef.ref} className="max-w-6xl mx-auto px-6">
+                <section id="solutions" className="py-32 bg-slate-950 relative">
+                    <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(6,182,212,0.03)_0%,transparent_100%)]" />
+                    <div ref={solutionsRef.ref} className="max-w-6xl mx-auto px-6 relative">
                         <MotionReveal inView={solutionsRef.inView} reducedMotion={prefersReducedMotion}>
-                            <div className="text-center mb-12">
-                                <h2 className="redoubt-font text-3xl font-semibold text-white">Built for Every Team</h2>
+                            <div className="text-center mb-16">
+                                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-400 text-xs font-medium mb-4">
+                                    <span className="signal-dot motion-safe-home h-2 w-2 rounded-full bg-cyan-400"></span>
+                                    Layers
+                                </div>
+                                <h2 className="redoubt-font text-3xl md:text-4xl font-semibold text-white">The Data Confidence Layer</h2>
+                                <p className="text-slate-400 mt-3 max-w-2xl mx-auto">
+                                    Redoubt is positioned as a trust and coordination layer around governed access, not as a generic listing venue.
+                                </p>
                             </div>
                         </MotionReveal>
-                        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {solutionCards.map((item, index) => (
                                 <MotionReveal
                                     key={item.title}
@@ -1031,17 +1036,22 @@ export default function HomePage() {
                                     className="h-full"
                                 >
                                     <TiltCard disabled={prefersReducedMotion} className="h-full">
-                                        <div className="landing-panel h-full rounded-2xl border border-slate-700 bg-slate-800/80 p-6">
-                                            <div className="mb-4 flex items-center justify-between">
-                                                <span className="text-[0.7rem] font-semibold uppercase tracking-[0.24em] text-cyan-300/80">
-                                                    0{index + 1}
-                                                </span>
-                                                <span className="h-px w-10 bg-gradient-to-r from-cyan-400/70 to-transparent" />
+                                        <div className="landing-panel h-full group rounded-2xl border border-slate-700/60 bg-gradient-to-br from-slate-800/60 to-slate-900/60 p-6 md:p-8">
+                                            <div className="flex items-start justify-between mb-4">
+                                                <div className="flex items-center gap-4">
+                                                    <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-cyan-500/10 text-cyan-400 text-sm font-bold">
+                                                        {index + 1}
+                                                    </span>
+                                                    <span className="h-px w-16 bg-gradient-to-r from-cyan-400/50 to-transparent" />
+                                                </div>
                                             </div>
-                                            <h3 className="text-lg font-semibold text-white mb-3">{item.title}</h3>
+                                            <h3 className="text-xl font-semibold text-white mb-3 group-hover:text-cyan-300 transition-colors">{item.title}</h3>
                                             <p className="text-slate-400 text-sm leading-6 mb-4">{item.desc}</p>
-                                            <a href="#" className="text-cyan-400 text-sm transition-colors hover:text-cyan-300 hover:underline">
-                                                Learn more →
+                                            <a href="#" className="inline-flex items-center gap-2 text-cyan-400 text-sm transition-colors hover:text-cyan-300">
+                                                Explore layer
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                                                </svg>
                                             </a>
                                         </div>
                                     </TiltCard>
@@ -1051,21 +1061,27 @@ export default function HomePage() {
                     </div>
                 </section>
 
+                <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-700/50 to-transparent" />
+
                 {/* ════════════════════════════════════════
                     WHO CAN JOIN
                 ════════════════════════════════════════ */}
-                <section id="join" className="py-24 bg-slate-900/95">
-                    <div ref={whoCanJoinRef.ref} className="max-w-6xl mx-auto px-6">
+                <section id="join" className="py-32 bg-slate-900/95 relative">
+                    <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(148,163,184,0.08) 1px, transparent 0)', backgroundSize: '32px 32px' }} />
+                    <div ref={whoCanJoinRef.ref} className="max-w-6xl mx-auto px-6 relative">
                         <MotionReveal inView={whoCanJoinRef.inView} reducedMotion={prefersReducedMotion}>
-                            <div className="text-center mb-12">
-                                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-medium mb-4">
+                            <div className="text-center mb-16">
+                                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-emerald-500/15 to-cyan-500/15 border border-emerald-400/20 text-emerald-300 text-xs font-semibold mb-6">
                                     <span className="signal-dot motion-safe-home h-2 w-2 rounded-full bg-emerald-400"></span>
-                                    Now Open
+                                    Supported Contexts
                                 </div>
-                                <h2 className="redoubt-font text-3xl font-semibold text-white">Who Can Join</h2>
+                                <h2 className="redoubt-font text-3xl md:text-4xl font-semibold text-white">Supported Operating Contexts</h2>
+                                <p className="mx-auto mt-4 max-w-3xl text-slate-400 text-lg">
+                                    The current demo is strongest where teams need confidence, policy, and approval context before broader dataset access is discussed.
+                                </p>
                             </div>
                         </MotionReveal>
-                        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {joinSegments.map((title, index) => (
                                 <MotionReveal
                                     key={title}
@@ -1074,52 +1090,82 @@ export default function HomePage() {
                                     delay={80 + index * 80}
                                 >
                                     <TiltCard disabled={prefersReducedMotion}>
-                                        <div className="landing-panel flex items-center justify-between rounded-xl border border-slate-700 bg-slate-900/85 p-5">
+                                        <div className="landing-panel group flex items-center justify-between rounded-xl border border-slate-600/40 bg-slate-800/40 p-5 hover:border-emerald-400/30 hover:bg-slate-800/60 transition-all">
                                             <span className="text-white font-medium">{title}</span>
-                                            <span className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-emerald-100">
+                                            <span className="inline-flex items-center gap-2 rounded-full border border-emerald-400/25 bg-emerald-400/10 px-3 py-1 text-[0.7rem] font-semibold uppercase tracking-[0.16em] text-emerald-200">
                                                 <span
                                                     className="signal-dot motion-safe-home h-2 w-2 rounded-full bg-emerald-300"
                                                     style={{ animationDelay: `${index * 0.12}s` }}
                                                 />
-                                                Open
+                                                Best Fit
                                             </span>
                                         </div>
                                     </TiltCard>
                                 </MotionReveal>
                             ))}
                         </div>
+                        <MotionReveal
+                            inView={whoCanJoinRef.inView}
+                            reducedMotion={prefersReducedMotion}
+                            delay={120 + joinSegments.length * 60}
+                        >
+                            <div className="mt-10">
+                                <div className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-300 mb-5 text-center">Cross-cutting programs</div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                    {workflowContexts.map((context, index) => (
+                                        <TiltCard disabled={prefersReducedMotion} key={context}>
+                                            <div className="rounded-xl border border-cyan-500/20 bg-slate-800/40 p-4 flex items-center justify-center h-[60px]">
+                                                <span className="inline-flex items-center gap-2 text-sm font-medium text-cyan-50 text-center">
+                                                    <span
+                                                        className="signal-dot motion-safe-home h-2 w-2 rounded-full bg-cyan-300"
+                                                        style={{ animationDelay: `${index * 0.1}s` }}
+                                                    />
+                                                    {context}
+                                                </span>
+                                            </div>
+                                        </TiltCard>
+                                    ))}
+                                </div>
+                            </div>
+                        </MotionReveal>
                     </div>
                 </section>
+
+{/* ════════════════════════════════════════
+                    SECTION DIVIDER
+                ════════════════════════════════════════ */}
+                <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-700/50 to-transparent" />
 
                 {/* ════════════════════════════════════════
                     FINAL CTA
                 ════════════════════════════════════════ */}
-                <section className="relative py-24 bg-slate-950 border-t border-white/5 overflow-hidden">
-                    <div className="cta-orb motion-safe-home absolute left-1/2 top-1/2 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-400/10 blur-[140px]" />
-                    <div ref={finalCtaRef.ref} className="relative max-w-3xl mx-auto px-6">
+                <section className="relative py-32 bg-slate-950 overflow-hidden">
+                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(6,182,212,0.08)_0%,transparent_70%)]" />
+                    <div className="cta-orb motion-safe-home absolute left-1/2 top-1/2 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-400/8 blur-[160px]" />
+                    <div ref={finalCtaRef.ref} className="relative max-w-4xl mx-auto px-6">
                         <MotionReveal inView={finalCtaRef.inView} reducedMotion={prefersReducedMotion}>
-                            <div className="landing-panel rounded-[2rem] border border-cyan-400/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.88)_0%,rgba(2,8,20,0.96)_100%)] px-8 py-10 text-center shadow-[0_0_70px_rgba(8,47,73,0.18)] sm:px-12">
-                                <div className="mx-auto mb-5 inline-flex items-center gap-2 rounded-full border border-cyan-400/15 bg-cyan-400/10 px-4 py-2 text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-cyan-100">
+                            <div className="landing-panel rounded-[2.5rem] border border-cyan-500/15 bg-[linear-gradient(180deg,rgba(15,23,42,0.9)_0%,rgba(2,8,20,0.98)_100%)] px-8 py-12 text-center shadow-[0_0_80px_rgba(8,47,73,0.2),inset_0_1px_0_rgba(255,255,255,0.05)] sm:px-14">
+                                <div className="mx-auto mb-6 inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-500/10 px-5 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-100">
                                     <span className="signal-dot motion-safe-home h-2 w-2 rounded-full bg-cyan-300" />
-                                    Trusted Network Intake
+                                    Regulated Analytics Pilot Intake
                                 </div>
-                                <h2 className="text-3xl font-semibold text-white mb-4">
-                                    Ready to get started?
+                                <h2 className="text-3xl md:text-4xl font-semibold text-white mb-5">
+                                    Exploring a governed dataset pilot?
                                 </h2>
-                                <p className="text-slate-400 mb-8">
-                                    Join the trusted network of organizations leveraging verified data for AI and analytics.
+                                <p className="text-slate-400 text-lg mb-10 max-w-xl mx-auto">
+                                    Redoubt is being shaped for teams that need a credible review and evaluation workflow before broader access is discussed, especially where clean-room controls or residency constraints matter.
                                 </p>
                                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                                     <button
                                         onClick={handleRequestPlatformAccess}
-                                        className="px-8 py-3 bg-cyan-400 text-slate-950 font-semibold rounded-lg hover:bg-cyan-300 transition-all shadow-[0_0_20px_rgba(34,211,238,0.25)]"
+                                        className="px-8 py-4 bg-cyan-400 text-slate-950 font-semibold rounded-xl hover:bg-cyan-300 transition-all shadow-[0_0_30px_rgba(34,211,238,0.3)] hover:shadow-[0_0_40px_rgba(34,211,238,0.4)]"
                                     >
                                         Request Access
                                     </button>
                                     <Link
                                         to="/login"
                                         onClick={handleSignInFromLanding}
-                                        className="px-8 py-3 border border-slate-600 bg-slate-900/60 text-slate-200 font-medium rounded-lg hover:border-cyan-500 hover:text-cyan-300 transition-all"
+                                        className="px-8 py-4 border border-slate-600 bg-slate-900/60 text-slate-200 font-medium rounded-xl hover:border-cyan-500 hover:text-cyan-300 transition-all"
                                     >
                                         Sign In
                                     </Link>

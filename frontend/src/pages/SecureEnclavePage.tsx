@@ -42,7 +42,7 @@ export default function SecureEnclavePage() {
                         </p>
                     </div>
                     <div className="rounded-2xl border border-amber-400/40 bg-amber-400/10 px-4 py-3 text-sm text-amber-100 shadow-[0_0_24px_rgba(245,158,11,0.25)]">
-                        🔒 SOC2 / PDPL Insulated Node
+                        Shared-control reference · AWS baseline
                     </div>
                 </header>
 

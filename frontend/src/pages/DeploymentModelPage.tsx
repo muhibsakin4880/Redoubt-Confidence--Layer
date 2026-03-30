@@ -29,9 +29,9 @@ const deploymentOptions: DeploymentOption[] = [
         badgeTone: 'border-emerald-400/40 bg-emerald-500/10 text-emerald-200',
         bullets: [
             'Hosted on AWS US-East + EU-West',
-            'SOC 2 Type II certified',
+            'AWS shared responsibility model applies',
             'Data encrypted at rest + in transit',
-            'Redoubt manages infrastructure'
+            'Cloud compliance reports and eligible services are referenced through AWS'
         ],
         bestFor: 'Best for: Fast onboarding, small-mid enterprises'
     },
@@ -96,14 +96,14 @@ const residencyRegions: ResidencyRegion[] = [
     {
         region: 'United States (US-East-1)',
         location: 'AWS Virginia',
-        compliance: 'HIPAA eligible',
+        compliance: 'AWS HIPAA-eligible service baseline',
         status: 'Current: Active',
         active: true
     },
     {
         region: 'European Union (EU-West-1)',
         location: 'AWS Ireland',
-        compliance: 'GDPR compliant',
+        compliance: 'Regional hosting for GDPR-aligned deployment design',
         status: 'Current: Active',
         active: true
     },
@@ -130,7 +130,7 @@ export default function DeploymentModelPage() {
                             Deployment & Data Residency
                         </h1>
                         <p className="mt-2 max-w-2xl text-slate-400">
-                            Understand where your data lives, what Redoubt can see, and how your deployment is configured
+                            Understand where your data lives, what Redoubt can see, and which cloud-control references come from AWS
                         </p>
                     </div>
                     <div className="rounded-2xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-3 text-sm text-cyan-200 shadow-[0_0_18px_rgba(34,211,238,0.18)]">
@@ -177,6 +177,10 @@ export default function DeploymentModelPage() {
                             </article>
                         ))}
                     </div>
+                </section>
+
+                <section className="mt-8 rounded-2xl border border-cyan-500/20 bg-cyan-500/10 p-5 text-sm leading-7 text-cyan-50 shadow-[0_0_24px_rgba(34,211,238,0.14)]">
+                    Infrastructure references such as SOC 2 Type II reports, HIPAA-eligible services, GDPR regional hosting patterns, and ISO 27001 certified cloud controls should be read through AWS under the shared responsibility model. This demo does not present them as standalone Redoubt application certifications.
                 </section>
 
                 <section className="mt-10 rounded-2xl border border-white/10 bg-[#0a1628] p-6 shadow-[0_10px_40px_rgba(0,0,0,0.25)]">

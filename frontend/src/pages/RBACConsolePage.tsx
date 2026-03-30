@@ -11,7 +11,7 @@ const roleTemplates = [
             'Export policy: Aggregated only',
             'Audit level: Full'
         ],
-        badge: { label: 'HIPAA Aligned', tone: 'active' as StatusTone },
+        badge: { label: 'Healthcare control profile', tone: 'active' as StatusTone },
         cta: 'Apply Template'
     },
     {
@@ -22,7 +22,7 @@ const roleTemplates = [
             'Export policy: Encrypted export only',
             'Audit level: Full'
         ],
-        badge: { label: 'SOC 2 Aligned', tone: 'active' as StatusTone },
+        badge: { label: 'Finance control profile', tone: 'active' as StatusTone },
         cta: 'Apply Template'
     },
     {
@@ -33,7 +33,7 @@ const roleTemplates = [
             'Export policy: No raw export',
             'Audit level: Enhanced'
         ],
-        badge: { label: 'FedRAMP Ready', tone: 'warn' as StatusTone },
+        badge: { label: 'Public-sector control profile', tone: 'warn' as StatusTone },
         cta: 'Apply Template'
     }
 ]

@@ -1,5 +1,6 @@
 @import url('https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&f[]=general-sans@400,500,600&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -19,8 +20,8 @@
     --color-text-secondary: #E0E7FF;
     --color-text-muted: #8892B0;
     
-    --font-heading: 'Satoshi', 'General Sans', sans-serif;
-    --font-body: 'Inter', sans-serif;
+    --font-heading: 'Satoshi', 'General Sans', 'Inter', system-ui, sans-serif;
+    --font-body: 'Inter', system-ui, sans-serif;
     
     --radius: 8px;
     --radius-lg: 12px;
@@ -39,7 +40,8 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Satoshi Black', 'Neue Haas Grotesk', var(--font-heading);
+    font-family: var(--font-heading);
+    font-weight: 700;
     @apply font-bold tracking-tight;
   }
 }

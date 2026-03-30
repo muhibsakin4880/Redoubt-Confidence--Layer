@@ -19,10 +19,10 @@ const sessionSecurity = [
 ]
 
 const complianceCerts = [
-    { label: 'SOC 2 Type II', value: 'Certified', tone: 'ok' as StatusTone },
-    { label: 'HIPAA', value: 'Compliant', tone: 'ok' as StatusTone },
-    { label: 'GDPR', value: 'Compliant', tone: 'ok' as StatusTone },
-    { label: 'ISO 27001', value: 'In Progress', tone: 'warn' as StatusTone }
+    { label: 'SOC 2 Type II', value: 'AWS infrastructure reports available', tone: 'ok' as StatusTone },
+    { label: 'HIPAA', value: 'AWS HIPAA-eligible service baseline', tone: 'ok' as StatusTone },
+    { label: 'GDPR', value: 'Regional hosting and shared cloud controls', tone: 'ok' as StatusTone },
+    { label: 'ISO 27001', value: 'AWS certified infrastructure baseline', tone: 'ok' as StatusTone }
 ]
 
 const toneClasses: Record<StatusTone, string> = {
@@ -49,7 +49,7 @@ export default function SecurityOperationsPage() {
                         </div>
                         <h1 className="mt-4 text-4xl font-bold tracking-tight text-white sm:text-5xl">Security Operations</h1>
                         <p className="mt-2 text-slate-400">
-                            Live security posture and compliance status for the Redoubt platform
+                            Illustrative security posture and shared cloud-control references for the Redoubt demo
                         </p>
                     </div>
                     <div className="rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200 shadow-[0_0_20px_rgba(16,185,129,0.18)]">
@@ -160,8 +160,8 @@ export default function SecurityOperationsPage() {
 
                 <section className="mt-10">
                     <div className="flex items-center justify-between gap-3 flex-wrap">
-                        <h2 className="text-2xl font-semibold text-white">Compliance Certifications</h2>
-                        <span className="text-xs text-slate-500">Mapped to regulated industries</span>
+                        <h2 className="text-2xl font-semibold text-white">Shared Cloud Control References</h2>
+                        <span className="text-xs text-slate-500">Infrastructure references under AWS shared responsibility</span>
                     </div>
                     <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                         {complianceCerts.map(cert => (
@@ -183,11 +183,14 @@ export default function SecurityOperationsPage() {
                                     className={`flex items-center gap-2 rounded-full border px-3 py-1 text-[11px] font-semibold ${toneClasses[cert.tone]}`}
                                 >
                                     <span className={`h-2.5 w-2.5 rounded-full ${dotClasses[cert.tone]}`} />
-                                    {cert.tone === 'warn' ? 'In Progress' : cert.tone === 'alert' ? 'Attention' : 'Secure'}
+                                    {cert.tone === 'warn' ? 'Review' : cert.tone === 'alert' ? 'Attention' : 'Reference'}
                                 </span>
                             </div>
                         ))}
                     </div>
+                    <p className="mt-4 text-xs text-slate-500">
+                        These items are infrastructure-level references and should not be read as standalone Redoubt application certifications in this prototype.
+                    </p>
                 </section>
             </div>
         </div>
