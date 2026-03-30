@@ -51,6 +51,7 @@ import RightsQuoteBuilderPage from './pages/RightsQuoteBuilderPage'
 import EscrowCheckoutPage from './pages/EscrowCheckoutPage'
 import PilotWalkthroughPage from './pages/PilotWalkthroughPage'
 import ProtectedEvaluationPage from './pages/ProtectedEvaluationPage'
+import TrustCenterPage from './pages/TrustCenterPage'
 
 import { useAuth } from './contexts/AuthContext'
 
@@ -182,6 +183,7 @@ function App() {
                     <Route index element={<HomePage />} />
                     <Route path="about" element={<AboutPage />} />
                     <Route path="solutions" element={<SolutionsPage />} />
+                    <Route path="trust-center" element={<TrustCenterPage />} />
                     <Route path="pilot-walkthrough" element={<PilotWalkthroughPage />} />
                     <Route path="protected-evaluation" element={<ProtectedEvaluationPage />} />
                     <Route path="demo" element={<GuidedTourPage />} />

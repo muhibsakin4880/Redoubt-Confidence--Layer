@@ -160,6 +160,17 @@ export default function SolutionsPage() {
                             </div>
                         </Link>
                     </div>
+                    <div className="mt-5 flex justify-center">
+                        <Link
+                            to="/trust-center"
+                            className="inline-flex items-center gap-2 text-sm font-medium text-cyan-300 transition-colors hover:text-cyan-200"
+                        >
+                            Open Trust Center
+                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                            </svg>
+                        </Link>
+                    </div>
                 </section>
 
                 <section className="mt-10">
@@ -284,6 +295,17 @@ export default function SolutionsPage() {
                                 <p className="mt-3 text-sm leading-7 text-slate-300">{model.description}</p>
                             </div>
                         ))}
+                    </div>
+                    <div className="mt-6">
+                        <Link
+                            to="/trust-center"
+                            className="inline-flex items-center gap-2 text-sm font-medium text-cyan-300 transition-colors hover:text-cyan-200"
+                        >
+                            Review the full Trust Center
+                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                            </svg>
+                        </Link>
                     </div>
                 </section>
 

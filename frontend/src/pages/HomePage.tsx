@@ -1003,6 +1003,23 @@ const joinSegments = [
                                 </MotionReveal>
                             ))}
                         </div>
+                        <MotionReveal
+                            inView={trustRef.inView}
+                            reducedMotion={prefersReducedMotion}
+                            delay={240}
+                        >
+                            <div className="mt-8 flex justify-center">
+                                <Link
+                                    to="/trust-center"
+                                    className="inline-flex items-center gap-2 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-5 py-3 text-sm font-semibold text-cyan-100 transition-colors hover:border-cyan-400/60 hover:bg-cyan-500/15"
+                                >
+                                    Open Trust Center
+                                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                                    </svg>
+                                </Link>
+                            </div>
+                        </MotionReveal>
                     </div>
                 </section>
 
