@@ -141,28 +141,28 @@ export default function AdminDashboardPage() {
         {
             label: 'Protected evaluations',
             value: protectedEvaluationCount,
-            detail: `${lifecycleSummary.evaluationLiveCount} active workspaces · ${lifecycleSummary.workspacesProvisioningCount} preparing`,
+            detail: `${lifecycleSummary.evaluationLiveCount} active · ${lifecycleSummary.workspacesProvisioningCount} provisioning`,
             tone: 'cyan' as SummaryTone,
             icon: summaryIcons.protectedEvaluations
         },
         {
             label: 'Approvals pending',
             value: approvalsPendingCount,
-            detail: `${highPriorityCount} high-priority decisions open`,
+            detail: `${highPriorityCount} high-priority decisions`,
             tone: 'amber' as SummaryTone,
             icon: summaryIcons.approvalsPending
         },
         {
             label: 'Policy exceptions',
             value: policyExceptionCount,
-            detail: `${rightsRiskSummary.highRiskCount + rightsRiskSummary.restrictedCount} rights signals · ${investigatingIncidentCount} active investigations`,
+            detail: `${rightsRiskSummary.highRiskCount + rightsRiskSummary.restrictedCount} rights signals · ${investigatingIncidentCount} active`,
             tone: 'red' as SummaryTone,
             icon: summaryIcons.policyExceptions
         },
         {
             label: 'Evidence packs ready',
             value: evidenceReadyCount,
-            detail: `${inReviewPackCount} still in review · ${blockedPackCount} blocked`,
+            detail: `${inReviewPackCount} in review · ${blockedPackCount} blocked`,
             tone: 'emerald' as SummaryTone,
             icon: summaryIcons.evidenceReady
         }
@@ -170,17 +170,17 @@ export default function AdminDashboardPage() {
 
     const postureCards = [
         {
-            title: 'Review posture',
+            title: 'Review Posture',
             value: `${approvalsPendingCount} open`,
             detail: `${highPriorityCount} high · ${mediumPriorityCount} medium · ${lowPriorityCount} low`
         },
         {
-            title: 'Visibility posture',
+            title: 'Visibility Posture',
             value: `${adminVisibilityBoundaries.length} boundaries`,
             detail: 'Metadata-first admin visibility with protected evaluation surfaces kept outside default view.'
         },
         {
-            title: 'Deployment posture',
+            title: 'Deployment Posture',
             value: `${nearSignoffSurfaceCount} near approval`,
             detail: `${blockedSurfaceCount} environments remain held by evidence or residency conditions`
         }
@@ -188,311 +188,374 @@ export default function AdminDashboardPage() {
 
     return (
         <AdminLayout title="CONTROL DASHBOARD" subtitle="GOVERNANCE, EVIDENCE & EXCEPTIONS">
-            <div className="space-y-6">
-                <section className="grid grid-cols-12 gap-4">
-                    {summaryCards.map((card) => (
-                        <div
-                            key={card.label}
-                            className="col-span-3 rounded-xl border border-slate-800/60 bg-slate-900/65 p-5 shadow-2xl shadow-black/20"
-                        >
-                            <div className="flex items-start justify-between gap-4">
-                                <div>
-                                    <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">
-                                        {card.label}
-                                    </p>
-                                    <p className="mt-3 text-4xl font-semibold tracking-tight text-slate-100">
-                                        {card.value}
-                                    </p>
-                                </div>
-                                <div className={`flex h-9 w-9 items-center justify-center rounded-lg border ${toneClasses[card.tone]}`}>
-                                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                                        <path strokeLinecap="round" strokeLinejoin="round" d={card.icon} />
-                                    </svg>
-                                </div>
-                            </div>
-                            <p className="mt-4 text-[10px] leading-relaxed text-slate-400">{card.detail}</p>
-                        </div>
-                    ))}
-                </section>
-
-                <section className="grid grid-cols-12 gap-4">
-                    {postureCards.map((card) => (
-                        <div key={card.title} className={`col-span-4 ${subpanelClass} px-5 py-4`}>
-                            <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-slate-600">{card.title}</p>
-                            <p className="mt-2 text-xl font-semibold text-slate-100">{card.value}</p>
-                            <p className="mt-2 text-[10px] leading-relaxed text-slate-400">{card.detail}</p>
-                        </div>
-                    ))}
-                </section>
-
-                <section className="grid grid-cols-12 gap-5">
-                    <div className={`col-span-8 ${panelClass}`}>
-                        <SectionHeader
-                            title="Governance Review Status"
-                            detail="The main queue stays focused on approval blockers, ownership, and the next control decision."
-                            actionLabel="Open review queue"
-                            actionTo="/admin/onboarding-queue"
-                        />
-                        <div className="grid grid-cols-12 gap-4 border-b border-slate-800/50 px-5 py-4">
-                            <div className={`${subpanelClass} col-span-4 px-4 py-3`}>
-                                <p className="text-[9px] uppercase tracking-[0.12em] text-slate-600">High priority</p>
-                                <p className="mt-2 text-2xl font-semibold text-slate-100">{highPriorityCount}</p>
-                                <p className="mt-1 text-[10px] text-slate-500">Immediate legal, residency, or evidence decisions</p>
-                            </div>
-                            <div className={`${subpanelClass} col-span-4 px-4 py-3`}>
-                                <p className="text-[9px] uppercase tracking-[0.12em] text-slate-600">Blocked packs</p>
-                                <p className="mt-2 text-2xl font-semibold text-slate-100">{blockedPackCount}</p>
-                                <p className="mt-1 text-[10px] text-slate-500">Signoff is held until evidence gaps are resolved</p>
-                            </div>
-                            <div className={`${subpanelClass} col-span-4 px-4 py-3`}>
-                                <p className="text-[9px] uppercase tracking-[0.12em] text-slate-600">Active incidents</p>
-                                <p className="mt-2 text-2xl font-semibold text-slate-100">{investigatingIncidentCount}</p>
-                                <p className="mt-1 text-[10px] text-slate-500">Containment remains tied to review IDs and evidence packs</p>
-                            </div>
-                        </div>
-                        <div className="divide-y divide-slate-800/35">
-                            {sortBlockers.map((blocker) => (
-                                <div key={blocker.id} className="px-5 py-4">
-                                    <div className="flex items-start justify-between gap-4">
-                                        <div className="min-w-0 flex-1">
-                                            <div className="flex flex-wrap items-center gap-2">
-                                                <p className="text-[11px] font-semibold text-slate-200">{blocker.organization}</p>
-                                                <span className="text-[9px] uppercase tracking-[0.12em] text-slate-600">
-                                                    {blocker.reviewId}
-                                                </span>
-                                            </div>
-                                            <p className="mt-2 text-[10px] leading-relaxed text-slate-400">{blocker.blocker}</p>
-                                            <div className="mt-2 flex flex-wrap gap-4 text-[9px] uppercase tracking-[0.12em] text-slate-600">
-                                                <span>Owner {blocker.owner}</span>
-                                                <span>Due {blocker.deadline}</span>
-                                            </div>
-                                        </div>
-                                        <span
-                                            className={`inline-flex items-center rounded-md border px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.12em] ${badgeClasses[blocker.severity]}`}
-                                        >
-                                            {blocker.severity}
-                                        </span>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
+            <div className="space-y-8">
+                <section>
+                    <div className="mb-3 flex items-center gap-2">
+                        <div className="h-px flex-1 bg-slate-800/60" />
+                        <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-slate-600">KEY METRICS</span>
+                        <div className="h-px flex-1 bg-slate-800/60" />
                     </div>
-
-                    <div className={`col-span-4 ${panelClass}`}>
-                        <SectionHeader
-                            title="Review Priorities"
-                            detail="A smaller side rail for what should move next."
-                            actionLabel="Security matrix"
-                            actionTo="/admin/security-compliance"
-                        />
-                        <div className="space-y-3 px-5 py-4">
-                            {prioritizedEvidencePacks.slice(0, 3).map((pack) => (
-                                <article key={pack.id} className={`${subpanelClass} p-4`}>
-                                    <div className="flex items-start justify-between gap-3">
-                                        <div>
-                                            <p className="text-[10px] uppercase tracking-[0.12em] text-slate-600">{pack.reviewId}</p>
-                                            <h3 className="mt-1 text-[12px] font-semibold text-slate-100">{pack.organization}</h3>
-                                        </div>
-                                        <span
-                                            className={`inline-flex items-center rounded-md border px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.1em] ${badgeClasses[pack.status]}`}
-                                        >
-                                            {pack.status}
-                                        </span>
+                    <div className="grid grid-cols-4 gap-4">
+                        {summaryCards.map((card) => (
+                            <div
+                                key={card.label}
+                                className="relative overflow-hidden rounded-xl border border-slate-800/60 bg-slate-900/65 p-5 shadow-2xl shadow-black/20 transition-all duration-300 hover:border-slate-700/60"
+                            >
+                                <div className="absolute right-0 top-0 w-24 h-24 opacity-5" style={{ background: `radial-gradient(circle at top right, ${card.tone === 'cyan' ? '#06b6d4' : card.tone === 'amber' ? '#f59e0b' : card.tone === 'emerald' ? '#10b981' : '#ef4444'}, transparent 70%)` }} />
+                                <div className="flex items-start justify-between gap-4">
+                                    <div>
+                                        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+                                            {card.label}
+                                        </p>
+                                        <p className="mt-3 text-4xl font-semibold tracking-tight text-slate-100">
+                                            {card.value}
+                                        </p>
                                     </div>
-                                    <p className="mt-3 text-[10px] leading-relaxed text-slate-400">{pack.blocker ?? pack.scope}</p>
-                                    <p className="mt-2 text-[9px] text-slate-600">{pack.owner}</p>
-                                </article>
-                            ))}
-                        </div>
+                                    <div className={`flex h-10 w-10 items-center justify-center rounded-lg border ${toneClasses[card.tone]}`}>
+                                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d={card.icon} />
+                                        </svg>
+                                    </div>
+                                </div>
+                                <p className="mt-4 text-[10px] leading-relaxed text-slate-400">{card.detail}</p>
+                            </div>
+                        ))}
                     </div>
                 </section>
 
-                <section className="grid grid-cols-12 gap-5">
-                    <div className={`col-span-7 ${panelClass}`}>
-                        <SectionHeader
-                            title="Environment & Residency"
-                            detail="Region posture and evaluation boundaries stay visible without exposing raw workspace content."
-                            actionLabel="Operations"
-                            actionTo="/admin/operations"
-                        />
-                        <div className="space-y-3 px-5 py-4">
-                            {deploymentSurfaces.map((surface) => (
-                                <article key={surface.id} className={`${subpanelClass} p-4`}>
-                                    <div className="flex items-start justify-between gap-4">
-                                        <div className="min-w-0 flex-1">
-                                            <div className="flex flex-wrap items-center gap-2">
-                                                <p className="text-[11px] font-semibold text-slate-200">{surface.organization}</p>
-                                                <span className="text-[9px] uppercase tracking-[0.12em] text-slate-600">
-                                                    {surface.cloud}
-                                                </span>
-                                            </div>
-                                            <p className="mt-2 text-[10px] text-slate-300">{surface.deploymentMode}</p>
-                                            <p className="mt-2 text-[10px] leading-relaxed text-slate-500">
-                                                {surface.residencyPosture}
-                                            </p>
-                                            <div className="mt-3 grid grid-cols-2 gap-3 text-[10px]">
-                                                <div>
-                                                    <p className="uppercase tracking-[0.12em] text-slate-600">Evaluation</p>
-                                                    <p className="mt-1 text-slate-300">{surface.evaluationStatus}</p>
+                <section>
+                    <div className="mb-3 flex items-center gap-2">
+                        <div className="h-px flex-1 bg-slate-800/60" />
+                        <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-slate-600">SYSTEM POSTURE</span>
+                        <div className="h-px flex-1 bg-slate-800/60" />
+                    </div>
+                    <div className="grid grid-cols-3 gap-4">
+                        {postureCards.map((card) => (
+                            <div key={card.title} className={`${subpanelClass} px-5 py-4`}>
+                                <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-slate-600">{card.title}</p>
+                                <p className="mt-2 text-xl font-semibold text-slate-100">{card.value}</p>
+                                <p className="mt-2 text-[10px] leading-relaxed text-slate-400">{card.detail}</p>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+
+                <section>
+                    <div className="mb-3 flex items-center gap-2">
+                        <div className="h-px flex-1 bg-slate-800/60" />
+                        <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-slate-600">GOVERNANCE & REVIEW</span>
+                        <div className="h-px flex-1 bg-slate-800/60" />
+                    </div>
+                    <div className="grid grid-cols-12 gap-5">
+                        <div className={`col-span-7 ${panelClass}`}>
+                            <SectionHeader
+                                title="Approval Blockers"
+                                detail="The main queue stays focused on approval blockers, ownership, and the next control decision."
+                                actionLabel="Open review queue"
+                                actionTo="/admin/onboarding-queue"
+                            />
+                            <div className="grid grid-cols-3 gap-4 border-b border-slate-800/50 px-5 py-4">
+                                <div className={`${subpanelClass} px-4 py-3`}>
+                                    <div className="flex items-center gap-2">
+                                        <div className="h-2 w-2 rounded-full bg-red-500" />
+                                        <p className="text-[9px] uppercase tracking-[0.12em] text-slate-600">High priority</p>
+                                    </div>
+                                    <p className="mt-2 text-2xl font-semibold text-slate-100">{highPriorityCount}</p>
+                                    <p className="mt-1 text-[10px] text-slate-500">Immediate decisions</p>
+                                </div>
+                                <div className={`${subpanelClass} px-4 py-3`}>
+                                    <div className="flex items-center gap-2">
+                                        <div className="h-2 w-2 rounded-full bg-amber-500" />
+                                        <p className="text-[9px] uppercase tracking-[0.12em] text-slate-600">Blocked packs</p>
+                                    </div>
+                                    <p className="mt-2 text-2xl font-semibold text-slate-100">{blockedPackCount}</p>
+                                    <p className="mt-1 text-[10px] text-slate-500">Evidence gaps</p>
+                                </div>
+                                <div className={`${subpanelClass} px-4 py-3`}>
+                                    <div className="flex items-center gap-2">
+                                        <div className="h-2 w-2 rounded-full bg-amber-500" />
+                                        <p className="text-[9px] uppercase tracking-[0.12em] text-slate-600">Active incidents</p>
+                                    </div>
+                                    <p className="mt-2 text-2xl font-semibold text-slate-100">{investigatingIncidentCount}</p>
+                                    <p className="mt-1 text-[10px] text-slate-500">In investigation</p>
+                                </div>
+                            </div>
+                            <div className="divide-y divide-slate-800/35">
+                                {sortBlockers.map((blocker) => (
+                                    <div key={blocker.id} className="group px-5 py-4 transition-colors hover:bg-slate-900/30">
+                                        <div className="flex items-start justify-between gap-4">
+                                            <div className="min-w-0 flex-1">
+                                                <div className="flex flex-wrap items-center gap-2">
+                                                    <p className="text-[11px] font-semibold text-slate-200">{blocker.organization}</p>
+                                                    <span className="text-[9px] uppercase tracking-[0.12em] text-slate-600">
+                                                        {blocker.reviewId}
+                                                    </span>
                                                 </div>
-                                                <div>
-                                                    <p className="uppercase tracking-[0.12em] text-slate-600">Evidence</p>
-                                                    <p className="mt-1 text-slate-300">{surface.evidenceStatus}</p>
+                                                <p className="mt-2 text-[10px] leading-relaxed text-slate-400">{blocker.blocker}</p>
+                                                <div className="mt-2 flex flex-wrap gap-4 text-[9px] uppercase tracking-[0.12em] text-slate-600">
+                                                    <span>Owner {blocker.owner}</span>
+                                                    <span>Due {blocker.deadline}</span>
                                                 </div>
                                             </div>
-                                        </div>
-                                        <div className="w-44 rounded-lg border border-slate-800/60 bg-slate-900/60 p-3">
-                                            <p className="text-[9px] uppercase tracking-[0.12em] text-slate-600">Current blocker</p>
-                                            <p className="mt-2 text-[10px] leading-relaxed text-slate-400">{surface.blocker}</p>
-                                            <p className="mt-3 text-[9px] text-slate-600">{surface.owner}</p>
-                                        </div>
-                                    </div>
-                                </article>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className={`col-span-5 ${panelClass}`}>
-                        <SectionHeader
-                            title="Audit & Evidence"
-                            detail="Verification, review, and exception activity is summarized here before teams drill into the full trail."
-                            actionLabel="Audit trail"
-                            actionTo="/admin/audit-trail"
-                        />
-                        <div className="grid grid-cols-3 gap-3 border-b border-slate-800/50 px-5 py-4">
-                            <div className={`${subpanelClass} px-3 py-3`}>
-                                <p className="text-[9px] uppercase tracking-[0.12em] text-slate-600">Verified</p>
-                                <p className="mt-2 text-xl font-semibold text-slate-100">{verifiedEventCount}</p>
-                            </div>
-                            <div className={`${subpanelClass} px-3 py-3`}>
-                                <p className="text-[9px] uppercase tracking-[0.12em] text-slate-600">Review</p>
-                                <p className="mt-2 text-xl font-semibold text-slate-100">{reviewEventCount}</p>
-                            </div>
-                            <div className={`${subpanelClass} px-3 py-3`}>
-                                <p className="text-[9px] uppercase tracking-[0.12em] text-slate-600">Exceptions</p>
-                                <p className="mt-2 text-xl font-semibold text-slate-100">{exceptionEventCount}</p>
-                            </div>
-                        </div>
-                        <div className="divide-y divide-slate-800/35">
-                            {evidenceEvents.slice(0, 4).map((event) => (
-                                <div key={event.id} className="px-5 py-4">
-                                    <div className="flex items-start justify-between gap-3">
-                                        <div className="min-w-0 flex-1">
-                                            <div className="flex flex-wrap items-center gap-2">
-                                                <p className="text-[11px] font-semibold text-slate-200">{event.organization}</p>
-                                                <span className="text-[9px] uppercase tracking-[0.12em] text-slate-600">{event.reviewId}</span>
-                                            </div>
-                                            <p className="mt-2 text-[10px] leading-relaxed text-slate-400">{event.event}</p>
-                                            <p className="mt-2 text-[9px] text-slate-600">
-                                                {event.surface} · {event.visibility}
-                                            </p>
-                                        </div>
-                                        <div className="flex min-w-[7rem] flex-col items-end gap-2">
-                                            <span className="text-[9px] font-mono text-slate-600">{event.evidencePackId}</span>
                                             <span
-                                                className={`inline-flex items-center rounded-md border px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.1em] ${badgeClasses[event.status]}`}
+                                                className={`inline-flex items-center rounded-md border px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.12em] ${badgeClasses[blocker.severity]}`}
                                             >
-                                                {event.status}
+                                                {blocker.severity}
                                             </span>
                                         </div>
                                     </div>
-                                </div>
-                            ))}
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className={`col-span-5 ${panelClass}`}>
+                            <SectionHeader
+                                title="Review Priorities"
+                                detail="What should move next in the review pipeline."
+                                actionLabel="Security matrix"
+                                actionTo="/admin/security-compliance"
+                            />
+                            <div className="space-y-3 px-5 py-4">
+                                {prioritizedEvidencePacks.slice(0, 3).map((pack) => (
+                                    <article key={pack.id} className={`${subpanelClass} p-4 transition-all duration-200 hover:border-slate-700/60`}>
+                                        <div className="flex items-start justify-between gap-3">
+                                            <div>
+                                                <p className="text-[10px] uppercase tracking-[0.12em] text-slate-600">{pack.reviewId}</p>
+                                                <h3 className="mt-1 text-[12px] font-semibold text-slate-100">{pack.organization}</h3>
+                                            </div>
+                                            <span
+                                                className={`inline-flex items-center rounded-md border px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.1em] ${badgeClasses[pack.status]}`}
+                                            >
+                                                {pack.status}
+                                            </span>
+                                        </div>
+                                        <p className="mt-3 text-[10px] leading-relaxed text-slate-400">{pack.blocker ?? pack.scope}</p>
+                                        <p className="mt-2 text-[9px] text-slate-600">{pack.owner}</p>
+                                    </article>
+                                ))}
+                            </div>
                         </div>
                     </div>
                 </section>
 
-                <section className="grid grid-cols-12 gap-5">
-                    <div className={`col-span-7 ${panelClass}`}>
-                        <SectionHeader
-                            title="Evidence Pack Readiness"
-                            detail="Review-ready packets stay readable here before teams move into the deeper audit and compliance surfaces."
-                            actionLabel="Open controls"
-                            actionTo="/admin/security-compliance"
-                        />
-                        <div className="grid grid-cols-3 gap-3 border-b border-slate-800/50 px-5 py-4">
-                            <div className={`${subpanelClass} px-3 py-3`}>
-                                <p className="text-[9px] uppercase tracking-[0.12em] text-slate-600">Ready</p>
-                                <p className="mt-2 text-xl font-semibold text-slate-100">{readyPackCount}</p>
-                            </div>
-                            <div className={`${subpanelClass} px-3 py-3`}>
-                                <p className="text-[9px] uppercase tracking-[0.12em] text-slate-600">In review</p>
-                                <p className="mt-2 text-xl font-semibold text-slate-100">{inReviewPackCount}</p>
-                            </div>
-                            <div className={`${subpanelClass} px-3 py-3`}>
-                                <p className="text-[9px] uppercase tracking-[0.12em] text-slate-600">Blocked</p>
-                                <p className="mt-2 text-xl font-semibold text-slate-100">{blockedPackCount}</p>
+                <section>
+                    <div className="mb-3 flex items-center gap-2">
+                        <div className="h-px flex-1 bg-slate-800/60" />
+                        <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-slate-600">OPERATIONS & EVIDENCE</span>
+                        <div className="h-px flex-1 bg-slate-800/60" />
+                    </div>
+                    <div className="grid grid-cols-12 gap-5">
+                        <div className={`col-span-7 ${panelClass}`}>
+                            <SectionHeader
+                                title="Environment & Residency"
+                                detail="Region posture and evaluation boundaries without exposing raw content."
+                                actionLabel="Operations"
+                                actionTo="/admin/operations"
+                            />
+                            <div className="space-y-3 px-5 py-4">
+                                {deploymentSurfaces.map((surface) => (
+                                    <article key={surface.id} className={`${subpanelClass} p-4 transition-all duration-200 hover:border-slate-700/60`}>
+                                        <div className="flex items-start justify-between gap-4">
+                                            <div className="min-w-0 flex-1">
+                                                <div className="flex flex-wrap items-center gap-2">
+                                                    <p className="text-[11px] font-semibold text-slate-200">{surface.organization}</p>
+                                                    <span className="text-[9px] uppercase tracking-[0.12em] text-slate-600">
+                                                        {surface.cloud}
+                                                    </span>
+                                                </div>
+                                                <p className="mt-2 text-[10px] text-slate-300">{surface.deploymentMode}</p>
+                                                <p className="mt-2 text-[10px] leading-relaxed text-slate-500">
+                                                    {surface.residencyPosture}
+                                                </p>
+                                                <div className="mt-3 grid grid-cols-2 gap-3 text-[10px]">
+                                                    <div>
+                                                        <p className="uppercase tracking-[0.12em] text-slate-600">Evaluation</p>
+                                                        <p className="mt-1 text-slate-300">{surface.evaluationStatus}</p>
+                                                    </div>
+                                                    <div>
+                                                        <p className="uppercase tracking-[0.12em] text-slate-600">Evidence</p>
+                                                        <p className="mt-1 text-slate-300">{surface.evidenceStatus}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="w-44 rounded-lg border border-slate-800/60 bg-slate-900/60 p-3">
+                                                <p className="text-[9px] uppercase tracking-[0.12em] text-slate-600">Current blocker</p>
+                                                <p className="mt-2 text-[10px] leading-relaxed text-slate-400">{surface.blocker}</p>
+                                                <p className="mt-3 text-[9px] text-slate-600">{surface.owner}</p>
+                                            </div>
+                                        </div>
+                                    </article>
+                                ))}
                             </div>
                         </div>
-                        <div className="divide-y divide-slate-800/35">
-                            {prioritizedEvidencePacks.map((pack) => (
-                                <div key={pack.id} className="px-5 py-4">
-                                    <div className="flex items-start justify-between gap-4">
-                                        <div className="min-w-0 flex-1">
-                                            <div className="flex flex-wrap items-center gap-2">
-                                                <p className="text-[11px] font-semibold text-slate-200">{pack.name}</p>
-                                                <span className="text-[9px] uppercase tracking-[0.12em] text-slate-600">{pack.reviewId}</span>
-                                            </div>
-                                            <p className="mt-2 text-[10px] leading-relaxed text-slate-400">{pack.scope}</p>
-                                            <p className="mt-2 text-[9px] text-slate-600">
-                                                {pack.organization} · {pack.owner} · {pack.updatedAt}
-                                            </p>
-                                            {pack.blocker ? (
-                                                <p className="mt-2 text-[9px] leading-relaxed text-amber-300/90">Blocker: {pack.blocker}</p>
-                                            ) : null}
-                                        </div>
-                                        <span
-                                            className={`inline-flex items-center rounded-md border px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.12em] ${badgeClasses[pack.status]}`}
-                                        >
-                                            {pack.status}
-                                        </span>
+
+                        <div className={`col-span-5 ${panelClass}`}>
+                            <SectionHeader
+                                title="Audit Activity"
+                                detail="Verification, review, and exception activity summary."
+                                actionLabel="Audit trail"
+                                actionTo="/admin/audit-trail"
+                            />
+                            <div className="grid grid-cols-3 gap-3 border-b border-slate-800/50 px-5 py-4">
+                                <div className={`${subpanelClass} px-3 py-3`}>
+                                    <div className="flex items-center gap-2">
+                                        <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                                        <p className="text-[9px] uppercase tracking-[0.12em] text-slate-600">Verified</p>
                                     </div>
+                                    <p className="mt-2 text-xl font-semibold text-slate-100">{verifiedEventCount}</p>
                                 </div>
-                            ))}
+                                <div className={`${subpanelClass} px-3 py-3`}>
+                                    <div className="flex items-center gap-2">
+                                        <div className="h-1.5 w-1.5 rounded-full bg-cyan-500" />
+                                        <p className="text-[9px] uppercase tracking-[0.12em] text-slate-600">Review</p>
+                                    </div>
+                                    <p className="mt-2 text-xl font-semibold text-slate-100">{reviewEventCount}</p>
+                                </div>
+                                <div className={`${subpanelClass} px-3 py-3`}>
+                                    <div className="flex items-center gap-2">
+                                        <div className="h-1.5 w-1.5 rounded-full bg-red-500" />
+                                        <p className="text-[9px] uppercase tracking-[0.12em] text-slate-600">Exception</p>
+                                    </div>
+                                    <p className="mt-2 text-xl font-semibold text-slate-100">{exceptionEventCount}</p>
+                                </div>
+                            </div>
+                            <div className="divide-y divide-slate-800/35">
+                                {evidenceEvents.slice(0, 4).map((event) => (
+                                    <div key={event.id} className="group px-5 py-4 transition-colors hover:bg-slate-900/30">
+                                        <div className="flex items-start justify-between gap-3">
+                                            <div className="min-w-0 flex-1">
+                                                <div className="flex flex-wrap items-center gap-2">
+                                                    <p className="text-[11px] font-semibold text-slate-200">{event.organization}</p>
+                                                    <span className="text-[9px] uppercase tracking-[0.12em] text-slate-600">{event.reviewId}</span>
+                                                </div>
+                                                <p className="mt-2 text-[10px] leading-relaxed text-slate-400">{event.event}</p>
+                                                <p className="mt-2 text-[9px] text-slate-600">
+                                                    {event.surface} · {event.visibility}
+                                                </p>
+                                            </div>
+                                            <div className="flex min-w-[7rem] flex-col items-end gap-2">
+                                                <span className="text-[9px] font-mono text-slate-600">{event.evidencePackId}</span>
+                                                <span
+                                                    className={`inline-flex items-center rounded-md border px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.1em] ${badgeClasses[event.status]}`}
+                                                >
+                                                    {event.status}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     </div>
+                </section>
 
-                    <div className={`col-span-5 ${panelClass}`}>
-                        <SectionHeader
-                            title="Incident Readiness"
-                            detail="Incidents remain visible as review-safe operational summaries rather than raw-content investigations."
-                            actionLabel="Incident response"
-                            actionTo="/admin/incident-response"
-                        />
-                        <div className="space-y-3 px-5 py-4">
-                            {prioritizedIncidents.map((incident) => (
-                                <article key={incident.id} className={`${subpanelClass} p-4`}>
-                                    <div className="flex items-start justify-between gap-3">
-                                        <div className="min-w-0 flex-1">
-                                            <p className="text-[11px] font-semibold text-slate-200">{incident.title}</p>
-                                            <p className="mt-2 text-[10px] leading-relaxed text-slate-400">{incident.environment}</p>
-                                            <p className="mt-2 text-[9px] leading-relaxed text-slate-500">
-                                                {incident.residencyImpact}
-                                            </p>
-                                            <div className="mt-3 flex flex-wrap gap-4 text-[9px] uppercase tracking-[0.12em] text-slate-600">
-                                                <span>{incident.reviewId}</span>
-                                                <span>{incident.evidencePackId}</span>
-                                                <span>SLA {incident.slaWindow}</span>
+                <section>
+                    <div className="mb-3 flex items-center gap-2">
+                        <div className="h-px flex-1 bg-slate-800/60" />
+                        <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-slate-600">PACK READINESS & INCIDENTS</span>
+                        <div className="h-px flex-1 bg-slate-800/60" />
+                    </div>
+                    <div className="grid grid-cols-12 gap-5">
+                        <div className={`col-span-7 ${panelClass}`}>
+                            <SectionHeader
+                                title="Evidence Pack Readiness"
+                                detail="Review-ready packets before teams move into audit and compliance surfaces."
+                                actionLabel="Open controls"
+                                actionTo="/admin/security-compliance"
+                            />
+                            <div className="grid grid-cols-3 gap-3 border-b border-slate-800/50 px-5 py-4">
+                                <div className={`${subpanelClass} px-3 py-3`}>
+                                    <div className="flex items-center gap-2">
+                                        <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                                        <p className="text-[9px] uppercase tracking-[0.12em] text-slate-600">Ready</p>
+                                    </div>
+                                    <p className="mt-2 text-xl font-semibold text-slate-100">{readyPackCount}</p>
+                                </div>
+                                <div className={`${subpanelClass} px-3 py-3`}>
+                                    <div className="flex items-center gap-2">
+                                        <div className="h-1.5 w-1.5 rounded-full bg-cyan-500" />
+                                        <p className="text-[9px] uppercase tracking-[0.12em] text-slate-600">In review</p>
+                                    </div>
+                                    <p className="mt-2 text-xl font-semibold text-slate-100">{inReviewPackCount}</p>
+                                </div>
+                                <div className={`${subpanelClass} px-3 py-3`}>
+                                    <div className="flex items-center gap-2">
+                                        <div className="h-1.5 w-1.5 rounded-full bg-red-500" />
+                                        <p className="text-[9px] uppercase tracking-[0.12em] text-slate-600">Blocked</p>
+                                    </div>
+                                    <p className="mt-2 text-xl font-semibold text-slate-100">{blockedPackCount}</p>
+                                </div>
+                            </div>
+                            <div className="divide-y divide-slate-800/35">
+                                {prioritizedEvidencePacks.map((pack) => (
+                                    <div key={pack.id} className="group px-5 py-4 transition-colors hover:bg-slate-900/30">
+                                        <div className="flex items-start justify-between gap-4">
+                                            <div className="min-w-0 flex-1">
+                                                <div className="flex flex-wrap items-center gap-2">
+                                                    <p className="text-[11px] font-semibold text-slate-200">{pack.name}</p>
+                                                    <span className="text-[9px] uppercase tracking-[0.12em] text-slate-600">{pack.reviewId}</span>
+                                                </div>
+                                                <p className="mt-2 text-[10px] leading-relaxed text-slate-400">{pack.scope}</p>
+                                                <p className="mt-2 text-[9px] text-slate-600">
+                                                    {pack.organization} · {pack.owner} · {pack.updatedAt}
+                                                </p>
+                                                {pack.blocker ? (
+                                                    <p className="mt-2 text-[9px] leading-relaxed text-amber-300/90">Blocker: {pack.blocker}</p>
+                                                ) : null}
                                             </div>
-                                            <p className="mt-3 text-[10px] leading-relaxed text-slate-400">
-                                                Next: {incident.nextAction}
-                                            </p>
-                                        </div>
-                                        <div className="flex min-w-[7rem] flex-col items-end gap-2">
                                             <span
-                                                className={`inline-flex items-center rounded-md border px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.1em] ${badgeClasses[incident.status]}`}
+                                                className={`inline-flex items-center rounded-md border px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.12em] ${badgeClasses[pack.status]}`}
                                             >
-                                                {incident.status}
-                                            </span>
-                                            <span
-                                                className={`inline-flex items-center rounded-md border px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.1em] ${badgeClasses[incident.severity]}`}
-                                            >
-                                                {incident.severity}
+                                                {pack.status}
                                             </span>
                                         </div>
                                     </div>
-                                </article>
-                            ))}
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className={`col-span-5 ${panelClass}`}>
+                            <SectionHeader
+                                title="Incident Readiness"
+                                detail="Review-safe operational summaries rather than raw investigations."
+                                actionLabel="Incident response"
+                                actionTo="/admin/incident-response"
+                            />
+                            <div className="space-y-3 px-5 py-4">
+                                {prioritizedIncidents.map((incident) => (
+                                    <article key={incident.id} className={`${subpanelClass} p-4 transition-all duration-200 hover:border-slate-700/60`}>
+                                        <div className="flex items-start justify-between gap-3">
+                                            <div className="min-w-0 flex-1">
+                                                <p className="text-[11px] font-semibold text-slate-200">{incident.title}</p>
+                                                <p className="mt-2 text-[10px] leading-relaxed text-slate-400">{incident.environment}</p>
+                                                <p className="mt-2 text-[9px] leading-relaxed text-slate-500">
+                                                    {incident.residencyImpact}
+                                                </p>
+                                                <div className="mt-3 flex flex-wrap gap-4 text-[9px] uppercase tracking-[0.12em] text-slate-600">
+                                                    <span>{incident.reviewId}</span>
+                                                    <span>{incident.evidencePackId}</span>
+                                                    <span>SLA {incident.slaWindow}</span>
+                                                </div>
+                                                <p className="mt-3 text-[10px] leading-relaxed text-slate-400">
+                                                    Next: {incident.nextAction}
+                                                </p>
+                                            </div>
+                                            <div className="flex min-w-[7rem] flex-col items-end gap-2">
+                                                <span
+                                                    className={`inline-flex items-center rounded-md border px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.1em] ${badgeClasses[incident.status]}`}
+                                                >
+                                                    {incident.status}
+                                                </span>
+                                                <span
+                                                    className={`inline-flex items-center rounded-md border px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.1em] ${badgeClasses[incident.severity]}`}
+                                                >
+                                                    {incident.severity}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </article>
+                                ))}
+                            </div>
                         </div>
                     </div>
                 </section>
