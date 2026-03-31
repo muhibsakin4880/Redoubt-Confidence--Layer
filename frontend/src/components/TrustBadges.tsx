@@ -5,7 +5,6 @@ const certifications = [
     { id: 'hipaa', name: 'HIPAA', color: 'bg-blue-500' },
     { id: 'gdpr', name: 'GDPR', color: 'bg-purple-500' },
     { id: 'iso27001', name: 'ISO 27001', color: 'bg-orange-500' },
-    { id: 'pci', name: 'PCI DSS', color: 'bg-red-500' },
 ]
 
 const complianceMappings: Record<string, { title: string; controls: string[] }> = {
@@ -43,15 +42,6 @@ const complianceMappings: Record<string, { title: string; controls: string[] }> 
             'Cryptographic controls (A.10)',
             'Information classification (A.8)',
             'Audit logging (A.12)',
-        ],
-    },
-    pci: {
-        title: 'PCI DSS',
-        controls: [
-            'Cardholder data encryption (Req. 3, 4)',
-            'Access control systems (Req. 7, 8)',
-            'Network security controls (Req. 1, 2)',
-            'Regular security testing (Req. 11)',
         ],
     },
 }

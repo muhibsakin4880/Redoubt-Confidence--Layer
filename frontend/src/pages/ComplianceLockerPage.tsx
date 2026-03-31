@@ -28,12 +28,6 @@ const certs = [
         description: 'Data residency in cloud provider regions. GDPR compliance inherited and extended by Redoubt.',
         badge: 'Active',
         badgeType: 'active'
-    },
-    {
-        title: 'PCI DSS',
-        description: 'Payment Card Industry Data Security Standard compliance inherited via cloud provider infrastructure.',
-        badge: 'Inherited',
-        badgeType: 'inherited'
     }
 ]
 
@@ -98,7 +92,6 @@ const certColors = [
     { bg: 'from-orange-500/20 to-orange-600/10', border: 'border-orange-500/30', icon: 'text-orange-400', glow: 'shadow-orange-500/20' },
     { bg: 'from-blue-500/20 to-blue-600/10', border: 'border-blue-500/30', icon: 'text-blue-400', glow: 'shadow-blue-500/20' },
     { bg: 'from-purple-500/20 to-purple-600/10', border: 'border-purple-500/30', icon: 'text-purple-400', glow: 'shadow-purple-500/20' },
-    { bg: 'from-red-500/20 to-red-600/10', border: 'border-red-500/30', icon: 'text-red-400', glow: 'shadow-red-500/20' },
 ]
 
 export default function ComplianceLockerPage() {
