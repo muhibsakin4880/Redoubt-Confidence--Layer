@@ -1,6 +1,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
+import { participantOnboardingPaths } from '../onboarding/constants'
 
 type PublicNavItem = {
     label: string
@@ -26,7 +27,7 @@ export default function Header() {
     const handleRequestAccess = () => {
         startOnboarding()
         setIsMobileOpen(false)
-        navigate('/onboarding')
+        navigate(participantOnboardingPaths.entry)
     }
 
     const renderNavItems = (isMobile = false) => (

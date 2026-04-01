@@ -1,115 +1,238 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+
 import { useAuth } from '../contexts/AuthContext'
+import { participantOnboardingPaths } from '../onboarding/constants'
+import OnboardingPageLayout from '../onboarding/components/OnboardingPageLayout'
+import OnboardingStepGuard from '../onboarding/components/OnboardingStepGuard'
+import { buildSubmissionMeta } from '../onboarding/submission'
+import {
+    getFirstIncompleteOnboardingPath,
+    isStep5Complete,
+    readOnboardingSnapshot
+} from '../onboarding/flow'
+import {
+    emptyComplianceCommitment,
+    onboardingStorageKeys,
+    readOnboardingValue,
+    writeOnboardingValue,
+    writeSubmissionMeta
+} from '../onboarding/storage'
+import type { ComplianceCommitment } from '../onboarding/types'
 
-const SUBMISSION_META_STORAGE_KEY = 'Redoubt:onboarding:submissionMeta'
-
-const formatSubmissionDate = (date: Date) =>
-    date.toLocaleDateString('en-US', {
-        month: 'long',
-        day: 'numeric',
-        year: 'numeric'
-    })
+const reviewSectionClassName = 'rounded-xl border border-slate-700 bg-slate-900/70 p-4 space-y-3'
+const detailLabelClassName = 'text-xs uppercase tracking-[0.18em] text-slate-500'
+const detailValueClassName = 'text-sm text-slate-200'
 
 export default function OnboardingStep5() {
     const navigate = useNavigate()
     const { submitApplication } = useAuth()
-    const [state, setState] = useState(() => {
-        const saved = localStorage.getItem('Redoubt:onboarding:compliance')
-        if (saved) {
-            try {
-                return JSON.parse(saved)
-            } catch {
-                return {
-                    responsibleDataUsage: false,
-                    noUnauthorizedSharing: false,
-                    platformCompliancePolicies: false
-                }
-            }
-        }
-        return {
-            responsibleDataUsage: false,
-            noUnauthorizedSharing: false,
-            platformCompliancePolicies: false
-        }
-    })
+    const [state, setState] = useState<ComplianceCommitment>(() =>
+        readOnboardingValue(onboardingStorageKeys.compliance, emptyComplianceCommitment)
+    )
+    const reviewSnapshot = useMemo(() => readOnboardingSnapshot(), [])
 
-    const handleChange = (field: string, value: boolean) => {
-        const newState = { ...state, [field]: value }
-        setState(newState)
-        localStorage.setItem('Redoubt:onboarding:compliance', JSON.stringify(newState))
+    const handleChange = (field: keyof ComplianceCommitment, value: boolean) => {
+        const next = { ...state, [field]: value }
+        setState(next)
+        writeOnboardingValue(onboardingStorageKeys.compliance, next)
     }
 
-    const stepReady = state.responsibleDataUsage && state.noUnauthorizedSharing && state.platformCompliancePolicies
+    const stepReady = isStep5Complete(state)
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault()
-        if (!stepReady) return
+    const handleSubmit = (event: React.FormEvent) => {
+        event.preventDefault()
 
-        // Get email from step 1
-        const step1Data = localStorage.getItem('Redoubt:onboarding:step1')
-        let email = ''
-        if (step1Data) {
-            try {
-                const parsed = JSON.parse(step1Data)
-                email = parsed.officialWorkEmail || ''
-            } catch {
-                // Handle error
-            }
+        const latestSnapshot = {
+            ...readOnboardingSnapshot(),
+            compliance: state
+        }
+        const firstIncompletePath = getFirstIncompleteOnboardingPath(latestSnapshot)
+
+        if (firstIncompletePath) {
+            navigate(firstIncompletePath)
+            return
         }
 
-        const referenceId = `#RDT-2026-${Math.floor(1000 + Math.random() * 9000)}`
-        const submissionDate = formatSubmissionDate(new Date())
-        localStorage.setItem(
-            SUBMISSION_META_STORAGE_KEY,
-            JSON.stringify({
-                referenceId,
-                submittedDate: submissionDate
-            })
-        )
+        const submissionMeta = buildSubmissionMeta()
 
-        submitApplication(email)
-        navigate('/onboarding/confirmation')
+        writeSubmissionMeta(submissionMeta)
+        submitApplication(latestSnapshot.step1.officialWorkEmail.trim())
+        navigate(participantOnboardingPaths.confirmation)
     }
 
     const handleBack = () => {
-        navigate('/onboarding/step4')
+        navigate(participantOnboardingPaths.step4)
     }
 
+    const usageSummary = reviewSnapshot.intendedUsage.length > 0 ? reviewSnapshot.intendedUsage : ['No usage selected yet']
+    const participationSummary =
+        reviewSnapshot.participationIntent.length > 0
+            ? reviewSnapshot.participationIntent
+            : ['No participation path selected yet']
+
     return (
-        <div className="bg-slate-900 min-h-screen text-white">
-            <div className="container mx-auto px-4 py-12 max-w-4xl">
-                <div className="mb-8">
-                    <h1 className="text-3xl font-bold mb-2">Participant Onboarding</h1>
-                    <p className="text-slate-400">Security and confidence infrastructure intake for controlled participation.</p>
-                </div>
-
-                <div className="mb-6 grid grid-cols-2 md:grid-cols-6 gap-2">
-                    {['Organization & Identity', 'Intended Platform Usage', 'Participation Intent', 'Verification & Credentials', 'Compliance Commitment', 'Submission Confirmation'].map((title, idx) => {
-                        const currentStep = idx + 1
-                        const active = currentStep === 5
-                        const done = currentStep < 5
-                        return (
-                            <div
-                                key={title}
-                                className={`rounded-lg border px-3 py-2 text-xs font-semibold ${active
-                                    ? 'border-blue-500 bg-blue-500/10 text-blue-200'
-                                    : done
-                                        ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200'
-                                        : 'border-slate-700 bg-slate-800/70 text-slate-400'
-                                    }`}
-                            >
-                                <div className="uppercase tracking-[0.1em] mb-1">Step {currentStep}</div>
-                                <div>{title}</div>
-                            </div>
-                        )
-                    })}
-                </div>
-
+        <OnboardingStepGuard currentPath={participantOnboardingPaths.step5}>
+            <OnboardingPageLayout activeStep={5}>
                 <form onSubmit={handleSubmit}>
+                    <section className="bg-slate-800/70 border border-slate-700 rounded-xl p-5 space-y-5 mb-6">
+                        <div className="flex items-center justify-between gap-3">
+                            <div>
+                                <h2 className="text-xl font-semibold">Final Review</h2>
+                                <p className="mt-1 text-sm text-slate-400">
+                                    Confirm your onboarding details before submitting the application.
+                                </p>
+                            </div>
+                            <span className="text-xs uppercase tracking-[0.14em] text-blue-200">Review Required</span>
+                        </div>
+
+                        <div className="grid gap-4 md:grid-cols-2">
+                            <article className={reviewSectionClassName}>
+                                <div className="flex items-center justify-between gap-3">
+                                    <h3 className="text-base font-semibold text-white">Organization &amp; Identity</h3>
+                                    <button
+                                        type="button"
+                                        onClick={() => navigate(participantOnboardingPaths.step1)}
+                                        className="text-xs font-semibold text-blue-300 hover:text-blue-200 transition-colors"
+                                    >
+                                        Edit Step 1
+                                    </button>
+                                </div>
+                                <div>
+                                    <div className={detailLabelClassName}>Organization</div>
+                                    <div className={detailValueClassName}>{reviewSnapshot.step1.organizationName}</div>
+                                </div>
+                                <div>
+                                    <div className={detailLabelClassName}>Work Email</div>
+                                    <div className={detailValueClassName}>{reviewSnapshot.step1.officialWorkEmail}</div>
+                                </div>
+                                <div>
+                                    <div className={detailLabelClassName}>Role</div>
+                                    <div className={detailValueClassName}>{reviewSnapshot.step1.roleInOrganization}</div>
+                                </div>
+                                <div>
+                                    <div className={detailLabelClassName}>Industry</div>
+                                    <div className={detailValueClassName}>{reviewSnapshot.step1.industryDomain}</div>
+                                </div>
+                                <div>
+                                    <div className={detailLabelClassName}>Country</div>
+                                    <div className={detailValueClassName}>{reviewSnapshot.step1.country}</div>
+                                </div>
+                                <div>
+                                    <div className={detailLabelClassName}>Invite Code</div>
+                                    <div className={detailValueClassName}>
+                                        {reviewSnapshot.step1.inviteCode.trim() || 'No invite code provided'}
+                                    </div>
+                                </div>
+                            </article>
+
+                            <article className={reviewSectionClassName}>
+                                <div className="flex items-center justify-between gap-3">
+                                    <h3 className="text-base font-semibold text-white">Intended Usage</h3>
+                                    <button
+                                        type="button"
+                                        onClick={() => navigate(participantOnboardingPaths.step2)}
+                                        className="text-xs font-semibold text-blue-300 hover:text-blue-200 transition-colors"
+                                    >
+                                        Edit Step 2
+                                    </button>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                    {usageSummary.map(option => (
+                                        <span
+                                            key={option}
+                                            className="rounded-full border border-blue-500/30 bg-blue-500/10 px-3 py-1 text-xs font-semibold text-blue-200"
+                                        >
+                                            {option}
+                                        </span>
+                                    ))}
+                                </div>
+                            </article>
+
+                            <article className={reviewSectionClassName}>
+                                <div className="flex items-center justify-between gap-3">
+                                    <h3 className="text-base font-semibold text-white">Participation &amp; Legal</h3>
+                                    <button
+                                        type="button"
+                                        onClick={() => navigate(participantOnboardingPaths.step3)}
+                                        className="text-xs font-semibold text-blue-300 hover:text-blue-200 transition-colors"
+                                    >
+                                        Edit Step 3
+                                    </button>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                    {participationSummary.map(option => (
+                                        <span
+                                            key={option}
+                                            className="rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-xs font-semibold text-cyan-200"
+                                        >
+                                            {option}
+                                        </span>
+                                    ))}
+                                </div>
+                                <div className="space-y-2">
+                                    <div className={detailValueClassName}>
+                                        {reviewSnapshot.legalAcknowledgment.authorizedRepresentative
+                                            ? 'Representative authority confirmed'
+                                            : 'Representative authority still pending'}
+                                    </div>
+                                    <div className={detailValueClassName}>
+                                        {reviewSnapshot.legalAcknowledgment.governancePolicyAccepted
+                                            ? 'Governance policy accepted'
+                                            : 'Governance policy still pending'}
+                                    </div>
+                                    <div className={detailValueClassName}>
+                                        {reviewSnapshot.legalAcknowledgment.nonRedistributionAcknowledged
+                                            ? 'Non-redistribution acknowledged'
+                                            : 'Non-redistribution acknowledgment still pending'}
+                                    </div>
+                                </div>
+                            </article>
+
+                            <article className={reviewSectionClassName}>
+                                <div className="flex items-center justify-between gap-3">
+                                    <h3 className="text-base font-semibold text-white">Verification &amp; Files</h3>
+                                    <button
+                                        type="button"
+                                        onClick={() => navigate(participantOnboardingPaths.step4)}
+                                        className="text-xs font-semibold text-blue-300 hover:text-blue-200 transition-colors"
+                                    >
+                                        Edit Step 4
+                                    </button>
+                                </div>
+                                <div className="space-y-2">
+                                    <div className={detailValueClassName}>
+                                        {reviewSnapshot.verification.linkedInConnected
+                                            ? 'LinkedIn verification complete'
+                                            : 'LinkedIn verification still pending'}
+                                    </div>
+                                    <div className={detailValueClassName}>
+                                        {reviewSnapshot.verification.domainVerified
+                                            ? 'DNS verification complete'
+                                            : 'DNS verification still pending'}
+                                    </div>
+                                    <div>
+                                        <div className={detailLabelClassName}>Affiliation File</div>
+                                        <div className={detailValueClassName}>
+                                            {reviewSnapshot.verification.affiliationFileName || 'No file uploaded'}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div className={detailLabelClassName}>Authorization File</div>
+                                        <div className={detailValueClassName}>
+                                            {reviewSnapshot.verification.authorizationFileName || 'No file uploaded'}
+                                        </div>
+                                    </div>
+                                </div>
+                            </article>
+                        </div>
+                    </section>
+
                     <section className="bg-slate-800/70 border border-slate-700 rounded-xl p-5 space-y-4 mb-6">
                         <h2 className="text-xl font-semibold">Compliance Commitment</h2>
-                        <p className="text-sm text-slate-400">All commitments are required before application submission.</p>
+                        <p className="text-sm text-slate-400">
+                            All commitments are required before application submission.
+                        </p>
 
                         <label className="flex items-start gap-3 text-sm text-slate-200">
                             <input
@@ -159,8 +282,7 @@ export default function OnboardingStep5() {
                         </button>
                     </div>
                 </form>
-            </div>
-        </div>
+            </OnboardingPageLayout>
+        </OnboardingStepGuard>
     )
 }
-

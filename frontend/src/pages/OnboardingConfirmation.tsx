@@ -1,113 +1,20 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
-const SUBMISSION_META_STORAGE_KEY = 'Redoubt:onboarding:submissionMeta'
-const generateReferenceId = () => `#RDT-2026-${Math.floor(1000 + Math.random() * 9000)}`
-
-const formatSubmissionDate = (date: Date) =>
-    date.toLocaleDateString('en-US', {
-        month: 'long',
-        day: 'numeric',
-        year: 'numeric'
-    })
+import { participantOnboardingPaths, participantOnboardingStepTitles } from '../onboarding/constants'
+import OnboardingPageLayout from '../onboarding/components/OnboardingPageLayout'
+import OnboardingStepGuard from '../onboarding/components/OnboardingStepGuard'
+import { emptySubmissionMeta, readSubmissionMeta } from '../onboarding/storage'
 
 export default function OnboardingConfirmation() {
-    const stepTitles = [
-        'Organization & Identity',
-        'Intended Platform Usage',
-        'Participation Intent',
-        'Verification & Credentials',
-        'Zero-Trust Pipeline Agreement',
-        'Submission Confirmation'
-    ]
-    const finalStep = stepTitles.length
-    const [submissionMeta] = useState(() => {
-        const stored = localStorage.getItem(SUBMISSION_META_STORAGE_KEY)
-        if (!stored) {
-            return {
-                referenceId: generateReferenceId(),
-                submittedDate: formatSubmissionDate(new Date())
-            }
-        }
-        try {
-            const parsed = JSON.parse(stored) as { referenceId?: string; submittedDate?: string }
-            return {
-                referenceId: parsed.referenceId || generateReferenceId(),
-                submittedDate: parsed.submittedDate || formatSubmissionDate(new Date())
-            }
-        } catch {
-            return {
-                referenceId: generateReferenceId(),
-                submittedDate: formatSubmissionDate(new Date())
-            }
-        }
-    })
+    const [submissionMeta] = useState(() => readSubmissionMeta(emptySubmissionMeta))
 
     return (
-        <div className="bg-slate-900 min-h-screen text-white">
-            <div className="container mx-auto px-4 py-12 max-w-4xl">
-                <div className="mb-8">
-                    <h1 className="text-3xl font-bold mb-2">Participant Onboarding</h1>
-                    <p className="text-slate-400">Security and confidence infrastructure intake for controlled participation.</p>
-                </div>
-
-                <div className="mb-8 overflow-x-auto pb-1">
-                    <div className="min-w-[760px] flex items-start">
-                        {stepTitles.map((title, idx) => {
-                            const currentStep = idx + 1
-                            const active = currentStep === finalStep
-                            const done = currentStep < finalStep
-                            const connectorDone = currentStep < finalStep
-                            return (
-                                <div key={title} className="flex items-center flex-1 last:flex-none">
-                                    <div className="w-32">
-                                        <div
-                                            className={`w-10 h-10 rounded-full border-2 flex items-center justify-center text-sm font-bold transition-colors ${
-                                                done
-                                                    ? 'border-emerald-400 bg-emerald-500/15 text-emerald-300'
-                                                    : active
-                                                        ? 'border-blue-400 bg-blue-500/10 text-blue-200 shadow-[0_0_0_3px_rgba(59,130,246,0.25),0_0_18px_rgba(59,130,246,0.35)]'
-                                                        : 'border-slate-700 bg-slate-900 text-slate-500'
-                                            }`}
-                                        >
-{done ? (
-                                                 <svg
-                                                     viewBox="0 0 24 24"
-                                                     className="w-6 h-6"
-                                                     fill="none"
-                                                     stroke="currentColor"
-                                                     strokeWidth="2.75"
-                                                 >
-                                                     <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
-                                                 </svg>
-                                             ) : (
-                                                 currentStep
-                                             )}
-                                        </div>
-                                        <div className="mt-2 text-[11px] uppercase tracking-[0.1em] text-slate-500">
-                                            Step {currentStep}
-                                        </div>
-                                        <div
-                                            className={`mt-1 text-xs font-semibold leading-4 ${
-                                                done ? 'text-emerald-200' : active ? 'text-blue-100' : 'text-slate-500'
-                                            }`}
-                                        >
-                                            {title}
-                                        </div>
-                                    </div>
-                                    {idx < stepTitles.length - 1 && (
-                                        <div
-                                            className={`h-[2px] flex-1 mx-2 rounded-full ${
-                                                connectorDone ? 'bg-emerald-400/70' : 'bg-slate-700'
-                                            }`}
-                                        />
-                                    )}
-                                </div>
-                            )
-                        })}
-                    </div>
-                </div>
-
+        <OnboardingStepGuard currentPath={participantOnboardingPaths.confirmation}>
+            <OnboardingPageLayout
+                activeStep={participantOnboardingStepTitles.length}
+                progressVariant="connector"
+            >
                 <div className="rounded-xl border border-slate-700/80 bg-[#0a1628]/85 backdrop-blur-md p-5 space-y-4 shadow-[0_16px_48px_rgba(2,8,23,0.45)]">
                     <div className="relative mx-auto w-36 h-36">
                         <div className="absolute inset-0 rounded-full bg-emerald-500/10 blur-2xl animate-pulse" />
@@ -174,15 +81,15 @@ export default function OnboardingConfirmation() {
                             Return to Home
                         </Link>
                         <Link
-                            to="/application-status"
+                            to={participantOnboardingPaths.applicationStatus}
                             className="px-4 py-2 rounded-lg border border-slate-600 hover:border-blue-500 text-slate-200 hover:text-white font-semibold transition-colors"
                         >
                             Check Application Status
                         </Link>
                     </div>
                 </div>
-            </div>
-        </div>
+            </OnboardingPageLayout>
+        </OnboardingStepGuard>
     )
 }
 

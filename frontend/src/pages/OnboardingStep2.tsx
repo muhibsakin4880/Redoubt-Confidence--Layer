@@ -1,83 +1,55 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
+import { participantOnboardingPaths } from '../onboarding/constants'
+import OnboardingPageLayout from '../onboarding/components/OnboardingPageLayout'
+import OnboardingStepGuard from '../onboarding/components/OnboardingStepGuard'
+import { isStep2Complete } from '../onboarding/flow'
+import { onboardingStorageKeys, readOnboardingValue, writeOnboardingValue } from '../onboarding/storage'
+
 const usageOptions = ['Research', 'AI/ML training', 'Analytics', 'Product development', 'Other']
 
 export default function OnboardingStep2() {
     const navigate = useNavigate()
-    const [intendedUsage, setIntendedUsage] = useState<string[]>(() => {
-        const saved = localStorage.getItem('Redoubt:onboarding:intendedUsage')
-        if (!saved) return []
-        try {
-            const parsed = JSON.parse(saved)
-            return Array.isArray(parsed) ? parsed : []
-        } catch {
-            return []
-        }
-    })
+    const [intendedUsage, setIntendedUsage] = useState<string[]>(() =>
+        readOnboardingValue(onboardingStorageKeys.intendedUsage, [])
+    )
 
     const toggleValue = (value: string) => {
         setIntendedUsage(prev => {
             const exists = prev.includes(value)
-            const newValue = exists ? prev.filter(item => item !== value) : [...prev, value]
-            localStorage.setItem('Redoubt:onboarding:intendedUsage', JSON.stringify(newValue))
-            return newValue
+            const next = exists ? prev.filter(item => item !== value) : [...prev, value]
+            writeOnboardingValue(onboardingStorageKeys.intendedUsage, next)
+            return next
         })
     }
 
     const handleNext = () => {
-        if (intendedUsage.length > 0) {
-            navigate('/onboarding/step3')
+        if (stepReady) {
+            navigate(participantOnboardingPaths.step3)
         }
     }
 
     const handleBack = () => {
-        navigate('/onboarding/step1')
+        navigate(participantOnboardingPaths.step1)
     }
 
     const selectAllUsages = () => {
         setIntendedUsage(usageOptions)
-        localStorage.setItem('Redoubt:onboarding:intendedUsage', JSON.stringify(usageOptions))
+        writeOnboardingValue(onboardingStorageKeys.intendedUsage, usageOptions)
     }
 
     const fillMockData = () => {
         const mockUsage = ['Research', 'AI/ML training']
         setIntendedUsage(mockUsage)
-        localStorage.setItem('Redoubt:onboarding:intendedUsage', JSON.stringify(mockUsage))
+        writeOnboardingValue(onboardingStorageKeys.intendedUsage, mockUsage)
     }
 
-    const stepReady = intendedUsage.length > 0
+    const stepReady = isStep2Complete(intendedUsage)
 
     return (
-        <div className="bg-slate-900 min-h-screen text-white">
-            <div className="container mx-auto px-4 py-12 max-w-4xl">
-                <div className="mb-8">
-                    <h1 className="text-3xl font-bold mb-2">Participant Onboarding</h1>
-                    <p className="text-slate-400">Security and confidence infrastructure intake for controlled participation.</p>
-                </div>
-
-                <div className="mb-6 grid grid-cols-2 md:grid-cols-6 gap-2">
-                    {['Organization & Identity', 'Intended Platform Usage', 'Participation Intent', 'Verification & Credentials', 'Compliance Commitment', 'Submission Confirmation'].map((title, idx) => {
-                        const currentStep = idx + 1
-                        const active = currentStep === 2
-                        const done = currentStep < 2
-                        return (
-                            <div
-                                key={title}
-                                className={`rounded-lg border px-3 py-2 text-xs font-semibold ${active
-                                    ? 'border-blue-500 bg-blue-500/10 text-blue-200'
-                                    : done
-                                        ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200'
-                                        : 'border-slate-700 bg-slate-800/70 text-slate-400'
-                                    }`}
-                            >
-                                <div className="uppercase tracking-[0.1em] mb-1">Step {currentStep}</div>
-                                <div>{title}</div>
-                            </div>
-                        )
-                    })}
-                </div>
-
+        <OnboardingStepGuard currentPath={participantOnboardingPaths.step2}>
+            <OnboardingPageLayout activeStep={2}>
                 <section className="bg-slate-800/70 border border-slate-700 rounded-xl p-5 space-y-4 mb-6">
                     <h2 className="text-xl font-semibold">Intended Platform Usage</h2>
                     <p className="text-sm text-slate-400">Select all that apply.</p>
@@ -89,10 +61,11 @@ export default function OnboardingStep2() {
                                     key={option}
                                     type="button"
                                     onClick={() => toggleValue(option)}
-                                    className={`px-3 py-2 rounded-lg border text-sm font-semibold transition-colors ${active
-                                        ? 'border-blue-500 bg-blue-500/10 text-blue-200'
-                                        : 'border-slate-700 bg-slate-900 text-slate-200 hover:border-blue-500'
-                                        }`}
+                                    className={`px-3 py-2 rounded-lg border text-sm font-semibold transition-colors ${
+                                        active
+                                            ? 'border-blue-500 bg-blue-500/10 text-blue-200'
+                                            : 'border-slate-700 bg-slate-900 text-slate-200 hover:border-blue-500'
+                                    }`}
                                 >
                                     {option}
                                 </button>
@@ -132,8 +105,7 @@ export default function OnboardingStep2() {
                         Next
                     </button>
                 </div>
-            </div>
-        </div>
+            </OnboardingPageLayout>
+        </OnboardingStepGuard>
     )
 }
-

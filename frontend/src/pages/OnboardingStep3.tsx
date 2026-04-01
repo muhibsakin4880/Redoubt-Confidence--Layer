@@ -1,72 +1,56 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
+import { participantOnboardingPaths } from '../onboarding/constants'
+import OnboardingPageLayout from '../onboarding/components/OnboardingPageLayout'
+import OnboardingStepGuard from '../onboarding/components/OnboardingStepGuard'
+import { isStep3Complete } from '../onboarding/flow'
+import {
+    emptyLegalAcknowledgment,
+    onboardingStorageKeys,
+    readOnboardingValue,
+    writeOnboardingValue
+} from '../onboarding/storage'
+import type { LegalAcknowledgment } from '../onboarding/types'
+
 const participationOptions = ['Access datasets', 'Contribute datasets', 'Collaborate', 'Research participation']
-const LEGAL_STORAGE_KEY = 'Redoubt:onboarding:legalAcknowledgment'
 
 export default function OnboardingStep3() {
     const navigate = useNavigate()
-    const [participationIntent, setParticipationIntent] = useState<string[]>(() => {
-        const saved = localStorage.getItem('Redoubt:onboarding:participationIntent')
-        if (!saved) return []
-        try {
-            const parsed = JSON.parse(saved)
-            return Array.isArray(parsed) ? parsed : []
-        } catch {
-            return []
-        }
-    })
-    const [legalAcknowledgment, setLegalAcknowledgment] = useState(() => {
-        const saved = localStorage.getItem(LEGAL_STORAGE_KEY)
-        if (!saved) {
-            return {
-                authorizedRepresentative: false,
-                governancePolicyAccepted: false,
-                nonRedistributionAcknowledged: false
-            }
-        }
-
-        try {
-            return JSON.parse(saved)
-        } catch {
-            return {
-                authorizedRepresentative: false,
-                governancePolicyAccepted: false,
-                nonRedistributionAcknowledged: false
-            }
-        }
-    })
+    const [participationIntent, setParticipationIntent] = useState<string[]>(() =>
+        readOnboardingValue(onboardingStorageKeys.participationIntent, [])
+    )
+    const [legalAcknowledgment, setLegalAcknowledgment] = useState<LegalAcknowledgment>(() =>
+        readOnboardingValue(onboardingStorageKeys.legalAcknowledgment, emptyLegalAcknowledgment)
+    )
 
     const toggleValue = (value: string) => {
         setParticipationIntent(prev => {
             const exists = prev.includes(value)
-            const newValue = exists ? prev.filter(item => item !== value) : [...prev, value]
-            localStorage.setItem('Redoubt:onboarding:participationIntent', JSON.stringify(newValue))
-            return newValue
+            const next = exists ? prev.filter(item => item !== value) : [...prev, value]
+            writeOnboardingValue(onboardingStorageKeys.participationIntent, next)
+            return next
         })
     }
 
-    const handleLegalChange = (
-        field: 'authorizedRepresentative' | 'governancePolicyAccepted' | 'nonRedistributionAcknowledged',
-        checked: boolean
-    ) => {
+    const handleLegalChange = (field: keyof LegalAcknowledgment, checked: boolean) => {
         const next = { ...legalAcknowledgment, [field]: checked }
         setLegalAcknowledgment(next)
-        localStorage.setItem(LEGAL_STORAGE_KEY, JSON.stringify(next))
+        writeOnboardingValue(onboardingStorageKeys.legalAcknowledgment, next)
     }
 
     const handleBack = () => {
-        navigate('/onboarding/step2')
+        navigate(participantOnboardingPaths.step2)
     }
 
     const selectAllParticipation = () => {
         setParticipationIntent(participationOptions)
-        localStorage.setItem('Redoubt:onboarding:participationIntent', JSON.stringify(participationOptions))
+        writeOnboardingValue(onboardingStorageKeys.participationIntent, participationOptions)
     }
 
     const fillMockData = () => {
         const mockParticipation = ['Access datasets', 'Collaborate']
-        const mockLegal = {
+        const mockLegal: LegalAcknowledgment = {
             authorizedRepresentative: true,
             governancePolicyAccepted: true,
             nonRedistributionAcknowledged: true
@@ -74,53 +58,21 @@ export default function OnboardingStep3() {
 
         setParticipationIntent(mockParticipation)
         setLegalAcknowledgment(mockLegal)
-        localStorage.setItem('Redoubt:onboarding:participationIntent', JSON.stringify(mockParticipation))
-        localStorage.setItem(LEGAL_STORAGE_KEY, JSON.stringify(mockLegal))
+        writeOnboardingValue(onboardingStorageKeys.participationIntent, mockParticipation)
+        writeOnboardingValue(onboardingStorageKeys.legalAcknowledgment, mockLegal)
     }
 
-    const allLegalChecked =
-        legalAcknowledgment.authorizedRepresentative &&
-        legalAcknowledgment.governancePolicyAccepted &&
-        legalAcknowledgment.nonRedistributionAcknowledged
-
-    const stepReady = participationIntent.length > 0 && allLegalChecked
+    const stepReady = isStep3Complete(participationIntent, legalAcknowledgment)
 
     const handleNext = () => {
         if (stepReady) {
-            navigate('/onboarding/step4')
+            navigate(participantOnboardingPaths.step4)
         }
     }
 
     return (
-        <div className="bg-slate-900 min-h-screen text-white">
-            <div className="container mx-auto px-4 py-12 max-w-4xl">
-                <div className="mb-8">
-                    <h1 className="text-3xl font-bold mb-2">Participant Onboarding</h1>
-                    <p className="text-slate-400">Security and confidence infrastructure intake for controlled participation.</p>
-                </div>
-
-                <div className="mb-6 grid grid-cols-2 md:grid-cols-6 gap-2">
-                    {['Organization & Identity', 'Intended Platform Usage', 'Participation Intent', 'Verification & Credentials', 'Compliance Commitment', 'Submission Confirmation'].map((title, idx) => {
-                        const currentStep = idx + 1
-                        const active = currentStep === 3
-                        const done = currentStep < 3
-                        return (
-                            <div
-                                key={title}
-                                className={`rounded-lg border px-3 py-2 text-xs font-semibold ${active
-                                    ? 'border-blue-500 bg-blue-500/10 text-blue-200'
-                                    : done
-                                        ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200'
-                                        : 'border-slate-700 bg-slate-800/70 text-slate-400'
-                                    }`}
-                            >
-                                <div className="uppercase tracking-[0.1em] mb-1">Step {currentStep}</div>
-                                <div>{title}</div>
-                            </div>
-                        )
-                    })}
-                </div>
-
+        <OnboardingStepGuard currentPath={participantOnboardingPaths.step3}>
+            <OnboardingPageLayout activeStep={3}>
                 <section className="bg-slate-800/70 border border-slate-700 rounded-xl p-5 space-y-4 mb-6">
                     <h2 className="text-xl font-semibold">Participation Intent</h2>
                     <p className="text-sm text-slate-400">Choose how your team plans to participate.</p>
@@ -132,10 +84,11 @@ export default function OnboardingStep3() {
                                     key={option}
                                     type="button"
                                     onClick={() => toggleValue(option)}
-                                    className={`px-3 py-2 rounded-lg border text-sm font-semibold transition-colors ${active
-                                        ? 'border-blue-500 bg-blue-500/10 text-blue-200'
-                                        : 'border-slate-700 bg-slate-900 text-slate-200 hover:border-blue-500'
-                                        }`}
+                                    className={`px-3 py-2 rounded-lg border text-sm font-semibold transition-colors ${
+                                        active
+                                            ? 'border-blue-500 bg-blue-500/10 text-blue-200'
+                                            : 'border-slate-700 bg-slate-900 text-slate-200 hover:border-blue-500'
+                                    }`}
                                 >
                                     {option}
                                 </button>
@@ -185,8 +138,8 @@ export default function OnboardingStep3() {
                             onChange={(e) => handleLegalChange('nonRedistributionAcknowledged', e.target.checked)}
                         />
                         <span>
-                            I acknowledge that data obtained through this platform may not be redistributed, resold, or used
-                            beyond the stated purpose without explicit written consent.
+                            I acknowledge that data obtained through this platform may not be redistributed, resold, or
+                            used beyond the stated purpose without explicit written consent.
                         </span>
                     </label>
                 </section>
@@ -222,8 +175,7 @@ export default function OnboardingStep3() {
                         Next
                     </button>
                 </div>
-            </div>
-        </div>
+            </OnboardingPageLayout>
+        </OnboardingStepGuard>
     )
 }
-

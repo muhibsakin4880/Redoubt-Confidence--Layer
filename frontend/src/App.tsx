@@ -11,7 +11,7 @@ import SolutionsPage from './pages/SolutionsPage'
 import LoginPage from './pages/LoginPage'
 import AdminLoginPage from './pages/AdminLoginPage'
 import NotFoundPage from './pages/NotFoundPage'
-import OnboardingPage from './pages/OnboardingPage'
+import OnboardingEntryPage from './pages/OnboardingEntryPage'
 import OnboardingStep1 from './pages/OnboardingStep1'
 import OnboardingStep2 from './pages/OnboardingStep2'
 import OnboardingStep3 from './pages/OnboardingStep3'
@@ -54,6 +54,7 @@ import ProtectedEvaluationPage from './pages/ProtectedEvaluationPage'
 import TrustCenterPage from './pages/TrustCenterPage'
 
 import { useAuth } from './contexts/AuthContext'
+import { participantOnboardingPaths } from './onboarding/constants'
 
 const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage'))
 const AIInterrogationLogsPage = lazy(() => import('./pages/admin/AIInterrogationLogsPage'))
@@ -209,13 +210,13 @@ function App() {
                     <Route path="demo/data-classification" element={<DataClassificationPage />} />
                     <Route path="login" element={!isAuthenticated ? <LoginPage /> : <Navigate to="/dashboard" replace />} />
                     <Route path="application-status" element={<ApplicationStatusPage />} />
-                    <Route path="onboarding" element={RequireOnboardingAccess(<OnboardingPage />)} />
-                    <Route path="onboarding/step1" element={RequireOnboardingAccess(<OnboardingStep1 />)} />
-                    <Route path="onboarding/step2" element={RequireOnboardingAccess(<OnboardingStep2 />)} />
-                    <Route path="onboarding/step3" element={RequireOnboardingAccess(<OnboardingStep3 />)} />
-                    <Route path="onboarding/step4" element={RequireOnboardingAccess(<OnboardingStep4 />)} />
-                    <Route path="onboarding/step5" element={RequireOnboardingAccess(<OnboardingStep5 />)} />
-                    <Route path="onboarding/confirmation" element={RequireOnboardingAccess(<OnboardingConfirmation />)} />
+                    <Route path={participantOnboardingPaths.entry.slice(1)} element={RequireOnboardingAccess(<OnboardingEntryPage />)} />
+                    <Route path={participantOnboardingPaths.step1.slice(1)} element={RequireOnboardingAccess(<OnboardingStep1 />)} />
+                    <Route path={participantOnboardingPaths.step2.slice(1)} element={RequireOnboardingAccess(<OnboardingStep2 />)} />
+                    <Route path={participantOnboardingPaths.step3.slice(1)} element={RequireOnboardingAccess(<OnboardingStep3 />)} />
+                    <Route path={participantOnboardingPaths.step4.slice(1)} element={RequireOnboardingAccess(<OnboardingStep4 />)} />
+                    <Route path={participantOnboardingPaths.step5.slice(1)} element={RequireOnboardingAccess(<OnboardingStep5 />)} />
+                    <Route path={participantOnboardingPaths.confirmation.slice(1)} element={RequireOnboardingAccess(<OnboardingConfirmation />)} />
                 </Route>
 
                 <Route path="admin" element={<Navigate to="/admin/login" replace />} />

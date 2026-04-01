@@ -2,6 +2,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import CloudProviderLogo, { getCloudProviderVisuals, type CloudProvider } from '../components/CloudProviderLogo'
+import { participantOnboardingPaths } from '../onboarding/constants'
 
 // ──────────────────────────────────────────────────────────────
 // HOOKS
@@ -581,7 +582,10 @@ const joinSegments = [
         'Public-sector and civic data programs (secondary fit)',
     ]
 
-    const handleRequestPlatformAccess = () => { startOnboarding(); navigate('/onboarding') }
+    const handleRequestPlatformAccess = () => {
+        startOnboarding()
+        navigate(participantOnboardingPaths.entry)
+    }
     const handleSignInFromLanding = () => { signOut() }
     const handleWizardCancel = () => { setWizardOpen(false); setWizardStep(1) }
     const handleEnterDashboard = () => { signIn(); setWizardOpen(false); setWizardStep(1); navigate('/dashboard') }

@@ -1,29 +1,10 @@
-type Step1FormState = {
-    organizationName: string
-    officialWorkEmail: string
-    inviteCode: string
-    roleInOrganization: string
-    industryDomain: string
-    country: string
-}
-
-type LegalAcknowledgment = {
-    authorizedRepresentative: boolean
-    governancePolicyAccepted: boolean
-    nonRedistributionAcknowledged: boolean
-}
-
-type VerificationSnapshot = {
-    linkedInConnected: boolean
-    affiliationFileName: string | null
-    authorizationFileName: string | null
-}
-
-type ComplianceCommitment = {
-    responsibleDataUsage: boolean
-    noUnauthorizedSharing: boolean
-    platformCompliancePolicies: boolean
-}
+import { onboardingStorageKeys, readOnboardingValue } from '../onboarding/storage'
+import type {
+    ComplianceCommitment,
+    LegalAcknowledgment,
+    Step1FormState,
+    VerificationSnapshot
+} from '../onboarding/types'
 
 export type CompliancePassportStatus = 'active' | 'review' | 'incomplete'
 
@@ -71,14 +52,6 @@ export type CompliancePassportRequestPrefill = {
     note: string
 }
 
-const STEP1_STORAGE_KEY = 'Redoubt:onboarding:step1'
-const INTENDED_USAGE_STORAGE_KEY = 'Redoubt:onboarding:intendedUsage'
-const PARTICIPATION_INTENT_STORAGE_KEY = 'Redoubt:onboarding:participationIntent'
-const LEGAL_STORAGE_KEY = 'Redoubt:onboarding:legalAcknowledgment'
-const VERIFICATION_STORAGE_KEY = 'Redoubt:onboarding:verification'
-const COMPLIANCE_STORAGE_KEY = 'Redoubt:onboarding:compliance'
-const SUBMISSION_META_STORAGE_KEY = 'Redoubt:onboarding:submissionMeta'
-
 const defaultStep1: Step1FormState = {
     organizationName: 'Northbridge Research Labs',
     officialWorkEmail: 'avery.underwood@northbridge.ai',
@@ -97,6 +70,7 @@ const defaultLegal: LegalAcknowledgment = {
 }
 const defaultVerification: VerificationSnapshot = {
     linkedInConnected: true,
+    domainVerified: true,
     affiliationFileName: 'northbridge-affiliation.pdf',
     authorizationFileName: 'northbridge-compliance-letter.pdf'
 }
@@ -104,18 +78,6 @@ const defaultCommitments: ComplianceCommitment = {
     responsibleDataUsage: true,
     noUnauthorizedSharing: true,
     platformCompliancePolicies: true
-}
-
-const readStoredValue = <T,>(key: string, fallback: T): T => {
-    if (typeof window === 'undefined') return fallback
-    const raw = window.localStorage.getItem(key)
-    if (!raw) return fallback
-
-    try {
-        return JSON.parse(raw) as T
-    } catch {
-        return fallback
-    }
 }
 
 const toTitleCase = (value: string) =>
@@ -175,7 +137,7 @@ const inferUsageScale = (usage: string[], participationIntent: string[]): Compli
 }
 
 const getIssuedAt = () => {
-    const submissionMeta = readStoredValue<{ submittedDate?: string } | null>(SUBMISSION_META_STORAGE_KEY, null)
+    const submissionMeta = readOnboardingValue<{ submittedDate?: string } | null>(onboardingStorageKeys.submissionMeta, null)
     return submissionMeta?.submittedDate ?? 'March 27, 2026'
 }
 
@@ -187,21 +149,21 @@ const getValidUntil = (status: CompliancePassportStatus) => {
 export const buildCompliancePassport = (): CompliancePassport => {
     const organization = {
         ...defaultStep1,
-        ...readStoredValue<Partial<Step1FormState>>(STEP1_STORAGE_KEY, {})
+        ...readOnboardingValue<Partial<Step1FormState>>(onboardingStorageKeys.step1, {})
     }
-    const intendedUsage = readStoredValue<string[]>(INTENDED_USAGE_STORAGE_KEY, defaultUsage)
-    const participationIntent = readStoredValue<string[]>(PARTICIPATION_INTENT_STORAGE_KEY, defaultParticipationIntent)
+    const intendedUsage = readOnboardingValue<string[]>(onboardingStorageKeys.intendedUsage, defaultUsage)
+    const participationIntent = readOnboardingValue<string[]>(onboardingStorageKeys.participationIntent, defaultParticipationIntent)
     const legalAcknowledgment = {
         ...defaultLegal,
-        ...readStoredValue<Partial<LegalAcknowledgment>>(LEGAL_STORAGE_KEY, {})
+        ...readOnboardingValue<Partial<LegalAcknowledgment>>(onboardingStorageKeys.legalAcknowledgment, {})
     }
     const verification = {
         ...defaultVerification,
-        ...readStoredValue<Partial<VerificationSnapshot>>(VERIFICATION_STORAGE_KEY, {})
+        ...readOnboardingValue<Partial<VerificationSnapshot>>(onboardingStorageKeys.verification, {})
     }
     const commitments = {
         ...defaultCommitments,
-        ...readStoredValue<Partial<ComplianceCommitment>>(COMPLIANCE_STORAGE_KEY, {})
+        ...readOnboardingValue<Partial<ComplianceCommitment>>(onboardingStorageKeys.compliance, {})
     }
 
     const sections: CompliancePassportSection[] = [
@@ -230,12 +192,13 @@ export const buildCompliancePassport = (): CompliancePassport => {
             key: 'verification',
             label: 'Verification evidence',
             complete:
+                verification.domainVerified &&
                 verification.linkedInConnected &&
                 Boolean(verification.affiliationFileName) &&
                 Boolean(verification.authorizationFileName),
-            detail: verification.linkedInConnected
+            detail: verification.linkedInConnected && verification.domainVerified
                 ? `${verification.affiliationFileName ?? 'Affiliation file'} · ${verification.authorizationFileName ?? 'Authorization file'}`
-                : 'LinkedIn and document verification still required'
+                : 'LinkedIn, DNS, and document verification still required'
         },
         {
             key: 'commitments',

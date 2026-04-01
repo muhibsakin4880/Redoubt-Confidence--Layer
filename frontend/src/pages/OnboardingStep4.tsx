@@ -1,57 +1,30 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-const STORAGE_KEY = 'Redoubt:onboarding:verification'
+import { participantOnboardingPaths } from '../onboarding/constants'
+import OnboardingPageLayout from '../onboarding/components/OnboardingPageLayout'
+import OnboardingStepGuard from '../onboarding/components/OnboardingStepGuard'
+import { isStep4Complete } from '../onboarding/flow'
+import {
+    emptyVerificationSnapshot,
+    onboardingStorageKeys,
+    readOnboardingValue,
+    writeOnboardingValue
+} from '../onboarding/storage'
+
 const allowedFileExtensions = new Set(['pdf', 'jpg', 'jpeg', 'png'])
 const maxFileSizeBytes = 5 * 1024 * 1024
 
-const steps = [
-    'Organization & Identity',
-    'Intended Platform Usage',
-    'Participation Intent',
-    'Verification & Credentials',
-    'Compliance Commitment',
-    'Submission Confirmation'
-]
-
-type VerificationSnapshot = {
-    linkedInConnected: boolean
-    affiliationFileName: string | null
-    authorizationFileName: string | null
-}
-
-const getStoredSnapshot = (): VerificationSnapshot => {
-    const stored = localStorage.getItem(STORAGE_KEY)
-    if (!stored) {
-        return {
-            linkedInConnected: false,
-            affiliationFileName: null,
-            authorizationFileName: null
-        }
-    }
-    try {
-        const parsed = JSON.parse(stored) as Partial<VerificationSnapshot>
-        return {
-            linkedInConnected: Boolean(parsed.linkedInConnected),
-            affiliationFileName: parsed.affiliationFileName ?? null,
-            authorizationFileName: parsed.authorizationFileName ?? null
-        }
-    } catch {
-        return {
-            linkedInConnected: false,
-            affiliationFileName: null,
-            authorizationFileName: null
-        }
-    }
-}
-
 export default function OnboardingStep4() {
     const navigate = useNavigate()
-    const snapshot = getStoredSnapshot()
+    const snapshot = readOnboardingValue(onboardingStorageKeys.verification, emptyVerificationSnapshot)
     const linkedInTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+    const dnsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
     const [isLinkedInLoading, setIsLinkedInLoading] = useState(false)
     const [isLinkedInConnected, setIsLinkedInConnected] = useState(snapshot.linkedInConnected)
+    const [isDNSVerifying, setIsDNSVerifying] = useState(false)
+    const [isDomainVerified, setIsDomainVerified] = useState(snapshot.domainVerified)
     const [affiliationFileName, setAffiliationFileName] = useState<string | null>(snapshot.affiliationFileName)
     const [authorizationFileName, setAuthorizationFileName] = useState<string | null>(snapshot.authorizationFileName)
     const [affiliationError, setAffiliationError] = useState<string | null>(null)
@@ -64,19 +37,20 @@ export default function OnboardingStep4() {
             if (linkedInTimerRef.current) {
                 clearTimeout(linkedInTimerRef.current)
             }
+            if (dnsTimerRef.current) {
+                clearTimeout(dnsTimerRef.current)
+            }
         }
     }, [])
 
     useEffect(() => {
-        localStorage.setItem(
-            STORAGE_KEY,
-            JSON.stringify({
-                linkedInConnected: isLinkedInConnected,
-                affiliationFileName,
-                authorizationFileName
-            })
-        )
-    }, [isLinkedInConnected, affiliationFileName, authorizationFileName])
+        writeOnboardingValue(onboardingStorageKeys.verification, {
+            linkedInConnected: isLinkedInConnected,
+            domainVerified: isDomainVerified,
+            affiliationFileName,
+            authorizationFileName
+        })
+    }, [isLinkedInConnected, isDomainVerified, affiliationFileName, authorizationFileName])
 
     const handleLinkedInConnect = () => {
         if (isLinkedInLoading || isLinkedInConnected) return
@@ -87,8 +61,18 @@ export default function OnboardingStep4() {
         }, 1600)
     }
 
+    const handleDNSVerification = () => {
+        if (isDNSVerifying || isDomainVerified) return
+        setIsDNSVerifying(true)
+        dnsTimerRef.current = setTimeout(() => {
+            setIsDNSVerifying(false)
+            setIsDomainVerified(true)
+        }, 2000)
+    }
+
     const handleFileSelection = (file: File | null | undefined, target: 'affiliation' | 'authorization') => {
         if (!file) return
+
         const fileExtension = file.name.split('.').pop()?.toLowerCase()
         const setFileName = target === 'affiliation' ? setAffiliationFileName : setAuthorizationFileName
         const setError = target === 'affiliation' ? setAffiliationError : setAuthorizationError
@@ -119,23 +103,30 @@ export default function OnboardingStep4() {
         handleFileSelection(event.target.files?.[0], target)
     }
 
-    const stepReady = isLinkedInConnected && Boolean(affiliationFileName) && Boolean(authorizationFileName)
+    const stepReady = isStep4Complete({
+        linkedInConnected: isLinkedInConnected,
+        domainVerified: isDomainVerified,
+        affiliationFileName,
+        authorizationFileName
+    })
 
     const handleNext = () => {
         if (!stepReady) {
             setShowError(true)
             return
         }
+
         setShowError(false)
-        navigate('/onboarding/step5')
+        navigate(participantOnboardingPaths.step5)
     }
 
     const handleBack = () => {
-        navigate('/onboarding/step3')
+        navigate(participantOnboardingPaths.step3)
     }
 
     const fillMockData = () => {
         setIsLinkedInConnected(true)
+        setIsDomainVerified(true)
         setAffiliationFileName('affiliation-proof.pdf')
         setAuthorizationFileName('authorization-letter.pdf')
         setAffiliationError(null)
@@ -144,36 +135,8 @@ export default function OnboardingStep4() {
     }
 
     return (
-        <div className="bg-slate-900 min-h-screen text-white">
-            <div className="container mx-auto px-4 py-12 max-w-4xl">
-                <div className="mb-8">
-                    <h1 className="text-3xl font-bold mb-2">Participant Onboarding</h1>
-                    <p className="text-slate-400">Security and confidence infrastructure intake for controlled participation.</p>
-                </div>
-
-                <div className="mb-6 grid grid-cols-2 md:grid-cols-6 gap-2">
-                    {steps.map((title, idx) => {
-                        const currentStep = idx + 1
-                        const active = currentStep === 4
-                        const done = currentStep < 4
-                        return (
-                            <div
-                                key={title}
-                                className={`rounded-lg border px-3 py-2 text-xs font-semibold ${
-                                    active
-                                        ? 'border-blue-500 bg-blue-500/10 text-blue-200'
-                                        : done
-                                            ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200'
-                                            : 'border-slate-700 bg-slate-800/70 text-slate-400'
-                                }`}
-                            >
-                                <div className="uppercase tracking-[0.1em] mb-1">Step {currentStep}</div>
-                                <div>{title}</div>
-                            </div>
-                        )
-                    })}
-                </div>
-
+        <OnboardingStepGuard currentPath={participantOnboardingPaths.step4}>
+            <OnboardingPageLayout activeStep={4}>
                 <section className="bg-slate-800/70 border border-slate-700 rounded-xl p-5 space-y-5 mb-6">
                     <div className="flex items-center justify-between gap-3">
                         <h2 className="text-xl font-semibold">Verification &amp; Credentials</h2>
@@ -210,6 +173,60 @@ export default function OnboardingStep4() {
                             </div>
                         </article>
 
+                        <article className="rounded-xl border border-slate-700 bg-slate-900/70 p-4">
+                            <div className="flex items-center justify-between gap-2">
+                                <h3 className="text-base font-semibold text-white">Corporate Domain Verification</h3>
+                                <span className="text-xs text-amber-300">Required</span>
+                            </div>
+                            <p className="mt-1 text-sm text-slate-400">
+                                Verify your organizational identity via DNS TXT record or Corporate IdP (Okta/Entra).
+                            </p>
+
+                            <div className="mt-4">
+                                {isDomainVerified ? (
+                                    <div className="inline-flex items-center gap-2 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-sm font-medium text-emerald-300">
+                                        <span aria-hidden="true">✓</span>
+                                        <span>Domain Verified</span>
+                                    </div>
+                                ) : (
+                                    <button
+                                        type="button"
+                                        onClick={handleDNSVerification}
+                                        disabled={isDNSVerifying}
+                                        className={`rounded-lg px-4 py-2 text-sm font-semibold text-white transition-colors duration-200 disabled:cursor-not-allowed ${
+                                            isDNSVerifying ? 'bg-slate-600' : 'bg-blue-600 hover:bg-blue-700'
+                                        }`}
+                                    >
+                                        {isDNSVerifying ? (
+                                            <span className="flex items-center gap-2">
+                                                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                                                    <circle
+                                                        className="opacity-25"
+                                                        cx="12"
+                                                        cy="12"
+                                                        r="10"
+                                                        stroke="currentColor"
+                                                        strokeWidth="4"
+                                                        fill="none"
+                                                    />
+                                                    <path
+                                                        className="opacity-75"
+                                                        fill="currentColor"
+                                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                                    />
+                                                </svg>
+                                                Querying DNS...
+                                            </span>
+                                        ) : (
+                                            'Verify DNS Record'
+                                        )}
+                                    </button>
+                                )}
+                            </div>
+                        </article>
+                    </div>
+
+                    <div className="grid gap-4 md:grid-cols-2">
                         <article className="rounded-xl border border-slate-700 bg-slate-900/70 p-4">
                             <div className="flex items-center justify-between gap-2">
                                 <h3 className="text-base font-semibold text-white">Upload Proof of Affiliation</h3>
@@ -252,56 +269,56 @@ export default function OnboardingStep4() {
 
                             {affiliationError && <p className="mt-3 text-xs text-amber-300">{affiliationError}</p>}
                         </article>
-                    </div>
 
-                    <article className="rounded-xl border border-slate-700 bg-slate-900/70 p-4">
-                        <div className="flex items-center justify-between gap-2">
-                            <h3 className="text-base font-semibold text-white">Upload Authorization / Compliance Letter</h3>
-                            <span className="text-xs text-amber-300">Required</span>
-                        </div>
-                        <p className="mt-1 text-sm text-slate-400">
-                            Examples: DPA, IRB approval, or letter of authority.
-                        </p>
-
-                        <label
-                            htmlFor="authorization-proof-upload"
-                            onDragOver={(event) => {
-                                event.preventDefault()
-                                setDragTarget('authorization')
-                            }}
-                            onDragLeave={() => setDragTarget(null)}
-                            onDrop={(event) => handleFileDrop(event, 'authorization')}
-                            className={`mt-4 flex min-h-28 cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed px-4 py-5 text-center transition-colors duration-200 ${
-                                dragTarget === 'authorization'
-                                    ? 'border-blue-500/80 bg-blue-500/10'
-                                    : 'border-slate-600 bg-slate-900 hover:border-blue-500/70'
-                            }`}
-                        >
-                            <span className="text-sm text-slate-300">Drag and drop a file here</span>
-                            <span className="mt-1 text-xs text-slate-400">or click to browse</span>
-                        </label>
-
-                        <input
-                            id="authorization-proof-upload"
-                            type="file"
-                            accept=".pdf,.jpg,.jpeg,.png"
-                            onChange={(event) => handleFileInputChange(event, 'authorization')}
-                            className="sr-only"
-                        />
-
-                        {authorizationFileName && (
-                            <div className="mt-3 inline-flex items-center gap-2 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-300">
-                                <span aria-hidden="true">✓</span>
-                                <span className="break-all">{authorizationFileName}</span>
+                        <article className="rounded-xl border border-slate-700 bg-slate-900/70 p-4">
+                            <div className="flex items-center justify-between gap-2">
+                                <h3 className="text-base font-semibold text-white">Upload Authorization / Compliance Letter</h3>
+                                <span className="text-xs text-amber-300">Required</span>
                             </div>
-                        )}
+                            <p className="mt-1 text-sm text-slate-400">
+                                Examples: DPA, IRB approval, or letter of authority.
+                            </p>
 
-                        {authorizationError && <p className="mt-3 text-xs text-amber-300">{authorizationError}</p>}
-                    </article>
+                            <label
+                                htmlFor="authorization-proof-upload"
+                                onDragOver={(event) => {
+                                    event.preventDefault()
+                                    setDragTarget('authorization')
+                                }}
+                                onDragLeave={() => setDragTarget(null)}
+                                onDrop={(event) => handleFileDrop(event, 'authorization')}
+                                className={`mt-4 flex min-h-28 cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed px-4 py-5 text-center transition-colors duration-200 ${
+                                    dragTarget === 'authorization'
+                                        ? 'border-blue-500/80 bg-blue-500/10'
+                                        : 'border-slate-600 bg-slate-900 hover:border-blue-500/70'
+                                }`}
+                            >
+                                <span className="text-sm text-slate-300">Drag and drop a file here</span>
+                                <span className="mt-1 text-xs text-slate-400">or click to browse</span>
+                            </label>
+
+                            <input
+                                id="authorization-proof-upload"
+                                type="file"
+                                accept=".pdf,.jpg,.jpeg,.png"
+                                onChange={(event) => handleFileInputChange(event, 'authorization')}
+                                className="sr-only"
+                            />
+
+                            {authorizationFileName && (
+                                <div className="mt-3 inline-flex items-center gap-2 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-300">
+                                    <span aria-hidden="true">✓</span>
+                                    <span className="break-all">{authorizationFileName}</span>
+                                </div>
+                            )}
+
+                            {authorizationError && <p className="mt-3 text-xs text-amber-300">{authorizationError}</p>}
+                        </article>
+                    </div>
 
                     {showError && !stepReady && (
                         <div className="text-sm text-amber-300 bg-amber-500/10 border border-amber-400/50 rounded-lg px-3 py-2">
-                            Please complete LinkedIn verification and upload both documents before continuing.
+                            Please complete LinkedIn, DNS verification, and both required uploads before continuing.
                         </div>
                     )}
                 </section>
@@ -330,7 +347,7 @@ export default function OnboardingStep4() {
                         Next
                     </button>
                 </div>
-            </div>
-        </div>
+            </OnboardingPageLayout>
+        </OnboardingStepGuard>
     )
 }

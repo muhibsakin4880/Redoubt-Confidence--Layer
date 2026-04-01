@@ -1,17 +1,8 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
-const SUBMISSION_META_STORAGE_KEY = 'Redoubt:onboarding:submissionMeta'
-
-const fallbackSubmissionMeta = {
-    referenceId: 'Pending assignment',
-    submittedDate: 'Not available'
-}
-
-type SubmissionMeta = {
-    referenceId: string
-    submittedDate: string
-}
+import { participantOnboardingActiveStepTitles } from '../onboarding/constants'
+import { emptySubmissionMeta, readSubmissionMeta } from '../onboarding/storage'
 
 type TimelineStatus = 'complete' | 'active' | 'upcoming'
 
@@ -39,23 +30,8 @@ const timelineSteps: TimelineStep[] = [
     }
 ]
 
-const getSubmissionMeta = (): SubmissionMeta => {
-    const stored = localStorage.getItem(SUBMISSION_META_STORAGE_KEY)
-    if (!stored) return fallbackSubmissionMeta
-
-    try {
-        const parsed = JSON.parse(stored) as { referenceId?: string; submittedDate?: string }
-        return {
-            referenceId: parsed.referenceId || fallbackSubmissionMeta.referenceId,
-            submittedDate: parsed.submittedDate || fallbackSubmissionMeta.submittedDate
-        }
-    } catch {
-        return fallbackSubmissionMeta
-    }
-}
-
 export default function ApplicationStatusPage() {
-    const [submissionMeta] = useState(() => getSubmissionMeta())
+    const [submissionMeta] = useState(() => readSubmissionMeta(emptySubmissionMeta))
 
     return (
         <div className="bg-slate-900 min-h-screen text-white">
@@ -75,13 +51,7 @@ export default function ApplicationStatusPage() {
 
                 <div className="mb-8 overflow-x-auto pb-1">
                     <div className="min-w-[760px] flex items-start">
-                        {[
-                            'Organization & Identity',
-                            'Intended Platform Usage',
-                            'Participation Intent',
-                            'Verification & Credentials',
-                            'Zero-Trust Pipeline Agreement'
-                        ].map((title, idx) => {
+                        {participantOnboardingActiveStepTitles.map((title, idx) => {
                             const currentStep = idx + 1
                             const done = currentStep < 5
                             return (
