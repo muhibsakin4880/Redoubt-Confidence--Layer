@@ -1,6 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import TrustBadges from '../components/TrustBadges'
+import CloudProviderLogo, { getCloudProviderVisuals, type CloudProvider } from '../components/CloudProviderLogo'
 
 const certs = [
     {
@@ -60,24 +61,20 @@ const cloudResponsibilities = [
 
 const cloudModels = [
     {
-        title: 'AWS',
+        title: 'AWS' as CloudProvider,
         description: 'Shared-responsibility baseline for infrastructure security, resilience, cloud controls, and reference compliance artifacts.',
-        icon: 'aws'
     },
     {
-        title: 'Azure',
+        title: 'Azure' as CloudProvider,
         description: 'Shared-responsibility model for regional deployment governance, identity controls, and enterprise cloud operations.',
-        icon: 'azure'
     },
     {
-        title: 'Google Cloud',
+        title: 'Google Cloud' as CloudProvider,
         description: 'Shared-responsibility approach for controlled analytics environments, platform operations, and underlying security posture.',
-        icon: 'gcp'
     },
     {
-        title: 'OCI',
+        title: 'OCI' as CloudProvider,
         description: 'Shared security model suited to residency-sensitive deployment patterns, enterprise isolation, and regional control requirements.',
-        icon: 'oci'
     }
 ]
 
@@ -140,20 +137,47 @@ export default function ComplianceLockerPage() {
                         </p>
                     </div>
                     <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                        {cloudModels.map(model => (
-                            <article key={model.title} className="group relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/5 to-white/[0.02] p-6 transition-all duration-300 hover:border-white/20 hover:shadow-[0_0_40px_rgba(255,255,255,0.05)]">
-                                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(59,130,246,0.1),transparent_50%)] opacity-0 group-hover:opacity-100 transition-opacity" />
-                                <div className="relative">
-                                    <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-white/10 bg-white/5 mb-4">
-                                        <svg className="h-6 w-6 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
-                                        </svg>
+                        {cloudModels.map((model) => {
+                            const visuals = getCloudProviderVisuals(model.title)
+
+                            return (
+                                <article
+                                    key={model.title}
+                                    className="group relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/5 to-white/[0.02] p-6 transition-all duration-300 hover:border-white/20 hover:shadow-[0_0_40px_rgba(255,255,255,0.05)]"
+                                >
+                                    <div
+                                        className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                                        style={{
+                                            background: `radial-gradient(circle at 50% 0%, ${visuals.glow} 0%, transparent 52%)`,
+                                        }}
+                                    />
+                                    <div
+                                        className="pointer-events-none absolute -right-8 top-0 h-20 w-20 rounded-full blur-3xl"
+                                        style={{
+                                            background: `radial-gradient(circle, ${visuals.glow} 0%, transparent 72%)`,
+                                        }}
+                                    />
+                                    <div className="relative">
+                                        <div
+                                            className="mb-4 flex h-12 w-14 items-center justify-center rounded-xl border shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_18px_40px_rgba(2,8,23,0.16)]"
+                                            style={{
+                                                background: visuals.badgeBackground,
+                                                borderColor: visuals.badgeBorder,
+                                            }}
+                                        >
+                                            <CloudProviderLogo provider={model.title} />
+                                        </div>
+                                        <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                                            Shared model
+                                        </div>
+                                        <h3 className="mt-2 text-xl font-semibold text-white group-hover:text-emerald-300 transition-colors">
+                                            {model.title}
+                                        </h3>
+                                        <p className="mt-3 text-sm leading-relaxed text-slate-400">{model.description}</p>
                                     </div>
-                                    <h3 className="text-xl font-semibold text-white group-hover:text-emerald-300 transition-colors">{model.title}</h3>
-                                    <p className="mt-3 text-sm leading-relaxed text-slate-400">{model.description}</p>
-                                </div>
-                            </article>
-                        ))}
+                                </article>
+                            )
+                        })}
                     </div>
                     <p className="mt-6 text-sm leading-6 text-slate-500 italic">
                         Infrastructure reports and cloud-control references should be read through the selected provider's shared-responsibility model, not as standalone Redoubt certifications.

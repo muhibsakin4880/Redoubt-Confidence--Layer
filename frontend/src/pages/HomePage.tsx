@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useAuth } from '../contexts/AuthContext'
+import CloudProviderLogo, { getCloudProviderVisuals, type CloudProvider } from '../components/CloudProviderLogo'
 
 // ──────────────────────────────────────────────────────────────
 // HOOKS
@@ -504,7 +505,7 @@ export default function HomePage() {
 
     const trustSignals = ['Secure Evaluation', 'Approval Gates', 'Residency-Aware']
 
-    const sharedResponsibilityCards = [
+    const sharedResponsibilityCards: Array<{ title: CloudProvider; detail: string }> = [
         {
             title: 'AWS',
             detail: 'Shared responsibility baseline for infrastructure security, resilience, and cloud control inheritance.',
@@ -938,25 +939,48 @@ const joinSegments = [
                                     </div>
 
                                     <div className="relative mt-6 grid gap-3 md:grid-cols-2">
-                                        {sharedResponsibilityCards.map((card) => (
-                                            <div
-                                                key={card.title}
-                                                className="landing-panel relative flex min-h-[9.25rem] flex-col overflow-hidden rounded-[1.15rem] border border-white/8 bg-slate-950/26 p-4 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.02)] backdrop-blur-md sm:p-5"
-                                            >
-                                                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+                                        {sharedResponsibilityCards.map((card) => {
+                                            const visuals = getCloudProviderVisuals(card.title)
 
-                                                <div className="relative flex items-center gap-3">
-                                                    <div className="h-1.5 w-1.5 rounded-full bg-slate-500/80" />
-                                                    <div className="text-sm font-medium tracking-[0.01em] text-slate-200">{card.title}</div>
+                                            return (
+                                                <div
+                                                    key={card.title}
+                                                    className="landing-panel relative flex min-h-[10.25rem] flex-col overflow-hidden rounded-[1.15rem] border border-white/8 bg-slate-950/26 p-4 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.02)] backdrop-blur-md sm:p-5"
+                                                >
+                                                    <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+                                                    <div
+                                                        className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full blur-3xl"
+                                                        style={{
+                                                            background: `radial-gradient(circle, ${visuals.glow} 0%, transparent 72%)`,
+                                                        }}
+                                                    />
+
+                                                    <div className="relative flex items-center gap-3">
+                                                        <div
+                                                            className="flex h-11 min-w-[3.35rem] items-center justify-center rounded-[1rem] border px-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_16px_40px_rgba(2,8,23,0.18)]"
+                                                            style={{
+                                                                background: visuals.badgeBackground,
+                                                                borderColor: visuals.badgeBorder,
+                                                            }}
+                                                        >
+                                                            <CloudProviderLogo provider={card.title} />
+                                                        </div>
+                                                        <div className="min-w-0">
+                                                            <div className="text-sm font-semibold tracking-[0.01em] text-slate-100">{card.title}</div>
+                                                            <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                                                                Shared model
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <p className="relative mt-4 text-xs leading-6 text-slate-400/88 sm:text-sm sm:leading-6">
+                                                        {card.detail}
+                                                    </p>
+                                                    <div className="relative mt-auto pt-5">
+                                                        <div className="h-px w-full bg-gradient-to-r from-white/12 via-white/6 to-transparent" />
+                                                    </div>
                                                 </div>
-                                                <p className="relative mt-4 text-xs leading-6 text-slate-400/88 sm:text-sm sm:leading-6">
-                                                    {card.detail}
-                                                </p>
-                                                <div className="relative mt-auto pt-5">
-                                                    <div className="h-px w-full bg-gradient-to-r from-white/12 via-white/6 to-transparent" />
-                                                </div>
-                                            </div>
-                                        ))}
+                                            )
+                                        })}
                                     </div>
                                 </div>
                             </div>
