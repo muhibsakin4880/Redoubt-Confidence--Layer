@@ -13,7 +13,7 @@ export const participantOnboardingPaths = {
     applicationStatus: '/application-status'
 } as const
 
-export const participantOnboardingPostSubmitPath = participantOnboardingPaths.applicationStatus
+export const participantOnboardingPostSubmitPath = participantOnboardingPaths.confirmation
 
 export const participantOnboardingStepTitles = [
     'Organization & Identity',

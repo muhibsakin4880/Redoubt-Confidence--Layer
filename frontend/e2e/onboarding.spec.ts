@@ -85,7 +85,7 @@ test.describe('participant onboarding', () => {
         await page.goto('/login')
 
         await expect(page.getByRole('heading', { name: 'System Authentication' })).toBeVisible()
-        await expect(page.getByText('Onboarding has not been submitted yet.')).toBeVisible()
+        await expect(page.getByRole('heading', { name: 'Access Request Required' })).not.toBeVisible()
 
         await page.getByPlaceholder('Authorized Corporate Email or Node ID').fill(completedStep1.officialWorkEmail)
         await page.getByRole('button', { name: 'Verify Identity →' }).click()
@@ -193,7 +193,7 @@ test.describe('participant onboarding', () => {
         await expect(page.getByText('Upload Authorization / Compliance Letter')).toBeVisible()
     })
 
-    test('a completed onboarding submission lands on application status and still allows mock console access', async ({ page }) => {
+    test('a completed onboarding submission lands on the onboarding confirmation screen and still allows mock console access', async ({ page }) => {
         await seedAppState(page, {
             onboarding: {
                 step1: completedStep1,
@@ -235,14 +235,20 @@ test.describe('participant onboarding', () => {
 
         await page.getByRole('button', { name: 'Submit Application' }).click()
 
-        await expect(page).toHaveURL(/\/application-status$/)
-        await expect(page.getByRole('heading', { name: 'Application Status' })).toBeVisible()
-        await expect(page.getByText('In review')).toBeVisible()
+        await expect(page).toHaveURL(/\/onboarding\/confirmation$/)
+        await expect(page.getByRole('heading', { name: 'Participant Onboarding' })).toBeVisible()
+        await expect(page.getByRole('heading', { name: 'Application Submitted' })).toBeVisible()
+        await expect(page.getByText('In review', { exact: true })).toBeVisible()
         await expect(page.getByText(/#RDT-2026-\d{4}/)).toBeVisible()
         await expect(page.getByRole('link', { name: 'Open Participant Console' })).toBeVisible()
+        await expect(page.getByRole('link', { name: 'View Application Status' })).toBeVisible()
 
         await page.goto('/onboarding/step1')
+        await expect(page).toHaveURL(/\/onboarding\/confirmation$/)
+
+        await page.getByRole('link', { name: 'View Application Status' }).click()
         await expect(page).toHaveURL(/\/application-status$/)
+        await expect(page.getByRole('heading', { name: 'Application Status' })).toBeVisible()
 
         await page.getByRole('link', { name: 'Open Participant Console' }).click()
         await expect(page).toHaveURL(/\/login$/)
