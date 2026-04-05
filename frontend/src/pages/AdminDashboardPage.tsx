@@ -188,18 +188,18 @@ export default function AdminDashboardPage() {
 
     return (
         <AdminLayout title="CONTROL DASHBOARD" subtitle="GOVERNANCE, EVIDENCE & EXCEPTIONS">
-            <div className="space-y-8">
+            <div className="space-y-10">
                 <section>
-                    <div className="mb-3 flex items-center gap-2">
+                    <div className="mb-6 flex items-center gap-2">
                         <div className="h-px flex-1 bg-slate-800/60" />
                         <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-slate-600">KEY METRICS</span>
                         <div className="h-px flex-1 bg-slate-800/60" />
                     </div>
-                    <div className="grid grid-cols-4 gap-4">
+                    <div className="grid grid-cols-4 gap-6">
                         {summaryCards.map((card) => (
                             <div
                                 key={card.label}
-                                className="relative overflow-hidden rounded-xl border border-slate-800/60 bg-slate-900/65 p-5 shadow-2xl shadow-black/20 transition-all duration-300 hover:border-slate-700/60"
+                                className="relative overflow-hidden rounded-xl border border-slate-800/60 bg-slate-900/65 p-6 shadow-2xl shadow-black/20 transition-all duration-300 hover:border-slate-700/60"
                             >
                                 <div className="absolute right-0 top-0 w-24 h-24 opacity-5" style={{ background: `radial-gradient(circle at top right, ${card.tone === 'cyan' ? '#06b6d4' : card.tone === 'amber' ? '#f59e0b' : card.tone === 'emerald' ? '#10b981' : '#ef4444'}, transparent 70%)` }} />
                                 <div className="flex items-start justify-between gap-4">
@@ -224,14 +224,14 @@ export default function AdminDashboardPage() {
                 </section>
 
                 <section>
-                    <div className="mb-3 flex items-center gap-2">
+                    <div className="mb-6 flex items-center gap-2">
                         <div className="h-px flex-1 bg-slate-800/60" />
                         <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-slate-600">SYSTEM POSTURE</span>
                         <div className="h-px flex-1 bg-slate-800/60" />
                     </div>
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-3 gap-6">
                         {postureCards.map((card) => (
-                            <div key={card.title} className={`${subpanelClass} px-5 py-4`}>
+                            <div key={card.title} className={`${subpanelClass} px-5 py-5`}>
                                 <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-slate-600">{card.title}</p>
                                 <p className="mt-2 text-xl font-semibold text-slate-100">{card.value}</p>
                                 <p className="mt-2 text-[10px] leading-relaxed text-slate-400">{card.detail}</p>
@@ -241,12 +241,12 @@ export default function AdminDashboardPage() {
                 </section>
 
                 <section>
-                    <div className="mb-3 flex items-center gap-2">
+                    <div className="mb-6 flex items-center gap-2">
                         <div className="h-px flex-1 bg-slate-800/60" />
                         <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-slate-600">GOVERNANCE & REVIEW</span>
                         <div className="h-px flex-1 bg-slate-800/60" />
                     </div>
-                    <div className="grid grid-cols-12 gap-5">
+                    <div className="grid grid-cols-12 gap-6">
                         <div className={`col-span-7 ${panelClass}`}>
                             <SectionHeader
                                 title="Approval Blockers"
@@ -254,8 +254,8 @@ export default function AdminDashboardPage() {
                                 actionLabel="Open review queue"
                                 actionTo="/admin/onboarding-queue"
                             />
-                            <div className="grid grid-cols-3 gap-4 border-b border-slate-800/50 px-5 py-4">
-                                <div className={`${subpanelClass} px-4 py-3`}>
+                            <div className="grid grid-cols-3 gap-4 border-b border-slate-800/50 px-6 py-5">
+                                <div className={`${subpanelClass} px-4 py-4`}>
                                     <div className="flex items-center gap-2">
                                         <div className="h-2 w-2 rounded-full bg-red-500" />
                                         <p className="text-[9px] uppercase tracking-[0.12em] text-slate-600">High priority</p>
@@ -282,7 +282,7 @@ export default function AdminDashboardPage() {
                             </div>
                             <div className="divide-y divide-slate-800/35">
                                 {sortBlockers.map((blocker) => (
-                                    <div key={blocker.id} className="group px-5 py-4 transition-colors hover:bg-slate-900/30">
+                                    <div key={blocker.id} className="group px-6 py-5 transition-colors hover:bg-slate-900/30">
                                         <div className="flex items-start justify-between gap-4">
                                             <div className="min-w-0 flex-1">
                                                 <div className="flex flex-wrap items-center gap-2">
@@ -315,9 +315,9 @@ export default function AdminDashboardPage() {
                                 actionLabel="Security matrix"
                                 actionTo="/admin/security-compliance"
                             />
-                            <div className="space-y-3 px-5 py-4">
+                            <div className="space-y-4 px-6 py-5">
                                 {prioritizedEvidencePacks.slice(0, 3).map((pack) => (
-                                    <article key={pack.id} className={`${subpanelClass} p-4 transition-all duration-200 hover:border-slate-700/60`}>
+                                    <article key={pack.id} className={`${subpanelClass} p-5 transition-all duration-200 hover:border-slate-700/60`}>
                                         <div className="flex items-start justify-between gap-3">
                                             <div>
                                                 <p className="text-[10px] uppercase tracking-[0.12em] text-slate-600">{pack.reviewId}</p>
@@ -339,12 +339,12 @@ export default function AdminDashboardPage() {
                 </section>
 
                 <section>
-                    <div className="mb-3 flex items-center gap-2">
+                    <div className="mb-6 flex items-center gap-2">
                         <div className="h-px flex-1 bg-slate-800/60" />
                         <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-slate-600">OPERATIONS & EVIDENCE</span>
                         <div className="h-px flex-1 bg-slate-800/60" />
                     </div>
-                    <div className="grid grid-cols-12 gap-5">
+                    <div className="grid grid-cols-12 gap-6">
                         <div className={`col-span-7 ${panelClass}`}>
                             <SectionHeader
                                 title="Environment & Residency"
@@ -352,7 +352,7 @@ export default function AdminDashboardPage() {
                                 actionLabel="Operations"
                                 actionTo="/admin/operations"
                             />
-                            <div className="space-y-3 px-5 py-4">
+                            <div className="space-y-4 px-6 py-5">
                                 {deploymentSurfaces.map((surface) => (
                                     <article key={surface.id} className={`${subpanelClass} p-4 transition-all duration-200 hover:border-slate-700/60`}>
                                         <div className="flex items-start justify-between gap-4">
@@ -396,22 +396,22 @@ export default function AdminDashboardPage() {
                                 actionLabel="Audit trail"
                                 actionTo="/admin/audit-trail"
                             />
-                            <div className="grid grid-cols-3 gap-3 border-b border-slate-800/50 px-5 py-4">
-                                <div className={`${subpanelClass} px-3 py-3`}>
+                            <div className="grid grid-cols-3 gap-4 border-b border-slate-800/50 px-6 py-5">
+                                <div className={`${subpanelClass} px-4 py-4`}>
                                     <div className="flex items-center gap-2">
                                         <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                                         <p className="text-[9px] uppercase tracking-[0.12em] text-slate-600">Verified</p>
                                     </div>
                                     <p className="mt-2 text-xl font-semibold text-slate-100">{verifiedEventCount}</p>
                                 </div>
-                                <div className={`${subpanelClass} px-3 py-3`}>
+                                <div className={`${subpanelClass} px-4 py-4`}>
                                     <div className="flex items-center gap-2">
                                         <div className="h-1.5 w-1.5 rounded-full bg-cyan-500" />
                                         <p className="text-[9px] uppercase tracking-[0.12em] text-slate-600">Review</p>
                                     </div>
                                     <p className="mt-2 text-xl font-semibold text-slate-100">{reviewEventCount}</p>
                                 </div>
-                                <div className={`${subpanelClass} px-3 py-3`}>
+                                <div className={`${subpanelClass} px-4 py-4`}>
                                     <div className="flex items-center gap-2">
                                         <div className="h-1.5 w-1.5 rounded-full bg-red-500" />
                                         <p className="text-[9px] uppercase tracking-[0.12em] text-slate-600">Exception</p>
@@ -421,7 +421,7 @@ export default function AdminDashboardPage() {
                             </div>
                             <div className="divide-y divide-slate-800/35">
                                 {evidenceEvents.slice(0, 4).map((event) => (
-                                    <div key={event.id} className="group px-5 py-4 transition-colors hover:bg-slate-900/30">
+                                    <div key={event.id} className="group px-6 py-5 transition-colors hover:bg-slate-900/30">
                                         <div className="flex items-start justify-between gap-3">
                                             <div className="min-w-0 flex-1">
                                                 <div className="flex flex-wrap items-center gap-2">
@@ -450,12 +450,12 @@ export default function AdminDashboardPage() {
                 </section>
 
                 <section>
-                    <div className="mb-3 flex items-center gap-2">
+                    <div className="mb-6 flex items-center gap-2">
                         <div className="h-px flex-1 bg-slate-800/60" />
                         <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-slate-600">PACK READINESS & INCIDENTS</span>
                         <div className="h-px flex-1 bg-slate-800/60" />
                     </div>
-                    <div className="grid grid-cols-12 gap-5">
+                    <div className="grid grid-cols-12 gap-6">
                         <div className={`col-span-7 ${panelClass}`}>
                             <SectionHeader
                                 title="Evidence Pack Readiness"
@@ -463,8 +463,8 @@ export default function AdminDashboardPage() {
                                 actionLabel="Open controls"
                                 actionTo="/admin/security-compliance"
                             />
-                            <div className="grid grid-cols-3 gap-3 border-b border-slate-800/50 px-5 py-4">
-                                <div className={`${subpanelClass} px-3 py-3`}>
+                            <div className="grid grid-cols-3 gap-4 border-b border-slate-800/50 px-6 py-5">
+                                <div className={`${subpanelClass} px-4 py-4`}>
                                     <div className="flex items-center gap-2">
                                         <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                                         <p className="text-[9px] uppercase tracking-[0.12em] text-slate-600">Ready</p>
@@ -488,7 +488,7 @@ export default function AdminDashboardPage() {
                             </div>
                             <div className="divide-y divide-slate-800/35">
                                 {prioritizedEvidencePacks.map((pack) => (
-                                    <div key={pack.id} className="group px-5 py-4 transition-colors hover:bg-slate-900/30">
+                                    <div key={pack.id} className="group px-6 py-5 transition-colors hover:bg-slate-900/30">
                                         <div className="flex items-start justify-between gap-4">
                                             <div className="min-w-0 flex-1">
                                                 <div className="flex flex-wrap items-center gap-2">
@@ -521,9 +521,9 @@ export default function AdminDashboardPage() {
                                 actionLabel="Incident response"
                                 actionTo="/admin/incident-response"
                             />
-                            <div className="space-y-3 px-5 py-4">
+                            <div className="space-y-4 px-6 py-5">
                                 {prioritizedIncidents.map((incident) => (
-                                    <article key={incident.id} className={`${subpanelClass} p-4 transition-all duration-200 hover:border-slate-700/60`}>
+                                    <article key={incident.id} className={`${subpanelClass} p-5 transition-all duration-200 hover:border-slate-700/60`}>
                                         <div className="flex items-start justify-between gap-3">
                                             <div className="min-w-0 flex-1">
                                                 <p className="text-[11px] font-semibold text-slate-200">{incident.title}</p>

@@ -1,4 +1,5 @@
 import { Navigate, useNavigate } from 'react-router-dom'
+import { useState } from 'react'
 import AdminLayout from '../components/admin/AdminLayout'
 import {
     getDocumentChecklistCounts,
@@ -59,10 +60,27 @@ const packetStatusClasses: Record<string, string> = {
 export default function OnboardingQueuePage() {
     const { isAuthenticated } = useAuth()
     const navigate = useNavigate()
+    const [searchQuery, setSearchQuery] = useState('')
 
     if (!isAuthenticated) return <Navigate to="/admin/login" replace />
 
-    const records = organizationReviewRecords
+    const allRecords = organizationReviewRecords
+    
+    const filteredRecords = searchQuery.trim()
+        ? allRecords.filter(record => {
+            const query = searchQuery.toLowerCase()
+            return (
+                record.organizationName.toLowerCase().includes(query) ||
+                record.id.toLowerCase().includes(query) ||
+                record.industry.toLowerCase().includes(query) ||
+                record.jurisdiction.toLowerCase().includes(query) ||
+                record.useCase.toLowerCase().includes(query) ||
+                record.deploymentPreference.toLowerCase().includes(query)
+            )
+        })
+        : allRecords
+    
+    const records = filteredRecords
     const pendingCount = records.filter((record) => record.reviewStatus === 'Pending').length
     const reviewingCount = records.filter((record) => record.reviewStatus === 'Reviewing').length
     const escalatedCount = records.filter((record) => record.reviewStatus === 'Escalated').length
@@ -188,6 +206,31 @@ export default function OnboardingQueuePage() {
                                 GOVERNANCE REVIEW WORKSPACE
                             </div>
                         </div>
+                        
+                        <div className="border-b border-slate-800/40 px-5 py-3">
+                            <div className="relative max-w-md">
+                                <svg className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                                <input
+                                    type="text"
+                                    placeholder="Search organization, ID, industry, jurisdiction..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="w-full rounded-lg border border-slate-700/60 bg-slate-950/50 py-2 pl-10 pr-10 text-[11px] text-slate-300 placeholder-slate-600 outline-none transition-all duration-200 focus:border-cyan-500/40 focus:ring-1 focus:ring-cyan-500/20"
+                                />
+                                {searchQuery && (
+                                    <button
+                                        onClick={() => setSearchQuery('')}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
+                                    >
+                                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                )}
+                            </div>
+                        </div>
                         <div className="overflow-x-auto">
                             <table className="w-full">
                                 <thead className="bg-slate-950/40">
@@ -202,62 +245,81 @@ export default function OnboardingQueuePage() {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-800/30">
-                                    {records.map((record) => {
-                                        const checklistCounts = getDocumentChecklistCounts(record)
-                                        return (
-                                            <tr key={record.id} className="align-top transition-colors duration-150 hover:bg-slate-800/20">
-                                                <td className="px-5 py-4 font-mono text-[10px] text-slate-500">{record.submittedAt}</td>
-                                                <td className="px-5 py-4 font-mono text-[10px] text-cyan-400/80">{record.id}</td>
-                                                <td className="px-5 py-4">
-                                                    <div className="space-y-1.5">
-                                                        <p className="text-[11px] font-medium text-slate-200">{record.organizationName}</p>
-                                                        <p className="text-[10px] text-slate-500">{record.reviewScope}</p>
-                                                        <p className="text-[10px] text-slate-600">{record.contactRole} · {record.owner}</p>
-                                                    </div>
-                                                </td>
-                                                <td className="px-5 py-4">
-                                                    <div className="space-y-2">
-                                                        <p className="text-[10px] leading-relaxed text-slate-300">{normalizeReviewCopy(record.useCase)}</p>
-                                                        <p className="text-[9px] uppercase tracking-[0.12em] text-slate-600">{record.industry} · {record.jurisdiction}</p>
-                                                    </div>
-                                                </td>
-                                                <td className="px-5 py-4">
-                                                    <div className="space-y-2">
-                                                        <p className="text-[10px] leading-relaxed text-slate-300">{record.deploymentPreference}</p>
-                                                        <p className="text-[10px] leading-relaxed text-slate-500">{record.residencyRequirement}</p>
-                                                    </div>
-                                                </td>
-                                                <td className="px-5 py-4">
-                                                    <div className="space-y-2">
-                                                        <div className="flex flex-wrap gap-2">
-                                                            <span className={`inline-flex items-center rounded-md border px-2.5 py-1 text-[10px] font-semibold tracking-wide ${statusClasses[record.reviewStatus]}`}>
-                                                                {record.reviewStatus}
-                                                            </span>
-                                                            <span className={`inline-flex items-center rounded-md border px-2.5 py-1 text-[10px] font-semibold tracking-wide ${decisionClasses[getDecisionStatusLabel(record.decisionStatus)]}`}>
-                                                                {getDecisionStatusLabel(record.decisionStatus)}
-                                                            </span>
+                                    {filteredRecords.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={7} className="px-5 py-12 text-center">
+                                                <div className="flex flex-col items-center gap-2">
+                                                    <svg className="h-8 w-8 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                                    </svg>
+                                                    <p className="text-[11px] text-slate-500">No organizations match your search</p>
+                                                    <button
+                                                        onClick={() => setSearchQuery('')}
+                                                        className="text-[10px] text-cyan-400 hover:text-cyan-300"
+                                                    >
+                                                        Clear search
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        records.map((record) => {
+                                            const checklistCounts = getDocumentChecklistCounts(record)
+                                            return (
+                                                <tr key={record.id} className="align-top transition-colors duration-150 hover:bg-slate-800/20">
+                                                    <td className="px-5 py-4 font-mono text-[10px] text-slate-500">{record.submittedAt}</td>
+                                                    <td className="px-5 py-4 font-mono text-[10px] text-cyan-400/80">{record.id}</td>
+                                                    <td className="px-5 py-4">
+                                                        <div className="space-y-1.5">
+                                                            <p className="text-[11px] font-medium text-slate-200">{record.organizationName}</p>
+                                                            <p className="text-[10px] text-slate-500">{record.reviewScope}</p>
+                                                            <p className="text-[10px] text-slate-600">{record.contactRole} · {record.owner}</p>
                                                         </div>
-                                                        <p className={`text-[10px] font-medium ${packetStatusClasses[getPacketStatusLabel(record.loiStatus)]}`}>{getPacketStatusLabel(record.loiStatus)}</p>
-                                                        <p className="text-[9px] text-slate-500">
-                                                            {checklistCounts.ready} ready · {checklistCounts.review} in review · {checklistCounts.missing} missing
-                                                        </p>
-                                                        <p className="text-[9px] text-slate-600">Deadline: {record.reviewDeadlineLabel}</p>
-                                                    </div>
-                                                </td>
-                                                <td className="px-5 py-4">
-                                                    <div className="space-y-2">
-                                                        <button
-                                                            onClick={() => navigate(`/admin/application-review/${record.id}`)}
-                                                            className="rounded-md border border-cyan-500/30 px-3 py-1.5 text-[9px] font-semibold uppercase tracking-wider text-cyan-400/80 transition-all duration-200 hover:border-cyan-500/50 hover:bg-cyan-500/10"
-                                                        >
-                                                            Open Review
-                                                        </button>
-                                                        <p className="max-w-[11rem] text-[9px] leading-relaxed text-slate-500">{normalizeReviewCopy(record.nextAction)}</p>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        )
-                                    })}
+                                                    </td>
+                                                    <td className="px-5 py-4">
+                                                        <div className="space-y-2">
+                                                            <p className="text-[10px] leading-relaxed text-slate-300">{normalizeReviewCopy(record.useCase)}</p>
+                                                            <p className="text-[9px] uppercase tracking-[0.12em] text-slate-600">{record.industry} · {record.jurisdiction}</p>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-5 py-4">
+                                                        <div className="space-y-2">
+                                                            <p className="text-[10px] leading-relaxed text-slate-300">{record.deploymentPreference}</p>
+                                                            <p className="text-[10px] leading-relaxed text-slate-500">{record.residencyRequirement}</p>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-5 py-4">
+                                                        <div className="space-y-2">
+                                                            <div className="flex flex-wrap gap-2">
+                                                                <span className={`inline-flex items-center rounded-md border px-2.5 py-1 text-[10px] font-semibold tracking-wide ${statusClasses[record.reviewStatus]}`}>
+                                                                    {record.reviewStatus}
+                                                                </span>
+                                                                <span className={`inline-flex items-center rounded-md border px-2.5 py-1 text-[10px] font-semibold tracking-wide ${decisionClasses[getDecisionStatusLabel(record.decisionStatus)]}`}>
+                                                                    {getDecisionStatusLabel(record.decisionStatus)}
+                                                                </span>
+                                                            </div>
+                                                            <p className={`text-[10px] font-medium ${packetStatusClasses[getPacketStatusLabel(record.loiStatus)]}`}>{getPacketStatusLabel(record.loiStatus)}</p>
+                                                            <p className="text-[9px] text-slate-500">
+                                                                {checklistCounts.ready} ready · {checklistCounts.review} in review · {checklistCounts.missing} missing
+                                                            </p>
+                                                            <p className="text-[9px] text-slate-600">Deadline: {record.reviewDeadlineLabel}</p>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-5 py-4">
+                                                        <div className="space-y-2">
+                                                            <button
+                                                                onClick={() => navigate(`/admin/application-review/${record.id}`)}
+                                                                className="rounded-md border border-cyan-500/30 px-3 py-1.5 text-[9px] font-semibold uppercase tracking-wider text-cyan-400/80 transition-all duration-200 hover:border-cyan-500/50 hover:bg-cyan-500/10"
+                                                            >
+                                                                Open Review
+                                                            </button>
+                                                            <p className="max-w-[11rem] text-[9px] leading-relaxed text-slate-500">{normalizeReviewCopy(record.nextAction)}</p>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            )
+                                        })
+                                    )}
                                 </tbody>
                             </table>
                         </div>
