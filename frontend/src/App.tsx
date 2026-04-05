@@ -67,6 +67,7 @@ const UserManagementPage = lazy(() => import('./pages/admin/UserManagementPage')
 const ProviderDatasetManagementPage = lazy(() => import('./pages/admin/ProviderDatasetManagementPage'))
 const SecurityCompliancePage = lazy(() => import('./pages/admin/SecurityCompliancePage'))
 const OperationsPage = lazy(() => import('./pages/admin/OperationsPage'))
+const OperationsHubPage = lazy(() => import('./pages/admin/OperationsHubPage'))
 const NotificationsPage = lazy(() => import('./pages/admin/NotificationsPage'))
 const AdminAuditTrailPage = lazy(() => import('./pages/admin/AdminAuditTrailPage'))
 const OnboardingQueuePage = lazy(() => import('./pages/OnboardingQueuePage'))
@@ -246,6 +247,7 @@ function App() {
                 <Route path="admin/provider-dataset" element={RequireAdminAccess(withLazyRoute(<ProviderDatasetManagementPage />))} />
                 <Route path="admin/security-compliance" element={RequireAdminAccess(withLazyRoute(<SecurityCompliancePage />))} />
                 <Route path="admin/operations" element={RequireAdminAccess(withLazyRoute(<OperationsPage />))} />
+                <Route path="admin/operations-hub" element={RequireAdminAccess(withLazyRoute(<OperationsHubPage />))} />
                 <Route path="admin/notifications" element={RequireAdminAccess(withLazyRoute(<NotificationsPage />))} />
                 <Route path="admin/onboarding-queue" element={RequireAdminAccess(withLazyRoute(<OnboardingQueuePage />))} />
                 <Route path="admin/application-review/:appId" element={RequireAdminAccess(withLazyRoute(<ApplicationReviewPage />))} />
