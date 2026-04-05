@@ -13,22 +13,24 @@ type NavGroup = {
 
 const navGroups: NavGroup[] = [
     {
-        title: 'Overview',
+        title: 'OVERVIEW',
         items: [
             { label: 'Dashboard', to: '/dashboard' },
             { label: 'Guided Tour', to: '/guided-tour' }
         ]
     },
     {
-        title: 'Data Access',
+        title: 'BUYER WORKFLOW',
         items: [
             { label: 'Datasets', to: '/datasets' },
             { label: 'Access Requests', to: '/access-requests' },
-            { label: 'Escrow Center', to: '/escrow-center' }
+            { label: 'Escrow Center', to: '/escrow-center' },
+            { label: 'Compliance Passport', to: '/compliance-passport' },
+            { label: 'Rights Quote Builder', to: '/datasets/1/rights-quote' }
         ]
     },
     {
-        title: 'Provider',
+        title: 'PROVIDER WORKFLOW',
         items: [
             { label: 'Provider Dashboard', to: '/provider/dashboard' },
             { label: 'Provider Onboarding', to: '/provider/onboarding' },
@@ -36,41 +38,36 @@ const navGroups: NavGroup[] = [
         ]
     },
     {
-        title: 'Trust & Consent',
+        title: 'TRUST & CONSENT',
         items: [
             { label: 'Trust Profile', to: '/trust-profile' },
-            { label: 'Compliance Passport', to: '/compliance-passport' },
-            { label: 'Consent', to: '/consent-tracker' },
-            { label: 'Trust Glossary', to: '/trust-glossary' }
+            { label: 'Trust Score History', to: '/trust-score-history' },
+            { label: 'Consent', to: '/consent-tracker' }
         ]
     },
     {
-        title: 'Compliance Ops',
+        title: 'COMPLIANCE OPS',
         items: [
             { label: 'Audit Trail', to: '/audit-trail' },
             { label: 'Compliance', to: '/compliance-locker' }
         ]
     },
     {
-        title: 'Security',
+        title: 'SECURITY',
         items: [
             { label: 'Security', to: '/security-ops' },
-            { label: 'Red Team', to: '/red-team' },
-            { label: 'Access Control', to: '/rbac-console' },
-            { label: 'Data Classification', to: '/data-classification' },
-            { label: 'Secure Enclave', to: '/secure-enclave' }
+            { label: 'Incident Response', to: '/admin/incident-response' }
         ]
     },
     {
-        title: 'Integrations',
+        title: 'INTEGRATIONS',
         items: [
             { label: 'Pipelines', to: '/pipelines' },
-            { label: 'Data Lineage', to: '/data-lineage' },
             { label: 'Usage Analytics', to: '/usage-analytics' }
         ]
     },
     {
-        title: 'Account',
+        title: 'ACCOUNT',
         items: [
             { label: 'Platform Status', to: '/status' },
             { label: 'Profile / Settings', to: '/profile' },
