@@ -52,6 +52,7 @@ import EscrowCheckoutPage from './pages/EscrowCheckoutPage'
 import PilotWalkthroughPage from './pages/PilotWalkthroughPage'
 import ProtectedEvaluationPage from './pages/ProtectedEvaluationPage'
 import TrustCenterPage from './pages/TrustCenterPage'
+import ResearcherAccessPage from './pages/ResearcherAccessPage'
 
 import { useAuth } from './contexts/AuthContext'
 import { participantOnboardingPaths } from './onboarding/constants'
@@ -127,6 +128,7 @@ function App() {
     const auth = useAuth() as AccessIntentAuth
     const {
         isAuthenticated,
+        isAdmin,
         accessStatus,
         accessIntentPromptPending = false,
         submitAccessIntent,
@@ -144,6 +146,9 @@ function App() {
     }
 
     const RequireWorkspaceAccess = (element: JSX.Element) => {
+        // Admins cannot access participant routes
+        if (isAdmin) return <Navigate to="/admin/dashboard" replace />
+        
         const canAccessWorkspace =
             accessStatus === 'approved' ||
             (MOCK_AUTH && (accessStatus === 'pending' || accessStatus === 'not_started'))
@@ -171,7 +176,13 @@ function App() {
     }
 
     const RequireAdminAccess = (element: JSX.Element) => {
-        if (!isAuthenticated) return <Navigate to="/admin/login" replace />
+        if (!isAuthenticated || !isAdmin) return <Navigate to="/admin/login" replace />
+        return element
+    }
+
+    const RequireNotAdmin = (element: JSX.Element) => {
+        // Redirect admins away from participant-only pages
+        if (isAdmin) return <Navigate to="/admin/dashboard" replace />
         return element
     }
 
@@ -244,6 +255,7 @@ function App() {
                 <Route element={RequireWorkspaceAccess(<AppLayout />)}>
                     <Route path="dashboard" element={<DashboardPage />} />
                     <Route path="provider/dashboard" element={<ProviderDashboardPage />} />
+                    <Route path="researcher-access" element={<ResearcherAccessPage />} />
                     <Route path="provider/onboarding" element={<ProviderOnboardingPage />} />
                     <Route path="datasets" element={<DatasetsPage />} />
                     <Route path="datasets/:id" element={<DatasetDetailPage />} />

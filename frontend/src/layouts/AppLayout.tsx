@@ -24,7 +24,14 @@ const navGroups: NavGroup[] = [
         items: [
             { label: 'Datasets', to: '/datasets' },
             { label: 'Access Requests', to: '/access-requests' },
-            { label: 'Escrow Center', to: '/escrow-center' },
+            { label: 'Escrow Center', to: '/escrow-center' }
+        ]
+    },
+    {
+        title: 'Provider',
+        items: [
+            { label: 'Provider Dashboard', to: '/provider/dashboard' },
+            { label: 'Provider Onboarding', to: '/provider/onboarding' },
             { label: 'Contributions', to: '/contributions' }
         ]
     },

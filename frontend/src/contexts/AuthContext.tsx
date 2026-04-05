@@ -5,10 +5,12 @@ export type AccessApplicationStatus = 'not_started' | 'pending' | 'approved'
 
 type AuthContextValue = {
     isAuthenticated: boolean
+    isAdmin: boolean
     accessStatus: AccessApplicationStatus
     onboardingInitiated: boolean
     applicantEmail: string
     signIn: () => boolean
+    signInAdmin: (email: string, password: string) => boolean
     signOut: () => void
     startOnboarding: () => void
     submitApplication: (officialWorkEmail: string) => void
@@ -20,6 +22,7 @@ const STORAGE_AUTH = 'Redoubt:isAuthenticated'
 const STORAGE_ACCESS_STATUS = 'Redoubt:accessStatus'
 const STORAGE_ONBOARDING_INITIATED = 'Redoubt:onboardingInitiated'
 const STORAGE_APPLICANT_EMAIL = 'Redoubt:applicantEmail'
+const STORAGE_IS_ADMIN = 'Redoubt:isAdmin'
 
 // Enable a fully client-side experience when there is no backend.
 // Default is ON for development; set VITE_MOCK_AUTH=false to restore strict gating.
@@ -53,6 +56,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (stored !== null) return stored
         return MOCK_AUTH ? 'demo@redoubt.local' : ''
     })
+    const [isAdmin, setIsAdmin] = useState<boolean>(() => {
+        const stored = localStorage.getItem(STORAGE_IS_ADMIN)
+        if (stored !== null) return stored === 'true'
+        return false
+    })
 
     useEffect(() => {
         localStorage.setItem(STORAGE_AUTH, String(isAuthenticated))
@@ -70,18 +78,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.setItem(STORAGE_APPLICANT_EMAIL, applicantEmail)
     }, [applicantEmail])
 
+    useEffect(() => {
+        localStorage.setItem(STORAGE_IS_ADMIN, String(isAdmin))
+    }, [isAdmin])
+
     const signIn = () => {
         const canAccessWorkspace =
             accessStatus === 'approved' ||
             (MOCK_AUTH && (accessStatus === 'pending' || accessStatus === 'not_started'))
         if (!canAccessWorkspace) return false
         setIsAuthenticated(true)
+        setIsAdmin(false)
         return true
+    }
+
+    const signInAdmin = (email: string, password: string) => {
+        // Demo admin credentials
+        if (email === 'admin@redoubt.io' && password === 'admin123') {
+            setIsAuthenticated(true)
+            setIsAdmin(true)
+            return true
+        }
+        return false
     }
 
     const signOut = () => {
         setIsAuthenticated(false)
+        setIsAdmin(false)
         localStorage.removeItem(STORAGE_AUTH)
+        localStorage.removeItem(STORAGE_IS_ADMIN)
     }
 
     const startOnboarding = () => {
@@ -113,10 +138,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         <AuthContext.Provider
             value={{
                 isAuthenticated,
+                isAdmin,
                 accessStatus,
                 onboardingInitiated,
                 applicantEmail,
                 signIn,
+                signInAdmin,
                 signOut,
                 startOnboarding,
                 submitApplication
