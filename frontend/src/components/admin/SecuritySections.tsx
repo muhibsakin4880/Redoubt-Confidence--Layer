@@ -154,8 +154,8 @@ export function ComplianceCertifications() {
     return (
         <section>
             <div className="flex items-center justify-between gap-3 flex-wrap">
-                <h2 className="text-xl font-semibold text-slate-100">Shared Cloud Control References</h2>
-                <span className="text-xs text-slate-500">Infrastructure references under AWS shared responsibility</span>
+                <h2 className="text-xl font-semibold text-slate-100">Compliance Certifications</h2>
+                <span className="text-xs text-slate-500">Shared cloud-control references under AWS shared responsibility</span>
             </div>
             <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 {complianceCerts.map(cert => (
