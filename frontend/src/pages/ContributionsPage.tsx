@@ -934,6 +934,159 @@ export default function ContributionsPage() {
                         </div>
                     </div>
 
+                    <div className="bg-slate-900/80 border-l-4 border-cyan-500 rounded-xl p-5">
+                        <div className="text-sm font-semibold text-slate-200 mb-1">Governance & Shared Responsibility</div>
+                        <p className="text-xs text-slate-400 mb-4">
+                            Automatically determined based on 
+                            your organization's verified location, 
+                            dataset sensitivity, and applicable 
+                            data protection frameworks.
+                        </p>
+                        
+                        <div className="text-xs font-medium text-slate-300 mb-3">Governance Rules Applied</div>
+                        
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg border border-slate-700">
+                                <div className="flex items-center gap-3">
+                                    <span className="text-lg">📍</span>
+                                    <div>
+                                        <div className="text-xs text-slate-400">Data Residency</div>
+                                        <div className="text-sm text-slate-200">UAE — Abu Dhabi / Dubai</div>
+                                    </div>
+                                </div>
+                                <span className="px-2 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs">Active</span>
+                            </div>
+                            
+                            <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg border border-slate-700">
+                                <div className="flex items-center gap-3">
+                                    <span className="text-lg">⚖️</span>
+                                    <div>
+                                        <div className="text-xs text-slate-400">Data Sovereignty</div>
+                                        <div className="text-sm text-slate-200">UAE Personal Data <br/>Protection Law (PDPL) 2022</div>
+                                    </div>
+                                </div>
+                                <span className="px-2 py-1 rounded-full bg-blue-500/20 border border-blue-500/40 text-blue-300 text-xs">Enforced</span>
+                            </div>
+                            
+                            <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg border border-slate-700">
+                                <div className="flex items-center gap-3">
+                                    <span className="text-lg">🔒</span>
+                                    <div>
+                                        <div className="text-xs text-slate-400">Regional Access Control</div>
+                                        <div className="text-sm text-slate-200">GCC Region only — <br/>UAE, Saudi Arabia, Qatar, <br/>Kuwait, Bahrain, Oman</div>
+                                    </div>
+                                </div>
+                                <span className="px-2 py-1 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs">Restricted</span>
+                            </div>
+                            
+                            <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg border border-slate-700">
+                                <div className="flex items-center gap-3">
+                                    <span className="text-lg">☁️</span>
+                                    <div>
+                                        <div className="text-xs text-slate-400">Assigned Cloud Model</div>
+                                        <div className="text-sm text-slate-200">Oracle Cloud Infrastructure (OCI) <br/>UAE North — Abu Dhabi</div>
+                                    </div>
+                                </div>
+                                <span className="px-2 py-1 rounded-full bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 text-xs">Auto-assigned</span>
+                            </div>
+                        </div>
+                        
+                        <div className="mt-3 p-3 bg-slate-800/40 rounded-lg border border-slate-700">
+                            <p className="text-xs text-slate-400">
+                                Cloud model is automatically assigned 
+                                based on your data residency 
+                                requirements and applicable 
+                                sovereignty laws.
+                            </p>
+                        </div>
+                        
+                        <div className="mt-6 pt-4 border-t border-slate-700">
+                            <div className="text-xs font-medium text-slate-300 mb-3">Responsibility Allocation</div>
+                            
+                            <div className="grid md:grid-cols-2 gap-4">
+                                <div className="bg-slate-800/50 rounded-lg border border-slate-700 border-l-4 border-l-blue-500 p-4">
+                                    <div className="text-sm font-medium text-blue-300 mb-3 flex items-center gap-2">
+                                        <span>🏢</span> OCI Responsibility
+                                    </div>
+                                    <ul className="text-xs text-slate-300 space-y-1.5">
+                                        <li className="flex items-start gap-2">
+                                            <span className="text-emerald-400">✅</span>
+                                            <span>Physical data center security <br/>(UAE North — Abu Dhabi)</span>
+                                        </li>
+                                        <li className="flex items-start gap-2">
+                                            <span className="text-emerald-400">✅</span>
+                                            <span>AES-256 encryption at rest</span>
+                                        </li>
+                                        <li className="flex items-start gap-2">
+                                            <span className="text-emerald-400">✅</span>
+                                            <span>TLS 1.3 encryption in transit</span>
+                                        </li>
+                                        <li className="flex items-start gap-2">
+                                            <span className="text-emerald-400">✅</span>
+                                            <span>UAE data sovereignty compliance</span>
+                                        </li>
+                                        <li className="flex items-start gap-2">
+                                            <span className="text-emerald-400">✅</span>
+                                            <span>Network isolation and access controls</span>
+                                        </li>
+                                        <li className="flex items-start gap-2">
+                                            <span className="text-emerald-400">✅</span>
+                                            <span>Infrastructure resilience and uptime</span>
+                                        </li>
+                                        <li className="flex items-start gap-2">
+                                            <span className="text-emerald-400">✅</span>
+                                            <span>PDPL eligible infrastructure</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                                
+                                <div className="bg-slate-800/50 rounded-lg border border-slate-700 border-l-4 border-l-cyan-500 p-4">
+                                    <div className="text-sm font-medium text-cyan-300 mb-3 flex items-center gap-2">
+                                        <span>🛡️</span> Redoubt Responsibility
+                                    </div>
+                                    <ul className="text-xs text-slate-300 space-y-1.5">
+                                        <li className="flex items-start gap-2">
+                                            <span className="text-emerald-400">✅</span>
+                                            <span>Buyer identity verification</span>
+                                        </li>
+                                        <li className="flex items-start gap-2">
+                                            <span className="text-emerald-400">✅</span>
+                                            <span>Purpose-of-use declaration</span>
+                                        </li>
+                                        <li className="flex items-start gap-2">
+                                            <span className="text-emerald-400">✅</span>
+                                            <span>Regional access enforcement</span>
+                                        </li>
+                                        <li className="flex items-start gap-2">
+                                            <span className="text-emerald-400">✅</span>
+                                            <span>Dataset access window control</span>
+                                        </li>
+                                        <li className="flex items-start gap-2">
+                                            <span className="text-emerald-400">✅</span>
+                                            <span>Immutable audit trail</span>
+                                        </li>
+                                        <li className="flex items-start gap-2">
+                                            <span className="text-emerald-400">✅</span>
+                                            <span>Escrow transaction management</span>
+                                        </li>
+                                        <li className="flex items-start gap-2">
+                                            <span className="text-emerald-400">✅</span>
+                                            <span>PHI/PII detection and masking</span>
+                                        </li>
+                                        <li className="flex items-start gap-2">
+                                            <span className="text-emerald-400">✅</span>
+                                            <span>Consent and legal basis tracking</span>
+                                        </li>
+                                        <li className="flex items-start gap-2">
+                                            <span className="text-emerald-400">✅</span>
+                                            <span>Trust score impact on access</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     {showTierReviewModal && (
                         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
                             <div className="bg-slate-800 border border-slate-700 rounded-xl p-5 w-full max-w-md">
@@ -1544,38 +1697,7 @@ export default function ContributionsPage() {
                 </div>
             )}
 
-            {!isUploadViewOpen && (
-                <div className="rounded-xl border border-slate-700 bg-slate-800/40 p-4">
-                    <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium text-slate-200">Dataset Quota</span>
-                        {providerAccount.tier === 'starter' && (
-                            <span className="text-xs text-slate-400">{providerAccount.datasetsUsed} of {providerAccount.datasetLimit} dataset used</span>
-                        )}
-                        {providerAccount.tier === 'professional' && (
-                            <span className="text-xs text-slate-400">{providerAccount.datasetsUsed} of {providerAccount.datasetLimit} datasets used</span>
-                        )}
-                        {providerAccount.tier === 'enterprise' && (
-                            <span className="text-xs text-emerald-400">Unlimited datasets</span>
-                        )}
-                    </div>
-                    {providerAccount.tier !== 'enterprise' && (
-                        <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
-                            <div 
-                                className={`h-full rounded-full transition-all ${
-                                    providerAccount.tier === 'starter' 
-                                        ? (providerAccount.datasetsUsed >= 1 ? 'bg-amber-500' : 'bg-cyan-500')
-                                        : 'bg-cyan-500'
-                                }`}
-                                style={{ 
-                                    width: providerAccount.tier === 'starter' 
-                                        ? '100%' 
-                                        : `${Math.min((providerAccount.datasetsUsed / (providerAccount.datasetLimit || 5)) * 100, 100)}%` 
-                                }} 
-                            />
-                        </div>
-                    )}
-                </div>
-            )}
+
 
             {!isUploadViewOpen && (
                 <>
