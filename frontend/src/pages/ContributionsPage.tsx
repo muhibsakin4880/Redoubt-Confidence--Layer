@@ -30,6 +30,67 @@ type UploadedDataset = {
     feedback: FeedbackItem[]
 }
 
+type AdvancedRightsConditions = {
+    redistributionRights: string
+    auditLoggingRequirement: string
+    attributionRequirement: string
+    volumeBasedPricing: boolean
+    volumePricingAdjustment: string
+    volumePricingUnit: 'tb' | 'million_records'
+}
+
+type PrivacyAccessTerms = {
+    deliveryMode: string
+    fieldAccess: string
+    usageRights: string
+    term: string
+    geography: string
+    exclusivity: string
+    advanced: AdvancedRightsConditions
+}
+
+type UploadDraftMetadata = {
+    name: string
+    domain: string
+    description: string
+    price: string
+}
+
+type UploadDraftFile = {
+    name: string
+    sizeLabel: string
+    format: string
+    checksumStatus: string
+    uploadStatus: string
+}
+
+type UploadDraftReviewFactor = {
+    label: string
+    score: number
+    detail: string
+}
+
+type UploadDraftReview = {
+    confidenceScore: number
+    confidenceLabel: string
+    classification: string
+    reviewTimeline: string
+    summary: string
+    breakdown: UploadDraftReviewFactor[]
+}
+
+type UploadDraftSubmission = {
+    id: string
+    declarationAccepted: boolean
+}
+
+type UploadDraft = {
+    metadata: UploadDraftMetadata
+    file: UploadDraftFile
+    review: UploadDraftReview
+    submission: UploadDraftSubmission
+}
+
 const uploadSteps = [
     'Dataset info',
     'Secure Payload Ingestion',
@@ -262,35 +323,80 @@ const feedbackStyles: Record<FeedbackItem['severity'], string> = {
     error: 'border-rose-500/40 bg-rose-500/10 text-rose-100'
 }
 
+const createDefaultPrivacyAccessTerms = (): PrivacyAccessTerms => ({
+    deliveryMode: 'secure_clean_room',
+    fieldAccess: 'analytics_pack',
+    usageRights: 'research_use',
+    term: '12_months',
+    geography: 'dual_region',
+    exclusivity: 'non_exclusive',
+    advanced: {
+        redistributionRights: 'not_allowed',
+        auditLoggingRequirement: 'mandatory',
+        attributionRequirement: 'required',
+        volumeBasedPricing: false,
+        volumePricingAdjustment: '',
+        volumePricingUnit: 'tb'
+    }
+})
+
+const createUploadSubmissionId = () => {
+    const now = new Date()
+    const year = now.getFullYear()
+    const month = String(now.getMonth() + 1).padStart(2, '0')
+    const day = String(now.getDate()).padStart(2, '0')
+    const suffix = String(Math.floor(Math.random() * 9000) + 1000)
+    return `SUB-${year}-${month}${day}-${suffix}`
+}
+
+const createInitialUploadDraft = (): UploadDraft => ({
+    metadata: {
+        name: 'City Sensor Aggregates 2026-Q1',
+        domain: 'Mobility & Infrastructure',
+        description: 'Aggregated sensor flow, occupancy, and throughput metrics by 5-minute intervals.',
+        price: '299'
+    },
+    file: {
+        name: 'city_sensors_q1.parquet',
+        sizeLabel: '6.3 GB',
+        format: 'Parquet',
+        checksumStatus: 'Checksum verified',
+        uploadStatus: 'Encrypted upload ready'
+    },
+    review: {
+        confidenceScore: 88,
+        confidenceLabel: 'High Confidence',
+        classification: 'Tier 2 - Regulated',
+        reviewTimeline: '48 hours',
+        summary: 'High-confidence quality and schema alignment.',
+        breakdown: [
+            { label: 'Schema Validity', score: 92, detail: 'All declared fields present and correctly typed.' },
+            { label: 'Completeness', score: 85, detail: '1.8% average null rate across all fields, within threshold.' },
+            { label: 'PHI/PII Risk', score: 90, detail: 'No high-risk sensitive fields detected in dataset.' },
+            { label: 'Format Consistency', score: 84, detail: 'Data formats remain consistent across rows and columns.' }
+        ]
+    },
+    submission: {
+        id: createUploadSubmissionId(),
+        declarationAccepted: false
+    }
+})
+
 export default function ContributionsPage() {
     const { providerAccount } = useAuth()
     const [activeStep, setActiveStep] = useState(0)
     const [selectedDatasetId, setSelectedDatasetId] = useState(uploadedDatasets[0]?.id ?? '')
     const [isUploadViewOpen, setIsUploadViewOpen] = useState(false)
+    const [uploadDraft, setUploadDraft] = useState<UploadDraft>(() => createInitialUploadDraft())
     const [interrogationAcknowledged, setInterrogationAcknowledged] = useState(false)
-    const [privacyAccessTerms, setPrivacyAccessTerms] = useState({
-        deliveryMode: 'secure_clean_room',
-        fieldAccess: 'analytics_pack',
-        usageRights: 'research_use',
-        term: '12_months',
-        geography: 'dual_region',
-        exclusivity: 'non_exclusive',
-        advanced: {
-            redistributionRights: 'not_allowed',
-            auditLoggingRequirement: 'mandatory',
-            attributionRequirement: 'required',
-            volumeBasedPricing: false,
-            volumePricingAdjustment: '',
-            volumePricingUnit: 'tb'
-        }
-    })
+    const [privacyAccessTerms, setPrivacyAccessTerms] = useState<PrivacyAccessTerms>(() => createDefaultPrivacyAccessTerms())
     const [isAdvancedRightsOpen, setIsAdvancedRightsOpen] = useState(false)
-    const [submissionConfirmed, setSubmissionConfirmed] = useState(false)
     const [schemaSearchQuery, setSchemaSearchQuery] = useState('')
     const [expandedFields, setExpandedFields] = useState<Set<string>>(new Set())
     const [showTierReviewModal, setShowTierReviewModal] = useState(false)
     const [tierReviewComment, setTierReviewComment] = useState('')
     const [showTierReviewSuccess, setShowTierReviewSuccess] = useState(false)
+    const [showMockSubmissionNotice, setShowMockSubmissionNotice] = useState(false)
 
     const toggleFieldExpansion = (field: string) => {
         setExpandedFields(prev => {
@@ -352,6 +458,7 @@ export default function ContributionsPage() {
         field: Exclude<keyof typeof privacyAccessTerms, 'advanced'>,
         value: string
     ) => {
+        setShowMockSubmissionNotice(false)
         setPrivacyAccessTerms(prev => ({
             ...prev,
             [field]: value
@@ -362,6 +469,7 @@ export default function ContributionsPage() {
         field: keyof typeof privacyAccessTerms.advanced,
         value: string | boolean
     ) => {
+        setShowMockSubmissionNotice(false)
         setPrivacyAccessTerms(prev => ({
             ...prev,
             advanced: {
@@ -389,6 +497,111 @@ export default function ContributionsPage() {
         [...advancedBinaryOptions.attributionRequirement],
         privacyAccessTerms.advanced.attributionRequirement
     )
+    const volumePricingSummary = privacyAccessTerms.advanced.volumeBasedPricing
+        ? privacyAccessTerms.advanced.volumePricingAdjustment
+            ? `${privacyAccessTerms.advanced.volumePricingAdjustment} / ${
+                privacyAccessTerms.advanced.volumePricingUnit === 'tb' ? 'TB' : 'million records'
+            }`
+            : 'Enabled'
+        : 'Disabled'
+    const isMetadataComplete = Object.values(uploadDraft.metadata).every(value => value.trim().length > 0)
+    const areRightsComplete = [
+        privacyAccessTerms.deliveryMode,
+        privacyAccessTerms.fieldAccess,
+        privacyAccessTerms.usageRights,
+        privacyAccessTerms.term,
+        privacyAccessTerms.geography,
+        privacyAccessTerms.exclusivity,
+        privacyAccessTerms.advanced.redistributionRights,
+        privacyAccessTerms.advanced.auditLoggingRequirement,
+        privacyAccessTerms.advanced.attributionRequirement
+    ].every(Boolean) && (
+        !privacyAccessTerms.advanced.volumeBasedPricing ||
+        privacyAccessTerms.advanced.volumePricingAdjustment.trim().length > 0
+    )
+    const submissionChecklist = [
+        {
+            label: 'Complete dataset metadata',
+            complete: isMetadataComplete
+        },
+        {
+            label: 'Acknowledge the payload interrogation protocol',
+            complete: interrogationAcknowledged
+        },
+        {
+            label: 'Confirm privacy and access rights',
+            complete: areRightsComplete
+        },
+        {
+            label: 'Accept the legal declaration',
+            complete: uploadDraft.submission.declarationAccepted
+        }
+    ]
+    const isSubmissionReady = submissionChecklist.every(item => item.complete)
+    const incompleteSubmissionLabels = submissionChecklist
+        .filter(item => !item.complete)
+        .map(item => item.label.toLowerCase())
+    const buyerAccessSummary = [
+        ['Delivery mode', selectedDeliveryModeLabel],
+        ['Field access', selectedFieldAccessLabel],
+        ['Usage rights', selectedUsageRightsLabel],
+        ['Term', selectedTermLabel],
+        ['Geography', selectedGeographyLabel],
+        ['Exclusivity', selectedExclusivityLabel]
+    ]
+    const advancedRightsSummary = [
+        ['Redistribution rights', selectedRedistributionLabel],
+        ['Audit logging requirement', selectedAuditLoggingLabel],
+        ['Attribution requirement', selectedAttributionLabel],
+        ['Data volume scaling', volumePricingSummary]
+    ]
+
+    const updateUploadMetadata = (field: keyof UploadDraftMetadata, value: string) => {
+        setShowMockSubmissionNotice(false)
+        setUploadDraft(prev => ({
+            ...prev,
+            metadata: {
+                ...prev.metadata,
+                [field]: value
+            }
+        }))
+    }
+
+    const updateSubmissionDeclaration = (declarationAccepted: boolean) => {
+        setShowMockSubmissionNotice(false)
+        setUploadDraft(prev => ({
+            ...prev,
+            submission: {
+                ...prev.submission,
+                declarationAccepted
+            }
+        }))
+    }
+
+    const startUploadFlow = () => {
+        setActiveStep(0)
+        setUploadDraft(createInitialUploadDraft())
+        setInterrogationAcknowledged(false)
+        setPrivacyAccessTerms(createDefaultPrivacyAccessTerms())
+        setIsAdvancedRightsOpen(false)
+        setSchemaSearchQuery('')
+        setExpandedFields(new Set())
+        setShowTierReviewModal(false)
+        setShowTierReviewSuccess(false)
+        setShowMockSubmissionNotice(false)
+        setTierReviewComment('')
+        setIsUploadViewOpen(true)
+    }
+
+    const closeUploadFlow = () => {
+        setIsAdvancedRightsOpen(false)
+        setIsUploadViewOpen(false)
+    }
+
+    const handleMockSubmission = () => {
+        if (!isSubmissionReady) return
+        setShowMockSubmissionNotice(true)
+    }
 
     const stepPreview = [
         {
@@ -398,21 +611,37 @@ export default function ContributionsPage() {
                 <div className="grid sm:grid-cols-2 gap-3 text-sm">
                     <div className="bg-slate-900/70 border border-slate-700 rounded-lg p-3">
                         <div className="text-slate-400 text-xs mb-1">Dataset title</div>
-                        <div className="text-slate-100">City Sensor Aggregates 2026-Q1</div>
+                        <input
+                            type="text"
+                            value={uploadDraft.metadata.name}
+                            onChange={(e) => updateUploadMetadata('name', e.target.value)}
+                            className="w-full bg-slate-950/80 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-cyan-500/50"
+                        />
                     </div>
                     <div className="bg-slate-900/70 border border-slate-700 rounded-lg p-3">
                         <div className="text-slate-400 text-xs mb-1">Domain</div>
-                        <div className="text-slate-100">Mobility & Infrastructure</div>
+                        <input
+                            type="text"
+                            value={uploadDraft.metadata.domain}
+                            onChange={(e) => updateUploadMetadata('domain', e.target.value)}
+                            className="w-full bg-slate-950/80 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-cyan-500/50"
+                        />
                     </div>
                     <div className="bg-slate-900/70 border border-slate-700 rounded-lg p-3 sm:col-span-2">
                         <div className="text-slate-400 text-xs mb-1">Description</div>
-                        <div className="text-slate-100">Aggregated sensor flow, occupancy, and throughput metrics by 5-minute intervals.</div>
+                        <textarea
+                            value={uploadDraft.metadata.description}
+                            onChange={(e) => updateUploadMetadata('description', e.target.value)}
+                            className="min-h-24 w-full resize-none bg-slate-950/80 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-cyan-500/50"
+                        />
                     </div>
                     <div className="sm:col-span-2">
                         <div className="text-slate-400 text-xs mb-1">Dataset Access Price</div>
                         <div className="flex items-center gap-2">
                             <input
                                 type="number"
+                                value={uploadDraft.metadata.price}
+                                onChange={(e) => updateUploadMetadata('price', e.target.value)}
                                 placeholder="299"
                                 className="flex-1 sm:flex-none sm:w-32 bg-slate-900/70 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-cyan-500/50"
                             />
@@ -463,7 +692,10 @@ export default function ContributionsPage() {
                         <input
                             type="checkbox"
                             checked={interrogationAcknowledged}
-                            onChange={(e) => setInterrogationAcknowledged(e.target.checked)}
+                            onChange={(e) => {
+                                setShowMockSubmissionNotice(false)
+                                setInterrogationAcknowledged(e.target.checked)
+                            }}
                             className="mt-1 w-4 h-4 rounded border-slate-600 bg-slate-800 text-cyan-500 focus:ring-cyan-500 focus:ring-offset-slate-900"
                         />
                         <span className="text-slate-300 text-xs">
@@ -474,8 +706,17 @@ export default function ContributionsPage() {
                         <div className={`font-semibold ${interrogationAcknowledged ? 'text-cyan-200' : 'text-slate-400'}`}>Drop files here or browse (mock)</div>
                         <div className="text-slate-500 text-xs mt-1">Accepted: CSV, Parquet, JSONL - max 15 GB per upload</div>
                     </div>
-                    <div className="bg-slate-900/70 border border-slate-700 rounded-lg p-3 text-slate-300">
-                        `city_sensors_q1.parquet` - 6.3 GB - checksum verified
+                    <div className="bg-slate-900/70 border border-slate-700 rounded-lg p-3">
+                        <div className="flex flex-wrap items-center gap-2 text-slate-100">
+                            <span className="font-medium">{uploadDraft.file.name}</span>
+                            <span className="text-slate-500">-</span>
+                            <span>{uploadDraft.file.sizeLabel}</span>
+                            <span className="text-slate-500">-</span>
+                            <span>{uploadDraft.file.checksumStatus}</span>
+                        </div>
+                        <div className="mt-1 text-xs text-slate-400">
+                            {uploadDraft.file.format} file • {uploadDraft.file.uploadStatus}
+                        </div>
                     </div>
                 </div>
             )
@@ -946,13 +1187,7 @@ export default function ContributionsPage() {
                                         <div className="flex items-center justify-between gap-3"><span>Attribution</span><span className="text-slate-100">{selectedAttributionLabel}</span></div>
                                         <div className="flex items-center justify-between gap-3">
                                             <span>Volume pricing</span>
-                                            <span className="text-slate-100">
-                                                {privacyAccessTerms.advanced.volumeBasedPricing
-                                                    ? privacyAccessTerms.advanced.volumePricingAdjustment
-                                                        ? `${privacyAccessTerms.advanced.volumePricingAdjustment} / ${privacyAccessTerms.advanced.volumePricingUnit === 'tb' ? 'TB' : 'million records'}`
-                                                        : 'Enabled'
-                                                    : 'Disabled'}
-                                            </span>
+                                            <span className="text-slate-100">{volumePricingSummary}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -1061,84 +1296,201 @@ export default function ContributionsPage() {
         },
         {
             title: 'Submission confirmation',
-            description: 'Review pricing, confidence, and legal declaration before submission.',
+            description: 'Review the dataset package, access terms, and legal declaration before submission.',
             body: (
                 <div className="space-y-4 text-sm">
-                    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                        <div className="rounded-lg border border-slate-700 bg-slate-900/70 p-3">
-                            <div className="text-slate-400 text-xs mb-1">Dataset name</div>
-                            <div className="text-slate-100 font-medium">City Sensor Aggregates 2026-Q1</div>
-                        </div>
-                        <div className="rounded-lg border border-slate-700 bg-slate-900/70 p-3">
-                            <div className="text-slate-400 text-xs mb-1">Domain</div>
-                            <div className="text-slate-100 font-medium">Mobility &amp; Infrastructure</div>
-                        </div>
-                        <div className="rounded-lg border border-slate-700 bg-slate-900/70 p-3">
-                            <div className="text-slate-400 text-xs mb-1">Price</div>
-                            <div className="text-slate-100 font-medium">$299 / access</div>
-                        </div>
-                        <div className="rounded-lg border border-slate-700 bg-slate-900/70 p-3">
-                            <div className="text-slate-400 text-xs mb-1">File</div>
-                            <div className="text-slate-100 font-medium">city_sensors_q1.parquet</div>
-                        </div>
-                    </div>
-
-                    <div className="grid gap-3 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
-                        <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-4 space-y-4">
-                            <div>
-                                <div className="text-[11px] uppercase tracking-[0.14em] text-slate-400 mb-2">Pricing info</div>
-                                <p className="text-slate-200">
-                                    No onboarding fees apply to participants or datasets. Revenue starts only after a successful settlement.
-                                </p>
-                            </div>
-
-                            <div className="grid gap-3 sm:grid-cols-2">
-                                <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3">
-                                    <div className="text-[11px] uppercase tracking-[0.14em] text-emerald-300/80 mb-1">Confidence score</div>
-                                    <div className="text-2xl font-semibold text-emerald-200">88 / 100</div>
-                                    <div className="text-xs text-slate-300 mt-1">High-confidence quality and schema alignment.</div>
+                    <div className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
+                        <div className="space-y-4">
+                            <section className="rounded-2xl border border-slate-700 bg-slate-900/60 p-5 backdrop-blur-sm">
+                                <div className="flex flex-wrap items-start justify-between gap-3">
+                                    <div>
+                                        <div className="text-[11px] uppercase tracking-[0.16em] text-slate-400">Dataset package</div>
+                                        <h4 className="mt-2 text-lg font-semibold text-slate-50">Final metadata and payload review</h4>
+                                        <p className="mt-1 text-sm text-slate-400">This mock submission screen now reflects the working values from the earlier upload steps.</p>
+                                    </div>
+                                    <div className="flex flex-wrap gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setActiveStep(0)}
+                                            className="rounded-lg border border-slate-700 bg-slate-950/60 px-3 py-2 text-xs font-semibold text-slate-200 transition-colors hover:border-cyan-500"
+                                        >
+                                            Edit Step 1
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setActiveStep(1)}
+                                            className="rounded-lg border border-slate-700 bg-slate-950/60 px-3 py-2 text-xs font-semibold text-slate-200 transition-colors hover:border-cyan-500"
+                                        >
+                                            Edit Step 2
+                                        </button>
+                                    </div>
                                 </div>
-                                <div className="rounded-lg border border-blue-500/30 bg-blue-500/10 p-3">
-                                    <div className="text-[11px] uppercase tracking-[0.14em] text-blue-300/80 mb-1">Review timeline</div>
-                                    <div className="text-2xl font-semibold text-blue-100">48 hours</div>
-                                    <div className="text-xs text-slate-300 mt-1">Compliance and marketplace review starts after submission.</div>
+
+                                <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                                    <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3">
+                                        <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">Dataset name</div>
+                                        <div className="mt-1 font-medium text-slate-100">{uploadDraft.metadata.name}</div>
+                                    </div>
+                                    <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3">
+                                        <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">Domain</div>
+                                        <div className="mt-1 font-medium text-slate-100">{uploadDraft.metadata.domain}</div>
+                                    </div>
+                                    <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3">
+                                        <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">Price</div>
+                                        <div className="mt-1 font-medium text-slate-100">${uploadDraft.metadata.price || '--'} / access</div>
+                                    </div>
+                                    <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3">
+                                        <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">File</div>
+                                        <div className="mt-1 font-medium text-slate-100">{uploadDraft.file.name}</div>
+                                    </div>
+                                    <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3 sm:col-span-2">
+                                        <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">Description</div>
+                                        <div className="mt-1 text-slate-200">{uploadDraft.metadata.description}</div>
+                                    </div>
+                                    <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3">
+                                        <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">File size</div>
+                                        <div className="mt-1 font-medium text-slate-100">{uploadDraft.file.sizeLabel}</div>
+                                    </div>
+                                    <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3">
+                                        <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">Integrity</div>
+                                        <div className="mt-1 font-medium text-slate-100">{uploadDraft.file.checksumStatus}</div>
+                                        <div className="mt-1 text-xs text-slate-400">{uploadDraft.file.format} • {uploadDraft.file.uploadStatus}</div>
+                                    </div>
                                 </div>
-                            </div>
+
+                                <div className="mt-4 rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-4">
+                                    <div className="text-[11px] uppercase tracking-[0.14em] text-cyan-300/80">Pricing info</div>
+                                    <p className="mt-2 text-slate-200">
+                                        No onboarding fees apply to participants or datasets. Revenue starts only after a successful settlement.
+                                    </p>
+                                </div>
+                            </section>
+
+                            <section className="rounded-2xl border border-slate-700 bg-slate-900/60 p-5 backdrop-blur-sm">
+                                <div className="text-[11px] uppercase tracking-[0.16em] text-slate-400">Review signals</div>
+                                <h4 className="mt-2 text-lg font-semibold text-slate-50">Quality and marketplace review summary</h4>
+
+                                <div className="mt-5 grid gap-3 md:grid-cols-3">
+                                    <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4">
+                                        <div className="text-[11px] uppercase tracking-[0.14em] text-emerald-300/80">Confidence score</div>
+                                        <div className="mt-2 text-3xl font-semibold text-emerald-200">{uploadDraft.review.confidenceScore} / 100</div>
+                                        <div className="mt-1 text-xs text-slate-300">{uploadDraft.review.summary}</div>
+                                    </div>
+                                    <div className="rounded-xl border border-blue-500/30 bg-blue-500/10 p-4">
+                                        <div className="text-[11px] uppercase tracking-[0.14em] text-blue-300/80">Classification</div>
+                                        <div className="mt-2 text-lg font-semibold text-blue-100">{uploadDraft.review.classification}</div>
+                                        <div className="mt-1 text-xs text-slate-300">{uploadDraft.review.confidenceLabel}</div>
+                                    </div>
+                                    <div className="rounded-xl border border-violet-500/30 bg-violet-500/10 p-4">
+                                        <div className="text-[11px] uppercase tracking-[0.14em] text-violet-300/80">Review timeline</div>
+                                        <div className="mt-2 text-3xl font-semibold text-violet-100">{uploadDraft.review.reviewTimeline}</div>
+                                        <div className="mt-1 text-xs text-slate-300">Compliance and marketplace review begins after submission.</div>
+                                    </div>
+                                </div>
+
+                                <div className="mt-4 grid gap-3 md:grid-cols-2">
+                                    {uploadDraft.review.breakdown.map(item => (
+                                        <div key={item.label} className="rounded-xl border border-slate-800 bg-slate-950/60 p-4">
+                                            <div className="flex items-center justify-between gap-3">
+                                                <span className="font-medium text-slate-100">{item.label}</span>
+                                                <span className="text-sm font-semibold text-emerald-300">{item.score}/100</span>
+                                            </div>
+                                            <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-800">
+                                                <div className="h-full rounded-full bg-emerald-500" style={{ width: `${item.score}%` }} />
+                                            </div>
+                                            <div className="mt-2 text-xs text-slate-400">{item.detail}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </section>
+
+                            <section className="rounded-2xl border border-slate-700 bg-slate-900/60 p-5 backdrop-blur-sm">
+                                <div className="flex flex-wrap items-start justify-between gap-3">
+                                    <div>
+                                        <div className="text-[11px] uppercase tracking-[0.16em] text-slate-400">Buyer access terms</div>
+                                        <h4 className="mt-2 text-lg font-semibold text-slate-50">Commercial access package</h4>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setActiveStep(3)}
+                                        className="rounded-lg border border-slate-700 bg-slate-950/60 px-3 py-2 text-xs font-semibold text-slate-200 transition-colors hover:border-cyan-500"
+                                    >
+                                        Edit Step 4
+                                    </button>
+                                </div>
+
+                                <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                                    {buyerAccessSummary.map(([label, value]) => (
+                                        <div key={label} className="rounded-xl border border-slate-800 bg-slate-950/60 p-3">
+                                            <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">{label}</div>
+                                            <div className="mt-1 font-medium text-slate-100">{value}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </section>
+
+                            <section className="rounded-2xl border border-slate-700 bg-slate-900/60 p-5 backdrop-blur-sm">
+                                <div className="text-[11px] uppercase tracking-[0.16em] text-slate-400">Advanced rights &amp; conditions</div>
+                                <h4 className="mt-2 text-lg font-semibold text-slate-50">Legal, audit, redistribution, and governance recap</h4>
+
+                                <div className="mt-5 grid gap-3 md:grid-cols-2">
+                                    {advancedRightsSummary.map(([label, value]) => (
+                                        <div key={label} className="rounded-xl border border-slate-800 bg-slate-950/60 p-3">
+                                            <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">{label}</div>
+                                            <div className="mt-1 font-medium text-slate-100">{value}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </section>
                         </div>
 
-                        <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-4 space-y-4">
-                            <div>
-                                <div className="text-[11px] uppercase tracking-[0.14em] text-slate-400 mb-2">Submission ID</div>
-                                <div className="text-lg font-semibold text-slate-100">SUB-2026-0481</div>
-                            </div>
+                        <aside className="xl:sticky xl:top-4 h-fit">
+                            <section className="rounded-2xl border border-slate-700 bg-slate-950/80 p-5 shadow-xl backdrop-blur-sm">
+                                <div className="text-[11px] uppercase tracking-[0.16em] text-slate-400">Submission</div>
+                                <div className="mt-2 text-2xl font-semibold text-slate-50">{uploadDraft.submission.id}</div>
+                                <p className="mt-1 text-sm text-slate-400">Generated for this frontend-only upload session. It resets when you start a new dataset upload.</p>
 
-                            <label className="flex items-start gap-3 rounded-lg border border-slate-700 bg-slate-950/60 p-3 cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    checked={submissionConfirmed}
-                                    onChange={(e) => setSubmissionConfirmed(e.target.checked)}
-                                    className="mt-1 h-4 w-4 rounded border-slate-600 bg-slate-800 text-blue-500 focus:ring-blue-500 focus:ring-offset-slate-900"
-                                />
-                                <span className="text-slate-300">
-                                    I declare that the dataset details, pricing, and attached file are accurate and ready for Redoubt review.
-                                </span>
-                            </label>
+                                <div className="mt-5 space-y-2">
+                                    {submissionChecklist.map(item => (
+                                        <div key={item.label} className="flex items-center justify-between gap-3 rounded-xl border border-slate-800 bg-slate-900/70 px-3 py-2">
+                                            <span className="text-slate-300">{item.label}</span>
+                                            <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] ${
+                                                item.complete
+                                                    ? 'border border-emerald-500/40 bg-emerald-500/15 text-emerald-200'
+                                                    : 'border border-slate-700 bg-slate-800 text-slate-400'
+                                            }`}>
+                                                {item.complete ? 'Ready' : 'Pending'}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
 
-                            <div className="flex flex-wrap items-center gap-3">
-                                <button
-                                    type="button"
-                                    disabled={!submissionConfirmed}
-                                    className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-colors disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400"
-                                >
-                                    Submit dataset (mock)
-                                </button>
-                                <span className={`text-xs ${submissionConfirmed ? 'text-emerald-300' : 'text-slate-500'}`}>
-                                    {submissionConfirmed
-                                        ? 'Declaration complete. Submission is enabled.'
-                                        : 'Accept the legal declaration to enable submission.'}
-                                </span>
-                            </div>
-                        </div>
+                                <label className="mt-5 flex items-start gap-3 rounded-xl border border-slate-700 bg-slate-900/70 p-4 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={uploadDraft.submission.declarationAccepted}
+                                        onChange={(e) => updateSubmissionDeclaration(e.target.checked)}
+                                        className="mt-1 h-4 w-4 rounded border-slate-600 bg-slate-800 text-blue-500 focus:ring-blue-500 focus:ring-offset-slate-900"
+                                    />
+                                    <span className="text-slate-300">
+                                        I declare that the dataset details, file package, pricing terms, and access conditions are accurate and ready for Redoubt review.
+                                    </span>
+                                </label>
+
+                                <div className="mt-5 space-y-3">
+                                    <div className={`text-xs ${isSubmissionReady ? 'text-emerald-300' : 'text-slate-400'}`}>
+                                        {isSubmissionReady
+                                            ? 'All frontend review requirements are complete. The button is enabled, but no backend submission is triggered.'
+                                            : `Finish ${incompleteSubmissionLabels.join(', ')} to enable the mock submission button.`}
+                                    </div>
+                                    {showMockSubmissionNotice && (
+                                        <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-200">
+                                            Mock submission captured locally. No backend request was sent.
+                                        </div>
+                                    )}
+                                </div>
+                            </section>
+                        </aside>
                     </div>
                 </div>
             )
@@ -1156,7 +1508,7 @@ export default function ContributionsPage() {
                 </div>
                 {isUploadViewOpen ? (
                     <button
-                        onClick={() => setIsUploadViewOpen(false)}
+                        onClick={closeUploadFlow}
                         className="inline-flex items-center justify-center px-4 py-2 rounded-lg border border-slate-600 bg-slate-800/80 hover:border-blue-400 text-sm font-semibold text-slate-100 transition-colors self-start"
                     >
                         Back to Dashboard
@@ -1164,10 +1516,7 @@ export default function ContributionsPage() {
                 ) : (
                     providerAccount.canCreateDataset ? (
                         <button
-                            onClick={() => {
-                                setActiveStep(0)
-                                setIsUploadViewOpen(true)
-                            }}
+                            onClick={startUploadFlow}
                             className="inline-flex items-center justify-center px-5 py-3 rounded-lg border border-blue-300/40 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-sm font-semibold text-white shadow-lg shadow-blue-700/25 transition-all self-start"
                         >
                             Upload New Dataset
@@ -1390,7 +1739,7 @@ export default function ContributionsPage() {
                                             Upgrade Plan →
                                         </button>
                                         <button
-                                            onClick={() => setIsUploadViewOpen(false)}
+                                            onClick={closeUploadFlow}
                                             className="px-4 py-2 rounded-lg border border-slate-600 hover:border-slate-500 text-sm font-semibold text-slate-300 transition-colors"
                                         >
                                             Go Back
@@ -1408,6 +1757,16 @@ export default function ContributionsPage() {
                                 >
                                     Previous
                                 </button>
+                                {activeStep === uploadSteps.length - 1 && (
+                                    <button
+                                        type="button"
+                                        onClick={handleMockSubmission}
+                                        disabled={!isSubmissionReady}
+                                        className="px-3 py-2 rounded-lg bg-blue-600 text-xs font-semibold text-white transition-colors hover:bg-blue-500 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400"
+                                    >
+                                        Submit &amp; Finalize
+                                    </button>
+                                )}
                                 {activeStep < uploadSteps.length - 1 && (
                                     <button
                                         onClick={() => setActiveStep(prev => Math.min(prev + 1, uploadSteps.length - 1))}
