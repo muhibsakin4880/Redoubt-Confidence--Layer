@@ -34,7 +34,7 @@ const uploadSteps = [
     'Dataset info',
     'Secure Payload Ingestion',
     'Schema preview',
-    'Privacy & access controls',
+    'Privacy & Access Controls',
     'Submission confirmation'
 ]
 
@@ -45,6 +45,122 @@ const validationStages = [
     'Compliance review',
     'Approved for access'
 ]
+
+const deliveryModeOptions = [
+    { value: 'metadata_only', label: 'Metadata only', detail: 'Surface title, schema, and high-level descriptors only.' },
+    { value: 'secure_clean_room', label: 'Secure clean room', detail: 'Buyer works inside a governed workspace without direct export.' },
+    { value: 'aggregated_export', label: 'Aggregated export', detail: 'Approved users receive pre-aggregated outputs only.' },
+    { value: 'encrypted_download', label: 'Encrypted download', detail: 'Encrypted file delivery for tightly controlled access cases.' }
+]
+
+const fieldAccessOptions = [
+    { value: 'core_fields', label: 'Core fields', detail: 'Essential operational columns for lightweight review.' },
+    { value: 'analytics_pack', label: 'Analytics pack', detail: 'Expanded feature set for analysis and benchmarking.' },
+    { value: 'full_schema', label: 'Full schema', detail: 'Complete dataset structure made available to approved buyers.' },
+    { value: 'sensitive_review_pack', label: 'Sensitive review pack', detail: 'Restricted review tier with heightened compliance checks.' }
+]
+
+const usageRightsOptions = [
+    { value: 'research_use', label: 'Research use', detail: 'Non-production exploration and model evaluation.' },
+    { value: 'internal_ai_training', label: 'Internal AI training', detail: 'Model development and tuning for internal systems.' },
+    { value: 'commercial_analytics', label: 'Commercial analytics', detail: 'Revenue-linked analytics and decision support workflows.' },
+    { value: 'customer_facing_output', label: 'Customer-facing output', detail: 'Insights may appear in downstream client experiences.' }
+]
+
+const termOptions = [
+    { value: '30_days', label: '30 days' },
+    { value: '90_days', label: '90 days' },
+    { value: '12_months', label: '12 months' },
+    { value: '24_months', label: '24 months' }
+]
+
+const geographyOptions = [
+    { value: 'single_region', label: 'Single region' },
+    { value: 'dual_region', label: 'Dual region' },
+    { value: 'global', label: 'Global' }
+]
+
+const exclusivityOptions = [
+    { value: 'non_exclusive', label: 'Non-exclusive' },
+    { value: 'vertical_exclusive', label: 'Vertical exclusive' },
+    { value: 'regional_exclusive', label: 'Regional exclusive' },
+    { value: 'full_exclusive', label: 'Full exclusive' }
+]
+
+const advancedBinaryOptions = {
+    redistributionRights: [
+        { value: 'allowed', label: 'Allowed' },
+        { value: 'not_allowed', label: 'Not Allowed' }
+    ],
+    auditLoggingRequirement: [
+        { value: 'mandatory', label: 'Mandatory' },
+        { value: 'optional', label: 'Optional' }
+    ],
+    attributionRequirement: [
+        { value: 'required', label: 'Required' },
+        { value: 'not_required', label: 'Not Required' }
+    ]
+} as const
+
+const findOptionLabel = <T extends { value: string; label: string }>(options: T[], value: string) =>
+    options.find(option => option.value === value)?.label ?? value
+
+const privacyControlSections = [
+    {
+        field: 'deliveryMode',
+        title: 'Delivery Mode',
+        description: 'Choose how buyers receive or interact with approved data.',
+        options: deliveryModeOptions
+    },
+    {
+        field: 'fieldAccess',
+        title: 'Field Access',
+        description: 'Set the breadth of schema visibility available to buyers.',
+        options: fieldAccessOptions
+    },
+    {
+        field: 'usageRights',
+        title: 'Usage Rights',
+        description: 'Select the primary rights granted to approved buyers.',
+        options: usageRightsOptions
+    },
+    {
+        field: 'term',
+        title: 'Term',
+        description: 'Define how long buyer access remains active.',
+        options: termOptions
+    },
+    {
+        field: 'geography',
+        title: 'Geography',
+        description: 'Set the operating footprint for approved access.',
+        options: geographyOptions
+    },
+    {
+        field: 'exclusivity',
+        title: 'Exclusivity',
+        description: 'Choose whether this package remains open or reserved.',
+        options: exclusivityOptions
+    }
+] as const
+
+const advancedRightsSections = [
+    {
+        field: 'redistributionRights',
+        title: 'Redistribution Rights',
+        options: advancedBinaryOptions.redistributionRights
+    },
+    {
+        field: 'auditLoggingRequirement',
+        title: 'Audit Logging Requirement',
+        options: advancedBinaryOptions.auditLoggingRequirement
+    },
+    {
+        field: 'attributionRequirement',
+        title: 'Attribution Requirement',
+        options: advancedBinaryOptions.attributionRequirement
+    }
+] as const
 
 const uploadedDatasets: UploadedDataset[] = [
     {
@@ -152,21 +268,26 @@ export default function ContributionsPage() {
     const [selectedDatasetId, setSelectedDatasetId] = useState(uploadedDatasets[0]?.id ?? '')
     const [isUploadViewOpen, setIsUploadViewOpen] = useState(false)
     const [interrogationAcknowledged, setInterrogationAcknowledged] = useState(false)
-    const [anonymitySettings, setAnonymitySettings] = useState({
-        anonymousUpload: true,
-        pseudonymization: false,
-        fullDeIdentification: false
+    const [privacyAccessTerms, setPrivacyAccessTerms] = useState({
+        deliveryMode: 'secure_clean_room',
+        fieldAccess: 'analytics_pack',
+        usageRights: 'research_use',
+        term: '12_months',
+        geography: 'dual_region',
+        exclusivity: 'non_exclusive',
+        advanced: {
+            redistributionRights: 'not_allowed',
+            auditLoggingRequirement: 'mandatory',
+            attributionRequirement: 'required',
+            volumeBasedPricing: false,
+            volumePricingAdjustment: '',
+            volumePricingUnit: 'tb'
+        }
     })
+    const [isAdvancedRightsOpen, setIsAdvancedRightsOpen] = useState(false)
     const [submissionConfirmed, setSubmissionConfirmed] = useState(false)
     const [schemaSearchQuery, setSchemaSearchQuery] = useState('')
     const [expandedFields, setExpandedFields] = useState<Set<string>>(new Set())
-    const [accessMethod, setAccessMethod] = useState<'platform' | 'download'>('platform')
-    const [downloadConditions, setDownloadConditions] = useState({
-        requireReconfirmation: true,
-        notifyOnDownload: true,
-        allowAfterEscrow: true,
-        maxDownloads: 1
-    })
     const [showTierReviewModal, setShowTierReviewModal] = useState(false)
     const [tierReviewComment, setTierReviewComment] = useState('')
     const [showTierReviewSuccess, setShowTierReviewSuccess] = useState(false)
@@ -207,13 +328,6 @@ export default function ContributionsPage() {
         return schemaFieldData.filter(f => f.field.toLowerCase().includes(query))
     }, [schemaSearchQuery])
 
-    const toggleAnonymitySetting = (setting: keyof typeof anonymitySettings) => {
-        setAnonymitySettings(prev => ({
-            ...prev,
-            [setting]: !prev[setting]
-        }))
-    }
-
     const selectedDataset = useMemo(
         () => uploadedDatasets.find(dataset => dataset.id === selectedDatasetId) ?? uploadedDatasets[0],
         [selectedDatasetId]
@@ -233,6 +347,48 @@ export default function ContributionsPage() {
             totalAccessEvents
         }
     }, [])
+
+    const updatePrivacyAccessTerm = (
+        field: Exclude<keyof typeof privacyAccessTerms, 'advanced'>,
+        value: string
+    ) => {
+        setPrivacyAccessTerms(prev => ({
+            ...prev,
+            [field]: value
+        }))
+    }
+
+    const updateAdvancedRight = (
+        field: keyof typeof privacyAccessTerms.advanced,
+        value: string | boolean
+    ) => {
+        setPrivacyAccessTerms(prev => ({
+            ...prev,
+            advanced: {
+                ...prev.advanced,
+                [field]: value
+            }
+        }))
+    }
+
+    const selectedDeliveryModeLabel = findOptionLabel(deliveryModeOptions, privacyAccessTerms.deliveryMode)
+    const selectedFieldAccessLabel = findOptionLabel(fieldAccessOptions, privacyAccessTerms.fieldAccess)
+    const selectedUsageRightsLabel = findOptionLabel(usageRightsOptions, privacyAccessTerms.usageRights)
+    const selectedTermLabel = findOptionLabel(termOptions, privacyAccessTerms.term)
+    const selectedGeographyLabel = findOptionLabel(geographyOptions, privacyAccessTerms.geography)
+    const selectedExclusivityLabel = findOptionLabel(exclusivityOptions, privacyAccessTerms.exclusivity)
+    const selectedRedistributionLabel = findOptionLabel(
+        [...advancedBinaryOptions.redistributionRights],
+        privacyAccessTerms.advanced.redistributionRights
+    )
+    const selectedAuditLoggingLabel = findOptionLabel(
+        [...advancedBinaryOptions.auditLoggingRequirement],
+        privacyAccessTerms.advanced.auditLoggingRequirement
+    )
+    const selectedAttributionLabel = findOptionLabel(
+        [...advancedBinaryOptions.attributionRequirement],
+        privacyAccessTerms.advanced.attributionRequirement
+    )
 
     const stepPreview = [
         {
@@ -690,342 +846,300 @@ export default function ContributionsPage() {
             )
         },
         {
-            title: 'Privacy & access controls',
-            description: 'Define policy controls before submission.',
+            title: 'Step 4 - Privacy & access controls',
+            description: 'Configure how buyers can access and use this dataset. Basic terms are shown below. Advanced legal and governance controls can be set separately.',
             body: (
                 <div className="space-y-4 text-sm">
-                    <div className="rounded-xl border border-cyan-400/30 bg-gradient-to-br from-cyan-500/10 via-slate-900/80 to-slate-950 px-4 py-4 shadow-lg shadow-cyan-900/20">
-                        <div className="flex items-center justify-between gap-3 mb-3">
-                            <div>
-                                <div className="text-[11px] uppercase tracking-[0.16em] text-cyan-300/80">Anonymity Settings</div>
-                                <div className="text-slate-200 text-xs mt-1">Configure identity protection and de-identification before dataset release.</div>
-                            </div>
-                            <span className="px-2.5 py-1 rounded-full bg-cyan-500/15 border border-cyan-400/30 text-[11px] font-medium text-cyan-200">Recommended</span>
-                        </div>
-
-                        <div className="space-y-2.5">
-                            <div className="flex items-start justify-between gap-4 rounded-lg border border-slate-700/80 bg-slate-900/80 px-3 py-3">
-                                <div>
-                                    <div className="text-slate-100 font-medium">Enable Anonymous Upload</div>
-                                    <div className="text-slate-400 text-xs mt-1 max-w-xl">Your identity and organization name will remain completely hidden from other participants and accessors</div>
-                                </div>
-                                <button
-type="button"
-                                     aria-pressed={anonymitySettings.anonymousUpload}
-                                     onClick={() => toggleAnonymitySetting('anonymousUpload')}
-                                     className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors transition-transform duration-100 active:scale-95 ${
-                                         anonymitySettings.anonymousUpload
-                                             ? 'bg-cyan-500 ring-1 ring-cyan-300/40'
-                                             : 'bg-slate-700 ring-1 ring-slate-500/60'
-                                     }`}
-                                >
-                                    <span
-                                        className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${
-                                            anonymitySettings.anonymousUpload ? 'translate-x-5' : 'translate-x-1'
-                                        }`}
-                                    />
-                                </button>
-                            </div>
-
-                            <div className="flex items-center justify-between gap-4 rounded-lg border border-slate-700/80 bg-slate-900/80 px-3 py-3">
-                                <div className="text-slate-100 font-medium">Apply Pseudonymization</div>
-                                <button
-type="button"
-                                     aria-pressed={anonymitySettings.pseudonymization}
-                                     onClick={() => toggleAnonymitySetting('pseudonymization')}
-                                     className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors transition-transform duration-100 active:scale-95 ${
-                                         anonymitySettings.pseudonymization
-                                             ? 'bg-cyan-500 ring-1 ring-cyan-300/40'
-                                             : 'bg-slate-700 ring-1 ring-slate-500/60'
-                                     }`}
-                                >
-                                    <span
-                                        className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${
-                                            anonymitySettings.pseudonymization ? 'translate-x-5' : 'translate-x-1'
-                                        }`}
-                                    />
-                                </button>
-                            </div>
-
-                            <div className="flex items-center justify-between gap-4 rounded-lg border border-slate-700/80 bg-slate-900/80 px-3 py-3">
-                                <div className="text-slate-100 font-medium">Full De-identification</div>
-                                <button
-                                    type="button"
-                                    aria-pressed={anonymitySettings.fullDeIdentification}
-                                    onClick={() => toggleAnonymitySetting('fullDeIdentification')}
-                                    className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
-                                        anonymitySettings.fullDeIdentification
-                                            ? 'bg-cyan-500 ring-1 ring-cyan-300/40'
-                                            : 'bg-slate-700 ring-1 ring-slate-500/60'
-                                    }`}
-                                >
-                                    <span
-                                        className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${
-                                            anonymitySettings.fullDeIdentification ? 'translate-x-5' : 'translate-x-1'
-                                        }`}
-                                    />
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
-                        <div className="text-[11px] uppercase tracking-[0.14em] text-slate-400 mb-3">Access Governance</div>
-                        <div className="grid sm:grid-cols-2 gap-3">
-                            <div className="bg-slate-950/70 border border-slate-700 rounded-lg p-3">
-                                <div className="text-slate-400 text-xs mb-1">Default access level</div>
-                                <div className="text-slate-100">Restricted participant workspaces</div>
-                            </div>
-                            <div className="bg-slate-950/70 border border-slate-700 rounded-lg p-3">
-                                <div className="text-slate-400 text-xs mb-1">Export policy</div>
-                                <div className="text-slate-100">Aggregated export only</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
-                        <div className="text-[11px] uppercase tracking-[0.14em] text-slate-400 mb-3">Buyer Restrictions</div>
-                        <div className="grid sm:grid-cols-3 gap-3">
-                            <div className="bg-slate-950/70 border border-slate-700 rounded-lg p-3">
-                                <div className="text-slate-400 text-xs mb-1">Allowed Industries</div>
-                                <select className="w-full bg-slate-900/70 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 text-sm focus:outline-none focus:border-cyan-500/50">
-                                    <option>All Industries</option>
-                                    <option>Healthcare Only</option>
-                                    <option>Finance Only</option>
-                                    <option>Government Only</option>
-                                    <option>Research & Academia Only</option>
-                                </select>
-                            </div>
-                            <div className="bg-slate-950/70 border border-slate-700 rounded-lg p-3">
-                                <div className="text-slate-400 text-xs mb-1">Geographic Restriction</div>
-                                <select className="w-full bg-slate-900/70 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 text-sm focus:outline-none focus:border-cyan-500/50">
-                                    <option>Global</option>
-                                    <option>US Only</option>
-                                    <option>EU Only</option>
-                                    <option>Asia Pacific Only</option>
-                                </select>
-                            </div>
-                            <div className="bg-slate-950/70 border border-slate-700 rounded-lg p-3">
-                                <div className="text-slate-400 text-xs mb-1">Permitted Use</div>
-                                <select className="w-full bg-slate-900/70 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 text-sm focus:outline-none focus:border-cyan-500/50">
-                                    <option>All Uses</option>
-                                    <option>Research Only</option>
-                                    <option>Commercial Use</option>
-                                    <option>AI Training Only</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
-                        <div className="text-[11px] uppercase tracking-[0.14em] text-slate-400 mb-3">Dataset Access Method</div>
-                        <div className="grid sm:grid-cols-2 gap-4">
-                            <button
-                                onClick={() => setAccessMethod('platform')}
-                                className={`rounded-lg border p-4 text-left transition-all ${
-                                    accessMethod === 'platform'
-                                        ? 'border-emerald-500/60 bg-emerald-500/10'
-                                        : 'border-slate-700 bg-slate-900/40 hover:border-slate-600'
-                                }`}
-                            >
-                                <div className="flex items-center justify-between mb-2">
-                                    <div className="flex items-center gap-2">
-                                        <svg className="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                        </svg>
-                                        <span className="text-slate-100 font-medium">Platform Only</span>
+                    <div className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
+                        <div className="space-y-4">
+                            <div className="rounded-2xl border border-cyan-400/20 bg-gradient-to-br from-cyan-500/10 via-slate-900/80 to-slate-950/95 p-5 shadow-xl shadow-cyan-950/20">
+                                <div className="flex flex-wrap items-start justify-between gap-3">
+                                    <div>
+                                        <div className="text-[11px] uppercase tracking-[0.18em] text-cyan-300/80">Basic Buyer Terms</div>
+                                        <h4 className="mt-2 text-lg font-semibold text-slate-50">Core access setup</h4>
+                                        <p className="mt-1 max-w-2xl text-sm text-slate-400">
+                                            Keep the main package clean here, then open advanced rights only when you need legal and governance detail.
+                                        </p>
                                     </div>
-                                    <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-[10px] font-medium">Recommended</span>
+                                    <span className="rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-cyan-200">
+                                        Step 4
+                                    </span>
                                 </div>
-                                <div className="text-xs text-slate-400 mb-3">Buyers can only view your dataset within Redoubt's Secure Enclave. No download allowed.</div>
-                                <ul className="text-xs text-slate-300 space-y-1">
-                                    <li className="flex items-center gap-2"><span className="text-emerald-400">✓</span> Maximum data security</li>
-                                    <li className="flex items-center gap-2"><span className="text-emerald-400">✓</span> Full egress control</li>
-                                    <li className="flex items-center gap-2"><span className="text-emerald-400">✓</span> +5 Trust Score bonus</li>
-                                    <li className="flex items-center gap-2"><span className="text-emerald-400">✓</span> "Maximum Security Tier" badge</li>
-                                </ul>
-                            </button>
+                            </div>
+
+                            <div className="grid gap-4 md:grid-cols-2">
+                                {privacyControlSections.map(section => (
+                                    <section key={section.field} className="rounded-2xl border border-slate-700 bg-slate-900/60 p-4 backdrop-blur-sm">
+                                        <div className="mb-3">
+                                            <div className="text-sm font-semibold text-slate-100">{section.title}</div>
+                                            <div className="mt-1 text-xs text-slate-400">{section.description}</div>
+                                        </div>
+                                        <div className={`grid gap-2 ${section.options.length <= 3 ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
+                                            {section.options.map(option => (
+                                                <button
+                                                    key={option.value}
+                                                    type="button"
+                                                    onClick={() => updatePrivacyAccessTerm(section.field, option.value)}
+                                                    className={`rounded-xl border px-3 py-3 text-left transition-all ${
+                                                        privacyAccessTerms[section.field] === option.value
+                                                            ? 'border-cyan-400/45 bg-cyan-500/10 text-cyan-100 shadow-lg shadow-cyan-950/10'
+                                                            : 'border-slate-700 bg-slate-950/40 text-slate-300 hover:border-slate-500'
+                                                    }`}
+                                                >
+                                                    <div className="text-sm font-medium">{option.label}</div>
+                                                    {'detail' in option && option.detail && (
+                                                        <div className="mt-1 text-xs text-slate-400">{option.detail}</div>
+                                                    )}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </section>
+                                ))}
+                            </div>
 
                             <button
-                                onClick={() => setAccessMethod('download')}
-                                className={`rounded-lg border p-4 text-left transition-all ${
-                                    accessMethod === 'download'
-                                        ? 'border-blue-500/60 bg-blue-500/10'
-                                        : 'border-slate-700 bg-slate-900/40 hover:border-slate-600'
-                                }`}
+                                type="button"
+                                onClick={() => setIsAdvancedRightsOpen(true)}
+                                className="w-full rounded-2xl border border-purple-500/35 bg-gradient-to-r from-purple-500/10 via-slate-900/80 to-slate-950/90 px-5 py-5 text-left shadow-lg shadow-purple-950/20 transition-all hover:border-purple-400/55 hover:from-purple-500/15"
                             >
-                                <div className="flex items-center justify-between mb-2">
-                                    <div className="flex items-center gap-2">
-                                        <svg className="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                <div className="flex items-center justify-between gap-3">
+                                    <div>
+                                        <div className="text-base font-semibold text-purple-100">Advanced Rights &amp; Conditions</div>
+                                        <div className="mt-1 text-xs text-slate-400">Legal, audit, redistribution and governance controls</div>
+                                    </div>
+                                    <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-purple-500/40 bg-purple-500/10 text-purple-300">
+                                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                                         </svg>
-                                        <span className="text-slate-100 font-medium">Platform + Download</span>
                                     </div>
                                 </div>
-                                <div className="text-xs text-slate-400 mb-3">Buyers can view within Secure Enclave AND download an encrypted copy with your consent.</div>
-                                <ul className="text-xs text-amber-300 space-y-1">
-                                    <li className="flex items-center gap-2"><span className="text-amber-400">⚠</span> AES-256 encrypted only</li>
-                                    <li className="flex items-center gap-2"><span className="text-amber-400">⚠</span> Watermark mandatory</li>
-                                    <li className="flex items-center gap-2"><span className="text-amber-400">⚠</span> 1 download per license</li>
-                                    <li className="flex items-center gap-2"><span className="text-amber-400">⚠</span> 24-hour download link expiry</li>
-                                    <li className="flex items-center gap-2"><span className="text-amber-400">⚠</span> You are notified on each download</li>
-                                </ul>
                             </button>
                         </div>
 
-                        {accessMethod === 'download' && (
-                            <div className="mt-4 pt-4 border-t border-slate-700">
-                                <div className="text-sm font-medium text-slate-200 mb-3">Download Conditions</div>
-                                <div className="space-y-3">
-                                    <div className="flex items-center justify-between gap-4 rounded-lg border border-slate-700/80 bg-slate-900/80 px-3 py-3">
-                                        <div className="text-slate-100 text-sm">Require evaluation org re-confirmation before download</div>
-                                        <button
-                                            type="button"
-                                            aria-pressed={downloadConditions.requireReconfirmation}
-                                            onClick={() => setDownloadConditions(prev => ({ ...prev, requireReconfirmation: !prev.requireReconfirmation }))}
-                                            className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
-                                                downloadConditions.requireReconfirmation
-                                                    ? 'bg-cyan-500 ring-1 ring-cyan-300/40'
-                                                    : 'bg-slate-700 ring-1 ring-slate-500/60'
-                                            }`}
-                                        >
-                                            <span
-                                                className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${
-                                                    downloadConditions.requireReconfirmation ? 'translate-x-5' : 'translate-x-1'
-                                                }`}
-                                            />
-                                        </button>
-                                    </div>
-                                    <div className="flex items-center justify-between gap-4 rounded-lg border border-slate-700/80 bg-slate-900/80 px-3 py-3">
-                                        <div className="text-slate-100 text-sm">Notify me on each download</div>
-                                        <button
-                                            type="button"
-                                            aria-pressed={downloadConditions.notifyOnDownload}
-                                            onClick={() => setDownloadConditions(prev => ({ ...prev, notifyOnDownload: !prev.notifyOnDownload }))}
-                                            className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
-                                                downloadConditions.notifyOnDownload
-                                                    ? 'bg-cyan-500 ring-1 ring-cyan-300/40'
-                                                    : 'bg-slate-700 ring-1 ring-slate-500/60'
-                                            }`}
-                                        >
-                                            <span
-                                                className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${
-                                                    downloadConditions.notifyOnDownload ? 'translate-x-5' : 'translate-x-1'
-                                                }`}
-                                            />
-                                        </button>
-                                    </div>
-                                    <div className="flex items-center justify-between gap-4 rounded-lg border border-slate-700/80 bg-slate-900/80 px-3 py-3">
-                                        <div className="text-slate-100 text-sm">Allow download only after escrow window expires</div>
-                                        <button
-                                            type="button"
-                                            aria-pressed={downloadConditions.allowAfterEscrow}
-                                            onClick={() => setDownloadConditions(prev => ({ ...prev, allowAfterEscrow: !prev.allowAfterEscrow }))}
-                                            className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
-                                                downloadConditions.allowAfterEscrow
-                                                    ? 'bg-cyan-500 ring-1 ring-cyan-300/40'
-                                                    : 'bg-slate-700 ring-1 ring-slate-500/60'
-                                            }`}
-                                        >
-                                            <span
-                                                className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${
-                                                    downloadConditions.allowAfterEscrow ? 'translate-x-5' : 'translate-x-1'
-                                                }`}
-                                            />
-                                        </button>
-                                    </div>
-                                    <div className="flex items-center justify-between gap-4 rounded-lg border border-slate-700/80 bg-slate-900/80 px-3 py-3">
-                                        <div className="text-slate-100 text-sm">Max downloads per license</div>
-                                        <input
-                                            type="number"
-                                            min="1"
-                                            value={downloadConditions.maxDownloads}
-                                            onChange={(e) => setDownloadConditions(prev => ({ ...prev, maxDownloads: parseInt(e.target.value) || 1 }))}
-                                            className="w-16 bg-slate-800 border border-slate-600 rounded-lg px-3 py-1.5 text-slate-100 text-sm text-center focus:outline-none focus:border-cyan-500/50"
-                                        />
+                        <aside className="xl:sticky xl:top-4 h-fit">
+                            <div className="rounded-2xl border border-slate-700 bg-slate-950/70 p-5 shadow-xl backdrop-blur-sm">
+                                <div className="text-[11px] uppercase tracking-[0.16em] text-slate-400">Live summary</div>
+                                <h4 className="mt-2 text-lg font-semibold text-slate-50">Buyer-facing package preview</h4>
+                                <p className="mt-1 text-sm text-slate-400">The main commercial terms stay visible here while advanced conditions remain tucked away.</p>
+
+                                <div className="mt-5 space-y-3">
+                                    {[
+                                        ['Delivery mode', selectedDeliveryModeLabel],
+                                        ['Field access', selectedFieldAccessLabel],
+                                        ['Usage rights', selectedUsageRightsLabel],
+                                        ['Term', selectedTermLabel],
+                                        ['Geography', selectedGeographyLabel],
+                                        ['Exclusivity', selectedExclusivityLabel]
+                                    ].map(([label, value]) => (
+                                        <div key={label} className="rounded-xl border border-slate-800 bg-slate-900/70 px-4 py-3">
+                                            <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">{label}</div>
+                                            <div className="mt-1 text-sm font-medium text-slate-100">{value}</div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <div className="mt-5 rounded-2xl border border-purple-500/20 bg-purple-500/5 p-4">
+                                    <div className="text-[11px] uppercase tracking-[0.14em] text-purple-300/80">Advanced conditions</div>
+                                    <div className="mt-3 space-y-2 text-sm text-slate-300">
+                                        <div className="flex items-center justify-between gap-3"><span>Redistribution</span><span className="text-slate-100">{selectedRedistributionLabel}</span></div>
+                                        <div className="flex items-center justify-between gap-3"><span>Audit logging</span><span className="text-slate-100">{selectedAuditLoggingLabel}</span></div>
+                                        <div className="flex items-center justify-between gap-3"><span>Attribution</span><span className="text-slate-100">{selectedAttributionLabel}</span></div>
+                                        <div className="flex items-center justify-between gap-3">
+                                            <span>Volume pricing</span>
+                                            <span className="text-slate-100">
+                                                {privacyAccessTerms.advanced.volumeBasedPricing
+                                                    ? privacyAccessTerms.advanced.volumePricingAdjustment
+                                                        ? `${privacyAccessTerms.advanced.volumePricingAdjustment} / ${privacyAccessTerms.advanced.volumePricingUnit === 'tb' ? 'TB' : 'million records'}`
+                                                        : 'Enabled'
+                                                    : 'Disabled'}
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        )}
-
-                        <div className="mt-4 pt-3 border-t border-slate-700">
-                            <div className="text-xs text-slate-500 italic">Platform Only providers receive a +5 Trust Score bonus and a Maximum Security Tier badge visible to all evaluating organizations.</div>
-                        </div>
+                        </aside>
                     </div>
 
-                    <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
-                        <div className="text-[11px] uppercase tracking-[0.14em] text-slate-400 mb-3">Compliance Controls</div>
-                        <div className="flex flex-wrap gap-2">
-                            <span className="px-2.5 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs text-slate-200">PII-checked</span>
-                            <span className="px-2.5 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs text-slate-200">Retention: 12 months</span>
-                            <span className="px-2.5 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs text-slate-200">Audit logging enabled</span>
+                    {isAdvancedRightsOpen && (
+                        <div className="fixed inset-0 z-50 flex justify-end">
+                            <button type="button" aria-label="Close advanced rights drawer" onClick={() => setIsAdvancedRightsOpen(false)} className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+
+                            <div className="relative h-full w-full max-w-xl border-l border-slate-700 bg-slate-900/95 shadow-2xl">
+                                <div className="flex h-full flex-col">
+                                    <div className="sticky top-0 z-10 border-b border-slate-700 bg-slate-900/95 px-6 py-5 backdrop-blur-sm">
+                                        <div className="flex items-start justify-between gap-4">
+                                            <div>
+                                                <div className="text-[11px] uppercase tracking-[0.16em] text-purple-300/80">Advanced Rights &amp; Conditions</div>
+                                                <h4 className="mt-2 text-xl font-semibold text-slate-50">Legal and governance controls</h4>
+                                                <p className="mt-1 text-sm text-slate-400">Configure redistribution, audit posture, attribution, and optional volume-based pricing.</p>
+                                            </div>
+                                            <button type="button" onClick={() => setIsAdvancedRightsOpen(false)} className="rounded-xl border border-slate-700 bg-slate-800/80 p-2 text-slate-400 transition-colors hover:border-slate-500 hover:text-white">
+                                                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex-1 space-y-6 overflow-y-auto px-6 py-6">
+                                        {advancedRightsSections.map(section => (
+                                            <section key={section.field} className="rounded-2xl border border-slate-700 bg-slate-950/40 p-5">
+                                                <div className="text-sm font-semibold text-slate-100">{section.title}</div>
+                                                <div className="mt-3 grid grid-cols-2 gap-3">
+                                                    {section.options.map(option => (
+                                                        <button
+                                                            key={option.value}
+                                                            type="button"
+                                                            onClick={() => updateAdvancedRight(section.field, option.value)}
+                                                            className={`rounded-xl border px-4 py-3 text-sm font-medium transition-all ${
+                                                                privacyAccessTerms.advanced[section.field] === option.value
+                                                                    ? 'border-purple-400/50 bg-purple-500/10 text-purple-100'
+                                                                    : 'border-slate-700 bg-slate-900/60 text-slate-300 hover:border-slate-500'
+                                                            }`}
+                                                        >
+                                                            {option.label}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </section>
+                                        ))}
+
+                                        <section className="rounded-2xl border border-slate-700 bg-slate-950/40 p-5">
+                                            <div className="flex items-start justify-between gap-4">
+                                                <div>
+                                                    <div className="text-sm font-semibold text-slate-100">Data Volume Scaling</div>
+                                                    <div className="mt-1 text-xs text-slate-400">Enable price adjustment per TB or per million records.</div>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    aria-pressed={privacyAccessTerms.advanced.volumeBasedPricing}
+                                                    onClick={() => updateAdvancedRight('volumeBasedPricing', !privacyAccessTerms.advanced.volumeBasedPricing)}
+                                                    className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
+                                                        privacyAccessTerms.advanced.volumeBasedPricing ? 'bg-purple-500 ring-1 ring-purple-300/40' : 'bg-slate-700 ring-1 ring-slate-500/60'
+                                                    }`}
+                                                >
+                                                    <span className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${privacyAccessTerms.advanced.volumeBasedPricing ? 'translate-x-5' : 'translate-x-1'}`} />
+                                                </button>
+                                            </div>
+
+                                            {privacyAccessTerms.advanced.volumeBasedPricing && (
+                                                <div className="mt-4 rounded-2xl border border-slate-700 bg-slate-900/60 p-4">
+                                                    <label className="block text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">Price adjustment</label>
+                                                    <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+                                                        <input
+                                                            type="number"
+                                                            value={privacyAccessTerms.advanced.volumePricingAdjustment}
+                                                            onChange={(e) => updateAdvancedRight('volumePricingAdjustment', e.target.value)}
+                                                            placeholder="e.g. 1200"
+                                                            className="flex-1 rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-purple-400/60 focus:outline-none"
+                                                        />
+                                                        <select
+                                                            value={privacyAccessTerms.advanced.volumePricingUnit}
+                                                            onChange={(e) => updateAdvancedRight('volumePricingUnit', e.target.value)}
+                                                            className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-purple-400/60 focus:outline-none"
+                                                        >
+                                                            <option value="tb">per TB</option>
+                                                            <option value="million_records">per million records</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </section>
+                                    </div>
+
+                                    <div className="border-t border-slate-700 bg-slate-900/95 px-6 py-4">
+                                        <button type="button" onClick={() => setIsAdvancedRightsOpen(false)} className="w-full rounded-xl bg-purple-600 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-purple-500">
+                                            Save advanced conditions
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                    </div>
+                    )}
                 </div>
             )
         },
         {
             title: 'Submission confirmation',
-            description: 'Finalize contribution package into validation pipeline.',
+            description: 'Review pricing, confidence, and legal declaration before submission.',
             body: (
                 <div className="space-y-4 text-sm">
-                    <div className="bg-slate-900/70 border border-slate-700 rounded-lg p-4 space-y-3">
-                        <div className="grid sm:grid-cols-2 gap-x-6 gap-y-2">
+                    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                        <div className="rounded-lg border border-slate-700 bg-slate-900/70 p-3">
+                            <div className="text-slate-400 text-xs mb-1">Dataset name</div>
+                            <div className="text-slate-100 font-medium">City Sensor Aggregates 2026-Q1</div>
+                        </div>
+                        <div className="rounded-lg border border-slate-700 bg-slate-900/70 p-3">
+                            <div className="text-slate-400 text-xs mb-1">Domain</div>
+                            <div className="text-slate-100 font-medium">Mobility &amp; Infrastructure</div>
+                        </div>
+                        <div className="rounded-lg border border-slate-700 bg-slate-900/70 p-3">
+                            <div className="text-slate-400 text-xs mb-1">Price</div>
+                            <div className="text-slate-100 font-medium">$299 / access</div>
+                        </div>
+                        <div className="rounded-lg border border-slate-700 bg-slate-900/70 p-3">
+                            <div className="text-slate-400 text-xs mb-1">File</div>
+                            <div className="text-slate-100 font-medium">city_sensors_q1.parquet</div>
+                        </div>
+                    </div>
+
+                    <div className="grid gap-3 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
+                        <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-4 space-y-4">
                             <div>
-                                <div className="text-slate-400 text-xs">Dataset</div>
-                                <div className="text-slate-100">City Sensor Aggregates 2026-Q1</div>
+                                <div className="text-[11px] uppercase tracking-[0.14em] text-slate-400 mb-2">Pricing info</div>
+                                <p className="text-slate-200">
+                                    No onboarding fees apply to participants or datasets. Revenue starts only after a successful settlement.
+                                </p>
                             </div>
-                            <div>
-                                <div className="text-slate-400 text-xs">Domain</div>
-                                <div className="text-slate-100">Mobility & Infrastructure</div>
+
+                            <div className="grid gap-3 sm:grid-cols-2">
+                                <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3">
+                                    <div className="text-[11px] uppercase tracking-[0.14em] text-emerald-300/80 mb-1">Confidence score</div>
+                                    <div className="text-2xl font-semibold text-emerald-200">88 / 100</div>
+                                    <div className="text-xs text-slate-300 mt-1">High-confidence quality and schema alignment.</div>
+                                </div>
+                                <div className="rounded-lg border border-blue-500/30 bg-blue-500/10 p-3">
+                                    <div className="text-[11px] uppercase tracking-[0.14em] text-blue-300/80 mb-1">Review timeline</div>
+                                    <div className="text-2xl font-semibold text-blue-100">48 hours</div>
+                                    <div className="text-xs text-slate-300 mt-1">Compliance and marketplace review starts after submission.</div>
+                                </div>
                             </div>
+                        </div>
+
+                        <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-4 space-y-4">
                             <div>
-                                <div className="text-slate-400 text-xs">Price</div>
-                                <div className="text-slate-100">$299 USD per access</div>
+                                <div className="text-[11px] uppercase tracking-[0.14em] text-slate-400 mb-2">Submission ID</div>
+                                <div className="text-lg font-semibold text-slate-100">SUB-2026-0481</div>
                             </div>
-                            <div>
-                                <div className="text-slate-400 text-xs">File</div>
-                                <div className="text-slate-100">city_sensors_q1.parquet - 6.3 GB</div>
+
+                            <label className="flex items-start gap-3 rounded-lg border border-slate-700 bg-slate-950/60 p-3 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={submissionConfirmed}
+                                    onChange={(e) => setSubmissionConfirmed(e.target.checked)}
+                                    className="mt-1 h-4 w-4 rounded border-slate-600 bg-slate-800 text-blue-500 focus:ring-blue-500 focus:ring-offset-slate-900"
+                                />
+                                <span className="text-slate-300">
+                                    I declare that the dataset details, pricing, and attached file are accurate and ready for Redoubt review.
+                                </span>
+                            </label>
+
+                            <div className="flex flex-wrap items-center gap-3">
+                                <button
+                                    type="button"
+                                    disabled={!submissionConfirmed}
+                                    className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-colors disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400"
+                                >
+                                    Submit dataset (mock)
+                                </button>
+                                <span className={`text-xs ${submissionConfirmed ? 'text-emerald-300' : 'text-slate-500'}`}>
+                                    {submissionConfirmed
+                                        ? 'Declaration complete. Submission is enabled.'
+                                        : 'Accept the legal declaration to enable submission.'}
+                                </span>
                             </div>
                         </div>
                     </div>
-                    <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-emerald-100">
-                        No participant onboarding fee and no dataset onboarding fee. Revenue starts only when an evaluating organization enters protected evaluation and the engagement later settles successfully.
-                    </div>
-                    <div className="grid sm:grid-cols-2 gap-3">
-                        <div className="bg-slate-900/70 border border-slate-700 rounded-lg p-3">
-                            <div className="text-slate-400 text-xs">Estimated confidence score</div>
-                            <div className="text-slate-100">88-94%</div>
-                        </div>
-                        <div className="bg-slate-900/70 border border-slate-700 rounded-lg p-3">
-                            <div className="text-slate-400 text-xs">Expected review timeline</div>
-                            <div className="text-slate-100">3-5 business days</div>
-                        </div>
-                    </div>
-                    <div className="text-slate-500 text-xs">
-                        Submission ID: BRE-DS-2026-XXXX
-                    </div>
-                    <label className="flex items-start gap-3 cursor-pointer">
-                        <input
-                            type="checkbox"
-                            checked={submissionConfirmed}
-                            onChange={(e) => setSubmissionConfirmed(e.target.checked)}
-                            className="mt-1 w-4 h-4 rounded border-slate-600 bg-slate-800 text-blue-600 focus:ring-blue-500 focus:ring-offset-slate-900"
-                        />
-                        <span className="text-xs text-slate-300">
-                            I declare under penalty of perjury that this dataset contains no unauthorized PII and complies with Redoubt's Provider Agreement.
-                        </span>
-                    </label>
-                    <button
-                        disabled={!submissionConfirmed}
-                        className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
-                            submissionConfirmed
-                                ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                                : 'bg-slate-600 text-slate-400 cursor-not-allowed'
-                        }`}
-                    >
-                        Submit dataset
-                    </button>
                 </div>
             )
         }

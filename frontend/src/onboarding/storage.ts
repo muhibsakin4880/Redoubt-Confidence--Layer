@@ -1,6 +1,7 @@
 import type {
     ComplianceCommitment,
     LegalAcknowledgment,
+    RightsPackage,
     Step1FormState,
     SubmissionMeta,
     VerificationSnapshot
@@ -37,7 +38,21 @@ export const emptyVerificationSnapshot: VerificationSnapshot = {
     affiliationFileName: null,
     authorizationFileName: null,
     authenticationMethod: null,
-    ssoDomain: ''
+    ssoDomain: '',
+    rightsPackage: {
+        accessType: '',
+        duration: '',
+        usagePurposes: [],
+        otherUsagePurpose: '',
+        geographicRestriction: 'global',
+        selectedRegions: [],
+        fieldRestrictions: [],
+        additionalConditions: {
+            attributionRequired: false,
+            auditLoggingMandatory: false,
+            noRedistribution: false
+        }
+    }
 }
 
 export const emptyComplianceCommitment: ComplianceCommitment = {

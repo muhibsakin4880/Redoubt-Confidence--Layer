@@ -19,6 +19,12 @@ export type RightsQuoteForm = {
     support: QuoteSupport
     seatBand: 'team' | 'department' | 'enterprise'
     validationWindowHours: 24 | 48 | 72
+    redistributionRights: 'allowed' | 'not_allowed'
+    auditLoggingRequirement: 'mandatory' | 'optional'
+    attributionRequirement: 'required' | 'not_required'
+    volumeBasedPricing: boolean
+    volumePricingAdjustment: number
+    volumePricingUnit: 'tb' | 'million_records'
 }
 
 export type QuoteBreakdownLine = {
@@ -183,7 +189,13 @@ export const getDefaultRightsQuoteForm = (passport: CompliancePassport): RightsQ
         exclusivity: 'none',
         support: passport.fastTrackEligible ? 'priority' : 'standard',
         seatBand: 'team',
-        validationWindowHours: passport.status === 'active' ? 24 : 48
+        validationWindowHours: passport.status === 'active' ? 24 : 48,
+        redistributionRights: 'not_allowed',
+        auditLoggingRequirement: 'mandatory',
+        attributionRequirement: 'required',
+        volumeBasedPricing: false,
+        volumePricingAdjustment: 0,
+        volumePricingUnit: 'tb'
     }
 }
 

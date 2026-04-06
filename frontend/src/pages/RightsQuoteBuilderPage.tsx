@@ -29,6 +29,169 @@ import {
     type RightsQuoteForm
 } from '../domain/rightsQuoteBuilder'
 
+const AdvancedConditionsDrawer = ({
+    isOpen,
+    onClose,
+    form,
+    updateForm
+}: {
+    isOpen: boolean
+    onClose: () => void
+    form: RightsQuoteForm
+    updateForm: <T extends keyof RightsQuoteForm>(field: T, value: RightsQuoteForm[T]) => void
+}) => {
+    if (!isOpen) return null
+
+    return (
+        <div className="fixed inset-0 z-50 flex justify-end">
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+            <div className="relative w-full max-w-md bg-slate-900 border-l border-slate-700 shadow-2xl overflow-y-auto">
+                <div className="sticky top-0 bg-slate-900 border-b border-slate-700 px-6 py-4 flex items-center justify-between">
+                    <div>
+                        <h2 className="text-lg font-semibold text-white">Advanced Rights & Conditions</h2>
+                        <p className="text-xs text-slate-400 mt-0.5">Legal & Governance Controls</p>
+                    </div>
+                    <button
+                        onClick={onClose}
+                        className="p-2 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
+                    >
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div className="p-6 space-y-6">
+                    <div>
+                        <div className="text-sm font-medium text-white mb-3">Redistribution Rights</div>
+                        <div className="grid grid-cols-2 gap-3">
+                            {[
+                                { value: 'allowed', label: 'Allowed' },
+                                { value: 'not_allowed', label: 'Not Allowed' }
+                            ].map(option => (
+                                <button
+                                    key={option.value}
+                                    onClick={() => updateForm('redistributionRights', option.value as 'allowed' | 'not_allowed')}
+                                    className={`rounded-xl border px-4 py-3 text-sm font-medium transition-all ${
+                                        form.redistributionRights === option.value
+                                            ? 'border-purple-500/60 bg-purple-500/10 text-purple-100'
+                                            : 'border-slate-700 bg-slate-800/50 text-slate-300 hover:border-slate-600'
+                                    }`}
+                                >
+                                    {option.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div>
+                        <div className="text-sm font-medium text-white mb-3">Audit Logging Requirement</div>
+                        <div className="grid grid-cols-2 gap-3">
+                            {[
+                                { value: 'mandatory', label: 'Mandatory' },
+                                { value: 'optional', label: 'Optional' }
+                            ].map(option => (
+                                <button
+                                    key={option.value}
+                                    onClick={() => updateForm('auditLoggingRequirement', option.value as 'mandatory' | 'optional')}
+                                    className={`rounded-xl border px-4 py-3 text-sm font-medium transition-all ${
+                                        form.auditLoggingRequirement === option.value
+                                            ? 'border-purple-500/60 bg-purple-500/10 text-purple-100'
+                                            : 'border-slate-700 bg-slate-800/50 text-slate-300 hover:border-slate-600'
+                                    }`}
+                                >
+                                    {option.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div>
+                        <div className="text-sm font-medium text-white mb-3">Attribution Requirement</div>
+                        <div className="grid grid-cols-2 gap-3">
+                            {[
+                                { value: 'required', label: 'Required' },
+                                { value: 'not_required', label: 'Not Required' }
+                            ].map(option => (
+                                <button
+                                    key={option.value}
+                                    onClick={() => updateForm('attributionRequirement', option.value as 'required' | 'not_required')}
+                                    className={`rounded-xl border px-4 py-3 text-sm font-medium transition-all ${
+                                        form.attributionRequirement === option.value
+                                            ? 'border-purple-500/60 bg-purple-500/10 text-purple-100'
+                                            : 'border-slate-700 bg-slate-800/50 text-slate-300 hover:border-slate-600'
+                                    }`}
+                                >
+                                    {option.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="border-t border-slate-700 pt-6">
+                        <div className="text-sm font-medium text-white mb-4">Data Volume Scaling</div>
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm text-slate-300">Enable volume-based pricing</span>
+                                <button
+                                    type="button"
+                                    aria-pressed={form.volumeBasedPricing}
+                                    onClick={() => updateForm('volumeBasedPricing', !form.volumeBasedPricing)}
+                                    className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
+                                        form.volumeBasedPricing
+                                            ? 'bg-purple-500 ring-1 ring-purple-300/40'
+                                            : 'bg-slate-700 ring-1 ring-slate-500/60'
+                                    }`}
+                                >
+                                    <span
+                                        className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${
+                                            form.volumeBasedPricing ? 'translate-x-5' : 'translate-x-1'
+                                        }`}
+                                    />
+                                </button>
+                            </div>
+
+                            {form.volumeBasedPricing && (
+                                <div className="space-y-3 p-4 rounded-xl bg-slate-800/30 border border-slate-700">
+                                    <div>
+                                        <label className="text-xs text-slate-400 mb-1.5 block">Base price adjustment</label>
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="number"
+                                                value={form.volumePricingAdjustment}
+                                                onChange={(e) => updateForm('volumePricingAdjustment', parseFloat(e.target.value) || 0)}
+                                                className="flex-1 bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500/50"
+                                                placeholder="0"
+                                            />
+                                            <select
+                                                value={form.volumePricingUnit}
+                                                onChange={(e) => updateForm('volumePricingUnit', e.target.value as 'tb' | 'million_records')}
+                                                className="bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500/50"
+                                            >
+                                                <option value="tb">per TB</option>
+                                                <option value="million_records">per million records</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                <div className="sticky bottom-0 bg-slate-900 border-t border-slate-700 px-6 py-4">
+                    <button
+                        onClick={onClose}
+                        className="w-full py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-sm font-semibold text-white transition-colors"
+                    >
+                        Done
+                    </button>
+                </div>
+            </div>
+        </div>
+    )
+}
+
 export default function RightsQuoteBuilderPage() {
     const { id } = useParams()
     const navigate = useNavigate()
@@ -37,6 +200,7 @@ export default function RightsQuoteBuilderPage() {
     const [form, setForm] = useState<RightsQuoteForm>(() => getDefaultRightsQuoteForm(passport))
     const [notice, setNotice] = useState<string | null>(null)
     const [quoteVersion, setQuoteVersion] = useState(0)
+    const [showAdvancedDrawer, setShowAdvancedDrawer] = useState(false)
     const statusMeta = passportStatusMeta(passport.status)
 
     const quote = useMemo(() => buildRightsQuote(dataset, form, passport), [dataset, form, passport, quoteVersion])
@@ -239,6 +403,21 @@ export default function RightsQuoteBuilderPage() {
                                 </div>
                             </div>
                         </BuilderSection>
+
+                        <button
+                            onClick={() => setShowAdvancedDrawer(true)}
+                            className="w-full rounded-2xl border border-purple-500/30 bg-purple-500/5 px-5 py-4 text-left transition-all hover:border-purple-500/50 hover:bg-purple-500/10"
+                        >
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <div className="text-sm font-semibold text-purple-200">Advanced Rights & Conditions</div>
+                                    <div className="text-xs text-slate-400 mt-0.5">Legal & Governance Controls</div>
+                                </div>
+                                <svg className="w-5 h-5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                </svg>
+                            </div>
+                        </button>
                     </div>
 
                     <aside className="space-y-6 xl:sticky xl:top-6 xl:self-start">
@@ -359,6 +538,13 @@ export default function RightsQuoteBuilderPage() {
                     </aside>
                 </section>
             </div>
+
+            <AdvancedConditionsDrawer
+                isOpen={showAdvancedDrawer}
+                onClose={() => setShowAdvancedDrawer(false)}
+                form={form}
+                updateForm={updateForm}
+            />
         </div>
     )
 }

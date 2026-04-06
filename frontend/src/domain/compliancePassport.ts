@@ -74,7 +74,21 @@ const defaultVerification: VerificationSnapshot = {
     affiliationFileName: 'northbridge-affiliation.pdf',
     authorizationFileName: 'northbridge-compliance-letter.pdf',
     authenticationMethod: 'hardware_key',
-    ssoDomain: ''
+    ssoDomain: '',
+    rightsPackage: {
+        accessType: 'clean_room',
+        duration: '12_months',
+        usagePurposes: ['research'],
+        otherUsagePurpose: '',
+        geographicRestriction: 'global',
+        selectedRegions: [],
+        fieldRestrictions: [],
+        additionalConditions: {
+            attributionRequired: false,
+            auditLoggingMandatory: false,
+            noRedistribution: false
+        }
+    }
 }
 const defaultCommitments: ComplianceCommitment = {
     responsibleDataUsage: true,

@@ -15,6 +15,30 @@ export type LegalAcknowledgment = {
 
 export type AuthenticationMethod = 'sso' | 'hardware_key'
 
+export type RightsPackage = {
+    accessType: string
+    duration: string
+    customDuration?: string
+    usagePurposes: string[]
+    otherUsagePurpose: string
+    geographicRestriction: 'global' | 'specific'
+    selectedRegions: string[]
+    fieldRestrictions: { fieldName: string; restriction: 'restricted' | 'masked' }[]
+    additionalConditions: {
+        attributionRequired: boolean
+        auditLoggingMandatory: boolean
+        noRedistribution: boolean
+    }
+    advancedConditions: {
+        redistributionRights: 'allowed' | 'not_allowed'
+        auditLoggingRequirement: 'mandatory' | 'optional'
+        attributionRequirement: 'required' | 'not_required'
+        volumeBasedPricing: boolean
+        volumePricingAdjustment: number
+        volumePricingUnit: 'tb' | 'million_records'
+    }
+}
+
 export type VerificationSnapshot = {
     linkedInConnected: boolean
     domainVerified: boolean
@@ -22,6 +46,7 @@ export type VerificationSnapshot = {
     authorizationFileName: string | null
     authenticationMethod: AuthenticationMethod | null
     ssoDomain: string
+    rightsPackage: RightsPackage
 }
 
 export type ComplianceCommitment = {
