@@ -36,10 +36,10 @@ const dashboardText = {
 
 const dashboardPageClass = `relative min-h-screen ${dashboardColorTokens['surface-page']} ${dashboardColorTokens['text-primary']}`
 const dashboardPageShellClass = `relative mx-auto max-w-[1680px] ${dashboardSpacingTokens['page-padding']}`
-const dashboardPanelClass = `${dashboardRadiusTokens['radius-lg']} border ${dashboardColorTokens['border-subtle']} ${dashboardColorTokens['surface-panel']} ${dashboardSpacingTokens['panel-padding']} ${dashboardShadowTokens['shadow-card']}`
-const dashboardItemCardClass = `${dashboardRadiusTokens['radius-md']} border ${dashboardColorTokens['border-card']} ${dashboardColorTokens['surface-card']} ${dashboardSpacingTokens['card-padding']}`
-const dashboardAccentCardClass = `${dashboardRadiusTokens['radius-md']} border ${dashboardColorTokens['border-accent']} ${dashboardColorTokens['surface-accent']} ${dashboardSpacingTokens['card-padding']}`
-const dashboardSoftCardClass = `${dashboardRadiusTokens['radius-md']} ${dashboardComponentTokens['card-soft']} ${dashboardShadowTokens['shadow-card']}`
+const dashboardPanelClass = `relative overflow-hidden ${dashboardRadiusTokens['radius-lg']} border ${dashboardColorTokens['border-subtle']} ${dashboardColorTokens['surface-panel']} ${dashboardSpacingTokens['panel-padding']} ${dashboardShadowTokens['shadow-card']} before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-24 before:bg-[linear-gradient(180deg,rgba(255,255,255,0.03),transparent)] before:content-['']`
+const dashboardItemCardClass = `relative overflow-hidden ${dashboardRadiusTokens['radius-md']} border ${dashboardColorTokens['border-card']} ${dashboardColorTokens['surface-card']} ${dashboardSpacingTokens['card-padding']} before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-16 before:bg-[linear-gradient(180deg,rgba(255,255,255,0.025),transparent)] before:content-['']`
+const dashboardAccentCardClass = `relative overflow-hidden ${dashboardRadiusTokens['radius-md']} border ${dashboardColorTokens['border-accent']} ${dashboardColorTokens['surface-accent']} ${dashboardSpacingTokens['card-padding']} shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]`
+const dashboardSoftCardClass = `relative overflow-hidden ${dashboardRadiusTokens['radius-md']} ${dashboardComponentTokens['card-soft']} ${dashboardShadowTokens['shadow-card']}`
 const dashboardActionButtonClass = `${dashboardRadiusTokens['radius-md']} ${dashboardComponentTokens['action-button']} ${dashboardSpacingTokens['button-padding']}`
 const dashboardActionButtonTallClass = `${dashboardRadiusTokens['radius-md']} ${dashboardComponentTokens['action-button']} ${dashboardSpacingTokens['button-padding-tall']}`
 const dashboardStripEmptyClass = `${dashboardRadiusTokens['radius-lg']} border ${dashboardColorTokens['border-subtle']} ${dashboardColorTokens['surface-card-soft']} ${dashboardSpacingTokens['card-padding']} ${dashboardShadowTokens['shadow-card']}`
@@ -75,19 +75,23 @@ export default function DashboardPage() {
             <div className={dashboardPageShellClass}>
                 <section className={dashboardSpacingTokens['section-gap']} aria-labelledby="dashboard-intro-banner">
                     <div className={`${dashboardComponentTokens['hero-surface']} ${dashboardRadiusTokens['radius-lg']} ${dashboardSpacingTokens['hero-padding']}`}>
-                        <div className={`flex min-h-[88px] flex-col justify-between ${dashboardGridGapClass} lg:flex-row lg:items-center`}>
-                            <div>
+                        <div className="pointer-events-none absolute -left-10 bottom-0 h-40 w-40 rounded-full bg-teal-400/12 blur-3xl" />
+                        <div className="pointer-events-none absolute right-6 top-4 h-44 w-44 rounded-full bg-cyan-300/12 blur-3xl" />
+                        <div className="pointer-events-none absolute inset-y-0 right-0 w-[36%] bg-[radial-gradient(circle_at_center,rgba(34,211,238,0.16),transparent_62%)]" />
+
+                        <div className={`relative flex min-h-[88px] flex-col justify-between ${dashboardGridGapClass} lg:flex-row lg:items-center`}>
+                            <div className="max-w-2xl">
                                 <h1 id="dashboard-intro-banner" className={dashboardText.heroTitle}>Welcome back, Demo</h1>
                                 <p className={`mt-2 ${dashboardText.bodyStrong}`}>
                                     Continue managing trust, access, and escrow milestones from the same governed workspace.
                                 </p>
                             </div>
 
-                            <div className={`flex shrink-0 flex-col items-start ${dashboardCompactGapClass} sm:flex-row sm:flex-wrap sm:items-center lg:justify-end`}>
+                            <div className={`flex shrink-0 flex-col items-start ${dashboardCompactGapClass} sm:flex-row sm:flex-wrap sm:items-center lg:max-w-[30rem] lg:justify-end`}>
                                 <span className={`${dashboardRadiusTokens['radius-pill']} ${dashboardComponentTokens['status-badge']} ${dashboardSpacingTokens['chip-padding']}`}>
                                     Approved participant
                                 </span>
-                                <div className={`${dashboardRadiusTokens['radius-md']} border ${dashboardColorTokens['border-subtle']} ${dashboardColorTokens['surface-overlay-soft']} ${dashboardSpacingTokens['card-padding-compact']}`}>
+                                <div className={`${dashboardRadiusTokens['radius-md']} border ${dashboardColorTokens['border-subtle']} ${dashboardColorTokens['surface-overlay-soft']} ${dashboardSpacingTokens['card-padding-compact']} shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]`}>
                                     <div className={dashboardText.eyebrow}>NEXT MILESTONE DATE: Apr 10, 2026</div>
                                 </div>
                                 <button
@@ -123,11 +127,12 @@ export default function DashboardPage() {
                             {dashboardAtAGlanceCards.map(card => (
                                 <article
                                     key={card.label}
-                                    className={`flex min-h-[96px] flex-col justify-between ${dashboardSoftCardClass}`}
+                                    className={`flex min-h-[112px] flex-col justify-between ${dashboardSoftCardClass} transition-transform duration-200 hover:-translate-y-0.5 hover:border-cyan-400/25`}
                                 >
+                                    <div className="absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/60 to-transparent" />
                                     <div className={dashboardText.eyebrow}>{card.label}</div>
-                                    <div className={`mt-2 ${dashboardText.value}`}>{card.value}</div>
-                                    <div className={`mt-2 ${dashboardText.metaStrong} ${card.toneClassName}`}>{card.trend}</div>
+                                    <div className={`mt-3 ${dashboardText.value}`}>{card.value}</div>
+                                    <div className={`mt-3 ${dashboardText.metaStrong} ${card.toneClassName}`}>{card.trend}</div>
                                 </article>
                             ))}
                         </div>
@@ -161,7 +166,7 @@ export default function DashboardPage() {
                                 >
                                     <div className={dashboardModuleStackClass}>
                                         {dashboardPriorityActions.map((action, index) => (
-                                            <div key={action.title} className={`flex items-center justify-between ${dashboardDenseGapClass} ${dashboardItemCardClass}`}>
+                                            <div key={action.title} className={`flex flex-col items-start justify-between ${dashboardDenseGapClass} ${dashboardItemCardClass} lg:flex-row lg:items-center`}>
                                                 <div>
                                                     <div className={`${dashboardText.meta} mb-2`}>Priority {index + 1}</div>
                                                     <div className={dashboardText.itemTitle}>{action.title}</div>
@@ -292,16 +297,23 @@ export default function DashboardPage() {
                                                 <span className={dashboardText.itemTitle}>Readiness score</span>
                                                 <span className={`${dashboardText.metaStrong} ${dashboardColorTokens['text-accent']}`}>78%</span>
                                             </div>
-                                            <div className="mt-4 flex items-center justify-center">
-                                                <div className="relative h-36 w-36">
+                                        <div className="mt-4 flex items-center justify-center">
+                                                <div className="relative h-40 w-40">
+                                                    <div className="absolute inset-5 rounded-full bg-cyan-400/12 blur-2xl" />
                                                     <svg className="h-full w-full -rotate-90" viewBox="0 0 120 120" aria-hidden="true">
+                                                        <defs>
+                                                            <linearGradient id="dashboardReadinessStroke" x1="0%" x2="100%" y1="0%" y2="100%">
+                                                                <stop offset="0%" stopColor="rgb(103 232 249)" />
+                                                                <stop offset="100%" stopColor="rgb(34 211 238)" />
+                                                            </linearGradient>
+                                                        </defs>
                                                         <circle cx="60" cy="60" r="44" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="12" />
                                                         <circle
                                                             cx="60"
                                                             cy="60"
                                                             r="44"
                                                             fill="none"
-                                                            stroke="rgb(34 211 238)"
+                                                            stroke="url(#dashboardReadinessStroke)"
                                                             strokeWidth="12"
                                                             strokeLinecap="round"
                                                             strokeDasharray="216 276"
@@ -315,7 +327,7 @@ export default function DashboardPage() {
                                             </div>
                                             <div className="mt-4 grid gap-2">
                                                 {dashboardProgressHighlights.map(highlight => (
-                                                    <div key={highlight.label} className="flex items-center justify-between rounded-lg border border-white/6 bg-slate-950/45 px-3 py-2">
+                                                    <div key={highlight.label} className="flex items-center justify-between rounded-2xl border border-[#22304D] bg-[#0C1527]/72 px-3 py-2.5">
                                                         <span className={dashboardText.meta}>{highlight.label}</span>
                                                         <span className={`${dashboardText.metaStrong} ${highlight.toneClassName}`}>{highlight.value}</span>
                                                     </div>
@@ -327,7 +339,6 @@ export default function DashboardPage() {
                                             <div className={dashboardItemCardClass}>
                                                 <div className="flex items-center justify-between">
                                                     <span className={dashboardText.itemTitle}>Readiness bars</span>
-                                                    <span className={dashboardText.meta}>Placeholder</span>
                                                 </div>
                                                 <div className="mt-4 space-y-4">
                                                     <ProgressBarPlaceholder label="Compliance evidence" widthClassName="w-[82%]" toneClassName="bg-emerald-400" />
@@ -341,7 +352,7 @@ export default function DashboardPage() {
                                                     <span className={dashboardText.itemTitle}>Activity sparkline</span>
                                                     <span className={dashboardText.meta}>Last 7 checkpoints</span>
                                                 </div>
-                                                <div className="mt-4 rounded-lg border border-white/6 bg-slate-950/45 px-3 py-3">
+                                                <div className="mt-4 rounded-2xl border border-[#22304D] bg-[#0C1527]/72 px-3 py-3">
                                                     <svg className="h-24 w-full" viewBox="0 0 320 96" preserveAspectRatio="none" aria-hidden="true">
                                                         <path d="M0 76H320" stroke="rgba(148,163,184,0.18)" strokeWidth="1" />
                                                         <path d="M0 60L46 54L92 58L138 42L184 46L230 26L276 32L320 18" fill="none" stroke="rgb(34 211 238)" strokeWidth="3" strokeLinecap="round" />
@@ -353,7 +364,6 @@ export default function DashboardPage() {
                                                             </linearGradient>
                                                         </defs>
                                                     </svg>
-                                                    <div className={`mt-2 ${dashboardText.meta}`}>Steady improvement in review throughput with a stronger close over the last two checkpoints.</div>
                                                 </div>
                                             </div>
                                         </div>
@@ -414,11 +424,11 @@ export default function DashboardPage() {
                                             <Link
                                                 key={link.label}
                                                 to={link.to}
-                                                className={`block ${dashboardItemCardClass} transition-colors hover:border-cyan-400/30 hover:bg-slate-900`}
+                                                className={`block ${dashboardItemCardClass} transition-all duration-200 hover:-translate-y-0.5 hover:border-cyan-400/30 hover:bg-[#0E182C]`}
                                             >
                                                 <div className={`flex items-center justify-between ${dashboardCompactGapClass}`}>
                                                     <div className={dashboardText.itemTitle}>{link.label}</div>
-                                                    <span className={dashboardColorTokens['text-accent']}>→</span>
+                                                    <span className="flex h-8 w-8 items-center justify-center rounded-full border border-cyan-400/15 bg-cyan-400/10 text-cyan-300">→</span>
                                                 </div>
                                                 <div className={`mt-2 ${dashboardText.meta}`}>{link.detail}</div>
                                             </Link>
@@ -445,12 +455,20 @@ export default function DashboardPage() {
                                     }
                                 >
                                     <div className={dashboardAccentCardClass}>
-                                        <div className={dashboardText.panelTitle}>{dashboardSupportContact.name}</div>
-                                        <div className={`mt-2 ${dashboardText.bodyStrong} ${dashboardColorTokens['text-accent-soft']}`}>{dashboardSupportContact.role}</div>
-                                        <div className={`mt-4 ${dashboardText.meta}`}>{`${dashboardSupportContact.availability} / ${dashboardSupportContact.responseTime}`}</div>
+                                        <div className="pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full bg-cyan-400/12 blur-3xl" />
+                                        <div className="relative flex items-start gap-4">
+                                            <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-cyan-400/20 bg-[#0A1324]/90 text-sm font-semibold tracking-[0.12em] text-cyan-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+                                                MC
+                                            </span>
+                                            <div className="min-w-0">
+                                                <div className={dashboardText.panelTitle}>{dashboardSupportContact.name}</div>
+                                                <div className={`mt-2 ${dashboardText.bodyStrong} ${dashboardColorTokens['text-accent-soft']}`}>{dashboardSupportContact.role}</div>
+                                                <div className={`mt-4 ${dashboardText.meta}`}>{`${dashboardSupportContact.availability} / ${dashboardSupportContact.responseTime}`}</div>
+                                            </div>
+                                        </div>
                                         <a
                                             href={`mailto:${dashboardSupportContact.email}`}
-                                            className={`mt-4 inline-flex ${dashboardActionButtonClass}`}
+                                            className={`mt-5 inline-flex ${dashboardActionButtonClass}`}
                                         >
                                             Contact support
                                         </a>
@@ -547,12 +565,11 @@ function ProgressBarPlaceholder({
 }) {
     return (
         <div>
-            <div className="mb-2 flex items-center justify-between">
+            <div className="mb-2">
                 <span className={dashboardText.itemTitle}>{label}</span>
-                <span className={dashboardText.meta}>Placeholder</span>
             </div>
-            <div className="h-2 rounded-full bg-slate-800">
-                <div className={`h-2 rounded-full ${widthClassName} ${toneClassName}`} />
+            <div className="h-2.5 rounded-full bg-[#0A1324]">
+                <div className={`h-2.5 rounded-full shadow-[0_0_20px_rgba(34,211,238,0.12)] ${widthClassName} ${toneClassName}`} />
             </div>
         </div>
     )
