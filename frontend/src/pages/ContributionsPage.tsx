@@ -39,13 +39,23 @@ type AdvancedRightsConditions = {
     volumePricingUnit: 'tb' | 'million_records'
 }
 
+type DatasetSecurityOptions = {
+    endToEndEncryption: boolean
+    autoMaskPii: boolean
+    dynamicRoleMasking: boolean
+    watermarkingEnabled: boolean
+    revocationRights: boolean
+}
+
 type PrivacyAccessTerms = {
+    accessMethod: string
     deliveryMode: string
     fieldAccess: string
     usageRights: string
     term: string
     geography: string
     exclusivity: string
+    security: DatasetSecurityOptions
     advanced: AdvancedRightsConditions
 }
 
@@ -91,6 +101,14 @@ type UploadDraft = {
     submission: UploadDraftSubmission
 }
 
+type AccessMethodOption = {
+    value: string
+    label: string
+    detail: string
+    summary: string
+    icon: 'platform' | 'download' | 'hybrid'
+}
+
 const uploadSteps = [
     'Dataset info',
     'Secure Payload Ingestion',
@@ -107,11 +125,36 @@ const validationStages = [
     'Approved for access'
 ]
 
+const accessMethodOptions: AccessMethodOption[] = [
+    {
+        value: 'platform_only',
+        label: 'Platform Only',
+        detail: 'Buyers can only access data inside a governed Redoubt workspace / clean room. No download or export allowed.',
+        summary: 'Governed workspace access only. No download or export rights.',
+        icon: 'platform'
+    },
+    {
+        value: 'download_only',
+        label: 'Download Only',
+        detail: 'Buyers can download a scoped/encrypted package. No access inside Redoubt platform.',
+        summary: 'Scoped encrypted download only. No platform workspace access.',
+        icon: 'download'
+    },
+    {
+        value: 'platform_and_download',
+        label: 'Platform + Download',
+        detail: 'Buyers get both governed workspace access + scoped download rights.',
+        summary: 'Workspace access and scoped download rights are both enabled.',
+        icon: 'hybrid'
+    }
+]
+
 const deliveryModeOptions = [
     { value: 'metadata_only', label: 'Metadata only', detail: 'Surface title, schema, and high-level descriptors only.' },
     { value: 'secure_clean_room', label: 'Secure clean room', detail: 'Buyer works inside a governed workspace without direct export.' },
     { value: 'aggregated_export', label: 'Aggregated export', detail: 'Approved users receive pre-aggregated outputs only.' },
-    { value: 'encrypted_download', label: 'Encrypted download', detail: 'Encrypted file delivery for tightly controlled access cases.' }
+    { value: 'encrypted_download', label: 'Encrypted download', detail: 'Encrypted file delivery for tightly controlled access cases.' },
+    { value: 'full_raw_access', label: 'Full Raw Access', detail: 'Full raw dataset release for tightly approved enterprise access.' }
 ]
 
 const fieldAccessOptions = [
@@ -168,12 +211,6 @@ const findOptionLabel = <T extends { value: string; label: string }>(options: T[
 
 const privacyControlSections = [
     {
-        field: 'deliveryMode',
-        title: 'Delivery Mode',
-        description: 'Choose how buyers receive or interact with approved data.',
-        options: deliveryModeOptions
-    },
-    {
         field: 'fieldAccess',
         title: 'Field Access',
         description: 'Set the breadth of schema visibility available to buyers.',
@@ -222,6 +259,36 @@ const advancedRightsSections = [
         options: advancedBinaryOptions.attributionRequirement
     }
 ] as const
+
+const renderAccessMethodIcon = (icon: AccessMethodOption['icon']) => {
+    switch (icon) {
+        case 'platform':
+            return (
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 5.25h16.5v10.5H3.75V5.25z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 18.75h6" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 15.75v3" />
+                </svg>
+            )
+        case 'download':
+            return (
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v9" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 10.5L12 14.25 15.75 10.5" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 18.75h15" />
+                </svg>
+            )
+        default:
+            return (
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6h10.5v7.5H3.75V6z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 8.25h4.5v9h-9v-2.25" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 15.75v-3.75" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 13.5l2.25 2.25 2.25-2.25" />
+                </svg>
+            )
+    }
+}
 
 const uploadedDatasets: UploadedDataset[] = [
     {
@@ -324,12 +391,20 @@ const feedbackStyles: Record<FeedbackItem['severity'], string> = {
 }
 
 const createDefaultPrivacyAccessTerms = (): PrivacyAccessTerms => ({
+    accessMethod: 'platform_only',
     deliveryMode: 'secure_clean_room',
     fieldAccess: 'analytics_pack',
     usageRights: 'research_use',
     term: '12_months',
     geography: 'dual_region',
     exclusivity: 'non_exclusive',
+    security: {
+        endToEndEncryption: false,
+        autoMaskPii: true,
+        dynamicRoleMasking: false,
+        watermarkingEnabled: true,
+        revocationRights: true
+    },
     advanced: {
         redistributionRights: 'not_allowed',
         auditLoggingRequirement: 'mandatory',
@@ -455,13 +530,27 @@ export default function ContributionsPage() {
     }, [])
 
     const updatePrivacyAccessTerm = (
-        field: Exclude<keyof typeof privacyAccessTerms, 'advanced'>,
+        field: Exclude<keyof typeof privacyAccessTerms, 'advanced' | 'security'>,
         value: string
     ) => {
         setShowMockSubmissionNotice(false)
         setPrivacyAccessTerms(prev => ({
             ...prev,
             [field]: value
+        }))
+    }
+
+    const updateSecurityOption = (
+        field: keyof DatasetSecurityOptions,
+        value: boolean
+    ) => {
+        setShowMockSubmissionNotice(false)
+        setPrivacyAccessTerms(prev => ({
+            ...prev,
+            security: {
+                ...prev.security,
+                [field]: value
+            }
         }))
     }
 
@@ -479,6 +568,8 @@ export default function ContributionsPage() {
         }))
     }
 
+    const selectedAccessMethodOption = accessMethodOptions.find(option => option.value === privacyAccessTerms.accessMethod) ?? accessMethodOptions[0]
+    const selectedAccessMethodLabel = selectedAccessMethodOption.label
     const selectedDeliveryModeLabel = findOptionLabel(deliveryModeOptions, privacyAccessTerms.deliveryMode)
     const selectedFieldAccessLabel = findOptionLabel(fieldAccessOptions, privacyAccessTerms.fieldAccess)
     const selectedUsageRightsLabel = findOptionLabel(usageRightsOptions, privacyAccessTerms.usageRights)
@@ -497,6 +588,13 @@ export default function ContributionsPage() {
         [...advancedBinaryOptions.attributionRequirement],
         privacyAccessTerms.advanced.attributionRequirement
     )
+    const encryptionSummary = privacyAccessTerms.security.endToEndEncryption
+        ? 'AES-256 at rest, TLS 1.3 in transit, and end-to-end encryption enabled.'
+        : 'AES-256 at rest and TLS 1.3 in transit.'
+    const maskingSummary = [
+        privacyAccessTerms.security.autoMaskPii ? 'Automatic PII masking' : null,
+        privacyAccessTerms.security.dynamicRoleMasking ? 'Role-based dynamic masking' : null
+    ].filter(Boolean).join(' + ') || 'Manual masking only'
     const volumePricingSummary = privacyAccessTerms.advanced.volumeBasedPricing
         ? privacyAccessTerms.advanced.volumePricingAdjustment
             ? `${privacyAccessTerms.advanced.volumePricingAdjustment} / ${
@@ -506,6 +604,7 @@ export default function ContributionsPage() {
         : 'Disabled'
     const isMetadataComplete = Object.values(uploadDraft.metadata).every(value => value.trim().length > 0)
     const areRightsComplete = [
+        privacyAccessTerms.accessMethod,
         privacyAccessTerms.deliveryMode,
         privacyAccessTerms.fieldAccess,
         privacyAccessTerms.usageRights,
@@ -542,7 +641,8 @@ export default function ContributionsPage() {
         .filter(item => !item.complete)
         .map(item => item.label.toLowerCase())
     const buyerAccessSummary = [
-        ['Delivery mode', selectedDeliveryModeLabel],
+        ['Access method', selectedAccessMethodLabel],
+        ['Delivery detail', selectedDeliveryModeLabel],
         ['Field access', selectedFieldAccessLabel],
         ['Usage rights', selectedUsageRightsLabel],
         ['Term', selectedTermLabel],
@@ -554,6 +654,12 @@ export default function ContributionsPage() {
         ['Audit logging requirement', selectedAuditLoggingLabel],
         ['Attribution requirement', selectedAttributionLabel],
         ['Data volume scaling', volumePricingSummary]
+    ]
+    const securitySummary = [
+        ['Encryption', encryptionSummary],
+        ['Masking', maskingSummary],
+        ['Watermarking', privacyAccessTerms.security.watermarkingEnabled ? 'Invisible watermarking enabled' : 'Watermarking disabled'],
+        ['Revocation rights', privacyAccessTerms.security.revocationRights ? 'Provider can revoke access at any time' : 'Revocation override disabled']
     ]
 
     const updateUploadMetadata = (field: keyof UploadDraftMetadata, value: string) => {
@@ -1261,6 +1367,268 @@ export default function ContributionsPage() {
                                 </div>
                             </div>
 
+                            <section className="rounded-2xl border border-cyan-400/20 bg-slate-900/60 p-5 backdrop-blur-sm shadow-lg shadow-cyan-950/10">
+                                <div className="mb-4">
+                                    <div className="text-sm font-semibold text-slate-100">Access &amp; Delivery Method</div>
+                                    <div className="mt-1 text-xs text-slate-400">Choose how buyers will receive and interact with the approved dataset.</div>
+                                </div>
+
+                                <div className="grid gap-3 xl:grid-cols-3">
+                                    {accessMethodOptions.map(option => (
+                                        <button
+                                            key={option.value}
+                                            type="button"
+                                            onClick={() => updatePrivacyAccessTerm('accessMethod', option.value)}
+                                            className={`rounded-2xl border p-4 text-left transition-all ${
+                                                privacyAccessTerms.accessMethod === option.value
+                                                    ? 'border-cyan-400/45 bg-cyan-500/10 text-cyan-100 shadow-lg shadow-cyan-950/10'
+                                                    : 'border-slate-700 bg-slate-950/50 text-slate-300 hover:border-slate-500'
+                                            }`}
+                                        >
+                                            <div className="flex items-start justify-between gap-3">
+                                                <div className={`flex h-12 w-12 items-center justify-center rounded-2xl border ${
+                                                    privacyAccessTerms.accessMethod === option.value
+                                                        ? 'border-cyan-400/40 bg-cyan-500/15 text-cyan-200'
+                                                        : 'border-slate-700 bg-slate-900/70 text-slate-400'
+                                                }`}>
+                                                    {renderAccessMethodIcon(option.icon)}
+                                                </div>
+                                                <span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] ${
+                                                    privacyAccessTerms.accessMethod === option.value
+                                                        ? 'border border-cyan-400/35 bg-cyan-500/15 text-cyan-100'
+                                                        : 'border border-slate-700 bg-slate-900/70 text-slate-500'
+                                                }`}>
+                                                    {privacyAccessTerms.accessMethod === option.value ? 'Selected' : 'Choose'}
+                                                </span>
+                                            </div>
+                                            <div className="mt-4 text-base font-semibold">{option.label}</div>
+                                            <div className="mt-2 text-sm leading-6 text-slate-400">{option.detail}</div>
+                                        </button>
+                                    ))}
+                                </div>
+
+                                <div className="mt-5 rounded-2xl border border-slate-700 bg-slate-950/40 p-4">
+                                    <div className="flex flex-wrap items-start justify-between gap-3">
+                                        <div>
+                                            <div className="text-sm font-semibold text-slate-100">Delivery detail</div>
+                                            <div className="mt-1 text-xs text-slate-400">Refine the exact packaging or access mode buyers receive after approval.</div>
+                                        </div>
+                                        <span className="rounded-full border border-slate-700 bg-slate-900/70 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">
+                                            Granular options
+                                        </span>
+                                    </div>
+
+                                    <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                                        {deliveryModeOptions.map(option => (
+                                            <button
+                                                key={option.value}
+                                                type="button"
+                                                onClick={() => updatePrivacyAccessTerm('deliveryMode', option.value)}
+                                                className={`rounded-xl border px-3 py-3 text-left transition-all ${
+                                                    privacyAccessTerms.deliveryMode === option.value
+                                                        ? 'border-cyan-400/45 bg-cyan-500/10 text-cyan-100 shadow-lg shadow-cyan-950/10'
+                                                        : 'border-slate-700 bg-slate-900/70 text-slate-300 hover:border-slate-500'
+                                                }`}
+                                            >
+                                                <div className="text-sm font-medium">{option.label}</div>
+                                                <div className="mt-1 text-xs leading-5 text-slate-400">{option.detail}</div>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </section>
+
+                            <section className="rounded-2xl border border-emerald-400/15 bg-gradient-to-br from-emerald-500/8 via-slate-900/75 to-slate-950/95 p-5 backdrop-blur-sm shadow-lg shadow-emerald-950/10">
+                                <div className="mb-5">
+                                    <div className="text-sm font-semibold text-slate-100">Dataset Security Options</div>
+                                    <div className="mt-1 text-xs text-slate-400">Configure additional security, privacy, and governance controls for this dataset.</div>
+                                </div>
+
+                                <div className="grid gap-4 lg:grid-cols-2">
+                                    <section className="rounded-2xl border border-slate-700 bg-slate-950/45 p-4">
+                                        <div className="text-sm font-semibold text-slate-100">Encryption Level</div>
+                                        <div className="mt-1 text-xs text-slate-400">Baseline transport and storage protections stay applied to every approved package.</div>
+
+                                        <div className="mt-4 rounded-2xl border border-emerald-400/25 bg-emerald-500/10 p-4">
+                                            <div className="flex items-start justify-between gap-3">
+                                                <div>
+                                                    <div className="text-sm font-semibold text-emerald-100">AES-256 at rest + TLS 1.3 in transit</div>
+                                                    <div className="mt-1 text-xs leading-5 text-slate-300">Default Redoubt encryption baseline for stored payloads and governed delivery channels.</div>
+                                                </div>
+                                                <span className="rounded-full border border-emerald-400/35 bg-emerald-500/15 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-100">
+                                                    Default
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <div className="mt-4 rounded-2xl border border-slate-700 bg-slate-900/70 p-4">
+                                            <div className="flex items-start justify-between gap-4">
+                                                <div>
+                                                    <div className="text-sm font-semibold text-slate-100">End-to-End Encryption</div>
+                                                    <div className="mt-1 text-xs text-slate-400">Add an extra protected path for highly sensitive buyer access scenarios.</div>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    aria-pressed={privacyAccessTerms.security.endToEndEncryption}
+                                                    onClick={() => updateSecurityOption('endToEndEncryption', !privacyAccessTerms.security.endToEndEncryption)}
+                                                    className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
+                                                        privacyAccessTerms.security.endToEndEncryption ? 'bg-emerald-500 ring-1 ring-emerald-300/40' : 'bg-slate-700 ring-1 ring-slate-500/60'
+                                                    }`}
+                                                >
+                                                    <span className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${privacyAccessTerms.security.endToEndEncryption ? 'translate-x-5' : 'translate-x-1'}`} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </section>
+
+                                    <section className="rounded-2xl border border-slate-700 bg-slate-950/45 p-4">
+                                        <div className="text-sm font-semibold text-slate-100">Data Masking &amp; Anonymization</div>
+                                        <div className="mt-1 text-xs text-slate-400">Control how sensitive fields are protected before buyers interact with approved data.</div>
+
+                                        <div className="mt-4 space-y-3">
+                                            <div className="rounded-2xl border border-slate-700 bg-slate-900/70 p-4">
+                                                <div className="flex items-start justify-between gap-4">
+                                                    <div>
+                                                        <div className="text-sm font-semibold text-slate-100">Automatically mask PII fields</div>
+                                                        <div className="mt-1 text-xs text-slate-400">Apply masking rules to known sensitive identifiers by default.</div>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        aria-pressed={privacyAccessTerms.security.autoMaskPii}
+                                                        onClick={() => updateSecurityOption('autoMaskPii', !privacyAccessTerms.security.autoMaskPii)}
+                                                        className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
+                                                            privacyAccessTerms.security.autoMaskPii ? 'bg-emerald-500 ring-1 ring-emerald-300/40' : 'bg-slate-700 ring-1 ring-slate-500/60'
+                                                        }`}
+                                                    >
+                                                        <span className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${privacyAccessTerms.security.autoMaskPii ? 'translate-x-5' : 'translate-x-1'}`} />
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <div className="rounded-2xl border border-slate-700 bg-slate-900/70 p-4">
+                                                <div className="flex items-start justify-between gap-4">
+                                                    <div>
+                                                        <div className="text-sm font-semibold text-slate-100">Dynamic masking based on buyer role</div>
+                                                        <div className="mt-1 text-xs text-slate-400">Adjust visible field precision and masking according to approved buyer permissions.</div>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        aria-pressed={privacyAccessTerms.security.dynamicRoleMasking}
+                                                        onClick={() => updateSecurityOption('dynamicRoleMasking', !privacyAccessTerms.security.dynamicRoleMasking)}
+                                                        className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
+                                                            privacyAccessTerms.security.dynamicRoleMasking ? 'bg-emerald-500 ring-1 ring-emerald-300/40' : 'bg-slate-700 ring-1 ring-slate-500/60'
+                                                        }`}
+                                                    >
+                                                        <span className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${privacyAccessTerms.security.dynamicRoleMasking ? 'translate-x-5' : 'translate-x-1'}`} />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </section>
+
+                                    <section className="rounded-2xl border border-slate-700 bg-slate-950/45 p-4">
+                                        <div className="flex items-start justify-between gap-4">
+                                            <div>
+                                                <div className="text-sm font-semibold text-slate-100">Watermarking</div>
+                                                <div className="mt-1 text-xs text-slate-400">Enable invisible digital watermarking on downloaded data.</div>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                aria-pressed={privacyAccessTerms.security.watermarkingEnabled}
+                                                onClick={() => updateSecurityOption('watermarkingEnabled', !privacyAccessTerms.security.watermarkingEnabled)}
+                                                className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
+                                                    privacyAccessTerms.security.watermarkingEnabled ? 'bg-emerald-500 ring-1 ring-emerald-300/40' : 'bg-slate-700 ring-1 ring-slate-500/60'
+                                                }`}
+                                            >
+                                                <span className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${privacyAccessTerms.security.watermarkingEnabled ? 'translate-x-5' : 'translate-x-1'}`} />
+                                            </button>
+                                        </div>
+                                    </section>
+
+                                    <section className="rounded-2xl border border-slate-700 bg-slate-950/45 p-4">
+                                        <div className="flex items-start justify-between gap-4">
+                                            <div>
+                                                <div className="text-sm font-semibold text-slate-100">Revocation Rights</div>
+                                                <div className="mt-1 text-xs text-slate-400">Provider can revoke access at any time when contractual or compliance issues arise.</div>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                aria-pressed={privacyAccessTerms.security.revocationRights}
+                                                onClick={() => updateSecurityOption('revocationRights', !privacyAccessTerms.security.revocationRights)}
+                                                className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
+                                                    privacyAccessTerms.security.revocationRights ? 'bg-emerald-500 ring-1 ring-emerald-300/40' : 'bg-slate-700 ring-1 ring-slate-500/60'
+                                                }`}
+                                            >
+                                                <span className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${privacyAccessTerms.security.revocationRights ? 'translate-x-5' : 'translate-x-1'}`} />
+                                            </button>
+                                        </div>
+                                    </section>
+
+                                    <section className="rounded-2xl border border-slate-700 bg-slate-950/45 p-4">
+                                        <div className="text-sm font-semibold text-slate-100">Audit Logging Requirement</div>
+                                        <div className="mt-1 text-xs text-slate-400">Define whether buyer access events require mandatory audit capture.</div>
+                                        <div className="mt-4 grid grid-cols-2 gap-3">
+                                            {advancedBinaryOptions.auditLoggingRequirement.map(option => (
+                                                <button
+                                                    key={option.value}
+                                                    type="button"
+                                                    onClick={() => updateAdvancedRight('auditLoggingRequirement', option.value)}
+                                                    className={`rounded-xl border px-4 py-3 text-sm font-medium transition-all ${
+                                                        privacyAccessTerms.advanced.auditLoggingRequirement === option.value
+                                                            ? 'border-emerald-400/45 bg-emerald-500/10 text-emerald-100'
+                                                            : 'border-slate-700 bg-slate-900/70 text-slate-300 hover:border-slate-500'
+                                                    }`}
+                                                >
+                                                    {option.label}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </section>
+
+                                    <section className="rounded-2xl border border-slate-700 bg-slate-950/45 p-4">
+                                        <div className="text-sm font-semibold text-slate-100">Attribution Requirement</div>
+                                        <div className="mt-1 text-xs text-slate-400">Set whether approved buyers must preserve attribution when using the dataset.</div>
+                                        <div className="mt-4 grid grid-cols-2 gap-3">
+                                            {advancedBinaryOptions.attributionRequirement.map(option => (
+                                                <button
+                                                    key={option.value}
+                                                    type="button"
+                                                    onClick={() => updateAdvancedRight('attributionRequirement', option.value)}
+                                                    className={`rounded-xl border px-4 py-3 text-sm font-medium transition-all ${
+                                                        privacyAccessTerms.advanced.attributionRequirement === option.value
+                                                            ? 'border-emerald-400/45 bg-emerald-500/10 text-emerald-100'
+                                                            : 'border-slate-700 bg-slate-900/70 text-slate-300 hover:border-slate-500'
+                                                    }`}
+                                                >
+                                                    {option.label}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </section>
+
+                                    <section className="rounded-2xl border border-slate-700 bg-slate-950/45 p-4 lg:col-span-2">
+                                        <div className="text-sm font-semibold text-slate-100">Redistribution Rights</div>
+                                        <div className="mt-1 text-xs text-slate-400">Control whether buyers may redistribute approved dataset outputs or packages.</div>
+                                        <div className="mt-4 grid grid-cols-2 gap-3 md:max-w-md">
+                                            {advancedBinaryOptions.redistributionRights.map(option => (
+                                                <button
+                                                    key={option.value}
+                                                    type="button"
+                                                    onClick={() => updateAdvancedRight('redistributionRights', option.value)}
+                                                    className={`rounded-xl border px-4 py-3 text-sm font-medium transition-all ${
+                                                        privacyAccessTerms.advanced.redistributionRights === option.value
+                                                            ? 'border-emerald-400/45 bg-emerald-500/10 text-emerald-100'
+                                                            : 'border-slate-700 bg-slate-900/70 text-slate-300 hover:border-slate-500'
+                                                    }`}
+                                                >
+                                                    {option.label}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </section>
+                                </div>
+                            </section>
+
                             <div className="grid gap-4 md:grid-cols-2">
                                 {privacyControlSections.map(section => (
                                     <section key={section.field} className="rounded-2xl border border-slate-700 bg-slate-900/60 p-4 backdrop-blur-sm">
@@ -1406,9 +1774,25 @@ export default function ContributionsPage() {
                                 <h4 className="mt-2 text-lg font-semibold text-slate-50">Buyer-facing package preview</h4>
                                 <p className="mt-1 text-sm text-slate-400">The main commercial terms stay visible here while advanced conditions expand inline below the main form.</p>
 
+                                <div className="mt-5 rounded-2xl border border-cyan-400/25 bg-cyan-500/10 p-4">
+                                    <div className="text-[11px] uppercase tracking-[0.14em] text-cyan-300/80">Access &amp; delivery method</div>
+                                    <div className="mt-3 flex items-start gap-3">
+                                        <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-cyan-400/30 bg-cyan-500/10 text-cyan-200">
+                                            {renderAccessMethodIcon(selectedAccessMethodOption.icon)}
+                                        </div>
+                                        <div>
+                                            <div className="text-sm font-semibold text-slate-100">{selectedAccessMethodLabel}</div>
+                                            <div className="mt-1 text-xs leading-5 text-slate-300">{selectedAccessMethodOption.summary}</div>
+                                            <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-cyan-400/25 bg-slate-950/40 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-cyan-100">
+                                                <span className="text-cyan-300/80">Delivery detail</span>
+                                                <span>{selectedDeliveryModeLabel}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div className="mt-5 space-y-3">
                                     {[
-                                        ['Delivery mode', selectedDeliveryModeLabel],
                                         ['Field access', selectedFieldAccessLabel],
                                         ['Usage rights', selectedUsageRightsLabel],
                                         ['Term', selectedTermLabel],
@@ -1420,6 +1804,30 @@ export default function ContributionsPage() {
                                             <div className="mt-1 text-sm font-medium text-slate-100">{value}</div>
                                         </div>
                                     ))}
+                                </div>
+
+                                <div className="mt-5 rounded-2xl border border-emerald-400/20 bg-emerald-500/5 p-4">
+                                    <div className="text-[11px] uppercase tracking-[0.14em] text-emerald-300/80">Security snapshot</div>
+                                    <div className="mt-3 space-y-2 text-sm text-slate-300">
+                                        {securitySummary.map(([label, value]) => (
+                                            <div key={label} className="flex items-start justify-between gap-3">
+                                                <span>{label}</span>
+                                                <span className="max-w-[62%] text-right text-slate-100">{value}</span>
+                                            </div>
+                                        ))}
+                                        <div className="flex items-start justify-between gap-3">
+                                            <span>Audit logging</span>
+                                            <span className="text-slate-100">{selectedAuditLoggingLabel}</span>
+                                        </div>
+                                        <div className="flex items-start justify-between gap-3">
+                                            <span>Attribution</span>
+                                            <span className="text-slate-100">{selectedAttributionLabel}</span>
+                                        </div>
+                                        <div className="flex items-start justify-between gap-3">
+                                            <span>Redistribution</span>
+                                            <span className="text-slate-100">{selectedRedistributionLabel}</span>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div className="mt-5 rounded-2xl border border-purple-500/20 bg-purple-500/5 p-4">
@@ -1443,7 +1851,7 @@ export default function ContributionsPage() {
         },
         {
             title: 'Submission confirmation',
-            description: 'Review the dataset package, access terms, and legal declaration before submission.',
+            description: 'Review the dataset package, access and security terms, and legal declaration before submission.',
             body: (
                 <div className="space-y-4 text-sm">
                     <div className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
@@ -1555,7 +1963,8 @@ export default function ContributionsPage() {
                                 <div className="flex flex-wrap items-start justify-between gap-3">
                                     <div>
                                         <div className="text-[11px] uppercase tracking-[0.16em] text-slate-400">Buyer access terms</div>
-                                        <h4 className="mt-2 text-lg font-semibold text-slate-50">Commercial access package</h4>
+                                        <h4 className="mt-2 text-lg font-semibold text-slate-50">Access and delivery package</h4>
+                                        <p className="mt-1 text-sm text-slate-400">Review the selected primary access method, delivery detail, and buyer-facing commercial controls.</p>
                                     </div>
                                     <button
                                         type="button"
@@ -1568,6 +1977,21 @@ export default function ContributionsPage() {
 
                                 <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                                     {buyerAccessSummary.map(([label, value]) => (
+                                        <div key={label} className="rounded-xl border border-slate-800 bg-slate-950/60 p-3">
+                                            <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">{label}</div>
+                                            <div className="mt-1 font-medium text-slate-100">{value}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </section>
+
+                            <section className="rounded-2xl border border-slate-700 bg-slate-900/60 p-5 backdrop-blur-sm">
+                                <div className="text-[11px] uppercase tracking-[0.16em] text-slate-400">Dataset security options</div>
+                                <h4 className="mt-2 text-lg font-semibold text-slate-50">Security, privacy, and governance recap</h4>
+                                <p className="mt-1 text-sm text-slate-400">Confirm the current encryption, masking, watermarking, and revocation settings before final submission.</p>
+
+                                <div className="mt-5 grid gap-3 md:grid-cols-2">
+                                    {securitySummary.map(([label, value]) => (
                                         <div key={label} className="rounded-xl border border-slate-800 bg-slate-950/60 p-3">
                                             <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">{label}</div>
                                             <div className="mt-1 font-medium text-slate-100">{value}</div>
