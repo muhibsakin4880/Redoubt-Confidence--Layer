@@ -1,11 +1,16 @@
 import { Link } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
 import { participantTrust } from '../data/workspaceData'
 
 export default function DashboardPage() {
+    const { accessStatus, applicantEmail } = useAuth()
     const netTrustScore = 72
     const trustInterpretation = netTrustScore >= 80 ? 'Trusted Participant' : netTrustScore >= 60 ? 'Building Trust' : 'New Participant'
     const trustColor = netTrustScore >= 80 ? 'text-emerald-400' : netTrustScore >= 60 ? 'text-amber-400' : 'text-slate-400'
-    
+    const participantName = formatParticipantName(applicantEmail)
+    const programStatusLabel = accessStatus === 'approved' ? 'Approved participant' : accessStatus === 'pending' ? 'Application pending' : 'Getting started'
+    const nextMilestoneDate = accessStatus === 'approved' ? 'Apr 18, 2026' : accessStatus === 'pending' ? 'Apr 12, 2026' : 'Apr 09, 2026'
+
     const activeEscrows = 2
     
     const recentActivity = [
@@ -19,18 +24,38 @@ export default function DashboardPage() {
             <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(ellipse_at_25%_0%,rgba(16,185,129,0.12),transparent_50%),radial-gradient(ellipse_at_80%_20%,rgba(59,130,246,0.08),transparent_45%)]" />
 
             <div className="relative mx-auto max-w-[1680px] px-8 py-10 lg:px-12">
-                <header className="mb-8">
-                    <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-                        <div>
-                            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/6 px-4 py-1.5 text-[11px] font-medium uppercase tracking-[0.12em] text-slate-400">
-                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                                Participant Workspace
+                <section className="mb-8" aria-labelledby="dashboard-intro-banner">
+                    <div className="overflow-hidden rounded-2xl border border-cyan-500/20 bg-[radial-gradient(circle_at_top_right,rgba(34,211,238,0.16),transparent_35%),linear-gradient(135deg,rgba(15,23,42,0.94),rgba(17,24,39,0.86))] px-6 py-5 shadow-[0_22px_60px_-34px_rgba(6,182,212,0.5)]">
+                        <div className="flex min-h-[88px] items-center justify-between gap-6">
+                            <div>
+                                <p className="text-[11px] uppercase tracking-[0.18em] text-cyan-200/80">Participant Workspace</p>
+                                <h1 id="dashboard-intro-banner" className="mt-2 text-4xl font-bold tracking-tight text-white">
+                                    Welcome back, {participantName}
+                                </h1>
+                                <p className="mt-2 text-sm leading-6 text-slate-300">
+                                    Continue managing trust, access, and escrow milestones from the same governed workspace.
+                                </p>
                             </div>
-                            <h1 className="mt-5 text-5xl font-bold tracking-tight text-white lg:text-6xl">Dashboard</h1>
-                            <p className="mt-3 text-lg text-slate-500">Enterprise-grade trust and access intelligence.</p>
+
+                            <div className="flex shrink-0 items-center gap-3">
+                                <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs font-medium text-emerald-100">
+                                    {programStatusLabel}
+                                </span>
+                                <div className="rounded-xl border border-white/10 bg-slate-950/45 px-4 py-3">
+                                    <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">Next milestone date</div>
+                                    <div className="mt-1 text-sm font-semibold text-slate-100">{nextMilestoneDate}</div>
+                                </div>
+                                <button
+                                    type="button"
+                                    className="rounded-xl bg-cyan-500 px-4 py-3 text-sm font-semibold text-slate-950 transition-colors hover:bg-cyan-400"
+                                    aria-label="Continue where you left off in the participant dashboard"
+                                >
+                                    Continue where you left off
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </header>
+                </section>
 
                 <section className="mb-10">
                     <h2 className="text-xl font-bold text-white mb-5">What needs your attention</h2>
@@ -201,4 +226,20 @@ export default function DashboardPage() {
             </div>
         </div>
     )
+}
+
+function formatParticipantName(email: string) {
+    if (!email) return 'Participant'
+
+    const localPart = email.split('@')[0] ?? ''
+    const segments = localPart
+        .split(/[._-]+/)
+        .map(segment => segment.trim())
+        .filter(Boolean)
+
+    if (segments.length === 0) return 'Participant'
+
+    return segments
+        .map(segment => segment.charAt(0).toUpperCase() + segment.slice(1))
+        .join(' ')
 }

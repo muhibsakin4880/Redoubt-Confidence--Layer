@@ -1,5 +1,4 @@
-import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { useAuth } from '../contexts/AuthContext'
+import { Link, NavLink, Outlet } from 'react-router-dom'
 
 type NavItem = {
     label: string
@@ -76,14 +75,6 @@ const navGroups: NavGroup[] = [
 ]
 
 export default function AppLayout() {
-    const navigate = useNavigate()
-    const { signOut } = useAuth()
-
-    const handleSignOut = () => {
-        signOut()
-        navigate('/', { replace: true })
-    }
-
     return (
         <div className="min-h-screen bg-slate-900 text-white flex">
             <aside className="hidden md:flex md:w-64 flex-col border-r border-slate-800 bg-slate-950/80">
@@ -174,32 +165,60 @@ export default function AppLayout() {
             </aside>
 
             <div className="flex-1 min-w-0">
-                <header className="h-[76px] border-b border-cyan-500/30 bg-black/80 backdrop-blur-xl">
-                    <div className="h-full px-6 flex items-center justify-between">
-                        <div className="md:hidden">
-                            <Link to="/dashboard" className="text-sm font-semibold text-slate-100">
-                                Workspace
+                <header className="h-[72px] border-b border-cyan-500/20 bg-black/80 backdrop-blur-xl">
+                    <div className="flex h-full items-center justify-between px-6">
+                        <div className="flex items-center gap-4">
+                            <Link to="/dashboard" className="flex items-center gap-3" aria-label="Open participant dashboard">
+                                <span className="flex h-10 w-10 items-center justify-center rounded-[12px] border border-cyan-500/30 bg-cyan-500/10 text-cyan-200">
+                                    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 6.75h15v10.5h-15V6.75z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 20.25h6" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 17.25v3" />
+                                    </svg>
+                                </span>
+                                <span>
+                                    <span className="block text-[11px] uppercase tracking-[0.2em] text-slate-500">Participant Console</span>
+                                    <span className="mt-1 block text-sm font-semibold text-slate-100">Redoubt Workspace</span>
+                                </span>
                             </Link>
                         </div>
-                        <div className="hidden md:block text-sm text-slate-400">Participant workspace</div>
-                        <div className="flex items-center gap-3">
-<button className="relative p-2 rounded-lg border border-slate-700 text-slate-200 hover:text-white hover:border-blue-500 transition-colors transition-transform duration-100 active:scale-95" aria-label="Notifications">
-                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2c0 .53-.21 1.04-.59 1.42L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                                 </svg>
-                                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-emerald-400" />
-                            </button>
-                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800/60 border border-slate-700/50">
-                                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-                                <span className="text-xs text-slate-300">Verified session</span>
-                            </div>
+
+                        <nav className="flex items-center gap-3" aria-label="Participant console tools">
                             <button
-                                onClick={handleSignOut}
-                                className="px-3 py-2 rounded-lg border border-slate-700 hover:border-rose-500 text-sm text-slate-200 hover:text-white transition-colors"
+                                type="button"
+                                className="relative rounded-[12px] border border-slate-700 bg-slate-900 px-3 py-2 text-slate-200 transition-colors hover:border-cyan-400/40 hover:text-white"
+                                aria-label="Open notifications"
                             >
-                                Logout
+                                <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-emerald-400" aria-hidden="true" />
+                                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2c0 .53-.21 1.04-.59 1.42L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                                </svg>
                             </button>
-                        </div>
+                            <button
+                                type="button"
+                                className="rounded-[12px] border border-slate-700 bg-slate-900 px-3 py-2 text-slate-200 transition-colors hover:border-cyan-400/40 hover:text-white"
+                                aria-label="Open help and guidance"
+                            >
+                                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.09 9a3 3 0 115.82 1c0 2-3 3-3 3" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 17h.01" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </button>
+                            <Link
+                                to="/profile"
+                                className="flex items-center gap-3 rounded-[12px] border border-slate-700 bg-slate-900 px-3 py-2 text-slate-200 transition-colors hover:border-cyan-400/40 hover:text-white"
+                                aria-label="Open profile settings"
+                            >
+                                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-cyan-500 text-sm font-semibold text-slate-950">
+                                    RP
+                                </span>
+                                <span className="hidden text-left md:block">
+                                    <span className="block text-sm font-medium text-slate-100">Profile</span>
+                                    <span className="block text-xs text-slate-500">Settings</span>
+                                </span>
+                            </Link>
+                        </nav>
                     </div>
                 </header>
 

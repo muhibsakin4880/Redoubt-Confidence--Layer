@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Card } from '../components/Card'
+import { useAuth } from '../contexts/AuthContext'
 
 type MetricItem = {
     label: string
@@ -182,36 +183,77 @@ const quickActions: QuickAction[] = [
 ]
 
 export default function ParticipantConsolePage() {
+    const { accessStatus, applicantEmail, workspaceRole } = useAuth()
+    const participantName = formatParticipantName(applicantEmail)
+    const programStatusLabel = accessStatus === 'approved' ? 'Approved participant' : accessStatus === 'pending' ? 'Application pending' : 'Getting started'
+    const nextMilestoneDate = accessStatus === 'approved' ? 'Apr 18, 2026' : accessStatus === 'pending' ? 'Apr 12, 2026' : 'Apr 09, 2026'
+    const profileInitials = participantName
+        .split(' ')
+        .slice(0, 2)
+        .map(part => part.charAt(0).toUpperCase())
+        .join('')
+
     return (
         <div className="min-h-screen bg-slate-950 px-6 py-6">
             <div className="overflow-x-auto">
                 <div className="mx-auto min-w-[1024px] max-w-[1280px] space-y-6">
                     <section>
                         <DashboardGrid>
-                            <header className="col-span-12 flex items-end justify-between gap-6">
-                                <div>
-                                    <div className="flex items-center gap-3">
-                                        <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                                        <span className="text-xs font-medium uppercase tracking-[0.24em] text-slate-500">
-                                            Participant Console
-                                        </span>
+                            <header className="col-span-12 h-[72px]" aria-label="Participant console header">
+                                <div className="flex h-full items-center justify-between gap-6 rounded-[12px] border border-white/8 bg-slate-900/75 px-5 shadow-[0_14px_40px_-26px_rgba(15,23,42,0.95)]">
+                                    <div className="flex items-center gap-4">
+                                        <div
+                                            className="flex h-10 w-10 items-center justify-center rounded-[12px] border border-cyan-500/30 bg-cyan-500/10 text-cyan-200"
+                                            aria-hidden="true"
+                                        >
+                                            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 6.75h15v10.5h-15V6.75z" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 20.25h6" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 17.25v3" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <div className="text-[11px] uppercase tracking-[0.22em] text-slate-500">Participant Console</div>
+                                            <div className="mt-1 text-base font-semibold text-white">Redoubt Workspace</div>
+                                        </div>
                                     </div>
-                                    <h1 className="mt-4 text-3xl font-bold text-white">Operational overview for your contribution pipeline</h1>
-                                    <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-400">
-                                        Track submission readiness, governance posture, payout timing, and the next actions that unblock participant-side
-                                        delivery.
-                                    </p>
-                                </div>
 
-                                <div className="flex shrink-0 items-center gap-3">
-                                    <div className="rounded-[12px] border border-white/10 bg-slate-900/80 px-4 py-3 text-right">
-                                        <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">Review window</div>
-                                        <div className="mt-1 text-sm font-semibold text-slate-100">Next compliance check · 18h</div>
-                                    </div>
-                                    <div className="rounded-[12px] border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-right">
-                                        <div className="text-[11px] uppercase tracking-[0.18em] text-emerald-200/80">Session</div>
-                                        <div className="mt-1 text-sm font-semibold text-emerald-100">Verified and settlement-ready</div>
-                                    </div>
+                                    <nav className="flex items-center gap-3" aria-label="Console utilities">
+                                        <button
+                                            type="button"
+                                            className="relative rounded-[12px] border border-white/10 bg-slate-900 px-3 py-2 text-slate-200 transition-colors hover:border-cyan-400/40 hover:text-white"
+                                            aria-label="Open notifications"
+                                        >
+                                            <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-emerald-400" aria-hidden="true" />
+                                            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2c0 .53-.21 1.04-.59 1.42L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                                            </svg>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="rounded-[12px] border border-white/10 bg-slate-900 px-3 py-2 text-slate-200 transition-colors hover:border-cyan-400/40 hover:text-white"
+                                            aria-label="Open help and guidance"
+                                        >
+                                            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M9.09 9a3 3 0 115.82 1c0 2-3 3-3 3" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 17h.01" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="flex items-center gap-3 rounded-[12px] border border-white/10 bg-slate-900 px-3 py-2 text-left text-slate-200 transition-colors hover:border-cyan-400/40 hover:text-white"
+                                            aria-label={`Open profile menu for ${participantName}`}
+                                        >
+                                            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-cyan-500 text-sm font-semibold text-slate-950">
+                                                {profileInitials}
+                                            </span>
+                                            <span>
+                                                <span className="block text-sm font-medium text-slate-100">{participantName}</span>
+                                                <span className="block text-xs capitalize text-slate-500">{workspaceRole} workspace</span>
+                                            </span>
+                                        </button>
+                                    </nav>
                                 </div>
                             </header>
                         </DashboardGrid>
@@ -220,39 +262,35 @@ export default function ParticipantConsolePage() {
                     <section>
                         <DashboardGrid>
                             <div className="col-span-12">
-                                <Card className="overflow-hidden border-cyan-500/20 bg-[radial-gradient(circle_at_top_right,rgba(34,211,238,0.16),transparent_35%),linear-gradient(135deg,rgba(15,23,42,0.94),rgba(17,24,39,0.86))] shadow-[0_22px_60px_-34px_rgba(6,182,212,0.5)]">
-                                    <div className="grid grid-cols-12 gap-6">
-                                        <div className="col-span-8">
-                                            <div className="text-[11px] uppercase tracking-[0.18em] text-cyan-200/80">Intro Banner</div>
-                                            <h2 className="mt-3 text-2xl font-semibold text-white">Today&apos;s focus is reviewer-ready access packages and settlement prep</h2>
-                                            <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">
-                                                Two submissions are close to release. Keep governance controls synchronized, close the remaining compliance
-                                                gaps, and move clean-room approvals toward settlement without reopening the upload flow.
-                                            </p>
-                                            <div className="mt-5 flex gap-3">
-                                                <button className="rounded-[12px] bg-cyan-500 px-4 py-3 text-sm font-semibold text-slate-950 transition-colors hover:bg-cyan-400">
-                                                    Review Submission Queue
-                                                </button>
-                                                <button className="rounded-[12px] border border-white/10 bg-slate-900/70 px-4 py-3 text-sm font-semibold text-white transition-colors hover:border-cyan-400/50 hover:bg-slate-900">
-                                                    Open Governance Summary
+                                <section aria-labelledby="participant-intro-banner">
+                                    <Card className="min-h-[96px] overflow-hidden border-cyan-500/20 bg-[radial-gradient(circle_at_top_right,rgba(34,211,238,0.16),transparent_35%),linear-gradient(135deg,rgba(15,23,42,0.94),rgba(17,24,39,0.86))] shadow-[0_22px_60px_-34px_rgba(6,182,212,0.5)]">
+                                        <div className="grid min-h-[64px] grid-cols-12 items-center gap-6">
+                                            <div className="col-span-7">
+                                                <p className="text-[11px] uppercase tracking-[0.18em] text-cyan-200/80">Intro Banner</p>
+                                                <h2 id="participant-intro-banner" className="mt-2 text-2xl font-semibold text-white">
+                                                    Welcome back, {participantName}
+                                                </h2>
+                                            </div>
+
+                                            <div className="col-span-5 flex items-center justify-end gap-3">
+                                                <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs font-medium text-emerald-100">
+                                                    {programStatusLabel}
+                                                </span>
+                                                <div className="rounded-[12px] border border-white/10 bg-slate-950/45 px-4 py-3">
+                                                    <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">Next milestone date</div>
+                                                    <div className="mt-1 text-sm font-semibold text-slate-100">{nextMilestoneDate}</div>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    className="rounded-[12px] bg-cyan-500 px-4 py-3 text-sm font-semibold text-slate-950 transition-colors hover:bg-cyan-400"
+                                                    aria-label="Continue where you left off in the participant console"
+                                                >
+                                                    Continue where you left off
                                                 </button>
                                             </div>
                                         </div>
-
-                                        <div className="col-span-4 space-y-3">
-                                            <BannerSignal
-                                                label="Current priority"
-                                                value="Finalize one restricted review package"
-                                                detail="Clinical outcomes needs legal redistribution confirmation before buyer release."
-                                            />
-                                            <BannerSignal
-                                                label="Best next unlock"
-                                                value="Complete one missing attestation"
-                                                detail="That moves the trust score toward the next approval band."
-                                            />
-                                        </div>
-                                    </div>
-                                </Card>
+                                    </Card>
+                                </section>
                             </div>
                         </DashboardGrid>
                     </section>
@@ -420,12 +458,18 @@ function DashboardGrid({ children, className = '' }: { children: ReactNode; clas
     return <div className={`grid grid-cols-12 gap-6 ${className}`}>{children}</div>
 }
 
-function BannerSignal({ label, value, detail }: SummaryItem) {
-    return (
-        <div className="rounded-[12px] border border-white/10 bg-slate-950/45 px-4 py-4">
-            <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">{label}</div>
-            <div className="mt-2 text-sm font-semibold text-white">{value}</div>
-            <div className="mt-2 text-sm leading-6 text-slate-400">{detail}</div>
-        </div>
-    )
+function formatParticipantName(email: string) {
+    if (!email) return 'Participant'
+
+    const localPart = email.split('@')[0] ?? ''
+    const segments = localPart
+        .split(/[._-]+/)
+        .map(segment => segment.trim())
+        .filter(Boolean)
+
+    if (segments.length === 0) return 'Participant'
+
+    return segments
+        .map(segment => segment.charAt(0).toUpperCase() + segment.slice(1))
+        .join(' ')
 }
