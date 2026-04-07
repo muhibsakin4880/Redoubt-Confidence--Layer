@@ -40,6 +40,19 @@ export type DashboardSupportContact = {
     email: string
 }
 
+export type DashboardProgressHighlight = {
+    label: string
+    value: string
+    toneClassName: string
+}
+
+export type DashboardActivityTimelineItem = {
+    title: string
+    detail: string
+    timing: string
+    state: 'completed' | 'in_progress' | 'upcoming'
+}
+
 export const dashboardPriorityActions: DashboardPriorityAction[] = [
     {
         title: 'Finish the climate submission clarification',
@@ -149,3 +162,42 @@ export const dashboardSupportContact: DashboardSupportContact = {
     responseTime: 'Average response: under 2 hours',
     email: 'support@redoubt.io'
 }
+
+export const dashboardProgressHighlights: DashboardProgressHighlight[] = [
+    {
+        label: 'Release readiness',
+        value: '78%',
+        toneClassName: 'text-cyan-300'
+    },
+    {
+        label: 'Reviewer throughput',
+        value: '3.2x',
+        toneClassName: 'text-emerald-300'
+    },
+    {
+        label: 'Evidence health',
+        value: 'Stable',
+        toneClassName: 'text-amber-300'
+    }
+]
+
+export const dashboardActivityTimeline: DashboardActivityTimelineItem[] = [
+    {
+        title: 'Compliance packet uploaded',
+        detail: 'The latest evidence bundle cleared automated checks and is ready for reviewer context.',
+        timing: 'Completed · Today 09:10',
+        state: 'completed'
+    },
+    {
+        title: 'Restricted review package validation',
+        detail: 'Legal redistribution controls are being verified before buyer release can continue.',
+        timing: 'In progress · Today 12:30',
+        state: 'in_progress'
+    },
+    {
+        title: 'Escrow release confirmation',
+        detail: 'Final participant confirmation is scheduled for the next settlement window.',
+        timing: 'Upcoming · Tomorrow 10:00',
+        state: 'upcoming'
+    }
+]
