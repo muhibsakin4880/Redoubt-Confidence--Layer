@@ -1293,7 +1293,8 @@ export default function ContributionsPage() {
 
                             <button
                                 type="button"
-                                onClick={() => setIsAdvancedRightsOpen(true)}
+                                aria-expanded={isAdvancedRightsOpen}
+                                onClick={() => setIsAdvancedRightsOpen(prev => !prev)}
                                 className="w-full rounded-2xl border border-purple-500/35 bg-gradient-to-r from-purple-500/10 via-slate-900/80 to-slate-950/90 px-5 py-5 text-left shadow-lg shadow-purple-950/20 transition-all hover:border-purple-400/55 hover:from-purple-500/15"
                             >
                                 <div className="flex items-center justify-between gap-3">
@@ -1301,20 +1302,109 @@ export default function ContributionsPage() {
                                         <div className="text-base font-semibold text-purple-100">Advanced Rights &amp; Conditions</div>
                                         <div className="mt-1 text-xs text-slate-400">Legal, audit, redistribution and governance controls</div>
                                     </div>
-                                    <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-purple-500/40 bg-purple-500/10 text-purple-300">
+                                    <div className={`flex h-10 w-10 items-center justify-center rounded-xl border border-purple-500/40 bg-purple-500/10 text-purple-300 transition-transform duration-300 ${isAdvancedRightsOpen ? 'rotate-90' : ''}`}>
                                         <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                                         </svg>
                                     </div>
                                 </div>
                             </button>
+
+                            <div className={`grid transition-all duration-300 ease-out ${isAdvancedRightsOpen ? 'mt-4 grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+                                <div className="overflow-hidden">
+                                    <div className="rounded-2xl border border-purple-500/20 bg-gradient-to-br from-purple-500/10 via-slate-900/80 to-slate-950/95 p-5 shadow-xl shadow-purple-950/10">
+                                        <div className="flex flex-wrap items-start justify-between gap-4">
+                                            <div>
+                                                <div className="text-[11px] uppercase tracking-[0.16em] text-purple-300/80">Advanced Rights &amp; Conditions</div>
+                                                <h4 className="mt-2 text-lg font-semibold text-slate-50">Legal and governance controls</h4>
+                                                <p className="mt-1 max-w-2xl text-sm text-slate-400">Configure redistribution, audit posture, attribution, and optional volume-based pricing without leaving the main form.</p>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => setIsAdvancedRightsOpen(false)}
+                                                className="rounded-xl border border-slate-700 bg-slate-900/70 px-3 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-slate-300 transition-colors hover:border-slate-500 hover:text-white"
+                                            >
+                                                Hide Advanced Controls
+                                            </button>
+                                        </div>
+
+                                        <div className="mt-5 space-y-5">
+                                            {advancedRightsSections.map(section => (
+                                                <section key={section.field} className="rounded-2xl border border-slate-700 bg-slate-950/40 p-5">
+                                                    <div className="text-sm font-semibold text-slate-100">{section.title}</div>
+                                                    <div className="mt-3 grid grid-cols-2 gap-3">
+                                                        {section.options.map(option => (
+                                                            <button
+                                                                key={option.value}
+                                                                type="button"
+                                                                onClick={() => updateAdvancedRight(section.field, option.value)}
+                                                                className={`rounded-xl border px-4 py-3 text-sm font-medium transition-all ${
+                                                                    privacyAccessTerms.advanced[section.field] === option.value
+                                                                        ? 'border-purple-400/50 bg-purple-500/10 text-purple-100'
+                                                                        : 'border-slate-700 bg-slate-900/60 text-slate-300 hover:border-slate-500'
+                                                                }`}
+                                                            >
+                                                                {option.label}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </section>
+                                            ))}
+
+                                            <section className="rounded-2xl border border-slate-700 bg-slate-950/40 p-5">
+                                                <div className="flex items-start justify-between gap-4">
+                                                    <div>
+                                                        <div className="text-sm font-semibold text-slate-100">Data Volume Scaling</div>
+                                                        <div className="mt-1 text-xs text-slate-400">Enable price adjustment per TB or per million records.</div>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        aria-pressed={privacyAccessTerms.advanced.volumeBasedPricing}
+                                                        onClick={() => updateAdvancedRight('volumeBasedPricing', !privacyAccessTerms.advanced.volumeBasedPricing)}
+                                                        className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
+                                                            privacyAccessTerms.advanced.volumeBasedPricing ? 'bg-purple-500 ring-1 ring-purple-300/40' : 'bg-slate-700 ring-1 ring-slate-500/60'
+                                                        }`}
+                                                    >
+                                                        <span className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${privacyAccessTerms.advanced.volumeBasedPricing ? 'translate-x-5' : 'translate-x-1'}`} />
+                                                    </button>
+                                                </div>
+
+                                                <div className={`grid transition-all duration-300 ease-out ${privacyAccessTerms.advanced.volumeBasedPricing ? 'mt-4 grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+                                                    <div className="overflow-hidden">
+                                                        <div className="rounded-2xl border border-slate-700 bg-slate-900/60 p-4">
+                                                            <label className="block text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">Price adjustment</label>
+                                                            <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+                                                                <input
+                                                                    type="number"
+                                                                    value={privacyAccessTerms.advanced.volumePricingAdjustment}
+                                                                    onChange={(e) => updateAdvancedRight('volumePricingAdjustment', e.target.value)}
+                                                                    placeholder="e.g. 1200"
+                                                                    className="flex-1 rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-purple-400/60 focus:outline-none"
+                                                                />
+                                                                <select
+                                                                    value={privacyAccessTerms.advanced.volumePricingUnit}
+                                                                    onChange={(e) => updateAdvancedRight('volumePricingUnit', e.target.value)}
+                                                                    className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-purple-400/60 focus:outline-none"
+                                                                >
+                                                                    <option value="tb">per TB</option>
+                                                                    <option value="million_records">per million records</option>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </section>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <aside className="xl:sticky xl:top-4 h-fit">
                             <div className="rounded-2xl border border-slate-700 bg-slate-950/70 p-5 shadow-xl backdrop-blur-sm">
                                 <div className="text-[11px] uppercase tracking-[0.16em] text-slate-400">Live summary</div>
                                 <h4 className="mt-2 text-lg font-semibold text-slate-50">Buyer-facing package preview</h4>
-                                <p className="mt-1 text-sm text-slate-400">The main commercial terms stay visible here while advanced conditions remain tucked away.</p>
+                                <p className="mt-1 text-sm text-slate-400">The main commercial terms stay visible here while advanced conditions expand inline below the main form.</p>
 
                                 <div className="mt-5 space-y-3">
                                     {[
@@ -1348,102 +1438,6 @@ export default function ContributionsPage() {
                         </aside>
                     </div>
 
-                    {isAdvancedRightsOpen && (
-                        <div className="fixed inset-0 z-50 flex justify-end">
-                            <button type="button" aria-label="Close advanced rights drawer" onClick={() => setIsAdvancedRightsOpen(false)} className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-
-                            <div className="relative h-full w-full max-w-xl border-l border-slate-700 bg-slate-900/95 shadow-2xl">
-                                <div className="flex h-full flex-col">
-                                    <div className="sticky top-0 z-10 border-b border-slate-700 bg-slate-900/95 px-6 py-5 backdrop-blur-sm">
-                                        <div className="flex items-start justify-between gap-4">
-                                            <div>
-                                                <div className="text-[11px] uppercase tracking-[0.16em] text-purple-300/80">Advanced Rights &amp; Conditions</div>
-                                                <h4 className="mt-2 text-xl font-semibold text-slate-50">Legal and governance controls</h4>
-                                                <p className="mt-1 text-sm text-slate-400">Configure redistribution, audit posture, attribution, and optional volume-based pricing.</p>
-                                            </div>
-                                            <button type="button" onClick={() => setIsAdvancedRightsOpen(false)} className="rounded-xl border border-slate-700 bg-slate-800/80 p-2 text-slate-400 transition-colors hover:border-slate-500 hover:text-white">
-                                                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                                                </svg>
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex-1 space-y-6 overflow-y-auto px-6 py-6">
-                                        {advancedRightsSections.map(section => (
-                                            <section key={section.field} className="rounded-2xl border border-slate-700 bg-slate-950/40 p-5">
-                                                <div className="text-sm font-semibold text-slate-100">{section.title}</div>
-                                                <div className="mt-3 grid grid-cols-2 gap-3">
-                                                    {section.options.map(option => (
-                                                        <button
-                                                            key={option.value}
-                                                            type="button"
-                                                            onClick={() => updateAdvancedRight(section.field, option.value)}
-                                                            className={`rounded-xl border px-4 py-3 text-sm font-medium transition-all ${
-                                                                privacyAccessTerms.advanced[section.field] === option.value
-                                                                    ? 'border-purple-400/50 bg-purple-500/10 text-purple-100'
-                                                                    : 'border-slate-700 bg-slate-900/60 text-slate-300 hover:border-slate-500'
-                                                            }`}
-                                                        >
-                                                            {option.label}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            </section>
-                                        ))}
-
-                                        <section className="rounded-2xl border border-slate-700 bg-slate-950/40 p-5">
-                                            <div className="flex items-start justify-between gap-4">
-                                                <div>
-                                                    <div className="text-sm font-semibold text-slate-100">Data Volume Scaling</div>
-                                                    <div className="mt-1 text-xs text-slate-400">Enable price adjustment per TB or per million records.</div>
-                                                </div>
-                                                <button
-                                                    type="button"
-                                                    aria-pressed={privacyAccessTerms.advanced.volumeBasedPricing}
-                                                    onClick={() => updateAdvancedRight('volumeBasedPricing', !privacyAccessTerms.advanced.volumeBasedPricing)}
-                                                    className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
-                                                        privacyAccessTerms.advanced.volumeBasedPricing ? 'bg-purple-500 ring-1 ring-purple-300/40' : 'bg-slate-700 ring-1 ring-slate-500/60'
-                                                    }`}
-                                                >
-                                                    <span className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${privacyAccessTerms.advanced.volumeBasedPricing ? 'translate-x-5' : 'translate-x-1'}`} />
-                                                </button>
-                                            </div>
-
-                                            {privacyAccessTerms.advanced.volumeBasedPricing && (
-                                                <div className="mt-4 rounded-2xl border border-slate-700 bg-slate-900/60 p-4">
-                                                    <label className="block text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">Price adjustment</label>
-                                                    <div className="mt-2 flex flex-col gap-2 sm:flex-row">
-                                                        <input
-                                                            type="number"
-                                                            value={privacyAccessTerms.advanced.volumePricingAdjustment}
-                                                            onChange={(e) => updateAdvancedRight('volumePricingAdjustment', e.target.value)}
-                                                            placeholder="e.g. 1200"
-                                                            className="flex-1 rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-purple-400/60 focus:outline-none"
-                                                        />
-                                                        <select
-                                                            value={privacyAccessTerms.advanced.volumePricingUnit}
-                                                            onChange={(e) => updateAdvancedRight('volumePricingUnit', e.target.value)}
-                                                            className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-purple-400/60 focus:outline-none"
-                                                        >
-                                                            <option value="tb">per TB</option>
-                                                            <option value="million_records">per million records</option>
-                                                        </select>
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </section>
-                                    </div>
-
-                                    <div className="border-t border-slate-700 bg-slate-900/95 px-6 py-4">
-                                        <button type="button" onClick={() => setIsAdvancedRightsOpen(false)} className="w-full rounded-xl bg-purple-600 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-purple-500">
-                                            Save advanced conditions
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
                 </div>
             )
         },
