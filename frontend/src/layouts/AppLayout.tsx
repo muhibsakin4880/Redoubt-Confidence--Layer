@@ -1,4 +1,5 @@
 import { Link, NavLink, Outlet } from 'react-router-dom'
+import ParticipantQuickActions from '../components/ParticipantQuickActions'
 
 type NavItem = {
     label: string
@@ -231,10 +232,12 @@ export default function AppLayout() {
                     </div>
                 </header>
 
-                <main id="app-main-content" tabIndex={-1} className="min-h-[calc(100vh-4rem)]">
+                <main id="app-main-content" tabIndex={-1} className="min-h-[calc(100vh-4rem)] pb-28 lg:pb-0 lg:pr-24">
                     <Outlet />
                 </main>
             </div>
+
+            <ParticipantQuickActions />
         </div>
     )
 }

@@ -1,4 +1,13 @@
-import React from 'react'
+import {
+    Bar,
+    BarChart,
+    CartesianGrid,
+    LabelList,
+    ResponsiveContainer,
+    Tooltip,
+    XAxis,
+    YAxis
+} from 'recharts'
 import {
     chargebackSummary,
     usageAnomalies as anomalies,
@@ -6,8 +15,36 @@ import {
     usageSummaryStats as summaryStats,
     usageTrendData as trendData
 } from '../data/pipelineOpsData'
+import { useToast } from '../components/Toast'
 
 type AnomalyTone = 'alert' | 'warn' | 'resolved'
+
+const chartAxisStyle = {
+    fill: '#94a3b8',
+    fontSize: 12
+} as const
+
+const chartTooltipContentStyle = {
+    backgroundColor: 'rgba(15, 23, 42, 0.92)',
+    border: '1px solid rgba(59, 130, 246, 0.35)',
+    borderRadius: '16px',
+    boxShadow: '0 20px 40px -20px rgba(15, 23, 42, 0.9)'
+} as const
+
+const chartTooltipLabelStyle = {
+    color: '#e2e8f0',
+    fontWeight: 600
+} as const
+
+const chartTooltipItemStyle = {
+    color: '#bfdbfe'
+} as const
+
+const chartLabelStyle = {
+    fill: '#e2e8f0',
+    fontSize: 11,
+    fontWeight: 600
+} as const
 
 const toneStyles: Record<AnomalyTone, string> = {
     alert: 'border-rose-500/40 bg-rose-500/10 shadow-[0_10px_40px_rgba(244,63,94,0.25)]',
@@ -21,8 +58,17 @@ const statusDot: Record<AnomalyTone, string> = {
     resolved: 'bg-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.8)]'
 }
 
+const formatQueryValue = (value: unknown) => {
+    if (typeof value === 'number') return value.toLocaleString()
+    if (typeof value === 'string') return value
+    if (Array.isArray(value)) return value.join(', ')
+    return ''
+}
+
+const formatYAxisTick = (value: number) => `${Math.round(value / 100) / 10}k`
+
 export default function UsageAnalyticsPage() {
-    const maxValue = Math.max(...trendData.map(point => point.value))
+    const { showToast } = useToast()
 
     return (
         <div className="relative min-h-screen bg-[#040812] text-white">
@@ -113,21 +159,43 @@ export default function UsageAnalyticsPage() {
                             </div>
                         </div>
                         <div className="mt-6 h-64 rounded-xl border border-white/10 bg-slate-900/60 px-4 py-4">
-                            <div className="flex h-full items-end gap-4">
-                                {trendData.map(point => (
-                                    <div key={point.label} className="flex-1 flex flex-col items-center gap-2">
-                                        <div
-                                            className="relative w-full rounded-lg bg-gradient-to-t from-blue-600 via-blue-500 to-cyan-400 shadow-[0_10px_30px_rgba(59,130,246,0.3)]"
-                                            style={{ height: `${(point.value / maxValue) * 100}%` }}
-                                        >
-                                            <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-[11px] font-semibold text-slate-100">
-                                                {point.value.toLocaleString()}
-                                            </span>
-                                        </div>
-                                        <span className="text-xs uppercase tracking-[0.12em] text-slate-400">{point.label}</span>
-                                    </div>
-                                ))}
-                            </div>
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={trendData} margin={{ top: 24, right: 8, left: -18, bottom: 0 }}>
+                                    <defs>
+                                        <linearGradient id="usageTrendFill" x1="0" x2="0" y1="0" y2="1">
+                                            <stop offset="0%" stopColor="#67e8f9" />
+                                            <stop offset="45%" stopColor="#3b82f6" />
+                                            <stop offset="100%" stopColor="#1d4ed8" />
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid vertical={false} stroke="rgba(148,163,184,0.12)" strokeDasharray="3 3" />
+                                    <XAxis axisLine={false} dataKey="label" tick={chartAxisStyle} tickLine={false} />
+                                    <YAxis
+                                        axisLine={false}
+                                        domain={[0, 9000]}
+                                        tick={chartAxisStyle}
+                                        tickFormatter={formatYAxisTick}
+                                        tickLine={false}
+                                        width={42}
+                                    />
+                                    <Tooltip
+                                        contentStyle={chartTooltipContentStyle}
+                                        cursor={{ fill: 'rgba(59,130,246,0.08)' }}
+                                        formatter={(value) => [formatQueryValue(value), 'API calls']}
+                                        itemStyle={chartTooltipItemStyle}
+                                        labelStyle={chartTooltipLabelStyle}
+                                    />
+                                    <Bar
+                                        animationDuration={700}
+                                        barSize={28}
+                                        dataKey="value"
+                                        fill="url(#usageTrendFill)"
+                                        radius={[12, 12, 0, 0]}
+                                    >
+                                        <LabelList dataKey="value" formatter={formatQueryValue} position="top" style={chartLabelStyle} />
+                                    </Bar>
+                                </BarChart>
+                            </ResponsiveContainer>
                         </div>
                     </article>
                 </section>
@@ -169,26 +237,30 @@ export default function UsageAnalyticsPage() {
                                 <h3 className="mt-2 text-2xl font-semibold text-white">Billing ready for payout</h3>
                                 <p className="mt-1 text-sm text-slate-400">Mapped to provider share-out with launch-tier settlement fees and separate recurring API billing.</p>
                             </div>
-                            <button className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-[0_12px_30px_rgba(37,99,235,0.35)] transition hover:bg-blue-500">
+                            <button
+                                type="button"
+                                onClick={() => showToast('Chargeback report queued from Usage Analytics.', 'success')}
+                                className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-[0_12px_30px_rgba(37,99,235,0.35)] transition hover:bg-blue-500"
+                            >
                                 Export Chargeback Report
                             </button>
                         </div>
-                            <div className="relative mt-6 grid gap-4 sm:grid-cols-3">
-                                <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
-                                    <p className="text-xs uppercase tracking-[0.12em] text-slate-500">Total billable usage</p>
-                                    <p className="mt-2 text-xl font-semibold text-white">{chargebackSummary.totalBillableUsage}</p>
-                                </div>
-                                <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
-                                    <p className="text-xs uppercase tracking-[0.12em] text-slate-500">Launch settlement fee (15%)</p>
-                                    <p className="mt-2 text-xl font-semibold text-white">{chargebackSummary.settlementFee}</p>
-                                </div>
-                                <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3">
-                                    <p className="text-xs uppercase tracking-[0.12em] text-emerald-200">Provider payouts</p>
-                                    <p className="mt-2 text-xl font-semibold text-emerald-100">{chargebackSummary.providerPayouts}</p>
-                                </div>
+                        <div className="relative mt-6 grid gap-4 sm:grid-cols-3">
+                            <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+                                <p className="text-xs uppercase tracking-[0.12em] text-slate-500">Total billable usage</p>
+                                <p className="mt-2 text-xl font-semibold text-white">{chargebackSummary.totalBillableUsage}</p>
                             </div>
-                        </article>
-                    </section>
+                            <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+                                <p className="text-xs uppercase tracking-[0.12em] text-slate-500">Launch settlement fee (15%)</p>
+                                <p className="mt-2 text-xl font-semibold text-white">{chargebackSummary.settlementFee}</p>
+                            </div>
+                            <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3">
+                                <p className="text-xs uppercase tracking-[0.12em] text-emerald-200">Provider payouts</p>
+                                <p className="mt-2 text-xl font-semibold text-emerald-100">{chargebackSummary.providerPayouts}</p>
+                            </div>
+                        </div>
+                    </article>
+                </section>
             </div>
         </div>
     )

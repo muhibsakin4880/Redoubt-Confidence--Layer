@@ -87,6 +87,14 @@ const defaultVerification: VerificationSnapshot = {
             attributionRequired: false,
             auditLoggingMandatory: false,
             noRedistribution: false
+        },
+        advancedConditions: {
+            redistributionRights: 'not_allowed',
+            auditLoggingRequirement: 'optional',
+            attributionRequirement: 'not_required',
+            volumeBasedPricing: false,
+            volumePricingAdjustment: 0,
+            volumePricingUnit: 'tb'
         }
     }
 }
