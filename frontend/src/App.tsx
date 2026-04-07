@@ -4,6 +4,7 @@ import MainLayout from './layouts/MainLayout'
 import AppLayout from './layouts/AppLayout'
 import HomePage from './pages/HomePage'
 import DashboardPage from './pages/DashboardPage'
+import ParticipantConsolePage from './pages/ParticipantConsolePage'
 import DatasetsPage from './pages/DatasetsPage'
 import DatasetDetailPage from './pages/DatasetDetailPage'
 import DatasetQualityBreakdownPage from './pages/DatasetQualityBreakdownPage'
@@ -262,6 +263,7 @@ function App() {
 
                 <Route element={RequireWorkspaceAccess(<AppLayout />)}>
                     <Route path="dashboard" element={<DashboardPage />} />
+                    <Route path="participant-console" element={<ParticipantConsolePage />} />
                     <Route path="provider/dashboard" element={<ProviderDashboardPage />} />
                     <Route path="researcher-access" element={<ResearcherAccessPage />} />
                     <Route path="datasets" element={<DatasetsPage />} />
