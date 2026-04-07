@@ -53,15 +53,6 @@ export type DashboardActivityTimelineItem = {
     state: 'completed' | 'in_progress' | 'upcoming'
 }
 
-export type DashboardStickyQuickAction = {
-    label: string
-    tooltip: string
-    icon: 'book' | 'upload' | 'message' | 'download'
-    to?: string
-    href?: string
-    downloadName?: string
-}
-
 export const dashboardPriorityActions: DashboardPriorityAction[] = [
     {
         title: 'Finish the climate submission clarification',
@@ -208,42 +199,5 @@ export const dashboardActivityTimeline: DashboardActivityTimelineItem[] = [
         detail: 'Final participant confirmation is scheduled for the next settlement window.',
         timing: 'Upcoming - Tomorrow 10:00',
         state: 'upcoming'
-    }
-]
-
-const participantGuideText = [
-    'Redoubt Participant Guide',
-    '',
-    '1. Review your priority actions at the start of each session.',
-    '2. Keep the compliance passport current before requesting new access.',
-    '3. Confirm settlement releases before their deadline closes.',
-    '4. Use the audit trail to verify notes, approvals, and control changes.'
-].join('\n')
-
-export const dashboardStickyQuickActions: DashboardStickyQuickAction[] = [
-    {
-        label: 'Book',
-        tooltip: 'Book a participant review session',
-        icon: 'book',
-        href: 'mailto:support@redoubt.io?subject=Book%20participant%20review%20session'
-    },
-    {
-        label: 'Upload',
-        tooltip: 'Upload a new dataset contribution',
-        icon: 'upload',
-        to: '/contributions'
-    },
-    {
-        label: 'Message coordinator',
-        tooltip: 'Message your participant coordinator',
-        icon: 'message',
-        href: 'mailto:support@redoubt.io?subject=Participant%20coordinator%20question'
-    },
-    {
-        label: 'Download guide',
-        tooltip: 'Download the participant guide',
-        icon: 'download',
-        href: `data:text/plain;charset=utf-8,${encodeURIComponent(participantGuideText)}`,
-        downloadName: 'redoubt-participant-guide.txt'
     }
 ]

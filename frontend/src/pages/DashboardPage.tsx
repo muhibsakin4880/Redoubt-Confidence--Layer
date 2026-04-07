@@ -17,7 +17,6 @@ import {
     dashboardPriorityActions,
     dashboardQuickLinks,
     dashboardSupportContact,
-    dashboardStickyQuickActions,
     dashboardUpcomingSessions
 } from '../data/dashboardPanelsData'
 
@@ -36,17 +35,13 @@ const dashboardText = {
 } as const
 
 const dashboardPageClass = `relative min-h-screen ${dashboardColorTokens['surface-page']} ${dashboardColorTokens['text-primary']}`
-const dashboardPageShellClass = `relative mx-auto max-w-[1680px] ${dashboardSpacingTokens['page-padding']} xl:pr-[96px]`
+const dashboardPageShellClass = `relative mx-auto max-w-[1680px] ${dashboardSpacingTokens['page-padding']}`
 const dashboardPanelClass = `${dashboardRadiusTokens['radius-lg']} border ${dashboardColorTokens['border-subtle']} ${dashboardColorTokens['surface-panel']} ${dashboardSpacingTokens['panel-padding']} ${dashboardShadowTokens['shadow-card']}`
 const dashboardItemCardClass = `${dashboardRadiusTokens['radius-md']} border ${dashboardColorTokens['border-card']} ${dashboardColorTokens['surface-card']} ${dashboardSpacingTokens['card-padding']}`
 const dashboardAccentCardClass = `${dashboardRadiusTokens['radius-md']} border ${dashboardColorTokens['border-accent']} ${dashboardColorTokens['surface-accent']} ${dashboardSpacingTokens['card-padding']}`
 const dashboardSoftCardClass = `${dashboardRadiusTokens['radius-md']} ${dashboardComponentTokens['card-soft']} ${dashboardShadowTokens['shadow-card']}`
 const dashboardActionButtonClass = `${dashboardRadiusTokens['radius-md']} ${dashboardComponentTokens['action-button']} ${dashboardSpacingTokens['button-padding']}`
 const dashboardActionButtonTallClass = `${dashboardRadiusTokens['radius-md']} ${dashboardComponentTokens['action-button']} ${dashboardSpacingTokens['button-padding-tall']}`
-const dashboardFloatingRailClass = `${dashboardRadiusTokens['radius-lg']} ${dashboardComponentTokens['floating-rail']} ${dashboardShadowTokens['shadow-float']}`
-const dashboardTooltipClass = `${dashboardComponentTokens.tooltip} ${dashboardRadiusTokens['radius-sm']} ${dashboardShadowTokens['shadow-tooltip']}`
-const dashboardQuickActionButtonClass = dashboardComponentTokens['quick-action-button']
-const dashboardFocusRingClass = dashboardComponentTokens['focus-ring']
 const dashboardStripEmptyClass = `${dashboardRadiusTokens['radius-lg']} border ${dashboardColorTokens['border-subtle']} ${dashboardColorTokens['surface-card-soft']} ${dashboardSpacingTokens['card-padding']} ${dashboardShadowTokens['shadow-card']}`
 const dashboardEmptyStateBaseClass = `${dashboardRadiusTokens['radius-md']} ${dashboardComponentTokens['empty-border']}`
 const dashboardSectionIntroClass = dashboardSpacingTokens['section-intro']
@@ -65,8 +60,7 @@ const dashboardModuleFlags = {
     quickLinks: { isLoading: false, isEmpty: false },
     support: { isLoading: false, isEmpty: false },
     progress: { isLoading: false, isEmpty: false },
-    timeline: { isLoading: false, isEmpty: false },
-    stickyActions: { isLoading: false, isEmpty: false }
+    timeline: { isLoading: false, isEmpty: false }
 } as const
 
 export default function DashboardPage() {
@@ -520,33 +514,6 @@ export default function DashboardPage() {
                         </DashboardPanel>
                     </div>
                 </section>
-
-                <aside
-                    className="pointer-events-none fixed right-6 top-24 z-30 hidden xl:block"
-                    aria-label="Desktop quick actions"
-                >
-                    <div className={dashboardFloatingRailClass}>
-                        <DashboardStateRenderer
-                            isLoading={dashboardModuleFlags.stickyActions.isLoading}
-                            isEmpty={dashboardModuleFlags.stickyActions.isEmpty}
-                            loading={<DashboardQuickActionsSkeleton />}
-                            empty={
-                                <DashboardEmptyState
-                                    icon="actions"
-                                    text="No quick actions available. Open your profile to configure them."
-                                    action={{ label: 'Open profile', to: '/profile' }}
-                                    compact
-                                />
-                            }
-                        >
-                            <div className={`flex flex-col ${dashboardCompactGapClass}`}>
-                                {dashboardStickyQuickActions.map(action => (
-                                    <StickyQuickActionButton key={action.label} action={action} />
-                                ))}
-                            </div>
-                        </DashboardStateRenderer>
-                    </div>
-                </aside>
             </div>
         </div>
     )
@@ -623,97 +590,6 @@ function getTimelineStateMeta(state: 'completed' | 'in_progress' | 'upcoming') {
     }
 }
 
-function StickyQuickActionButton({
-    action
-}: {
-    action: (typeof dashboardStickyQuickActions)[number]
-}) {
-    const tooltipId = `quick-action-${action.label.toLowerCase().replace(/\s+/g, '-')}`
-    const content = (
-        <>
-            <span
-                id={tooltipId}
-                role="tooltip"
-                className={dashboardTooltipClass}
-            >
-                {action.tooltip}
-            </span>
-            <span
-                className={dashboardQuickActionButtonClass}
-                aria-hidden="true"
-            >
-                <QuickActionIcon icon={action.icon} />
-            </span>
-        </>
-    )
-
-    if (action.to) {
-        return (
-            <div className="group relative flex justify-end">
-                <Link
-                    to={action.to}
-                    aria-label={action.label}
-                    aria-describedby={tooltipId}
-                    className={dashboardFocusRingClass}
-                >
-                    {content}
-                </Link>
-            </div>
-        )
-    }
-
-    return (
-        <div className="group relative flex justify-end">
-            <a
-                href={action.href}
-                download={action.downloadName}
-                aria-label={action.label}
-                aria-describedby={tooltipId}
-                className={dashboardFocusRingClass}
-            >
-                {content}
-            </a>
-        </div>
-    )
-}
-
-function QuickActionIcon({ icon }: { icon: 'book' | 'upload' | 'message' | 'download' }) {
-    switch (icon) {
-        case 'book':
-            return (
-                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 4.5h9a2.25 2.25 0 012.25 2.25v12.75H8.25A2.25 2.25 0 016 17.25V5.25A.75.75 0 016.75 4.5z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 7.5h7.5" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 10.5h7.5" />
-                </svg>
-            )
-        case 'upload':
-            return (
-                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 15V5.25" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 9l3.75-3.75L15.75 9" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 18.75h15" />
-                </svg>
-            )
-        case 'message':
-            return (
-                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 9.75h9" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 13.5h5.25" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18.75l-2.25.75.75-2.25V6.75A2.25 2.25 0 016.75 4.5h10.5a2.25 2.25 0 012.25 2.25v8.25a2.25 2.25 0 01-2.25 2.25H6z" />
-                </svg>
-            )
-        default:
-            return (
-                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v9" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 10.5L12 14.25 15.75 10.5" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 18.75h15" />
-                </svg>
-            )
-    }
-}
-
 function DashboardStateRenderer({
     isLoading,
     isEmpty,
@@ -755,7 +631,7 @@ type DashboardStateAction = {
     downloadName?: string
 }
 
-type DashboardEmptyIconName = 'spark' | 'calendar' | 'priority' | 'tasks' | 'megaphone' | 'links' | 'support' | 'timeline' | 'actions'
+type DashboardEmptyIconName = 'spark' | 'calendar' | 'priority' | 'tasks' | 'megaphone' | 'links' | 'support' | 'timeline'
 
 function DashboardEmptyState({
     icon,
@@ -858,13 +734,6 @@ function DashboardEmptyIcon({ icon }: { icon: DashboardEmptyIconName }) {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6.75h6.75M10.5 12h6.75M10.5 17.25h6.75" />
                 </svg>
             )
-        case 'actions':
-            return (
-                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12h15" />
-                </svg>
-            )
         default:
             return (
                 <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
@@ -923,16 +792,6 @@ function DashboardProgressSkeleton() {
 
 function DashboardTimelineSkeleton() {
     return <DashboardListSkeleton count={3} />
-}
-
-function DashboardQuickActionsSkeleton() {
-    return (
-        <div className={`flex flex-col ${dashboardCompactGapClass}`}>
-            {Array.from({ length: 4 }).map((_, index) => (
-                <span key={index} className={dashboardComponentTokens['skeleton-action']} aria-hidden="true" />
-            ))}
-        </div>
-    )
 }
 
 function DashboardSkeletonCard({ minHeightClassName }: { minHeightClassName: string }) {

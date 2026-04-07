@@ -80,102 +80,104 @@ export default function AppLayout() {
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950'
 
     return (
-        <div className="min-h-screen bg-slate-900 text-white flex">
+        <div className="relative h-screen overflow-hidden bg-slate-900 text-white">
             <a
                 href="#app-main-content"
-                className={`absolute left-4 top-4 z-50 -translate-y-16 rounded-xl bg-cyan-400 px-4 py-2 text-sm font-semibold text-slate-950 transition-transform focus:translate-y-0 ${consoleFocusRingClass}`}
+                className={`fixed left-4 top-4 z-[60] -translate-y-16 rounded-xl bg-cyan-400 px-4 py-2 text-sm font-semibold text-slate-950 transition-transform focus:translate-y-0 ${consoleFocusRingClass}`}
             >
                 Skip to main content
             </a>
-            <aside className="hidden md:flex md:w-64 flex-col border-r border-slate-800 bg-slate-950/80">
-                <div className="px-5 py-5 border-b border-slate-800">
-                    <Link to="/dashboard" className={`flex items-center gap-3 rounded-xl ${consoleFocusRingClass}`}>
-                        <svg
-                            className="w-10 h-10 overflow-visible"
-                            viewBox="0 0 240 300"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                            style={{ filter: 'drop-shadow(0 0 12px rgba(72, 219, 229, 0.5)) drop-shadow(0 0 24px rgba(14, 42, 80, 0.5))' }}
-                        >
-                            <defs>
-                                <linearGradient id="dashShieldOuter" x1="120" y1="0" x2="120" y2="300" gradientUnits="userSpaceOnUse">
-                                    <stop stopColor="#10294b"/>
-                                    <stop offset="1" stopColor="#0a1323"/>
-                                </linearGradient>
-                                <linearGradient id="dashShieldInner" x1="120" y1="40" x2="120" y2="260" gradientUnits="userSpaceOnUse">
-                                    <stop stopColor="#0f2442"/>
-                                    <stop offset="1" stopColor="#091322"/>
-                                </linearGradient>
-                                <filter id="dashCircuitGlow" x="-50%" y="-50%" width="200%" height="200%">
-                                    <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-                                    <feMerge>
-                                        <feMergeNode in="coloredBlur"/>
-                                        <feMergeNode in="SourceGraphic"/>
-                                    </feMerge>
-                                </filter>
-                                <filter id="dashShieldGlow" x="-50%" y="-50%" width="200%" height="200%">
-                                    <feGaussianBlur stdDeviation="6" result="softGlow"/>
-                                    <feMerge>
-                                        <feMergeNode in="softGlow"/>
-                                        <feMergeNode in="SourceGraphic"/>
-                                    </feMerge>
-                                </filter>
-                            </defs>
-                            <path
-                                d="M120 10L24 60v86c0 78 46 132 96 144 50-12 96-66 96-144V60L120 10z"
-                                fill="url(#dashShieldOuter)"
-                                stroke="#0f3a7a"
-                                strokeWidth="4"
-                                filter="url(#dashShieldGlow)"
-                            />
-                            <path
-                                d="M120 44L66 74v72c0 58 34 98 54 108 20-10 54-50 54-108V74L120 44z"
-                                fill="url(#dashShieldInner)"
-                                stroke="#0b2552"
-                                strokeWidth="3"
-                            />
-                            <g stroke="#4dd6d6" strokeLinecap="round" strokeLinejoin="round" filter="url(#dashCircuitGlow)">
-                                <path d="M58 198 C96 192 114 172 134 150" strokeWidth="8" />
-                                <path d="M50 160 C90 156 110 138 130 120" strokeWidth="8" />
-                                <path d="M62 124 C100 120 122 104 148 90" strokeWidth="8" />
-                            </g>
-                            <path d="M148 90 L180 78 L162 108 Z" fill="#4dd6d6" filter="url(#dashCircuitGlow)" />
-                            <circle cx="58" cy="198" r="7" fill="#4dd6d6" filter="url(#dashCircuitGlow)" />
-                            <circle cx="50" cy="160" r="7" fill="#4dd6d6" filter="url(#dashCircuitGlow)" />
-                            <circle cx="62" cy="124" r="7" fill="#4dd6d6" filter="url(#dashCircuitGlow)" />
-                        </svg>
-                        <span className="text-xl font-bold text-white hover:text-blue-300 transition-colors">Redoubt Workspace</span>
-                    </Link>
-                    <p className="text-xs text-slate-300 mt-1 ml-11">Participant Console</p>
-                </div>
-                <nav className="p-4 space-y-4">
-                    {navGroups.map((group, groupIndex) => (
-                        <div key={group.title} className={`${groupIndex > 0 ? 'border-t border-slate-800/80 pt-3' : ''} space-y-2`}>
-                            <p className="px-4 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">{group.title}</p>
-                            <div className="space-y-1">
-                                {group.items.map(item => (
-                                    <NavLink
-                                        key={item.to}
-                                        to={item.to}
-                                        className={({ isActive }) =>
-                                            `block px-4 py-3 rounded-xl text-sm transition-all duration-200 ${consoleFocusRingClass} ${
-                                                isActive
-                                                    ? 'bg-cyan-500/10 border-l-2 border-cyan-400 text-cyan-100 shadow-[0_0_15px_rgba(0,240,255,0.15)]'
-                                                    : 'text-slate-400 border border-transparent hover:border-slate-700/50 hover:text-white hover:bg-slate-800/50'
-                                            }`
-                                        }
-                                    >
-                                        {item.label}
-                                    </NavLink>
-                                ))}
+            <aside className="fixed inset-y-0 left-0 z-40 hidden w-[260px] border-r border-slate-800 bg-slate-950/90 backdrop-blur-xl md:flex">
+                <div className="flex h-full w-full flex-col overflow-hidden">
+                    <div className="border-b border-slate-800 px-5 py-5">
+                        <Link to="/dashboard" className={`flex items-center gap-3 rounded-xl ${consoleFocusRingClass}`}>
+                            <svg
+                                className="w-10 h-10 overflow-visible"
+                                viewBox="0 0 240 300"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                                style={{ filter: 'drop-shadow(0 0 12px rgba(72, 219, 229, 0.5)) drop-shadow(0 0 24px rgba(14, 42, 80, 0.5))' }}
+                            >
+                                <defs>
+                                    <linearGradient id="dashShieldOuter" x1="120" y1="0" x2="120" y2="300" gradientUnits="userSpaceOnUse">
+                                        <stop stopColor="#10294b"/>
+                                        <stop offset="1" stopColor="#0a1323"/>
+                                    </linearGradient>
+                                    <linearGradient id="dashShieldInner" x1="120" y1="40" x2="120" y2="260" gradientUnits="userSpaceOnUse">
+                                        <stop stopColor="#0f2442"/>
+                                        <stop offset="1" stopColor="#091322"/>
+                                    </linearGradient>
+                                    <filter id="dashCircuitGlow" x="-50%" y="-50%" width="200%" height="200%">
+                                        <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                                        <feMerge>
+                                            <feMergeNode in="coloredBlur"/>
+                                            <feMergeNode in="SourceGraphic"/>
+                                        </feMerge>
+                                    </filter>
+                                    <filter id="dashShieldGlow" x="-50%" y="-50%" width="200%" height="200%">
+                                        <feGaussianBlur stdDeviation="6" result="softGlow"/>
+                                        <feMerge>
+                                            <feMergeNode in="softGlow"/>
+                                            <feMergeNode in="SourceGraphic"/>
+                                        </feMerge>
+                                    </filter>
+                                </defs>
+                                <path
+                                    d="M120 10L24 60v86c0 78 46 132 96 144 50-12 96-66 96-144V60L120 10z"
+                                    fill="url(#dashShieldOuter)"
+                                    stroke="#0f3a7a"
+                                    strokeWidth="4"
+                                    filter="url(#dashShieldGlow)"
+                                />
+                                <path
+                                    d="M120 44L66 74v72c0 58 34 98 54 108 20-10 54-50 54-108V74L120 44z"
+                                    fill="url(#dashShieldInner)"
+                                    stroke="#0b2552"
+                                    strokeWidth="3"
+                                />
+                                <g stroke="#4dd6d6" strokeLinecap="round" strokeLinejoin="round" filter="url(#dashCircuitGlow)">
+                                    <path d="M58 198 C96 192 114 172 134 150" strokeWidth="8" />
+                                    <path d="M50 160 C90 156 110 138 130 120" strokeWidth="8" />
+                                    <path d="M62 124 C100 120 122 104 148 90" strokeWidth="8" />
+                                </g>
+                                <path d="M148 90 L180 78 L162 108 Z" fill="#4dd6d6" filter="url(#dashCircuitGlow)" />
+                                <circle cx="58" cy="198" r="7" fill="#4dd6d6" filter="url(#dashCircuitGlow)" />
+                                <circle cx="50" cy="160" r="7" fill="#4dd6d6" filter="url(#dashCircuitGlow)" />
+                                <circle cx="62" cy="124" r="7" fill="#4dd6d6" filter="url(#dashCircuitGlow)" />
+                            </svg>
+                            <span className="text-xl font-bold text-white hover:text-blue-300 transition-colors">Redoubt Workspace</span>
+                        </Link>
+                        <p className="ml-11 mt-1 text-xs text-slate-300">Participant Console</p>
+                    </div>
+                    <nav className="flex-1 overflow-y-auto p-4 space-y-4">
+                        {navGroups.map((group, groupIndex) => (
+                            <div key={group.title} className={`${groupIndex > 0 ? 'border-t border-slate-800/80 pt-3' : ''} space-y-2`}>
+                                <p className="px-4 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">{group.title}</p>
+                                <div className="space-y-1">
+                                    {group.items.map(item => (
+                                        <NavLink
+                                            key={item.to}
+                                            to={item.to}
+                                            className={({ isActive }) =>
+                                                `block px-4 py-3 rounded-xl text-sm transition-all duration-200 ${consoleFocusRingClass} ${
+                                                    isActive
+                                                        ? 'bg-cyan-500/10 border-l-2 border-cyan-400 text-cyan-100 shadow-[0_0_15px_rgba(0,240,255,0.15)]'
+                                                        : 'text-slate-400 border border-transparent hover:border-slate-700/50 hover:text-white hover:bg-slate-800/50'
+                                                }`
+                                            }
+                                        >
+                                            {item.label}
+                                        </NavLink>
+                                    ))}
+                                </div>
                             </div>
-                        </div>
-                    ))}
-                </nav>
+                        ))}
+                    </nav>
+                </div>
             </aside>
 
-            <div className="flex-1 min-w-0">
-                <header className="h-[72px] border-b border-cyan-500/20 bg-black/80 backdrop-blur-xl">
+            <div className="relative h-full min-w-0 md:pl-[260px]">
+                <header className="fixed inset-x-0 top-0 z-30 h-[72px] border-b border-cyan-500/20 bg-black/80 backdrop-blur-xl md:left-[260px]">
                     <div className="flex h-full items-center justify-between px-6">
                         <div className="flex items-center gap-4">
                             <Link to="/dashboard" className={`flex items-center gap-3 rounded-xl ${consoleFocusRingClass}`} aria-label="Open participant dashboard">
@@ -232,8 +234,14 @@ export default function AppLayout() {
                     </div>
                 </header>
 
-                <main id="app-main-content" tabIndex={-1} className="min-h-[calc(100vh-4rem)] pb-28 lg:pb-0 lg:pr-24">
-                    <Outlet />
+                <main
+                    id="app-main-content"
+                    tabIndex={-1}
+                    className="h-full overflow-y-auto overscroll-y-contain pb-28 pt-[72px] lg:pb-0 lg:pr-24"
+                >
+                    <div className="min-h-[calc(100vh-72px)]">
+                        <Outlet />
+                    </div>
                 </main>
             </div>
 
