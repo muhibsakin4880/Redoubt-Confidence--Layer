@@ -10,6 +10,7 @@ import {
     dashboardPriorityActions,
     dashboardQuickLinks,
     dashboardSupportContact,
+    dashboardStickyQuickActions,
     dashboardUpcomingSessions
 } from '../data/dashboardPanelsData'
 
@@ -36,7 +37,7 @@ export default function DashboardPage() {
         <div className="relative min-h-screen bg-slate-900 text-white">
             <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(ellipse_at_25%_0%,rgba(16,185,129,0.12),transparent_50%),radial-gradient(ellipse_at_80%_20%,rgba(59,130,246,0.08),transparent_45%)]" />
 
-            <div className="relative mx-auto max-w-[1680px] px-8 py-10 lg:px-12">
+            <div className="relative mx-auto max-w-[1680px] px-8 py-10 lg:px-12 xl:pr-[15rem]">
                 <section className="mb-8" aria-labelledby="dashboard-intro-banner">
                     <div className="overflow-hidden rounded-2xl border border-cyan-500/20 bg-[radial-gradient(circle_at_top_right,rgba(34,211,238,0.16),transparent_35%),linear-gradient(135deg,rgba(15,23,42,0.94),rgba(17,24,39,0.86))] px-6 py-5 shadow-[0_22px_60px_-34px_rgba(6,182,212,0.5)]">
                         <div className="flex min-h-[88px] items-center justify-between gap-6">
@@ -366,6 +367,19 @@ export default function DashboardPage() {
                         </DashboardPanel>
                     </div>
                 </section>
+
+                <aside
+                    className="pointer-events-none fixed right-8 top-[116px] z-30 hidden xl:block"
+                    aria-label="Desktop quick actions"
+                >
+                    <div className="pointer-events-auto rounded-2xl border border-white/10 bg-slate-950/85 p-3 shadow-[0_20px_40px_-26px_rgba(15,23,42,0.95)] backdrop-blur-xl">
+                        <div className="flex flex-col gap-3">
+                            {dashboardStickyQuickActions.map(action => (
+                                <StickyQuickActionButton key={action.label} action={action} />
+                            ))}
+                        </div>
+                    </div>
+                </aside>
             </div>
         </div>
     )
@@ -455,5 +469,96 @@ function getTimelineStateMeta(state: 'completed' | 'in_progress' | 'upcoming') {
                 markerClassName: 'border-amber-500/40 bg-amber-500/15 text-amber-200',
                 icon: '•'
             }
+    }
+}
+
+function StickyQuickActionButton({
+    action
+}: {
+    action: (typeof dashboardStickyQuickActions)[number]
+}) {
+    const tooltipId = `quick-action-${action.label.toLowerCase().replace(/\s+/g, '-')}`
+    const content = (
+        <>
+            <span
+                id={tooltipId}
+                role="tooltip"
+                className="pointer-events-none absolute right-[calc(100%+12px)] top-1/2 -translate-y-1/2 whitespace-nowrap rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-xs font-medium text-slate-100 opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100"
+            >
+                {action.tooltip}
+            </span>
+            <span
+                className="flex h-12 w-12 items-center justify-center rounded-xl border border-white/10 bg-slate-900 text-slate-100 transition-colors duration-150 group-hover:border-cyan-400/40 group-hover:text-cyan-200 group-focus-within:border-cyan-400/40 group-focus-within:text-cyan-200"
+                aria-hidden="true"
+            >
+                <QuickActionIcon icon={action.icon} />
+            </span>
+        </>
+    )
+
+    if (action.to) {
+        return (
+            <div className="group relative flex justify-end">
+                <Link
+                    to={action.to}
+                    aria-label={action.label}
+                    aria-describedby={tooltipId}
+                    className="rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+                >
+                    {content}
+                </Link>
+            </div>
+        )
+    }
+
+    return (
+        <div className="group relative flex justify-end">
+            <a
+                href={action.href}
+                download={action.downloadName}
+                aria-label={action.label}
+                aria-describedby={tooltipId}
+                className="rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+            >
+                {content}
+            </a>
+        </div>
+    )
+}
+
+function QuickActionIcon({ icon }: { icon: 'book' | 'upload' | 'message' | 'download' }) {
+    switch (icon) {
+        case 'book':
+            return (
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 4.5h9a2.25 2.25 0 012.25 2.25v12.75H8.25A2.25 2.25 0 016 17.25V5.25A.75.75 0 016.75 4.5z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 7.5h7.5" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 10.5h7.5" />
+                </svg>
+            )
+        case 'upload':
+            return (
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 15V5.25" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 9l3.75-3.75L15.75 9" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 18.75h15" />
+                </svg>
+            )
+        case 'message':
+            return (
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 9.75h9" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 13.5h5.25" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18.75l-2.25.75.75-2.25V6.75A2.25 2.25 0 016.75 4.5h10.5a2.25 2.25 0 012.25 2.25v8.25a2.25 2.25 0 01-2.25 2.25H6z" />
+                </svg>
+            )
+        default:
+            return (
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v9" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 10.5L12 14.25 15.75 10.5" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 18.75h15" />
+                </svg>
+            )
     }
 }
