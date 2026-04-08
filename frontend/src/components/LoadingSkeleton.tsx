@@ -22,49 +22,55 @@ export function Skeleton({ className = '', variant = 'rectangular', width, heigh
 
 export function DatasetCardSkeleton() {
     return (
-        <div className="h-full rounded-2xl border border-slate-700/80 bg-slate-800/70 px-4 py-4 shadow-[0_12px_28px_-20px_rgba(2,132,199,0.35)] backdrop-blur-sm flex flex-col">
-            <div className="mb-3 rounded-xl border border-slate-700/70 bg-slate-900/70 px-3 py-3">
-                <div className="flex items-baseline justify-between">
-                    <Skeleton className="w-20 h-4" />
-                    <Skeleton className="w-12 h-8" />
+        <div className="relative flex h-full flex-col overflow-hidden rounded-2xl border border-[#22304D]/90 bg-[#10192E]/92 px-4 py-4 shadow-[0_24px_60px_-42px_rgba(2,6,23,0.95)] before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-16 before:bg-[linear-gradient(180deg,rgba(255,255,255,0.025),transparent)] before:content-['']">
+            <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0 flex-1 space-y-2">
+                    <Skeleton className="h-3 w-16" />
+                    <Skeleton className="h-5 w-4/5" />
+                    <Skeleton className="h-4 w-full" />
                 </div>
-                <div className="mt-2.5 h-2 w-full overflow-hidden rounded-full bg-slate-700/80">
-                    <Skeleton className="h-full rounded-full w-3/4" />
-                </div>
-            </div>
-
-            <div className="mb-3 flex items-start justify-between gap-3">
-                <div className="min-w-0 space-y-2 flex-1">
-                    <Skeleton className="w-4/5 h-5" />
-                    <Skeleton className="w-full h-4" />
-                </div>
-                <div className="flex shrink-0 flex-col items-end gap-1.5">
-                    <Skeleton className="w-20 h-6 rounded-full" />
-                    <Skeleton className="w-16 h-5 rounded-full" />
+                <div className="flex flex-col items-end gap-2">
+                    <Skeleton className="h-6 w-24 rounded-full" />
+                    <Skeleton className="h-6 w-28 rounded-full" />
                 </div>
             </div>
 
-            <div className="mb-3 flex items-center gap-2">
-                <Skeleton className="w-20 h-6 rounded-full" />
-                <Skeleton className="w-16 h-6 rounded-full" />
-            </div>
-
-            <div className="mb-4 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2">
-                    <Skeleton className="w-6 h-6 rounded-full" />
-                    <Skeleton className="w-6 h-6 rounded-full" />
-                    <Skeleton className="w-6 h-6 rounded-full" />
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <div className="rounded-[20px] border border-[#22304D]/70 bg-slate-950/45 px-4 py-3">
+                    <Skeleton className="h-3 w-20" />
+                    <Skeleton className="mt-3 h-6 w-16" />
+                    <Skeleton className="mt-2 h-3 w-24" />
                 </div>
-                <Skeleton className="w-28 h-6 rounded-full" />
+                <div className="rounded-[20px] border border-[#22304D]/70 bg-slate-950/45 px-4 py-3">
+                    <Skeleton className="h-3 w-24" />
+                    <Skeleton className="mt-3 h-6 w-16" />
+                    <Skeleton className="mt-2 h-3 w-20" />
+                </div>
             </div>
 
-            <div className="text-[11px] text-slate-500 flex gap-2">
-                <Skeleton className="w-16 h-4" />
-                <Skeleton className="w-24 h-4" />
+            <div className="mt-4 flex flex-wrap gap-2">
+                <Skeleton className="h-6 w-20 rounded-full" />
+                <Skeleton className="h-6 w-24 rounded-full" />
+                <Skeleton className="h-6 w-28 rounded-full" />
             </div>
 
-            <div className="mt-auto pt-4 flex justify-center">
-                <Skeleton className="w-full h-11 rounded-xl" />
+            <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                <Skeleton className="h-16 rounded-[18px]" />
+                <Skeleton className="h-16 rounded-[18px]" />
+                <Skeleton className="h-16 rounded-[18px]" />
+            </div>
+
+            <div className="mt-4 rounded-[20px] border border-[#22304D]/70 bg-slate-950/45 px-4 py-3">
+                <Skeleton className="h-3 w-24" />
+                <Skeleton className="mt-3 h-4 w-full" />
+                <Skeleton className="mt-2 h-4 w-4/5" />
+                <Skeleton className="mt-3 h-3 w-2/3" />
+            </div>
+
+            <div className="mt-5 flex flex-wrap gap-3">
+                <Skeleton className="h-11 w-32 rounded-2xl" />
+                <Skeleton className="h-11 w-32 rounded-2xl" />
+                <Skeleton className="h-11 flex-1 rounded-2xl" />
             </div>
         </div>
     )
