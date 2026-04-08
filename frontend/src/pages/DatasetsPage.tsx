@@ -105,7 +105,7 @@ const verificationStates: FilterState['verificationStatus'][] = ['All', 'Verifie
 const freshnessBuckets = ['All', 'Real-time / <1h', 'Daily', 'Weekly']
 
 const discoveryPageClass = `relative min-h-screen ${dashboardColorTokens['surface-page']} ${dashboardColorTokens['text-primary']}`
-const discoveryPageShellClass = 'relative mx-auto max-w-[1920px] px-5 py-8 sm:px-7 sm:py-10 lg:px-10 lg:py-12 xl:px-12 2xl:px-16'
+const discoveryPageShellClass = 'relative mx-auto max-w-[2080px] px-5 py-8 sm:px-7 sm:py-10 lg:px-10 lg:py-12 xl:px-12 2xl:px-16'
 const discoverySectionClass = 'mb-10 sm:mb-14 xl:mb-16 2xl:mb-20'
 const discoveryPanelClass =
     "relative overflow-hidden rounded-[32px] border border-white/10 bg-[linear-gradient(180deg,rgba(19,27,47,0.9),rgba(10,17,31,0.82))] p-6 sm:p-7 xl:p-8 shadow-[0_28px_90px_-42px_rgba(2,6,23,0.98),0_18px_40px_-26px_rgba(15,23,42,0.72)] ring-1 ring-inset ring-white/6 backdrop-blur-2xl before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-28 before:bg-[linear-gradient(180deg,rgba(255,255,255,0.055),transparent)] before:content-['']"
@@ -131,6 +131,14 @@ const discoveryText = {
     meta: 'text-[13px] leading-6 text-slate-500',
     metaStrong: 'text-[13px] font-medium leading-6 text-slate-300',
     value: 'text-[2.25rem] font-semibold tracking-[-0.065em] text-slate-50'
+} as const
+
+const matchedDatasetCardGridStyle = {
+    gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 38rem), 1fr))'
+} as const
+
+const metricPillGridStyle = {
+    gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 11rem), 1fr))'
 } as const
 
 export default function DatasetsPage() {
@@ -448,7 +456,7 @@ export default function DatasetsPage() {
                 </section>
 
                 <section className={discoverySectionClass} aria-labelledby="matched-datasets">
-                    <div className="grid grid-cols-1 items-start gap-8 xl:grid-cols-[minmax(0,1.78fr)_minmax(360px,0.68fr)] 2xl:grid-cols-[minmax(0,1.9fr)_minmax(400px,0.74fr)]">
+                    <div className="grid grid-cols-1 items-start gap-8 xl:grid-cols-[minmax(0,2.18fr)_minmax(360px,0.72fr)] 2xl:grid-cols-[minmax(0,2.34fr)_minmax(390px,0.76fr)]">
                         <DiscoveryPanel
                             eyebrow="Matched datasets"
                             title="Decision-ready results"
@@ -463,13 +471,18 @@ export default function DatasetsPage() {
                             </div>
 
                             {isLoading ? (
-                                <div className="mt-8 grid grid-cols-1 gap-6 2xl:grid-cols-2 2xl:gap-8" aria-busy="true" aria-label="Loading datasets">
+                                <div
+                                    className="mt-8 grid gap-6 xl:gap-7 2xl:gap-8"
+                                    style={matchedDatasetCardGridStyle}
+                                    aria-busy="true"
+                                    aria-label="Loading datasets"
+                                >
                                     {Array.from({ length: 6 }).map((_, index) => (
                                         <DatasetCardSkeleton key={index} />
                                     ))}
                                 </div>
                             ) : filteredDatasets.length > 0 ? (
-                                <div className="mt-8 grid grid-cols-1 gap-6 2xl:grid-cols-2 2xl:gap-8">
+                                <div className="mt-8 grid gap-6 xl:gap-7 2xl:gap-8" style={matchedDatasetCardGridStyle}>
                                     {filteredDatasets.map(dataset => (
                                         <DatasetDecisionCard
                                             key={dataset.id}
@@ -825,7 +838,7 @@ function DatasetDecisionCard({
                 <InlineNeutralChip label={bucketFreshness(dataset.freshness)} />
             </div>
 
-            <div className="mt-6 grid gap-4 md:grid-cols-3">
+            <div className="mt-6 grid gap-4 xl:gap-5" style={metricPillGridStyle}>
                 <MetricPill label="Completeness" value={`${dataset.completeness}%`} tone="healthy" />
                 <MetricPill label="Freshness" value={`${dataset.freshness}%`} tone="scheduled" />
                 <MetricPill label="Consistency" value={`${dataset.consistency}%`} tone="healthy" />
@@ -912,7 +925,7 @@ function MetricPill({
 }) {
     return (
         <div className={`min-w-0 rounded-[20px] border px-4 py-4 shadow-[0_16px_34px_-28px_rgba(2,6,23,0.88)] ${getSignalToneMeta(tone).surfaceClassName}`}>
-            <div className="text-[9px] font-semibold uppercase leading-4 tracking-[0.14em] text-slate-500 sm:text-[10px]">
+            <div className="max-w-full break-words text-[9px] font-semibold uppercase leading-4 tracking-[0.1em] text-slate-500 whitespace-normal sm:text-[10px]">
                 {label}
             </div>
             <div className="mt-3 text-base font-semibold text-slate-100">{value}</div>
