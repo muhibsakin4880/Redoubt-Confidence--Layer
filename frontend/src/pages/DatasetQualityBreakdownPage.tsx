@@ -1,12 +1,14 @@
 import { Link, useParams } from "react-router-dom";
 import { useEffect, useMemo, useRef, useState } from "react";
+import DatasetUnavailableState from "../components/DatasetUnavailableState";
 import {
   DATASET_DETAILS,
-  DEFAULT_DATASET,
+  getDatasetDetailById,
   confidenceLevel,
   decisionLabel,
   qualityColor,
 } from "../data/datasetDetailData";
+import { DATASET_QUALITY_PREVIEW_BY_ID, getDatasetQualityPreviewById } from "../data/datasetCatalogData";
 import { askDatasetAssistant, getOllamaConfig } from "../services/ollama";
 
 type ChatRole = "assistant" | "user";
@@ -100,145 +102,12 @@ const schemaResidencyMeta: Record<SchemaResidency, string> = {
   local: "Local Hosting Required",
 };
 
-const schemaRowsByDataset: Record<string, SchemaPreviewRow[]> = {
-  "1": [
-    {
-      field: "device_id",
-      type: "String",
-      sampleValue: '["DE-7829-XK", "AE-4512-QR"]',
-      risk: "safe",
-      access: "metadata",
-      residency: "global",
-      nullPercent: 0.0,
-    },
-    {
-      field: "timestamp_utc",
-      type: "Timestamp",
-      sampleValue: '["2026-01-15T08:23:41Z"]',
-      risk: "safe",
-      access: "metadata",
-      residency: "global",
-      nullPercent: 0.0,
-    },
-    {
-      field: "flow_count",
-      type: "Integer",
-      sampleValue: "[1247, 3892, 562]",
-      risk: "safe",
-      access: "metadata",
-      residency: "global",
-      nullPercent: 1.8,
-    },
-    {
-      field: "blood_type",
-      type: "String",
-      sampleValue: '["A+", "O-", "B+"]',
-      risk: "high",
-      access: "restricted",
-      residency: "local",
-      nullPercent: 0.0,
-    },
-    {
-      field: "national_id",
-      type: "String",
-      sampleValue: '["784-1972-1234567-1"]',
-      risk: "high",
-      access: "restricted",
-      residency: "local",
-      nullPercent: 0.0,
-    },
-    {
-      field: "location_lat",
-      type: "Float",
-      sampleValue: '["24.4539", "25.2697"]',
-      risk: "gray",
-      access: "aggregated",
-      residency: "local",
-      nullPercent: 2.1,
-    },
-    {
-      field: "location_lon",
-      type: "Float",
-      sampleValue: '["54.3773", "55.3092"]',
-      risk: "gray",
-      access: "aggregated",
-      residency: "local",
-      nullPercent: 2.1,
-    },
-    {
-      field: "salary_bracket",
-      type: "String",
-      sampleValue: '["150000-200000 AED"]',
-      risk: "gray",
-      access: "aggregated",
-      residency: "local",
-      nullPercent: 5.4,
-    },
-    {
-      field: "email_hash",
-      type: "String",
-      sampleValue: '["a7b3c9f2..."]',
-      risk: "safe",
-      access: "metadata",
-      residency: "global",
-      nullPercent: 0.0,
-    },
-    {
-      field: "registration_date",
-      type: "Date",
-      sampleValue: '["2024-03-12", "2025-01-08"]',
-      risk: "safe",
-      access: "metadata",
-      residency: "global",
-      nullPercent: 0.0,
-    },
-    {
-      field: "ip_address",
-      type: "String",
-      sampleValue: '["185.58.142.12"]',
-      risk: "high",
-      access: "restricted",
-      residency: "local",
-      nullPercent: 0.0,
-    },
-    {
-      field: "passport_number",
-      type: "String",
-      sampleValue: '["A12345678"]',
-      risk: "high",
-      access: "restricted",
-      residency: "local",
-      nullPercent: 0.0,
-    },
-    {
-      field: "phone_prefix",
-      type: "String",
-      sampleValue: '["+971-50", "+971-55"]',
-      risk: "gray",
-      access: "aggregated",
-      residency: "local",
-      nullPercent: 0.0,
-    },
-    {
-      field: "department_code",
-      type: "String",
-      sampleValue: '["HR-FIN-001", "OPS-TECH-042"]',
-      risk: "safe",
-      access: "metadata",
-      residency: "global",
-      nullPercent: 0.0,
-    },
-    {
-      field: "employee_id",
-      type: "String",
-      sampleValue: '["EMP-2024-8891"]',
-      risk: "safe",
-      access: "metadata",
-      residency: "global",
-      nullPercent: 0.0,
-    },
-  ],
-};
+const schemaRowsByDataset: Record<string, SchemaPreviewRow[]> = Object.fromEntries(
+  Object.entries(DATASET_QUALITY_PREVIEW_BY_ID).map(([datasetId, preview]) => [
+    datasetId,
+    preview.schemaRows,
+  ]),
+);
 
 const buildInitialChatMessages = (
   datasetTitle: string,
@@ -279,12 +148,13 @@ const sectionEyebrowClass =
 
 export default function DatasetQualityBreakdownPage() {
   const { id } = useParams();
-  const dataset = (id && DATASET_DETAILS[id]) || DEFAULT_DATASET;
+  const routeDataset = getDatasetDetailById(id);
+  const routeQualityPreview = getDatasetQualityPreviewById(id);
+  const dataset = routeDataset ?? Object.values(DATASET_DETAILS)[0];
+  const qualityPreview =
+    routeQualityPreview ?? Object.values(DATASET_QUALITY_PREVIEW_BY_ID)[0];
   const ollamaConfig = getOllamaConfig();
-  const schemaRows =
-    schemaRowsByDataset[dataset.id] ??
-    schemaRowsByDataset[DEFAULT_DATASET.id] ??
-    [];
+  const schemaRows = schemaRowsByDataset[dataset.id] ?? qualityPreview.schemaRows;
   const previewDecision = decisionLabel(dataset.preview.decision);
 
   const [showConfidence, setShowConfidence] = useState(true);
@@ -312,11 +182,6 @@ export default function DatasetQualityBreakdownPage() {
   const chatContainerRef = useRef<HTMLDivElement | null>(null);
 
   const datasetSnapshot = useMemo(() => {
-    const coverageMatch = dataset.title.match(/\b(20\d{2})-(20\d{2})\b/);
-    const coverageWindow = coverageMatch
-      ? `${coverageMatch[1]} to ${coverageMatch[2]}`
-      : dataset.lastUpdated;
-    const sourceNetwork = dataset.description.split(" with ")[0];
     const licenseNote =
       dataset.access.allowedUsage.find((note) =>
         note.toLowerCase().includes("derived works"),
@@ -332,19 +197,17 @@ export default function DatasetQualityBreakdownPage() {
       },
       {
         label: "Source network",
-        value: sourceNetwork,
+        value: qualityPreview.sourceNetwork,
         detail: "Curated through verified contributor pipelines.",
       },
       {
         label: "Geography",
-        value: dataset.title.toLowerCase().includes("global")
-          ? "Global coverage"
-          : dataset.category,
+        value: qualityPreview.geographyLabel,
         detail: "Cross-provider metadata is harmonized before preview.",
       },
       {
         label: "Coverage window",
-        value: coverageWindow,
+        value: qualityPreview.coverageWindow,
         detail: "Preview shows window-level metadata only.",
       },
       {
@@ -370,7 +233,7 @@ export default function DatasetQualityBreakdownPage() {
         detail: dataset.access.usageLimits,
       },
     ];
-  }, [dataset]);
+  }, [dataset, qualityPreview]);
 
   const freePreviewItems = useMemo(
     () => [
@@ -609,6 +472,15 @@ export default function DatasetQualityBreakdownPage() {
       });
   };
 
+  if (!routeDataset || !routeQualityPreview) {
+    return (
+      <DatasetUnavailableState
+        contextLabel="Quality Breakdown"
+        detail="Redoubt could not find the dataset tied to this quality preview route. Return to Dataset Discovery and reopen the dataset before reviewing schema and governance signals."
+      />
+    );
+  }
+
   return (
     <div className="relative min-h-screen overflow-hidden bg-slate-950 text-white">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -707,7 +579,7 @@ export default function DatasetQualityBreakdownPage() {
                       />
                     </div>
                     <p className="text-sm leading-7 text-slate-400">
-                      Required fields filled across stations and time slices.
+                      {qualityPreview.completenessNarrative}
                     </p>
                   </div>
                 </div>
@@ -759,7 +631,7 @@ export default function DatasetQualityBreakdownPage() {
                       />
                     </div>
                     <p className="text-sm leading-7 text-slate-400">
-                      Schema-aligned across providers with unit normalizations.
+                      {qualityPreview.consistencyNarrative}
                     </p>
                   </div>
                 </div>
@@ -778,11 +650,10 @@ export default function DatasetQualityBreakdownPage() {
                     </span>
                   </div>
                   <p className="text-sm leading-7 text-slate-400">
-                    Anomaly detection, duplication checks, and reference
-                    crosswalks run on each load.
+                    {qualityPreview.validationNarrative}
                   </p>
                   <div className="pt-2 text-sm font-medium text-slate-300">
-                    Escalations: none open
+                    Escalations: {qualityPreview.escalationStatus}
                   </div>
                 </div>
               </div>
@@ -1216,10 +1087,7 @@ export default function DatasetQualityBreakdownPage() {
                         AI evaluation summary
                       </div>
                       <p className="text-sm leading-7 text-slate-300">
-                        Dataset shows high structural consistency and recent
-                        updates. Missing values exist in ~3% of records.
-                        Suitable for analytical workloads; access is gated to
-                        protect sensitive dimensions.
+                        {dataset.preview.aiSummary}
                       </p>
                     </div>
 
@@ -1236,8 +1104,6 @@ export default function DatasetQualityBreakdownPage() {
                           {dataset.preview.riskFlags.map((flag) => (
                             <li key={flag}>{flag}</li>
                           ))}
-                          <li>Missing fields: ~3% nullable attributes</li>
-                          <li>Sparse coverage in coastal wind sensors</li>
                         </ul>
                       )}
                     </div>

@@ -1,7 +1,8 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import DatasetUnavailableState from '../components/DatasetUnavailableState'
 import DealProgressTracker from '../components/DealProgressTracker'
-import { DATASET_DETAILS, DEFAULT_DATASET } from '../data/datasetDetailData'
+import { DATASET_DETAILS, getDatasetDetailById } from '../data/datasetDetailData'
 import { buildCompliancePassport, passportStatusMeta } from '../domain/compliancePassport'
 import { buildDealProgressModel } from '../domain/dealProgress'
 import { loadEscrowCheckoutByQuoteId } from '../domain/escrowCheckout'
@@ -195,7 +196,8 @@ const AdvancedConditionsDrawer = ({
 export default function RightsQuoteBuilderPage() {
     const { id } = useParams()
     const navigate = useNavigate()
-    const dataset = (id && DATASET_DETAILS[id]) || DEFAULT_DATASET
+    const routeDataset = getDatasetDetailById(id)
+    const dataset = routeDataset ?? Object.values(DATASET_DETAILS)[0]
     const passport = useMemo(() => buildCompliancePassport(), [])
     const [form, setForm] = useState<RightsQuoteForm>(() => getDefaultRightsQuoteForm(passport))
     const [notice, setNotice] = useState<string | null>(null)
@@ -240,6 +242,15 @@ export default function RightsQuoteBuilderPage() {
                 quoteId: savedQuote.id
             }
         })
+    }
+
+    if (!routeDataset) {
+        return (
+            <DatasetUnavailableState
+                contextLabel="Evaluation Terms"
+                detail="Redoubt could not locate the dataset tied to this evaluation-terms route. Return to Dataset Discovery and reopen the dataset from the matched results list."
+            />
+        )
     }
 
     return (

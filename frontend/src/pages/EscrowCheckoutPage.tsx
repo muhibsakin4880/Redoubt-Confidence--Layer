@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router-dom'
-import { DATASET_DETAILS, DEFAULT_DATASET } from '../data/datasetDetailData'
+import DatasetUnavailableState from '../components/DatasetUnavailableState'
+import { DATASET_DETAILS, getDatasetDetailById } from '../data/datasetDetailData'
 import DealProgressTracker from '../components/DealProgressTracker'
 import { buildCompliancePassport, passportStatusMeta } from '../domain/compliancePassport'
 import { buildDealProgressModel } from '../domain/dealProgress'
@@ -44,7 +45,8 @@ type EscrowCheckoutLocationState = {
 export default function EscrowCheckoutPage() {
     const { id } = useParams()
     const location = useLocation()
-    const dataset = (id && DATASET_DETAILS[id]) || DEFAULT_DATASET
+    const routeDataset = getDatasetDetailById(id)
+    const dataset = routeDataset ?? Object.values(DATASET_DETAILS)[0]
     const passport = useMemo(() => buildCompliancePassport(), [])
     const passportStatus = passportStatusMeta(passport.status)
     const savedQuotes = useMemo(() => loadRightsQuotes(dataset.id), [dataset.id])
@@ -173,6 +175,15 @@ export default function EscrowCheckoutPage() {
         setCheckoutRecord(nextRecord)
         setRecordVersion(current => current + 1)
         setNotice(nextNotice)
+    }
+
+    if (!routeDataset) {
+        return (
+            <DatasetUnavailableState
+                contextLabel="Escrow Evaluation"
+                detail="This escrow-setup route does not point to a known dataset. Return to Dataset Discovery and reopen the dataset before continuing into evaluation setup."
+            />
+        )
     }
 
     const handleFundEscrow = () => {

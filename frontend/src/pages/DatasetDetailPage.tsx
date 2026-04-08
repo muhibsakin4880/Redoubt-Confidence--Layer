@@ -1,6 +1,7 @@
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
-import { DEFAULT_DATASET, DATASET_DETAILS, RequestStatus, confidenceLevel, decisionLabel } from '../data/datasetDetailData'
+import DatasetUnavailableState from '../components/DatasetUnavailableState'
+import { DATASET_DETAILS, RequestStatus, confidenceLevel, decisionLabel, getDatasetDetailById } from '../data/datasetDetailData'
 import { getAccessPackageForDataset } from '../data/datasetAccessPackageData'
 import { requestReviewStateLabel, type ContractLifecycleState } from '../domain/accessContract'
 import DealProgressTracker from '../components/DealProgressTracker'
@@ -65,7 +66,8 @@ export default function DatasetDetailPage() {
     const { id } = useParams()
     const location = useLocation()
     const navigate = useNavigate()
-    const dataset = (id && DATASET_DETAILS[id]) || DEFAULT_DATASET
+    const routeDataset = getDatasetDetailById(id)
+    const dataset = routeDataset ?? Object.values(DATASET_DETAILS)[0]
     const accessPackage = getAccessPackageForDataset(dataset.id)
     const compliancePassport = useMemo(() => buildCompliancePassport(), [location.key])
     const passportStatus = useMemo(() => passportStatusMeta(compliancePassport.status), [compliancePassport.status])
@@ -189,6 +191,15 @@ export default function DatasetDetailPage() {
         accessPackage.accessMethod.buyerSummary,
         accessPackage.deliveryDetail.buyerSummary
     ].filter(Boolean).join(' ')
+
+    if (!routeDataset) {
+        return (
+            <DatasetUnavailableState
+                contextLabel="Dataset Detail"
+                detail="Redoubt could not find the dataset tied to this detail route. Return to Dataset Discovery and reopen the dataset from the matched results panel."
+            />
+        )
+    }
 
     if (showRiskAssessment) {
         return (
