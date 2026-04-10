@@ -101,6 +101,12 @@ type UploadDraft = {
     submission: UploadDraftSubmission
 }
 
+type UploadDraftGovernanceSummary = {
+    dataResidency: string
+    regionalAccessRestriction: string
+    restrictionReason: string
+}
+
 type AccessMethodOption = {
     value: string
     label: string
@@ -457,6 +463,13 @@ const createInitialUploadDraft = (): UploadDraft => ({
     }
 })
 
+const createDefaultUploadGovernanceSummary = (): UploadDraftGovernanceSummary => ({
+    dataResidency: 'UAE - Abu Dhabi / Dubai',
+    regionalAccessRestriction: 'GCC Region only',
+    restrictionReason:
+        'Platform-enforced residency and sovereignty controls narrow buyer access to GCC-approved organizations even when the provider-selected package geography is broader.'
+})
+
 export default function ContributionsPage() {
     const { providerAccount } = useAuth()
     const [activeStep, setActiveStep] = useState(0)
@@ -472,6 +485,7 @@ export default function ContributionsPage() {
     const [tierReviewComment, setTierReviewComment] = useState('')
     const [showTierReviewSuccess, setShowTierReviewSuccess] = useState(false)
     const [showMockSubmissionNotice, setShowMockSubmissionNotice] = useState(false)
+    const uploadGovernanceSummary = useMemo(() => createDefaultUploadGovernanceSummary(), [])
 
     const toggleFieldExpansion = (field: string) => {
         setExpandedFields(prev => {
@@ -640,6 +654,8 @@ export default function ContributionsPage() {
     const incompleteSubmissionLabels = submissionChecklist
         .filter(item => !item.complete)
         .map(item => item.label.toLowerCase())
+    const governanceGeoRestriction = uploadGovernanceSummary.regionalAccessRestriction.trim()
+    const hasGovernanceGeoRestriction = governanceGeoRestriction.length > 0
     const buyerAccessSummary = [
         ['Access method', selectedAccessMethodLabel],
         ['Delivery detail', selectedDeliveryModeLabel],
@@ -1057,7 +1073,7 @@ export default function ContributionsPage() {
                                     <span className="text-lg">📍</span>
                                     <div>
                                         <div className="text-xs text-slate-400">Data Residency</div>
-                                        <div className="text-sm text-slate-200">UAE — Abu Dhabi / Dubai</div>
+                                        <div className="text-sm text-slate-200">{uploadGovernanceSummary.dataResidency}</div>
                                     </div>
                                 </div>
                                 <span className="px-2 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs">Active</span>
@@ -1079,10 +1095,31 @@ export default function ContributionsPage() {
                                     <span className="text-lg">🔒</span>
                                     <div>
                                         <div className="text-xs text-slate-400">Regional Access Control</div>
-                                        <div className="text-sm text-slate-200">GCC Region only — <br/>UAE, Saudi Arabia, Qatar, <br/>Kuwait, Bahrain, Oman</div>
+                                        <div className="text-sm text-slate-200">
+                                            {hasGovernanceGeoRestriction ? (
+                                                <>
+                                                    {governanceGeoRestriction} -
+                                                    <br />
+                                                    UAE, Saudi Arabia, Qatar,
+                                                    <br />
+                                                    Kuwait, Bahrain, Oman
+                                                </>
+                                            ) : (
+                                                'No additional regional restriction'
+                                            )}
+                                        </div>
+                                        {hasGovernanceGeoRestriction && uploadGovernanceSummary.restrictionReason && (
+                                            <div className="mt-1 text-xs text-slate-400">{uploadGovernanceSummary.restrictionReason}</div>
+                                        )}
                                     </div>
                                 </div>
-                                <span className="px-2 py-1 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs">Restricted</span>
+                                <span className={`px-2 py-1 rounded-full text-xs ${
+                                    hasGovernanceGeoRestriction
+                                        ? 'border border-amber-500/40 bg-amber-500/20 text-amber-300'
+                                        : 'border border-emerald-500/40 bg-emerald-500/20 text-emerald-300'
+                                }`}>
+                                    {hasGovernanceGeoRestriction ? 'Restricted' : 'Open'}
+                                </span>
                             </div>
                             
                             <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg border border-slate-700">
@@ -1964,7 +2001,9 @@ export default function ContributionsPage() {
                                     <div>
                                         <div className="text-[11px] uppercase tracking-[0.16em] text-slate-400">Buyer access terms</div>
                                         <h4 className="mt-2 text-lg font-semibold text-slate-50">Access and delivery package</h4>
-                                        <p className="mt-1 text-sm text-slate-400">Review the selected primary access method, delivery detail, and buyer-facing commercial controls.</p>
+                                        <p className="mt-1 text-sm text-slate-400">
+                                            Review the selected primary access method, delivery detail, provider-selected package geography, and buyer-facing commercial controls.
+                                        </p>
                                     </div>
                                     <button
                                         type="button"
@@ -1982,7 +2021,24 @@ export default function ContributionsPage() {
                                             <div className="mt-1 font-medium text-slate-100">{value}</div>
                                         </div>
                                     ))}
+                                    {hasGovernanceGeoRestriction && (
+                                        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3">
+                                            <div className="text-[11px] uppercase tracking-[0.14em] text-amber-200">Governance geo restriction</div>
+                                            <div className="mt-1 font-medium text-amber-100">{governanceGeoRestriction}</div>
+                                        </div>
+                                    )}
                                 </div>
+
+                                {hasGovernanceGeoRestriction && (
+                                    <div className="mt-4 rounded-2xl border border-amber-500/25 bg-amber-500/10 p-4">
+                                        <div className="text-[11px] uppercase tracking-[0.14em] text-amber-200">Governance precedence</div>
+                                        <p className="mt-2 text-sm text-amber-100">
+                                            This governance geo restriction is platform-enforced and may narrow the broader commercial geography selected in Step 4.
+                                            {' '}
+                                            {uploadGovernanceSummary.restrictionReason}
+                                        </p>
+                                    </div>
+                                )}
                             </section>
 
                             <section className="rounded-2xl border border-slate-700 bg-slate-900/60 p-5 backdrop-blur-sm">

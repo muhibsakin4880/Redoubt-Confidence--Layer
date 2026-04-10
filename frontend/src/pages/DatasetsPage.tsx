@@ -1,10 +1,16 @@
 import { useEffect, useMemo, useState, type ReactNode, type SVGProps } from 'react'
 import { Link } from 'react-router-dom'
 import { DATASET_DISCOVERY_SUMMARIES } from '../data/datasetCatalogData'
+import { getAccessPackageForDataset } from '../data/datasetAccessPackageData'
 import {
     dashboardColorTokens,
     dashboardComponentTokens
 } from '../dashboardTokens'
+import {
+    emptyStep1FormState,
+    onboardingStorageKeys,
+    readOnboardingValue
+} from '../onboarding/storage'
 
 type VerificationStatus = 'Verified' | 'Under Review'
 type AccessType = 'Restricted' | 'Approved access required'
@@ -83,6 +89,12 @@ type SidebarSectionState = Record<SidebarSectionKey, boolean>
 
 type RailSectionKey = 'shortlist' | 'compare' | 'requestReadiness'
 type RailSectionState = Record<RailSectionKey, boolean>
+
+type GeoAccessSignal = {
+    label: string
+    detail: string
+    tone: SignalTone
+}
 
 const STORAGE_DATASET_SHORTLIST = 'Redoubt:datasets:shortlist'
 const STORAGE_DATASET_COMPARE = 'Redoubt:datasets:compare'
@@ -175,11 +187,122 @@ const discoveryText = {
     metaStrong: 'text-[13px] font-medium leading-6 text-slate-300'
 } as const
 
+const northAmericaCountries = new Set([
+    'united states',
+    'united states of america',
+    'canada',
+    'mexico'
+])
+
+const usEuCountries = new Set([
+    'united states',
+    'united states of america',
+    'austria',
+    'belgium',
+    'bulgaria',
+    'croatia',
+    'cyprus',
+    'czech republic',
+    'czechia',
+    'denmark',
+    'estonia',
+    'finland',
+    'france',
+    'germany',
+    'greece',
+    'hungary',
+    'ireland',
+    'italy',
+    'latvia',
+    'lithuania',
+    'luxembourg',
+    'malta',
+    'netherlands',
+    'poland',
+    'portugal',
+    'romania',
+    'slovakia',
+    'slovenia',
+    'spain',
+    'sweden'
+])
+
+const normalizeCountry = (value: string) => value.trim().toLowerCase()
+
+function getDatasetGeoAccessSignal(datasetId: number, buyerOrgCountry: string): GeoAccessSignal {
+    const packageGeography = getAccessPackageForDataset(String(datasetId)).geography.label
+    const normalizedCountry = normalizeCountry(buyerOrgCountry)
+
+    if (!normalizedCountry) {
+        return {
+            label: 'Geo check requires org profile',
+            detail: `${packageGeography} policy. Add your organization country to evaluate provider residency and regional access fit.`,
+            tone: 'scheduled'
+        }
+    }
+
+    if (packageGeography === 'Global') {
+        return {
+            label: 'Eligible from your org location',
+            detail: `Global package. ${buyerOrgCountry} is eligible to proceed to provider review, subject to final purpose and compliance checks.`,
+            tone: 'healthy'
+        }
+    }
+
+    if (packageGeography === 'North America') {
+        return northAmericaCountries.has(normalizedCountry)
+            ? {
+                label: 'Eligible from your org location',
+                detail: `North America package. ${buyerOrgCountry} falls inside the current regional access scope.`,
+                tone: 'healthy'
+            }
+            : {
+                label: 'Region-restricted',
+                detail: `North America package. ${buyerOrgCountry} sits outside the provider's current regional access scope.`,
+                tone: 'monitoring'
+            }
+    }
+
+    if (packageGeography === 'US / EU venue scope' || packageGeography === 'US / EU utility scope') {
+        return usEuCountries.has(normalizedCountry)
+            ? {
+                label: 'Eligible from your org location',
+                detail: `${packageGeography} package. ${buyerOrgCountry} matches the current buyer geography scope.`,
+                tone: 'healthy'
+            }
+            : {
+                label: 'Region-restricted',
+                detail: `${packageGeography} package. ${buyerOrgCountry} needs manual geography review before access can proceed.`,
+                tone: 'monitoring'
+            }
+    }
+
+    if (packageGeography === 'Residency constrained' || packageGeography === 'Residency reviewed') {
+        return {
+            label: 'Residency constrained',
+            detail: `${packageGeography} package. Provider residency controls and buyer location checks shape final access eligibility for ${buyerOrgCountry}.`,
+            tone: 'monitoring'
+        }
+    }
+
+    return {
+        label: 'Region-restricted',
+        detail: `${packageGeography} package. Final access depends on matching your organization location to the provider's approved geography.`,
+        tone: 'scheduled'
+    }
+}
+
 export default function DatasetsPage() {
     const [filters, setFilters] = useState<FilterState>(defaultFilters)
     const [sortOption, setSortOption] = useState<SortOption>('best-match')
     const [shortlistIds, setShortlistIds] = useState<number[]>(() => parseStoredIdList(STORAGE_DATASET_SHORTLIST))
     const [compareIds, setCompareIds] = useState<number[]>(() => parseStoredIdList(STORAGE_DATASET_COMPARE))
+    const buyerOrgCountry = useMemo(
+        () => readOnboardingValue(onboardingStorageKeys.step1, emptyStep1FormState).country.trim(),
+        []
+    )
+    const hasBuyerGeoProfile = buyerOrgCountry.length > 0
+    const geoPolicyNoteTone: SignalTone = hasBuyerGeoProfile ? 'scheduled' : 'monitoring'
 
     useEffect(() => {
         if (typeof window === 'undefined') return
@@ -315,6 +438,15 @@ export default function DatasetsPage() {
                                     <HeroMetricChip label="High confidence" value={`${highConfidenceCount}`} />
                                     <HeroMetricChip label="Domains covered" value={`${domainCoverageCount}`} />
                                     <HeroMetricChip label="Restricted access" value={`${restrictedCount}`} />
+                                </div>
+
+                                <div className={`mt-6 max-w-3xl rounded-[22px] border px-5 py-4 ${getSignalToneMeta(geoPolicyNoteTone).surfaceClassName}`}>
+                                    <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Geo access policy</div>
+                                    <p className="mt-2 text-sm leading-6 text-slate-200">
+                                        {hasBuyerGeoProfile
+                                            ? `Eligibility signals are tailored to ${buyerOrgCountry}. Provider residency and regional restrictions may narrow access even when dataset coverage is broader.`
+                                            : 'Complete your organization country in participant onboarding to personalize geo eligibility signals. Until then, discovery shows policy-level geography guidance only.'}
+                                    </p>
                                 </div>
 
                                 <div className="mt-8 flex flex-wrap gap-3.5">
@@ -490,7 +622,7 @@ export default function DatasetsPage() {
                                         Decision-ready results
                                     </h2>
                                     <p className={`mt-3 max-w-4xl ${discoveryText.body}`}>
-                                        Cards are organized for buyer evaluation: trust, access path, freshness, and reasons to shortlist come before deeper workflow actions.
+                                        Cards are organized for buyer evaluation: trust, access path, coverage geography, geo policy, freshness, and reasons to shortlist come before deeper workflow actions.
                                     </p>
                                 </div>
 
@@ -506,6 +638,7 @@ export default function DatasetsPage() {
                                         <DatasetDecisionCard
                                             key={dataset.id}
                                             dataset={dataset}
+                                            buyerOrgCountry={buyerOrgCountry}
                                             shortlisted={shortlistIds.includes(dataset.id)}
                                             compared={compareIds.includes(dataset.id)}
                                             compareLimitReached={compareLimitReached}
@@ -529,53 +662,60 @@ export default function DatasetsPage() {
                         >
                             {shortlistDatasets.length > 0 ? (
                                 <div className="space-y-4">
-                                    {shortlistDatasets.map(dataset => (
-                                        <div key={dataset.id} className={`${subCardSurfaceClass} px-5 py-5`}>
-                                            <div className="flex items-start justify-between gap-4">
-                                                <div className="min-w-0">
-                                                    <div className="text-[1.08rem] font-semibold tracking-[-0.03em] text-slate-50">{dataset.title}</div>
-                                                    <p className={`mt-2 ${discoveryText.body}`}>{dataset.bestFor}</p>
+                                    {shortlistDatasets.map(dataset => {
+                                        const geoAccessSignal = getDatasetGeoAccessSignal(dataset.id, buyerOrgCountry)
+
+                                        return (
+                                            <div key={dataset.id} className={`${subCardSurfaceClass} px-5 py-5`}>
+                                                <div className="flex items-start justify-between gap-4">
+                                                    <div className="min-w-0">
+                                                        <div className="text-[1.08rem] font-semibold tracking-[-0.03em] text-slate-50">{dataset.title}</div>
+                                                        <p className={`mt-2 ${discoveryText.body}`}>{dataset.bestFor}</p>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => toggleShortlist(dataset.id)}
+                                                        aria-label={`Remove ${dataset.title} from shortlist`}
+                                                        className={`rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-semibold text-slate-200 transition-colors hover:border-cyan-400/30 hover:text-cyan-100 ${focusRingClass}`}
+                                                    >
+                                                        Remove
+                                                    </button>
                                                 </div>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => toggleShortlist(dataset.id)}
-                                                    aria-label={`Remove ${dataset.title} from shortlist`}
-                                                    className={`rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-semibold text-slate-200 transition-colors hover:border-cyan-400/30 hover:text-cyan-100 ${focusRingClass}`}
-                                                >
-                                                    Remove
-                                                </button>
-                                            </div>
 
-                                            <div className="mt-4 flex flex-wrap gap-2.5">
-                                                <StatusChip label={`${dataset.confidenceScore}% confidence`} tone={dataset.confidenceScore >= 90 ? 'healthy' : 'monitoring'} />
-                                                <StatusChip label={dataset.accessType} tone={dataset.accessType === 'Restricted' ? 'monitoring' : 'healthy'} />
-                                            </div>
+                                                <div className="mt-4 flex flex-wrap gap-2.5">
+                                                    <StatusChip label={`${dataset.confidenceScore}% confidence`} tone={dataset.confidenceScore >= 90 ? 'healthy' : 'monitoring'} />
+                                                    <StatusChip label={dataset.accessType} tone={dataset.accessType === 'Restricted' ? 'monitoring' : 'healthy'} />
+                                                    <StatusChip label={geoAccessSignal.label} tone={geoAccessSignal.tone} />
+                                                </div>
 
-                                            <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                                                <CompactSignal label="Confidence" value={`${dataset.confidenceScore}%`} />
-                                                <CompactSignal label="Trust" value={`${dataset.providerTrustScore}%`} />
-                                            </div>
+                                                <p className="mt-3 text-xs leading-5 text-slate-400">{geoAccessSignal.detail}</p>
 
-                                            <div className="mt-5 flex flex-wrap gap-3">
-                                                <Link to={`/datasets/${dataset.id}`} className={primaryButtonClass}>
-                                                    Open detail
-                                                </Link>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => toggleCompare(dataset.id)}
-                                                    aria-label={compareIds.includes(dataset.id) ? `Remove ${dataset.title} from compare` : `Add ${dataset.title} to compare`}
-                                                    disabled={compareLimitReached && !compareIds.includes(dataset.id)}
-                                                    className={`inline-flex items-center justify-center rounded-[16px] border px-5 py-3 text-sm font-semibold transition-all duration-200 ${focusRingClass} ${
-                                                        compareIds.includes(dataset.id)
-                                                            ? 'border-cyan-400/35 bg-cyan-500/10 text-cyan-100 hover:border-cyan-300'
-                                                            : 'border-white/10 bg-white/[0.04] text-slate-100 hover:border-cyan-400/30 hover:text-cyan-100 disabled:cursor-not-allowed disabled:border-slate-800 disabled:text-slate-500'
-                                                    }`}
-                                                >
-                                                    {compareIds.includes(dataset.id) ? 'In compare' : 'Add to compare'}
-                                                </button>
+                                                <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                                                    <CompactSignal label="Confidence" value={`${dataset.confidenceScore}%`} />
+                                                    <CompactSignal label="Trust" value={`${dataset.providerTrustScore}%`} />
+                                                </div>
+
+                                                <div className="mt-5 flex flex-wrap gap-3">
+                                                    <Link to={`/datasets/${dataset.id}`} className={primaryButtonClass}>
+                                                        Open detail
+                                                    </Link>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => toggleCompare(dataset.id)}
+                                                        aria-label={compareIds.includes(dataset.id) ? `Remove ${dataset.title} from compare` : `Add ${dataset.title} to compare`}
+                                                        disabled={compareLimitReached && !compareIds.includes(dataset.id)}
+                                                        className={`inline-flex items-center justify-center rounded-[16px] border px-5 py-3 text-sm font-semibold transition-all duration-200 ${focusRingClass} ${
+                                                            compareIds.includes(dataset.id)
+                                                                ? 'border-cyan-400/35 bg-cyan-500/10 text-cyan-100 hover:border-cyan-300'
+                                                                : 'border-white/10 bg-white/[0.04] text-slate-100 hover:border-cyan-400/30 hover:text-cyan-100 disabled:cursor-not-allowed disabled:border-slate-800 disabled:text-slate-500'
+                                                        }`}
+                                                    >
+                                                        {compareIds.includes(dataset.id) ? 'In compare' : 'Add to compare'}
+                                                    </button>
+                                                </div>
                                             </div>
-                                        </div>
-                                    ))}
+                                        )
+                                    })}
                                 </div>
                             ) : (
                                 <EmptyRailState
@@ -590,7 +730,7 @@ export default function DatasetsPage() {
                         <RailSection
                             eyebrow="Compare"
                             title="Compare datasets"
-                            description="Queue up to three datasets to compare trust, freshness, geography, and access path without leaving discovery."
+                            description="Queue up to three datasets to compare trust, freshness, coverage geography, geo policy, and access path without leaving discovery."
                             id="compare-panel"
                             action={
                                 compareDatasets.length > 0 ? (
@@ -639,7 +779,7 @@ export default function DatasetsPage() {
                                     ))}
 
                                     {compareDatasets.length >= 2 ? (
-                                        <CompareTable datasets={compareDatasets} />
+                                        <CompareTable datasets={compareDatasets} buyerOrgCountry={buyerOrgCountry} />
                                     ) : (
                                         <div className={`${subCardSurfaceClass} px-5 py-5`}>
                                             <div className="text-base font-semibold text-slate-50">Add one more dataset to compare</div>
@@ -776,6 +916,7 @@ function FilterSelect({
 
 function DatasetDecisionCard({
     dataset,
+    buyerOrgCountry,
     shortlisted,
     compared,
     compareLimitReached,
@@ -783,6 +924,7 @@ function DatasetDecisionCard({
     onToggleCompare
 }: {
     dataset: Dataset
+    buyerOrgCountry: string
     shortlisted: boolean
     compared: boolean
     compareLimitReached: boolean
@@ -795,6 +937,7 @@ function DatasetDecisionCard({
     const completenessTone = dataset.completeness >= 95 ? 'healthy' : dataset.completeness >= 90 ? 'scheduled' : 'monitoring'
     const freshnessTone = dataset.freshness >= 93 ? 'healthy' : dataset.freshness >= 88 ? 'scheduled' : 'monitoring'
     const consistencyTone = dataset.consistency >= 95 ? 'healthy' : dataset.consistency >= 90 ? 'scheduled' : 'monitoring'
+    const geoAccessSignal = getDatasetGeoAccessSignal(dataset.id, buyerOrgCountry)
 
     return (
         <article aria-label={`Dataset card for ${dataset.title}`} className={`${cardSurfaceClass} min-h-[620px]`}>
@@ -821,9 +964,12 @@ function DatasetDecisionCard({
             <div className="mt-5 flex flex-wrap gap-2.5">
                 <InlineNeutralChip label={dataset.domain} />
                 <InlineNeutralChip label={dataset.dataType} />
-                <InlineNeutralChip label={dataset.geography} />
+                <InlineNeutralChip label={`Coverage: ${dataset.geography}`} />
                 <InlineNeutralChip label={bucketFreshness(dataset.freshness)} />
+                <StatusChip label={geoAccessSignal.label} tone={geoAccessSignal.tone} />
             </div>
+
+            <p className="mt-3 text-xs leading-5 text-slate-400">{geoAccessSignal.detail}</p>
 
             <div className="mt-5 grid gap-3 sm:grid-cols-3">
                 <MetricPill label="Completeness" value={`${dataset.completeness}%`} tone={completenessTone} />
@@ -1314,14 +1460,15 @@ function CompactDecisionStat({ label, value }: { label: string; value: string })
     )
 }
 
-function CompareTable({ datasets }: { datasets: Dataset[] }) {
+function CompareTable({ datasets, buyerOrgCountry }: { datasets: Dataset[]; buyerOrgCountry: string }) {
     const attributes = [
         { label: 'Confidence', getValue: (dataset: Dataset) => `${dataset.confidenceScore}%` },
         { label: 'Provider trust', getValue: (dataset: Dataset) => `${dataset.providerTrustScore}%` },
         { label: 'Freshness bucket', getValue: (dataset: Dataset) => bucketFreshness(dataset.freshness) },
         { label: 'Verification', getValue: (dataset: Dataset) => dataset.verificationStatus },
         { label: 'Access path', getValue: (dataset: Dataset) => dataset.accessType },
-        { label: 'Geography', getValue: (dataset: Dataset) => dataset.geography }
+        { label: 'Coverage geography', getValue: (dataset: Dataset) => dataset.geography },
+        { label: 'Geo policy', getValue: (dataset: Dataset) => getDatasetGeoAccessSignal(dataset.id, buyerOrgCountry).label }
     ] as const
 
     return (
