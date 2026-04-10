@@ -325,7 +325,7 @@ export default function DatasetDetailPage() {
                                 </span>
                                 <span className="px-3 py-1 rounded-full bg-green-500/15 border border-green-400 text-green-300 text-sm flex items-center gap-2">
                                     <span className="w-2 h-2 rounded-full bg-green-300" />
-                                    Provider verified
+                                    Provider attested
                                 </span>
                             </div>
                             <h1 className="text-3xl md:text-4xl font-bold mb-4">{dataset.title}</h1>
@@ -354,7 +354,7 @@ export default function DatasetDetailPage() {
 
                             <div className="mt-4 bg-slate-900/70 border border-slate-700 rounded-lg p-4 space-y-2">
                                 <div className="flex items-center justify-between">
-                                    <span className="text-sm text-slate-300">Contributor trust</span>
+                                    <span className="text-sm text-slate-300">Contributor review signal</span>
                                     <span className="px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs font-semibold text-emerald-200">
                                         {dataset.contributorTrust}
                                     </span>
@@ -363,6 +363,9 @@ export default function DatasetDetailPage() {
                                     <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
                                     {dataset.contributionHistory}
                                 </div>
+                                <p className="text-xs text-slate-500">
+                                    Demo review cue: {dataset.trustProfile.ownershipAndLicense.value}
+                                </p>
                             </div>
 
                             <section className="mt-8 rounded-2xl border border-slate-700 bg-slate-900/70 p-5 shadow-[0_12px_35px_rgba(0,0,0,0.18)]">
@@ -515,7 +518,7 @@ export default function DatasetDetailPage() {
                                 <div className={`text-xs text-center px-3 py-2 rounded-lg border ${decisionLabel(dataset.preview.decision).classes}`}>
                                     {decisionLabel(dataset.preview.decision).text}
                                 </div>
-                                <div className="text-[11px] uppercase tracking-[0.14em] text-slate-400 text-center">AI Confidence Verified Dataset</div>
+                                <div className="text-[11px] uppercase tracking-[0.14em] text-slate-400 text-center">Quality review signal</div>
                             </div>
                             {requestStatus !== 'REQUEST_APPROVED' && (
                                 <div className="text-xs text-slate-400 border border-slate-700 rounded-lg px-3 py-2 bg-slate-900/80">
@@ -538,7 +541,10 @@ export default function DatasetDetailPage() {
                         <svg className="h-4 w-4 text-cyan-200" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                             <path fillRule="evenodd" d="M10 2a4 4 0 00-4 4v2H5a2 2 0 00-2 2v5a3 3 0 003 3h8a3 3 0 003-3v-5a2 2 0 00-2-2h-1V6a4 4 0 00-4-4zm2 6V6a2 2 0 10-4 0v2h4z" clipRule="evenodd" />
                         </svg>
-                        <span className="font-semibold text-white">All Access Requests are Audited</span>
+                        <div>
+                            <div className="font-semibold text-white">Audit visibility active</div>
+                            <div className="text-xs text-slate-400">Shown as review context in this demo and may still require reviewer confirmation.</div>
+                        </div>
                     </div>
                     <button
                         onClick={() => setShowRiskAssessment(true)}
@@ -636,13 +642,16 @@ export default function DatasetDetailPage() {
                             <div className="rounded-2xl border border-slate-700 bg-slate-900/40 p-6">
                                 <div className="flex items-center gap-3 mb-4">
                                     <span className="px-3 py-1 rounded-full bg-green-500/15 border border-green-400 text-green-200 text-xs">
-                                        Provider verified
+                                        Provider attested
                                     </span>
-                                    <span className="text-slate-400 text-sm">Identity protected; delivery handled by platform.</span>
+                                    <span className="text-slate-400 text-sm">Identity protected; attestation and delivery handling are shown by the platform.</span>
                                 </div>
                                 <h3 className="text-xl font-semibold mb-2">Provider Transparency</h3>
                                 <p className="text-slate-300 mb-5">
-                                    Essential information to evaluate trust without exposing the provider's identity.
+                                    Essential information to evaluate the provider packet without exposing the provider's identity.
+                                </p>
+                                <p className="mb-5 text-xs text-slate-500">
+                                    These notes are demo review cues and do not replace provider, legal, or policy confirmation.
                                 </p>
                                 <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-3">
                                     {dataset.providerNotes.map(note => (

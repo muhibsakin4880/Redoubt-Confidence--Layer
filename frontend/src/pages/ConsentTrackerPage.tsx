@@ -42,6 +42,11 @@ const toneBadge: Record<StatusTone, string> = {
 }
 
 export default function ConsentTrackerPage() {
+    const expiredCount = consentRows.filter(row => row.status === 'Expired').length
+    const expiringSoonCount = consentRows.filter(row => row.status === 'Expiring Soon').length
+    const pendingReviewCount = Number(summaryStats.find(stat => stat.label === 'Pending Review')?.value ?? 0)
+    const consentNeedsReview = expiredCount > 0 || expiringSoonCount > 0 || pendingReviewCount > 0
+
     return (
         <div className="relative min-h-screen bg-[#010915] text-white">
             <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_18%_20%,rgba(52,211,153,0.12),transparent_40%),radial-gradient(circle_at_82%_0%,rgba(59,130,246,0.08),transparent_35%)]" />
@@ -56,23 +61,47 @@ export default function ConsentTrackerPage() {
                             Purpose-of-use capture, expiration tracking, and revocation management per dataset access request
                         </p>
                     </div>
-                    <div className="rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200 shadow-[0_0_20px_rgba(16,185,129,0.18)]">
-                        Immutable consent ledger with audit proofs
+                    <div className={`rounded-2xl border px-4 py-3 text-sm shadow-[0_0_20px_rgba(16,185,129,0.18)] ${
+                        consentNeedsReview
+                            ? 'border-amber-400/30 bg-amber-500/10 text-amber-100'
+                            : 'border-emerald-400/30 bg-emerald-500/10 text-emerald-200'
+                    }`}>
+                        {consentNeedsReview ? 'Reviewer confirmation required' : 'Consent review timeline'}
                     </div>
                 </header>
 
                 <section className="mt-10">
-                    <div className="relative overflow-hidden rounded-2xl border border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 via-emerald-500/8 to-emerald-400/10 px-6 py-4 shadow-[0_0_30px_rgba(16,185,129,0.18)]">
-                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_10%_50%,rgba(16,185,129,0.25),transparent_35%)]" />
+                    <div className={`relative overflow-hidden rounded-2xl border px-6 py-4 shadow-[0_0_30px_rgba(16,185,129,0.18)] ${
+                        consentNeedsReview
+                            ? 'border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-amber-500/8 to-amber-400/10'
+                            : 'border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 via-emerald-500/8 to-emerald-400/10'
+                    }`}>
+                        <div className={`absolute inset-0 ${
+                            consentNeedsReview
+                                ? 'bg-[radial-gradient(circle_at_10%_50%,rgba(245,158,11,0.18),transparent_35%)]'
+                                : 'bg-[radial-gradient(circle_at_10%_50%,rgba(16,185,129,0.25),transparent_35%)]'
+                        }`} />
                         <div className="relative flex items-center justify-between gap-4 flex-wrap">
                             <div className="flex items-center gap-3">
-                                <span className="h-3 w-3 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.9)]" />
+                                <span className={`h-3 w-3 rounded-full animate-pulse ${
+                                    consentNeedsReview
+                                        ? 'bg-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.9)]'
+                                        : 'bg-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.9)]'
+                                }`} />
                                 <div>
-                                    <p className="text-base font-semibold text-emerald-200">All active consents valid — 0 expired, 0 pending revocation</p>
-                                    <p className="text-xs text-emerald-100/70">Real-time status checks across participants</p>
+                                    <p className={`text-base font-semibold ${consentNeedsReview ? 'text-amber-100' : 'text-emerald-200'}`}>
+                                        {consentNeedsReview ? 'Reviewer confirmation required' : 'Consent status looks current'}
+                                    </p>
+                                    <p className={`text-xs ${consentNeedsReview ? 'text-amber-100/70' : 'text-emerald-100/70'}`}>
+                                        {consentNeedsReview
+                                            ? `${expiredCount} expired, ${expiringSoonCount} expiring soon, and ${pendingReviewCount} pending review in this demo sample.`
+                                            : 'No expiring or revoked records are shown in the current sample.'}
+                                    </p>
                                 </div>
                             </div>
-                            <div className="text-xs font-medium text-emerald-100/70">Next expiry: April 2026</div>
+                            <div className={`text-xs font-medium ${consentNeedsReview ? 'text-amber-100/70' : 'text-emerald-100/70'}`}>
+                                Next expiry: April 2026
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -122,7 +151,7 @@ export default function ConsentTrackerPage() {
                     <div className="rounded-2xl border border-white/10 bg-[#0a1628] p-6 shadow-[0_10px_40px_rgba(0,0,0,0.25)] space-y-4">
                         <div className="flex items-center justify-between">
                             <h3 className="text-xl font-semibold text-white">Recent Revocations</h3>
-                            <span className="text-xs text-slate-500">Immutable records</span>
+                            <span className="text-xs text-slate-500">Review history</span>
                         </div>
                         <div className="space-y-4">
                             {revocations.map(item => (
@@ -144,7 +173,7 @@ export default function ConsentTrackerPage() {
                         <button className="rounded-lg bg-blue-600 hover:bg-blue-500 px-4 py-2 text-sm font-semibold text-white shadow-[0_10px_25px_rgba(59,130,246,0.25)]">Export Consent Report</button>
                         <button className="rounded-lg border border-amber-400 text-amber-200 px-4 py-2 text-sm font-semibold hover:bg-amber-500/10">Review Expiring</button>
                     </div>
-                    <p className="text-xs text-slate-500">Consent records are immutable and audit-logged</p>
+                    <p className="text-xs text-slate-500">Consent records are shown as preserved demo history and should still be confirmed by reviewers.</p>
                 </section>
             </div>
         </div>

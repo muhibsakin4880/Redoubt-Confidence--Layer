@@ -249,7 +249,7 @@ export const buildCompliancePassport = (): CompliancePassport => {
         {
             label: 'Accelerated reviewer triage',
             active: completedSections === sections.length,
-            detail: 'Completed passports can enter a fast-track review lane with fewer manual checks.'
+            detail: 'Completed passports give reviewers a fuller starting packet, but manual checks can still apply.'
         }
     ]
 
@@ -287,8 +287,8 @@ export const buildRequestPrefillFromPassport = (
     complianceChecked: passport.status === 'active' || passport.status === 'review',
     note:
         passport.status === 'active'
-            ? `Reusable Compliance Passport ${passport.passportId} applied. Identity, legal, and verification evidence were reused.`
-            : `Compliance Passport ${passport.passportId} provided partial reuse. Finish missing sections to unlock full fast-track treatment.`
+            ? `Reusable Compliance Passport ${passport.passportId} applied. Identity, legal, and verification context were reused for review preparation.`
+            : `Compliance Passport ${passport.passportId} provided partial reuse. Finish missing sections to improve reviewer context reuse.`
 })
 
 export const passportStatusMeta = (status: CompliancePassportStatus) => {
@@ -296,7 +296,7 @@ export const passportStatusMeta = (status: CompliancePassportStatus) => {
         return {
             label: 'Active',
             classes: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200',
-            detail: 'Reusable across requests, quotes, and governed checkout.'
+            detail: 'Reusable across requests, quotes, and governed checkout as demo review context.'
         }
     }
 

@@ -1157,8 +1157,8 @@ const buildPassportComplianceReminders = (
             id: 'fast-track-gap',
             severity: 'info',
             category: 'reuse',
-            title: 'Fast-track benefits are not fully unlocked',
-            detail: 'Completing one more diligence section would unlock stronger quote and checkout reuse benefits.',
+            title: 'Reusable review context is not fully unlocked',
+            detail: 'Completing one more diligence section would improve quote and checkout reuse context for reviewers.',
             dueLabel: 'When convenient'
         })
     }

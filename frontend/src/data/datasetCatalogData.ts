@@ -1,6 +1,10 @@
 import type { RequestReviewState } from '../domain/accessContract'
+import {
+    DATASET_TRUST_PROFILE_LIBRARY,
+    type DatasetTrustProfile
+} from '../domain/datasetTrustProfile'
 
-export type VerificationStatus = 'Verified' | 'Under Review'
+export type VerificationStatus = 'Attested' | 'Under Review'
 export type AccessType = 'Restricted' | 'Approved access required'
 
 export type DatasetDetail = {
@@ -15,6 +19,7 @@ export type DatasetDetail = {
     confidenceSummary: string
     contributorTrust: string
     contributionHistory: string
+    trustProfile: DatasetTrustProfile
     quality: {
         completeness: number
         freshnessScore: number
@@ -72,6 +77,7 @@ export type DatasetDiscoverySummary = {
     confidenceSummary: string
     contributorTrust: string
     contributionHistory: string
+    trustProfile: DatasetTrustProfile
 }
 
 export type DatasetQualitySchemaRisk = 'safe' | 'gray' | 'high'
@@ -101,7 +107,7 @@ export type DatasetQualityPreview = {
 
 export type DatasetCatalogRecord = Omit<DatasetDiscoverySummary, 'sampleSchema'> & {
     accessPackageId: string
-    detail: DatasetDetail
+    detail: Omit<DatasetDetail, 'trustProfile'>
     qualityPreview: DatasetQualityPreview
 }
 
@@ -137,7 +143,7 @@ export const DATASET_CATALOG: DatasetCatalogRecord[] = [
         geography: 'Global',
         confidenceScore: 96,
         providerTrustScore: 94,
-        verificationStatus: 'Verified',
+        verificationStatus: 'Attested',
         lastUpdated: '2026-02-15',
         size: '2.4 TB',
         coverage: '1.2M records',
@@ -146,9 +152,10 @@ export const DATASET_CATALOG: DatasetCatalogRecord[] = [
         consistency: 95,
         accessType: 'Approved access required',
         confidenceSummary: 'Stable ingest with anomaly gating; near-real-time freshness and cross-source reconciliation.',
-        contributorTrust: 'Verified Participant',
+        contributorTrust: 'Reviewed Participant',
         contributionHistory: '12 integrity checks',
         accessPackageId: 'platform-clean-room-standard',
+        trustProfile: DATASET_TRUST_PROFILE_LIBRARY.climateObservations,
         detail: {
             id: '1',
             title: 'Global Climate Observations 2020-2024',
@@ -160,7 +167,7 @@ export const DATASET_CATALOG: DatasetCatalogRecord[] = [
             lastUpdated: '2026-02-15',
             confidenceScore: 96,
             confidenceSummary: 'Stable ingest with anomaly gating, near-real-time freshness, and cross-source reconciliation keep this package in the highest confidence lane.',
-            contributorTrust: 'Verified Participant',
+            contributorTrust: 'Reviewed Participant',
             contributionHistory: '12 integrity checks',
             quality: {
                 completeness: 96,
@@ -175,7 +182,7 @@ export const DATASET_CATALOG: DatasetCatalogRecord[] = [
                 'Operational support responds within one business day for approved requests.'
             ],
             providerNotes: [
-                'Provider identity is shielded behind the managed exchange, but uptime and integrity evidence are verified.',
+                'Provider identity is shielded behind the managed exchange, while uptime and integrity evidence are shown as reviewed signals.',
                 'Rollback procedures and anomaly alerts are active across the ingest pipeline.',
                 'Cross-source calibration reports are refreshed on a rolling monthly basis.'
             ],
@@ -265,7 +272,7 @@ export const DATASET_CATALOG: DatasetCatalogRecord[] = [
         geography: 'North America, EU, APAC',
         confidenceScore: 91,
         providerTrustScore: 87,
-        verificationStatus: 'Verified',
+        verificationStatus: 'Attested',
         lastUpdated: '2026-02-14',
         size: '1.8 TB',
         coverage: '920K sensors',
@@ -274,9 +281,10 @@ export const DATASET_CATALOG: DatasetCatalogRecord[] = [
         consistency: 89,
         accessType: 'Restricted',
         confidenceSummary: 'High availability with minor variance during peak hours; governed streaming channel.',
-        contributorTrust: 'Trusted Participant',
+        contributorTrust: 'Established Participant',
         contributionHistory: '8 deliveries, zero disputes',
         accessPackageId: 'governed-streaming-restricted',
+        trustProfile: DATASET_TRUST_PROFILE_LIBRARY.mobilityTelemetry,
         detail: {
             id: '2',
             title: 'Urban Mobility Sensor Streams',
@@ -288,7 +296,7 @@ export const DATASET_CATALOG: DatasetCatalogRecord[] = [
             lastUpdated: '2026-02-14',
             confidenceScore: 91,
             confidenceSummary: 'Availability is strong across partner metros, though rush-hour spikes still create small pockets of delayed telemetry.',
-            contributorTrust: 'Trusted Participant',
+            contributorTrust: 'Established Participant',
             contributionHistory: '8 deliveries, zero disputes',
             quality: {
                 completeness: 92,
@@ -303,7 +311,7 @@ export const DATASET_CATALOG: DatasetCatalogRecord[] = [
                 'Location joins that could increase re-identification risk require additional review.'
             ],
             providerNotes: [
-                'Municipal and transit partners are verified through managed agreements rather than direct buyer contact.',
+                'Municipal and transit partners are reviewed through managed agreements rather than direct buyer contact.',
                 'Streaming incident notifications are shared through Redoubt during significant metro outages.',
                 'Regional maintenance windows can temporarily shift freshness from real time to hourly.'
             ],
@@ -393,7 +401,7 @@ export const DATASET_CATALOG: DatasetCatalogRecord[] = [
         geography: 'US, EU',
         confidenceScore: 95,
         providerTrustScore: 98,
-        verificationStatus: 'Verified',
+        verificationStatus: 'Attested',
         lastUpdated: '2026-02-12',
         size: '3.2 TB',
         coverage: '450M ticks',
@@ -402,9 +410,10 @@ export const DATASET_CATALOG: DatasetCatalogRecord[] = [
         consistency: 94,
         accessType: 'Approved access required',
         confidenceSummary: 'Tight latency distribution; reconciled across venues; anomaly filters for outliers.',
-        contributorTrust: 'High Confidence Participant',
-        contributionHistory: '18 verified pushes',
+        contributorTrust: 'High-Confidence Participant',
+        contributionHistory: '18 reviewed pushes',
         accessPackageId: 'market-tick-vault',
+        trustProfile: DATASET_TRUST_PROFILE_LIBRARY.marketData,
         detail: {
             id: '3',
             title: 'Financial Market Tick Data',
@@ -416,8 +425,8 @@ export const DATASET_CATALOG: DatasetCatalogRecord[] = [
             lastUpdated: '2026-02-12',
             confidenceScore: 95,
             confidenceSummary: 'Venue reconciliation and timing repair keep the feed in a high-confidence state for execution-sensitive research.',
-            contributorTrust: 'High Confidence Participant',
-            contributionHistory: '18 verified pushes',
+            contributorTrust: 'High-Confidence Participant',
+            contributionHistory: '18 reviewed pushes',
             quality: {
                 completeness: 97,
                 freshnessScore: 93,
@@ -431,7 +440,7 @@ export const DATASET_CATALOG: DatasetCatalogRecord[] = [
                 'High-frequency export paths require explicit approval beyond the baseline package.'
             ],
             providerNotes: [
-                'Venue and aggregator relationships are verified behind managed marketplace controls.',
+                'Venue and aggregator relationships are reviewed behind managed marketplace controls.',
                 'Outlier suppression and sequencing repair logs are available in governed review sessions.',
                 'Buyers receive operational notices if any venue falls behind consolidated SLAs.'
             ],
@@ -530,9 +539,10 @@ export const DATASET_CATALOG: DatasetCatalogRecord[] = [
         consistency: 91,
         accessType: 'Restricted',
         confidenceSummary: 'De-identification and k-anonymity applied; under review for additional privacy controls.',
-        contributorTrust: 'Verified Participant',
+        contributorTrust: 'Reviewed Participant',
         contributionHistory: '5 secure submissions',
         accessPackageId: 'clinical-safe-haven',
+        trustProfile: DATASET_TRUST_PROFILE_LIBRARY.clinicalResearch,
         detail: {
             id: '4',
             title: 'Clinical Outcomes (De-identified)',
@@ -544,7 +554,7 @@ export const DATASET_CATALOG: DatasetCatalogRecord[] = [
             lastUpdated: '2026-02-10',
             confidenceScore: 92,
             confidenceSummary: 'The package is analytically strong, but additional privacy controls remain in active review before full approval.',
-            contributorTrust: 'Verified Participant',
+            contributorTrust: 'Reviewed Participant',
             contributionHistory: '5 secure submissions',
             quality: {
                 completeness: 90,
@@ -559,7 +569,7 @@ export const DATASET_CATALOG: DatasetCatalogRecord[] = [
                 'All exports remain aggregated until the current privacy review closes.'
             ],
             providerNotes: [
-                'Clinical contributors are verified through sponsor and institution review managed by Redoubt.',
+                'Clinical contributors are reviewed through sponsor and institution review managed by Redoubt.',
                 'The latest refresh is analytically complete but still carries additional privacy review checkpoints.',
                 'Regulated workflows receive audit evidence and residency controls inside the safe-haven environment.'
             ],
@@ -649,7 +659,7 @@ export const DATASET_CATALOG: DatasetCatalogRecord[] = [
         geography: 'Global',
         confidenceScore: 88,
         providerTrustScore: 82,
-        verificationStatus: 'Verified',
+        verificationStatus: 'Attested',
         lastUpdated: '2026-01-20',
         size: '450 GB',
         coverage: '2.8M tiles',
@@ -658,9 +668,10 @@ export const DATASET_CATALOG: DatasetCatalogRecord[] = [
         consistency: 87,
         accessType: 'Approved access required',
         confidenceSummary: 'Multi-spectral analysis with ground truthing; some regions have incomplete coverage.',
-        contributorTrust: 'Trusted Participant',
-        contributionHistory: '6 verified submissions',
+        contributorTrust: 'Established Participant',
+        contributionHistory: '6 reviewed submissions',
         accessPackageId: 'geospatial-evaluation-room',
+        trustProfile: DATASET_TRUST_PROFILE_LIBRARY.geospatialImagery,
         detail: {
             id: '5',
             title: 'Satellite Land Use Dataset 2023',
@@ -672,8 +683,8 @@ export const DATASET_CATALOG: DatasetCatalogRecord[] = [
             lastUpdated: '2026-01-20',
             confidenceScore: 88,
             confidenceSummary: 'Classification quality is solid across core regions, but cloud cover and sparse ground truthing create a few lower-confidence pockets.',
-            contributorTrust: 'Trusted Participant',
-            contributionHistory: '6 verified submissions',
+            contributorTrust: 'Established Participant',
+            contributionHistory: '6 reviewed submissions',
             quality: {
                 completeness: 88,
                 freshnessScore: 85,
@@ -687,7 +698,7 @@ export const DATASET_CATALOG: DatasetCatalogRecord[] = [
                 'High-resolution export requests require a separate approval step.'
             ],
             providerNotes: [
-                'Imagery and derived labels are verified through managed contributor review.',
+                'Imagery and derived labels are reviewed through managed contributor review.',
                 'Regional gaps are flagged when cloud contamination or missing ground truth reduces confidence.',
                 'Class taxonomy updates are versioned and shared inside governed workspaces.'
             ],
@@ -786,9 +797,10 @@ export const DATASET_CATALOG: DatasetCatalogRecord[] = [
         consistency: 80,
         accessType: 'Restricted',
         confidenceSummary: 'Aggregated from retail loyalty cards; under review for anonymization compliance.',
-        contributorTrust: 'Verified Participant',
+        contributorTrust: 'Reviewed Participant',
         contributionHistory: '4 secure submissions',
         accessPackageId: 'retail-insights-clean-room',
+        trustProfile: DATASET_TRUST_PROFILE_LIBRARY.retailPanel,
         detail: {
             id: '6',
             title: 'Consumer Behavior Analytics Q4',
@@ -800,7 +812,7 @@ export const DATASET_CATALOG: DatasetCatalogRecord[] = [
             lastUpdated: '2026-01-25',
             confidenceScore: 79,
             confidenceSummary: 'The package is useful for directional demand and basket analysis, but anonymization review and segment sparsity keep it below the highest confidence bands.',
-            contributorTrust: 'Verified Participant',
+            contributorTrust: 'Reviewed Participant',
             contributionHistory: '4 secure submissions',
             quality: {
                 completeness: 82,
@@ -815,7 +827,7 @@ export const DATASET_CATALOG: DatasetCatalogRecord[] = [
                 'Fine-grained segment cuts require extra governance review before approval.'
             ],
             providerNotes: [
-                'Retail contributor relationships are verified through the managed exchange.',
+                'Retail contributor relationships are reviewed through the managed exchange.',
                 'Anonymization controls are being tightened before broader evaluation approval.',
                 'Sparse demographic slices may be suppressed or merged in governed delivery.'
             ],
@@ -905,7 +917,7 @@ export const DATASET_CATALOG: DatasetCatalogRecord[] = [
         geography: 'Global',
         confidenceScore: 94,
         providerTrustScore: 96,
-        verificationStatus: 'Verified',
+        verificationStatus: 'Attested',
         lastUpdated: '2026-02-01',
         size: '1.5 TB',
         coverage: '125K samples',
@@ -913,23 +925,24 @@ export const DATASET_CATALOG: DatasetCatalogRecord[] = [
         freshness: 92,
         consistency: 95,
         accessType: 'Approved access required',
-        confidenceSummary: 'Peer-reviewed and reproducibility validated; all data has ethical approvals.',
-        contributorTrust: 'High Confidence Participant',
-        contributionHistory: '15 verified pushes',
+        confidenceSummary: 'Peer-reviewed literature and reproducibility references are cited in the demo packet; ethics coverage still requires reviewer confirmation.',
+        contributorTrust: 'High-Confidence Participant',
+        contributionHistory: '15 reviewed pushes',
         accessPackageId: 'genomics-controlled-enclave',
+        trustProfile: DATASET_TRUST_PROFILE_LIBRARY.genomicsResearch,
         detail: {
             id: '7',
             title: 'Genomics Research Dataset v2',
             description:
-                'Gene expression measurements, variant calls, and cohort metadata from verified institutions and biobanks, packaged for reproducibility-sensitive translational and biomarker research inside tightly governed environments.',
+                'Gene expression measurements, variant calls, and cohort metadata from reviewed institutions and biobanks, packaged for reproducibility-sensitive translational and biomarker research inside tightly governed environments.',
             category: 'Genomics Research',
             size: '1.5 TB',
             recordCount: '125K samples',
             lastUpdated: '2026-02-01',
             confidenceScore: 94,
-            confidenceSummary: 'Reproducibility validation and ethical approvals keep this package in a strong production-research band for governed genomics work.',
-            contributorTrust: 'High Confidence Participant',
-            contributionHistory: '15 verified pushes',
+            confidenceSummary: 'Reproducibility evidence and ethics review references support this package, though live approvals still need reviewer confirmation.',
+            contributorTrust: 'High-Confidence Participant',
+            contributionHistory: '15 reviewed pushes',
             quality: {
                 completeness: 94,
                 freshnessScore: 92,
@@ -1005,7 +1018,7 @@ export const DATASET_CATALOG: DatasetCatalogRecord[] = [
             }
         },
         qualityPreview: {
-            sourceNetwork: 'Verified biobanks, research institutions, and governed genomics programs',
+            sourceNetwork: 'Reviewed biobanks, research institutions, and governed genomics programs',
             coverageWindow: '2019-2025',
             geographyLabel: 'Global',
             completenessNarrative: 'Expression, cohort, and metadata coverage remain strong across published releases, with governance limiting the sparsest rare-variant dimensions.',
@@ -1033,7 +1046,7 @@ export const DATASET_CATALOG: DatasetCatalogRecord[] = [
         geography: 'US, EU',
         confidenceScore: 91,
         providerTrustScore: 89,
-        verificationStatus: 'Verified',
+        verificationStatus: 'Attested',
         lastUpdated: '2026-02-13',
         size: '890 GB',
         coverage: '4.2M meters',
@@ -1042,9 +1055,10 @@ export const DATASET_CATALOG: DatasetCatalogRecord[] = [
         consistency: 90,
         accessType: 'Approved access required',
         confidenceSummary: 'Real-time grid monitoring with anomaly detection; some residential data anonymized.',
-        contributorTrust: 'Verified Participant',
-        contributionHistory: '10 verified submissions',
+        contributorTrust: 'Reviewed Participant',
+        contributionHistory: '10 reviewed submissions',
         accessPackageId: 'utility-grid-governed-room',
+        trustProfile: DATASET_TRUST_PROFILE_LIBRARY.utilityTelemetry,
         detail: {
             id: '8',
             title: 'Smart Grid Energy Patterns',
@@ -1056,8 +1070,8 @@ export const DATASET_CATALOG: DatasetCatalogRecord[] = [
             lastUpdated: '2026-02-13',
             confidenceScore: 91,
             confidenceSummary: 'The package is reliable for utility forecasting and optimization, with anonymization and localized outage handling already built into delivery.',
-            contributorTrust: 'Verified Participant',
-            contributionHistory: '10 verified submissions',
+            contributorTrust: 'Reviewed Participant',
+            contributionHistory: '10 reviewed submissions',
             quality: {
                 completeness: 91,
                 freshnessScore: 88,
@@ -1071,7 +1085,7 @@ export const DATASET_CATALOG: DatasetCatalogRecord[] = [
                 'Region-specific utility scopes are provisioned after approval.'
             ],
             providerNotes: [
-                'Utility relationships are managed through Redoubt and verified via delivery evidence.',
+                'Utility relationships are managed through Redoubt and shown through delivery evidence reviewed in the demo flow.',
                 'Residential identifiers are masked before governed delivery.',
                 'Localized outage events may reduce freshness briefly while reconciliation completes.'
             ],
@@ -1158,7 +1172,7 @@ export const DATASET_DISCOVERY_SUMMARIES: DatasetDiscoverySummary[] = DATASET_CA
 }))
 
 export const DATASET_DETAILS: Record<string, DatasetDetail> = Object.fromEntries(
-    DATASET_CATALOG.map(record => [record.detail.id, record.detail])
+    DATASET_CATALOG.map(record => [record.detail.id, { ...record.detail, trustProfile: record.trustProfile }])
 ) as Record<string, DatasetDetail>
 
 export const DATASET_QUALITY_PREVIEW_BY_ID: Record<string, DatasetQualityPreview> = Object.fromEntries(
@@ -1175,6 +1189,9 @@ export const getDatasetCatalogRecordById = (id?: string | number) => {
     return DATASET_CATALOG.find(record => String(record.id) === normalizedId) ?? null
 }
 
-export const getDatasetDetailById = (id?: string | number) => getDatasetCatalogRecordById(id)?.detail ?? null
+export const getDatasetDetailById = (id?: string | number): DatasetDetail | null => {
+    if (id === undefined || id === null) return null
+    return DATASET_DETAILS[String(id)] ?? null
+}
 
 export const getDatasetQualityPreviewById = (id?: string | number) => getDatasetCatalogRecordById(id)?.qualityPreview ?? null

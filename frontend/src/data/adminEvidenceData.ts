@@ -34,7 +34,7 @@ export type VisibilityBoundary = {
     hiddenFromAdmins: string
 }
 
-export type EvidenceEventStatus = 'Verified' | 'Review' | 'Exception'
+export type EvidenceEventStatus = 'Reviewed' | 'Review' | 'Exception'
 
 export type EvidenceEvent = {
     id: string
@@ -221,7 +221,7 @@ export const evidenceEvents: EvidenceEvent[] = [
         surface: 'Approval readiness pack',
         event: 'Evidence pack marked ready for final approval',
         evidencePackId: 'EVP-4471',
-        status: 'Verified',
+        status: 'Reviewed',
         visibility: 'Metadata and summary only'
     },
     {

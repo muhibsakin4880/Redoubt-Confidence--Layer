@@ -21,7 +21,7 @@ export default function CompliancePassportPage() {
                         </div>
                         <h1 className="mt-4 text-4xl font-bold tracking-tight text-white sm:text-5xl">Compliance Passport</h1>
                         <p className="mt-2 max-w-3xl text-slate-400">
-                            Reuse identity, legal, verification, and usage declarations across access requests, rights quotes,
+                            Reuse identity, legal, verification, and usage declarations as demo review context across access requests, rights quotes,
                             and governed checkout instead of re-entering the same diligence each time.
                         </p>
                     </div>
@@ -49,9 +49,9 @@ export default function CompliancePassportPage() {
                             <div className="mt-6 grid gap-4 md:grid-cols-3">
                                 <MetricCard label="Completion" value={`${passport.completionPercent}%`} detail={statusMeta.detail} tone="emerald" />
                                 <MetricCard
-                                    label="Fast-track eligibility"
-                                    value={passport.fastTrackEligible ? 'Enabled' : 'Pending'}
-                                    detail={passport.fastTrackEligible ? 'Requests and quotes can reuse verified diligence.' : 'Complete remaining sections to unlock automatic reuse.'}
+                                    label="Reusable review context"
+                                    value={passport.fastTrackEligible ? 'Ready' : 'Needs work'}
+                                    detail={passport.fastTrackEligible ? 'Requests and quotes can reuse declared diligence context.' : 'Complete remaining sections to improve reviewer reuse.'}
                                     tone={passport.fastTrackEligible ? 'cyan' : 'amber'}
                                 />
                                 <MetricCard
@@ -60,6 +60,10 @@ export default function CompliancePassportPage() {
                                     detail={`${passport.defaultDuration} default term`}
                                     tone="blue"
                                 />
+                            </div>
+
+                            <div className="mt-4 rounded-2xl border border-amber-400/20 bg-amber-500/8 px-4 py-3 text-xs text-amber-100/90">
+                                This passport organizes declarations and evidence references for demo review flows. It is not a compliance certification, legal opinion, or approval guarantee.
                             </div>
 
                             <div className="mt-6 rounded-2xl border border-white/10 bg-slate-950/45 p-5">
@@ -96,7 +100,7 @@ export default function CompliancePassportPage() {
                                     <p className="mt-1 text-sm text-emerald-100/75">What this passport unlocks right now.</p>
                                 </div>
                                 <span className="rounded-full border border-emerald-400/40 bg-emerald-500/20 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-emerald-100">
-                                    Live
+                                    Demo
                                 </span>
                             </div>
 
@@ -199,8 +203,8 @@ export default function CompliancePassportPage() {
                             <h2 className="text-xl font-semibold text-white">Why This Matters</h2>
                             <div className="mt-4 space-y-3 text-sm text-slate-200">
                                 <p>Without a passport, each deal re-collects identity, governance, and verification data.</p>
-                                <p>With a passport, compliance becomes a reusable asset that lowers friction in requests, quotes, and checkout.</p>
-                                <p>The quote builder now reads this passport directly, so pricing and reviewer readiness reflect real diligence state.</p>
+                                <p>With a passport, review context becomes a reusable asset that lowers friction in requests, quotes, and checkout.</p>
+                                <p>The quote builder now reads this passport directly, so pricing and reviewer readiness reflect declared diligence state rather than a legal guarantee.</p>
                             </div>
                         </section>
                     </div>

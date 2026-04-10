@@ -1,7 +1,7 @@
 const lineageSummary = [
     { label: 'Tracked Sources', value: '18' },
     { label: 'Active Pipelines', value: '7' },
-    { label: 'Verified Lineage', value: '93%' },
+    { label: 'Tracked Lineage', value: '93%' },
     { label: 'Last Sync', value: 'Today, 08:42 UTC' }
 ]
 
@@ -34,8 +34,8 @@ const lineageNodes = [
 
 const accessEvents = [
     { timestamp: '2026-03-11 08:12', action: 'Access request created', actor: 'part_anon_042', status: 'Logged' },
-    { timestamp: '2026-03-11 08:18', action: 'Escrow initiated', actor: 'redoubt_escrow', status: 'Verified' },
-    { timestamp: '2026-03-11 08:41', action: 'Secure enclave granted', actor: 'rbac_console', status: 'Verified' },
+    { timestamp: '2026-03-11 08:18', action: 'Escrow initiated', actor: 'redoubt_escrow', status: 'Tracked' },
+    { timestamp: '2026-03-11 08:41', action: 'Secure enclave granted', actor: 'rbac_console', status: 'Tracked' },
     { timestamp: '2026-03-11 08:42', action: 'Usage telemetry synced', actor: 'audit_trail', status: 'Logged' }
 ]
 
@@ -72,11 +72,11 @@ export default function DataLineagePage() {
                             Data Lineage
                         </h1>
                         <p className="mt-2 max-w-2xl text-slate-400">
-                            Trace every dataset from source to delivery with verified lineage checkpoints.
+                            Trace every dataset from source to delivery with tracked lineage checkpoints.
                         </p>
                     </div>
                     <div className="rounded-2xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-3 text-sm text-cyan-200 shadow-[0_0_18px_rgba(34,211,238,0.18)]">
-                        Immutable provenance tracking enabled
+                        Provenance tracking active
                     </div>
                 </header>
 
@@ -107,7 +107,7 @@ export default function DataLineagePage() {
                                                 <p className="text-sm font-semibold text-white">{node.title}</p>
                                                 <p className="text-xs text-slate-200/70 mt-1">{node.subtitle}</p>
                                             </div>
-                                            <span className={`text-xs font-semibold ${toneStyles[node.tone].badge}`}>Verified</span>
+                                            <span className={`text-xs font-semibold ${toneStyles[node.tone].badge}`}>Tracked</span>
                                         </div>
                                         <div className="mt-4 flex flex-wrap gap-2 text-xs text-slate-300">
                                             {node.meta.map(item => (
@@ -120,7 +120,7 @@ export default function DataLineagePage() {
                                     {index < lineageNodes.length - 1 && (
                                         <div className="flex items-center gap-2 text-slate-500 text-xs">
                                             <span className="h-6 w-px bg-gradient-to-b from-slate-500/60 to-transparent" />
-                                            <span>Verified handoff</span>
+                                            <span>Tracked handoff</span>
                                         </div>
                                     )}
                                 </div>
@@ -149,7 +149,7 @@ export default function DataLineagePage() {
                             ))}
                         </div>
                         <div className="mt-6 rounded-xl border border-blue-500/40 bg-blue-500/10 px-4 py-3 text-xs text-blue-200">
-                            All lineage checkpoints are cryptographically hashed and exportable.
+                            Lineage checkpoints are shown as demo provenance references and export cues.
                         </div>
                     </div>
                 </section>

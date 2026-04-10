@@ -55,7 +55,7 @@ const badgeClasses = {
     Ready: 'border-emerald-500/25 bg-emerald-500/10 text-emerald-300',
     'In Review': 'border-cyan-500/25 bg-cyan-500/10 text-cyan-300',
     Blocked: 'border-red-500/25 bg-red-500/10 text-red-300',
-    Verified: 'border-emerald-500/25 bg-emerald-500/10 text-emerald-300',
+    Reviewed: 'border-emerald-500/25 bg-emerald-500/10 text-emerald-300',
     Review: 'border-cyan-500/25 bg-cyan-500/10 text-cyan-300',
     Exception: 'border-red-500/25 bg-red-500/10 text-red-300',
     Contained: 'border-emerald-500/25 bg-emerald-500/10 text-emerald-300',
@@ -152,7 +152,7 @@ export default function AdminDashboardPage() {
     const inReviewPackCount = evidencePacks.filter((pack) => pack.status === 'In Review').length
     const blockedPackCount = evidencePacks.filter((pack) => pack.status === 'Blocked').length
 
-    const verifiedEventCount = evidenceEvents.filter((event) => event.status === 'Verified').length
+    const reviewedEventCount = evidenceEvents.filter((event) => event.status === 'Reviewed').length
     const reviewEventCount = evidenceEvents.filter((event) => event.status === 'Review').length
     const exceptionEventCount = evidenceEvents.filter((event) => event.status === 'Exception').length
 
@@ -449,9 +449,9 @@ export default function AdminDashboardPage() {
                                 <div className={`${subpanelClass} px-4 py-4`}>
                                     <div className="flex items-center gap-2">
                                         <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                                        <p className="text-[9px] uppercase tracking-[0.12em] text-slate-600">Verified</p>
+                                        <p className="text-[9px] uppercase tracking-[0.12em] text-slate-600">Reviewed</p>
                                     </div>
-                                    <p className="mt-2 text-xl font-semibold text-slate-100">{verifiedEventCount}</p>
+                                    <p className="mt-2 text-xl font-semibold text-slate-100">{reviewedEventCount}</p>
                                 </div>
                                 <div className={`${subpanelClass} px-4 py-4`}>
                                     <div className="flex items-center gap-2">

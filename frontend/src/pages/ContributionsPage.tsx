@@ -728,7 +728,7 @@ export default function ContributionsPage() {
     const stepPreview = [
         {
             title: 'Dataset info',
-            description: 'Define metadata and ownership for the contribution package.',
+            description: 'Define the core metadata for the contribution package.',
             body: (
                 <div className="grid sm:grid-cols-2 gap-3 text-sm">
                     <div className="bg-slate-900/70 border border-slate-700 rounded-lg p-3">
@@ -990,14 +990,14 @@ export default function ContributionsPage() {
                     </div>
 
                     <div className="bg-slate-900/80 border border-slate-700 rounded-xl p-5">
-                        <div className="text-sm font-semibold text-slate-200 mb-4">AI Classification Result</div>
+                        <div className="text-sm font-semibold text-slate-200 mb-4">Automated classification signal</div>
                         <div className="grid md:grid-cols-2 gap-6">
                             <div className="flex flex-col items-start">
                                 <span className="px-3 py-1.5 rounded-lg bg-blue-500/20 border border-blue-500/40 text-blue-300 text-lg font-semibold">
                                     Tier 2 — Regulated
                                 </span>
                                 <p className="text-xs text-slate-500 mt-2">
-                                    Automatically assigned by Redoubt AI based on schema and field analysis
+                                    Suggested by automated schema and field analysis; reviewer confirmation may still be required
                                 </p>
                             </div>
                             <div>
@@ -1059,10 +1059,10 @@ export default function ContributionsPage() {
                     <div className="bg-slate-900/80 border-l-4 border-cyan-500 rounded-xl p-5">
                         <div className="text-sm font-semibold text-slate-200 mb-1">Governance & Shared Responsibility</div>
                         <p className="text-xs text-slate-400 mb-4">
-                            Automatically determined based on 
-                            your organization's verified location, 
-                            dataset sensitivity, and applicable 
-                            data protection frameworks.
+                            Initial governance signal generated from
+                            your organization profile,
+                            dataset sensitivity, and configured
+                            demo policy examples.
                         </p>
                         
                         <div className="text-xs font-medium text-slate-300 mb-3">Governance Rules Applied</div>
@@ -1206,7 +1206,7 @@ export default function ContributionsPage() {
                                         </li>
                                         <li className="flex items-start gap-2">
                                             <span className="text-emerald-400">✅</span>
-                                            <span>Immutable audit trail</span>
+                                            <span>Audit visibility timeline</span>
                                         </li>
                                         <li className="flex items-start gap-2">
                                             <span className="text-emerald-400">✅</span>
@@ -2440,10 +2440,10 @@ export default function ContributionsPage() {
                                 </svg>
                             </div>
                             <div className="space-y-2">
-                                <h3 className="text-sm font-semibold text-cyan-300">Compliance Protocol & Liability Shift</h3>
+                                <h3 className="text-sm font-semibold text-cyan-300">Compliance Review Signal</h3>
                                 <div className="text-xs text-slate-400 space-y-2 font-mono">
                                     <p><span className="text-slate-500">What we are doing:</span> Our automated AI engine is actively inspecting your schema for structural integrity, PII (Personally Identifiable Information) exposure, and cross-border data residency flags.</p>
-                                    <p><span className="text-slate-500">Why we do this:</span> Redoubt operates on a zero-trust architecture. This rigorous validation protects your organization from GDPR/PDPL violations and ensures that enterprise consumers receive a clean, audit-ready data pipeline without legal liabilities.</p>
+                                    <p><span className="text-slate-500">Why we do this:</span> Redoubt uses this validation pass to surface schema, residency, and exposure issues early in the demo flow, but it does not replace provider legal review, reviewer judgment, or buyer diligence.</p>
                                 </div>
                             </div>
                         </div>

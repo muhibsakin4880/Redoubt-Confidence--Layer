@@ -1,4 +1,8 @@
 import { requestReviewStateLabel, type RequestReviewState } from '../domain/accessContract'
+import {
+    DATASET_TRUST_PROFILE_LIBRARY,
+    type DatasetTrustProfile
+} from '../domain/datasetTrustProfile'
 
 export type RequestStatus = RequestReviewState
 
@@ -15,6 +19,7 @@ export type DatasetRequest = {
     reviewerFeedback?: string
     expectedResolution?: string
     notes?: string
+    trustProfile: DatasetTrustProfile
 }
 
 export type ApprovedDataset = {
@@ -54,7 +59,8 @@ export const datasetRequests: DatasetRequest[] = [
         lastUpdated: '2026-02-12',
         category: 'Finance',
         delivery: 'S3 presigned + VPN',
-        notes: 'Approved for quantitative research workspace. Revalidation every 90 days.'
+        notes: 'Approved for quantitative research workspace. Revalidation every 90 days.',
+        trustProfile: DATASET_TRUST_PROFILE_LIBRARY.marketData
     },
     {
         id: 'cl-204',
@@ -68,7 +74,8 @@ export const datasetRequests: DatasetRequest[] = [
         delivery: 'Workspace + API key',
         reviewerFeedback: 'Reviewer requested clarification on intended downstream model outputs.',
         expectedResolution: 'Estimated by Feb 20, 2026',
-        notes: 'Awaiting policy review for regional export controls.'
+        notes: 'Awaiting policy review for regional export controls.',
+        trustProfile: DATASET_TRUST_PROFILE_LIBRARY.climateObservations
     },
     {
         id: 'nlp-118',
@@ -82,7 +89,8 @@ export const datasetRequests: DatasetRequest[] = [
         delivery: 'API (awaiting approval)',
         reviewerFeedback: 'Pending additional data retention and moderation compliance confirmation.',
         expectedResolution: 'Estimated by Feb 22, 2026',
-        notes: 'External reviewer assigned for policy check.'
+        notes: 'External reviewer assigned for policy check.',
+        trustProfile: DATASET_TRUST_PROFILE_LIBRARY.retailPanel
     },
     {
         id: 'med-441',
@@ -95,7 +103,8 @@ export const datasetRequests: DatasetRequest[] = [
         category: 'Healthcare',
         delivery: 'Secure enclave (declined)',
         reviewerFeedback: 'Rejected due to incomplete ethics approval and missing institutional review documentation.',
-        notes: 'Resubmission allowed after full IRB package is attached.'
+        notes: 'Resubmission allowed after full IRB package is attached.',
+        trustProfile: DATASET_TRUST_PROFILE_LIBRARY.clinicalResearch
     },
     {
         id: 'urb-147',
@@ -107,7 +116,8 @@ export const datasetRequests: DatasetRequest[] = [
         lastUpdated: '2026-02-09',
         category: 'Smart Cities',
         delivery: 'Streaming websocket + workspace',
-        notes: 'Approved with streaming quota and audit logging enabled.'
+        notes: 'Approved with streaming quota and audit logging enabled.',
+        trustProfile: DATASET_TRUST_PROFILE_LIBRARY.mobilityTelemetry
     }
 ]
 
@@ -166,7 +176,7 @@ export const participantTrust = {
     scoreDelta: 6,
     scoreDeltaLabel: '+6 since the last attestation cycle',
     misusePenalty: 12,
-    level: 'Verified Participant',
+    level: 'Reviewed Participant',
     misuseWarning: 'Misuse flagged: export attempt outside approved scope',
     factors: [
         { label: 'Approved dataset participation', value: 90 },
@@ -245,21 +255,21 @@ export const getParticipantNetTrustScore = (trust = participantTrust) => Math.ma
 export const trustLevel = (score: number) => {
     if (score >= 95) {
         return {
-            label: 'High Confidence Participant',
+            label: 'High-Confidence Participant',
             classes: 'bg-emerald-500/15 border-emerald-400 text-emerald-200',
             toneClassName: 'text-emerald-300'
         }
     }
     if (score >= 90) {
         return {
-            label: 'Verified Participant',
+            label: 'Reviewed Participant',
             classes: 'bg-green-500/15 border-green-400 text-green-200',
             toneClassName: 'text-green-300'
         }
     }
     if (score >= 80) {
         return {
-            label: 'Trusted Participant',
+            label: 'Established Participant',
             classes: 'bg-cyan-500/15 border-cyan-400 text-cyan-200',
             toneClassName: 'text-cyan-300'
         }

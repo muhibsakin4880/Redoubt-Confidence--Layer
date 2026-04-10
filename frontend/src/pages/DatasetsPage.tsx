@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useState, type ReactNode, type SVGProps } from 'react'
 import { Link } from 'react-router-dom'
-import { DATASET_DISCOVERY_SUMMARIES } from '../data/datasetCatalogData'
+import {
+    DATASET_DISCOVERY_SUMMARIES,
+    type AccessType,
+    type DatasetDiscoverySummary,
+    type VerificationStatus
+} from '../data/datasetCatalogData'
 import {
     dashboardColorTokens,
     dashboardComponentTokens
@@ -12,35 +17,9 @@ import {
     readOnboardingValue
 } from '../onboarding/storage'
 
-type VerificationStatus = 'Verified' | 'Under Review'
-type AccessType = 'Restricted' | 'Approved access required'
 type SortOption = 'best-match' | 'highest-confidence' | 'highest-provider-trust' | 'most-recent'
 type SignalTone = 'healthy' | 'monitoring' | 'scheduled'
-
-type Dataset = {
-    id: number
-    title: string
-    timeRange: string
-    description: string
-    bestFor: string
-    domain: string
-    dataType: string
-    geography: string
-    confidenceScore: number
-    providerTrustScore: number
-    verificationStatus: VerificationStatus
-    lastUpdated: string
-    size: string
-    coverage: string
-    completeness: number
-    freshness: number
-    consistency: number
-    accessType: AccessType
-    sampleSchema: { field: string; type: string }[]
-    confidenceSummary: string
-    contributorTrust: string
-    contributionHistory: string
-}
+type Dataset = DatasetDiscoverySummary
 
 type FilterState = {
     searchTerm: string
@@ -124,14 +103,14 @@ const defaultRailSections: RailSectionState = {
 const sortOptions: Array<{ value: SortOption; label: string }> = [
     { value: 'best-match', label: 'Best match' },
     { value: 'highest-confidence', label: 'Highest confidence' },
-    { value: 'highest-provider-trust', label: 'Highest provider trust' },
+    { value: 'highest-provider-trust', label: 'Highest provider review signal' },
     { value: 'most-recent', label: 'Most recent' }
 ]
 
 const domains = ['All', ...new Set(DATASETS.map(dataset => dataset.domain))]
 const dataTypes = ['All', ...new Set(DATASETS.map(dataset => dataset.dataType))]
 const geographies = ['All', ...new Set(DATASETS.map(dataset => dataset.geography))]
-const verificationStates: FilterState['verificationStatus'][] = ['All', 'Verified', 'Under Review']
+const verificationStates: FilterState['verificationStatus'][] = ['All', 'Attested', 'Under Review']
 const freshnessBuckets = ['All', 'Real-time / <1h', 'Daily', 'Weekly']
 const minConfidenceOptions = [0, 85, 90, 95]
 
@@ -252,7 +231,7 @@ export default function DatasetsPage() {
     const firstShortlistedDataset = shortlistDatasets[0] ?? null
     const compareLimitReached = compareIds.length >= MAX_COMPARE_ITEMS
     const activeFilters = buildActiveFilters(filters)
-    const verifiedCount = DATASETS.filter(dataset => dataset.verificationStatus === 'Verified').length
+    const attestedCount = DATASETS.filter(dataset => dataset.verificationStatus === 'Attested').length
     const highConfidenceCount = DATASETS.filter(dataset => dataset.confidenceScore >= 92).length
     const domainCoverageCount = new Set(DATASETS.map(dataset => dataset.domain)).size
     const restrictedCount = DATASETS.filter(dataset => dataset.accessType === 'Restricted').length
@@ -295,7 +274,7 @@ export default function DatasetsPage() {
         })
     }
 
-    const verifiedShortlistCount = shortlistDatasets.filter(dataset => dataset.verificationStatus === 'Verified').length
+    const attestedShortlistCount = shortlistDatasets.filter(dataset => dataset.verificationStatus === 'Attested').length
     const shortlistAverageConfidence =
         shortlistDatasets.length > 0
             ? `${Math.round(shortlistDatasets.reduce((sum, dataset) => sum + dataset.confidenceScore, 0) / shortlistDatasets.length)}%`
@@ -323,7 +302,7 @@ export default function DatasetsPage() {
                                 </p>
 
                                 <div className="mt-7 flex flex-wrap gap-3.5">
-                                    <HeroMetricChip label="Verified datasets" value={`${verifiedCount}`} />
+                                    <HeroMetricChip label="Attested datasets" value={`${attestedCount}`} />
                                     <HeroMetricChip label="High confidence" value={`${highConfidenceCount}`} />
                                     <HeroMetricChip label="Domains covered" value={`${domainCoverageCount}`} />
                                     <HeroMetricChip label="Restricted access" value={`${restrictedCount}`} />
@@ -581,7 +560,7 @@ export default function DatasetsPage() {
 
                                                 <div className="mt-5 grid gap-3 sm:grid-cols-2">
                                                     <CompactSignal label="Confidence" value={`${dataset.confidenceScore}%`} />
-                                                    <CompactSignal label="Trust" value={`${dataset.providerTrustScore}%`} />
+                                                    <CompactSignal label="Review signal" value={`${dataset.providerTrustScore}%`} />
                                                 </div>
 
                                                 <div className="mt-5 flex flex-wrap gap-3">
@@ -609,7 +588,7 @@ export default function DatasetsPage() {
                             ) : (
                                 <EmptyRailState
                                     title="No shortlisted datasets yet"
-                                    detail="Start with verified, high-confidence candidates and use shortlist to keep the strongest options together."
+                                    detail="Start with attested, high-confidence candidates and use shortlist to keep the strongest options together."
                                     actionLabel="Open guided tour"
                                     actionTo="/guided-tour"
                                 />
@@ -703,7 +682,7 @@ export default function DatasetsPage() {
 
                             <div className="mt-5 grid gap-3 sm:grid-cols-3">
                                 <CompactDecisionStat label="Shortlist" value={`${shortlistDatasets.length}`} />
-                                <CompactDecisionStat label="Verified" value={`${verifiedShortlistCount}`} />
+                                <CompactDecisionStat label="Attested" value={`${attestedShortlistCount}`} />
                                 <CompactDecisionStat label="Average confidence" value={shortlistAverageConfidence} />
                             </div>
 
@@ -847,7 +826,7 @@ function DatasetDecisionCard({
 
             <div className="mt-7 grid gap-4 sm:grid-cols-2">
                 <SignalCard label="Confidence score" value={`${dataset.confidenceScore}%`} detail={dataset.coverage} tone={confidenceTone} />
-                <SignalCard label="Provider trust" value={`${dataset.providerTrustScore}%`} detail={dataset.contributionHistory} tone={providerTone} />
+                <SignalCard label="Provider review signal" value={`${dataset.providerTrustScore}%`} detail={dataset.contributionHistory} tone={providerTone} />
             </div>
 
             <div className="mt-5 flex flex-wrap gap-2.5">
@@ -1216,7 +1195,7 @@ function DatasetCatalogRow({
 
                         <DetailPanel title="Trust and provenance">
                             <DetailPair label="Confidence summary" value={dataset.confidenceSummary} />
-                            <DetailPair label="Contributor trust" value={dataset.contributorTrust} />
+                            <DetailPair label="Contributor review signal" value={dataset.contributorTrust} />
                             <DetailPair label="Contribution history" value={dataset.contributionHistory} />
                         </DetailPanel>
 
@@ -1352,7 +1331,7 @@ function CompactDecisionStat({ label, value }: { label: string; value: string })
 function CompareTable({ datasets, buyerOrgCountry }: { datasets: Dataset[]; buyerOrgCountry: string }) {
     const attributes = [
         { label: 'Confidence', getValue: (dataset: Dataset) => `${dataset.confidenceScore}%` },
-        { label: 'Provider trust', getValue: (dataset: Dataset) => `${dataset.providerTrustScore}%` },
+        { label: 'Provider review signal', getValue: (dataset: Dataset) => `${dataset.providerTrustScore}%` },
         { label: 'Freshness bucket', getValue: (dataset: Dataset) => bucketFreshness(dataset.freshness) },
         { label: 'Verification', getValue: (dataset: Dataset) => dataset.verificationStatus },
         { label: 'Access path', getValue: (dataset: Dataset) => dataset.accessType },
@@ -1481,7 +1460,7 @@ function sortDatasetResults(left: Dataset, right: Dataset, sortOption: SortOptio
 }
 
 function getBestMatchScore(dataset: Dataset) {
-    const verificationWeight = dataset.verificationStatus === 'Verified' ? 7 : 0
+    const verificationWeight = dataset.verificationStatus === 'Attested' ? 7 : 0
     const accessWeight = dataset.accessType === 'Approved access required' ? 4 : 1
     const freshnessWeight = dataset.freshness >= 93 ? 5 : dataset.freshness >= 88 ? 3 : 1
 
@@ -1619,7 +1598,7 @@ function getMetricValueTone(score: number) {
 
 function getStatusBadgeMeta(label: string, kind: 'verification' | 'access') {
     if (kind === 'verification') {
-        if (label === 'Verified') {
+        if (label === 'Attested') {
             return {
                 className: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-100',
                 dotClassName: 'bg-emerald-300'

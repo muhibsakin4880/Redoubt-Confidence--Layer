@@ -53,7 +53,7 @@ const buildDatasetSystemPrompt = (dataset: DatasetDetail) => {
         `Completeness: ${dataset.quality.completeness}%`,
         `Freshness: ${dataset.quality.freshnessScore}%`,
         `Consistency: ${dataset.quality.consistency}%`,
-        `Validation status: ${dataset.validationStatus}`,
+        `Validation status: ${dataset.quality.validationStatus}`,
         `Allowed usage: ${allowedUsage}`,
         `Usage limits: ${limits}`,
         `Schema preview: ${schemaPreview}`

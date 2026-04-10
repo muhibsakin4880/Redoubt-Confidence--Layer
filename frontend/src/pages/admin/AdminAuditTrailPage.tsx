@@ -4,7 +4,7 @@ import AdminLayout from '../../components/admin/AdminLayout'
 import { adminVisibilityBoundaries, evidenceEvents, evidencePacks, type EvidenceEventStatus, type EvidencePackStatus } from '../../data/adminEvidenceData'
 
 const statusTone: Record<EvidenceEventStatus, string> = {
-    Verified: 'text-emerald-200 bg-emerald-500/10 border-emerald-500/30',
+    Reviewed: 'text-emerald-200 bg-emerald-500/10 border-emerald-500/30',
     Review: 'text-amber-200 bg-amber-500/10 border-amber-500/30',
     Exception: 'text-red-200 bg-red-500/10 border-red-500/30'
 }
@@ -23,7 +23,7 @@ export default function AdminAuditTrailPage() {
         return evidenceEvents.filter((event) => event.status === selectedStatus)
     }, [selectedStatus])
 
-    const verifiedCount = evidenceEvents.filter((event) => event.status === 'Verified').length
+    const reviewedCount = evidenceEvents.filter((event) => event.status === 'Reviewed').length
     const reviewCount = evidenceEvents.filter((event) => event.status === 'Review').length
     const exceptionCount = evidenceEvents.filter((event) => event.status === 'Exception').length
 
@@ -34,8 +34,8 @@ export default function AdminAuditTrailPage() {
             detail: 'Cross-linked review, incident, and approval events held in the admin evidence ledger.'
         },
         {
-            label: 'Verified Events',
-            value: verifiedCount.toString(),
+            label: 'Reviewed Events',
+            value: reviewedCount.toString(),
             detail: 'Events ready to support approval, incident closure, or broader evidence review conversations.'
         },
         {
@@ -73,7 +73,7 @@ export default function AdminAuditTrailPage() {
                                 </p>
                             </div>
                             <div className="flex flex-wrap gap-2">
-                                {(['All', 'Verified', 'Review', 'Exception'] as const).map((status) => (
+                                {(['All', 'Reviewed', 'Review', 'Exception'] as const).map((status) => (
                                     <button
                                         key={status}
                                         onClick={() => setSelectedStatus(status)}

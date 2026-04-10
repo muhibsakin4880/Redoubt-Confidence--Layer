@@ -3,12 +3,12 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
 const factorTooltips: Record<string, string> = {
-    'Approved dataset participation': 'Based on number of successfully approved dataset access requests',
-    'Positive feedback history': 'Ratings received from providers after dataset access',
-    'Compliance adherence': 'Based on DUA acknowledgments and zero policy violations',
-    'Responsible data usage': 'No misuse flags or policy violations detected',
-    'Dataset contribution quality': 'Average confidence score of your contributed datasets',
-    'Dispute / misuse penalties': 'Deductions from disputes raised against your account'
+    'Approved dataset participation': 'Based on mock approved access history, not on legal fitness certification.',
+    'Positive feedback history': 'Ratings and reviewer sentiment shown in the demo provider feedback history.',
+    'Compliance adherence': 'Based on declared acknowledgments and mock review activity captured on the platform.',
+    'Responsible data usage': 'No unresolved misuse or policy-review flags are shown in the current demo record.',
+    'Dataset contribution quality': 'Average quality signal attached to contributed datasets in the demo workspace.',
+    'Dispute / misuse penalties': 'Deductions based on disputes or misuse reviews shown in the demo record.'
 }
 
 export default function TrustProfilePage() {
@@ -106,7 +106,7 @@ export default function TrustProfilePage() {
                                 <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
                                     <div className="h-full bg-emerald-500 rounded-full" style={{ width: '100%' }} />
                                 </div>
-                                <div className="text-xs text-slate-500 mt-1">Clean record ✓</div>
+                                <div className="text-xs text-slate-500 mt-1">No penalties recorded yet</div>
                             </div>
                         </div>
                     </div>
@@ -199,7 +199,10 @@ export default function TrustProfilePage() {
                                         <div className="text-xs text-slate-400">Warning shown on participant profile.</div>
                                     </div>
                                 )
-                                : 'No misuse penalties applied.'}
+                                : 'No unresolved misuse penalties are shown in this demo record.'}
+                        </div>
+                        <div className="rounded-lg border border-amber-400/20 bg-amber-500/8 px-3 py-2 text-xs text-amber-100/90">
+                            Trust scores are demo readiness signals. They do not certify lawful basis, ownership, or regulatory approval.
                         </div>
                         <Link
                             to="/trust-score-history"

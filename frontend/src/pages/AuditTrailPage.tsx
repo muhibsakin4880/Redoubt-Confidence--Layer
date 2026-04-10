@@ -43,6 +43,8 @@ export default function AuditTrailPage() {
     const [selectedType, setSelectedType] = useState('All Event Types')
     const [selectedRange, setSelectedRange] = useState('All Time')
     const [search, setSearch] = useState('')
+    const flaggedEventCount = auditRows.filter(row => row.status !== 'CLEARED' || !row.verified).length
+    const auditNeedsReview = flaggedEventCount > 0
 
     const filteredRows = useMemo(() => {
         return auditRows.filter(row => {
@@ -59,30 +61,54 @@ export default function AuditTrailPage() {
                 <header className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                     <div>
                         <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
-                            Immutable Audit Trail
+                            Audit Visibility Timeline
                         </div>
-                        <h1 className="mt-4 text-4xl font-bold tracking-tight text-white sm:text-5xl">Immutable Audit Trail</h1>
+                        <h1 className="mt-4 text-4xl font-bold tracking-tight text-white sm:text-5xl">Audit Visibility Timeline</h1>
                         <p className="mt-2 text-slate-400">
-                            Append-only access logs with integrity verification and SIEM export
+                            Review-oriented access logs with export cues and follow-up signals
                         </p>
                     </div>
-                    <div className="rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200 shadow-[0_0_20px_rgba(16,185,129,0.18)]">
-                        Hash-chained, tamper-evident ledger
+                    <div className={`rounded-2xl border px-4 py-3 text-sm shadow-[0_0_20px_rgba(16,185,129,0.18)] ${
+                        auditNeedsReview
+                            ? 'border-amber-400/30 bg-amber-500/10 text-amber-100'
+                            : 'border-emerald-400/30 bg-emerald-500/10 text-emerald-200'
+                    }`}>
+                        {auditNeedsReview ? 'Reviewer confirmation required' : 'Review-oriented audit visibility'}
                     </div>
                 </header>
 
                 <section className="mt-10">
-                    <div className="relative overflow-hidden rounded-2xl border border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 via-emerald-500/8 to-emerald-400/10 px-6 py-4 shadow-[0_0_30px_rgba(16,185,129,0.18)]">
-                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_10%_50%,rgba(16,185,129,0.25),transparent_35%)]" />
+                    <div className={`relative overflow-hidden rounded-2xl border px-6 py-4 shadow-[0_0_30px_rgba(16,185,129,0.18)] ${
+                        auditNeedsReview
+                            ? 'border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-amber-500/8 to-amber-400/10'
+                            : 'border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 via-emerald-500/8 to-emerald-400/10'
+                    }`}>
+                        <div className={`absolute inset-0 ${
+                            auditNeedsReview
+                                ? 'bg-[radial-gradient(circle_at_10%_50%,rgba(245,158,11,0.18),transparent_35%)]'
+                                : 'bg-[radial-gradient(circle_at_10%_50%,rgba(16,185,129,0.25),transparent_35%)]'
+                        }`} />
                         <div className="relative flex items-center justify-between gap-4 flex-wrap">
                             <div className="flex items-center gap-3">
-                                <span className="h-3 w-3 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.9)]" />
+                                <span className={`h-3 w-3 rounded-full animate-pulse ${
+                                    auditNeedsReview
+                                        ? 'bg-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.9)]'
+                                        : 'bg-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.9)]'
+                                }`} />
                                 <div>
-                                    <p className="text-base font-semibold text-emerald-200">Audit log integrity verified — Hash chain intact</p>
-                                    <p className="text-xs text-emerald-100/70">Continuous hashing & proof of append-only writes</p>
+                                    <p className={`text-base font-semibold ${auditNeedsReview ? 'text-amber-100' : 'text-emerald-200'}`}>
+                                        {auditNeedsReview ? 'Reviewer confirmation required' : 'Audit visibility looks current'}
+                                    </p>
+                                    <p className={`text-xs ${auditNeedsReview ? 'text-amber-100/70' : 'text-emerald-100/70'}`}>
+                                        {auditNeedsReview
+                                            ? `${flaggedEventCount} event(s) need follow-up before this demo log should be treated as complete.`
+                                            : 'No flagged rows are shown in the current mock sample.'}
+                                    </p>
                                 </div>
                             </div>
-                            <div className="text-xs font-medium text-emerald-100/70">14,847 events logged to date</div>
+                            <div className={`text-xs font-medium ${auditNeedsReview ? 'text-amber-100/70' : 'text-emerald-100/70'}`}>
+                                14,847 events logged to date
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -220,7 +246,7 @@ export default function AuditTrailPage() {
                         <button className="rounded-lg bg-blue-600 hover:bg-blue-500 px-4 py-2 text-sm font-semibold text-white shadow-[0_10px_25px_rgba(59,130,246,0.25)]">Push to SIEM (Splunk / QRadar)</button>
                         <button className="rounded-lg border border-white/20 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10">Download CSV</button>
                     </div>
-                    <p className="text-xs text-slate-500">Logs are append-only and tamper-evident</p>
+                    <p className="text-xs text-slate-500">Logs are shown as append-style demo history for review and export.</p>
                 </section>
             </div>
         </div>
