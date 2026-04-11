@@ -1,6 +1,7 @@
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
 import DatasetUnavailableState from '../components/DatasetUnavailableState'
+import { ResponsibilityNotice, RiskLabelStrip, TrustComplianceSummary } from '../components/trust/TrustLayer'
 import { DATASET_DETAILS, RequestStatus, confidenceLevel, decisionLabel, getDatasetDetailById } from '../data/datasetDetailData'
 import { getAccessPackageForDataset } from '../data/datasetAccessPackageData'
 import { requestReviewStateLabel, type ContractLifecycleState } from '../domain/accessContract'
@@ -26,6 +27,12 @@ import {
 } from '../domain/compliancePassport'
 import { buildDealProgressModel } from '../domain/dealProgress'
 import { getOutcomeEvaluationFee, loadEscrowCheckouts } from '../domain/escrowCheckout'
+import {
+    getDatasetTrustRiskLabels,
+    getDatasetTrustSummaryRows,
+    getMinimumTrustClarificationState,
+    trustSignalStateLabel
+} from '../domain/datasetTrustProfile'
 import {
     buildRightsQuote,
     buildRequestPrefillFromQuote,
@@ -191,6 +198,23 @@ export default function DatasetDetailPage() {
         accessPackage.accessMethod.buyerSummary,
         accessPackage.deliveryDetail.buyerSummary
     ].filter(Boolean).join(' ')
+    const minimumTrustState = getMinimumTrustClarificationState(dataset.trustProfile)
+    const minimumTrustNeedsReview = minimumTrustState !== 'documented'
+    const trustRiskLabels = getDatasetTrustRiskLabels(dataset.trustProfile)
+    const trustSummaryRows = getDatasetTrustSummaryRows(dataset.trustProfile)
+    const requestEntryLabel = minimumTrustNeedsReview ? 'Request Review' : 'Request Access'
+    const requestSubmitLabel = minimumTrustNeedsReview ? 'Submit review request' : 'Submit secure request'
+    const requestSectionDescription = minimumTrustNeedsReview
+        ? 'Request review with intended use. One or more minimum trust fields still need provider or reviewer confirmation before live access.'
+        : 'Request access with context on intended use. We scope delivery, controls, and data handling together - no open marketplace listing.'
+    const requestModalDescription = minimumTrustNeedsReview
+        ? `${trustSignalStateLabel(minimumTrustState)} on minimum trust fields. Share intended use so the provider and review team can confirm the packet.`
+        : 'Share intended use to route approval. Provider identity remains private.'
+    const trustSummaryBadgeClass = minimumTrustNeedsReview
+        ? minimumTrustState === 'reviewer_confirmation'
+            ? 'border-rose-400/30 bg-rose-500/12 text-rose-100'
+            : 'border-amber-400/30 bg-amber-500/12 text-amber-100'
+        : 'border-cyan-400/25 bg-cyan-500/10 text-cyan-100'
 
     if (!routeDataset) {
         return (
@@ -557,6 +581,29 @@ export default function DatasetDetailPage() {
                     <div className="flex flex-col lg:flex-row gap-10">
                         {/* Left Column - Access Info, Request Status, Provider Transparency */}
                         <div className="lg:w-2/3 space-y-8">
+                            <section className="rounded-2xl border border-slate-700 bg-slate-950/45 p-6">
+                                <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                                    <div>
+                                        <div className="text-[11px] uppercase tracking-[0.18em] text-cyan-200/80">Minimum trust layer</div>
+                                        <h3 className="mt-2 text-xl font-semibold text-white">Trust & Compliance Summary</h3>
+                                        <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-300">
+                                            Review the minimum trust context before asking the provider to evaluate access. This keeps rights, basis, re-identification,
+                                            and audit expectations visible at the point of request.
+                                        </p>
+                                    </div>
+                                    <span className={`rounded-full border px-3 py-1.5 text-[11px] font-semibold ${trustSummaryBadgeClass}`}>
+                                        {minimumTrustNeedsReview ? trustSignalStateLabel(minimumTrustState) : 'Documented in demo'}
+                                    </span>
+                                </div>
+
+                                <RiskLabelStrip items={trustRiskLabels} className="mt-5" />
+                                <TrustComplianceSummary rows={trustSummaryRows} className="mt-5" />
+                                <ResponsibilityNotice
+                                    className="mt-5"
+                                    message="This is a demo review signal, not legal approval."
+                                />
+                            </section>
+
                             <div>
                                 <div className="flex items-center gap-3 mb-3">
                                     <h3 className="text-xl font-semibold">Access</h3>
@@ -565,7 +612,7 @@ export default function DatasetDetailPage() {
                                     </span>
                                 </div>
                                 <p className="text-slate-300 max-w-2xl mb-4">
-                                    Request access with context on intended use. We scope delivery, controls, and data handling together - no open marketplace listing.
+                                    {requestSectionDescription}
                                 </p>
                                 <ul className="text-slate-400 text-sm space-y-2 list-disc list-inside">
                                     {dataset.accessNotes.map(note => (
@@ -575,9 +622,13 @@ export default function DatasetDetailPage() {
                                 <div className="mt-5 flex flex-wrap gap-3">
                                     <button
                                         onClick={openRequestModal}
-                                        className="rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700"
+                                        className={`rounded-xl px-4 py-3 text-sm font-semibold ${
+                                            minimumTrustNeedsReview
+                                                ? 'border border-amber-400/40 bg-amber-500/15 text-amber-100 hover:bg-amber-500/20'
+                                                : 'bg-blue-600 text-white hover:bg-blue-700'
+                                        }`}
                                     >
-                                        Request Access
+                                        {requestEntryLabel}
                                     </button>
                                     <Link
                                         to={`/datasets/${dataset.id}/rights-quote`}
@@ -592,6 +643,18 @@ export default function DatasetDetailPage() {
                                     >
                                         Escrow-Native Checkout
                                     </Link>
+                                </div>
+
+                                <div
+                                    className={`mt-4 rounded-xl border px-4 py-3 text-xs ${
+                                        minimumTrustNeedsReview
+                                            ? 'border-amber-400/25 bg-amber-500/8 text-amber-100'
+                                            : 'border-cyan-400/20 bg-cyan-500/8 text-cyan-100'
+                                    }`}
+                                >
+                                    {minimumTrustNeedsReview
+                                        ? `${trustSignalStateLabel(minimumTrustState)} before live access can be approved. The request stays open, but it routes to review-first handling.`
+                                        : 'Minimum trust fields are documented in the current demo packet, but access still follows provider review and configured controls.'}
                                 </div>
 
                                 <div className="mt-7 grid gap-4 xl:grid-cols-2">
@@ -712,6 +775,9 @@ export default function DatasetDetailPage() {
                                     </span>
                                 </div>
                                 <p className="mt-3 text-xs text-slate-300">{passportStatus.detail}</p>
+                                <p className="mt-3 text-[11px] leading-5 text-slate-400">
+                                    Passport reuse organizes declared review context. It does not grant access or legal approval.
+                                </p>
                                 <div className="mt-4 flex flex-wrap gap-2">
                                     <button
                                         onClick={() => {
@@ -784,6 +850,9 @@ export default function DatasetDetailPage() {
                                             >
                                                 Refine Terms
                                             </Link>
+                                        </div>
+                                        <div className="mt-4 text-[11px] leading-5 text-slate-500">
+                                            Quote terms describe licensed use in this demo. They do not prove ownership, lawful basis, or chain-of-title.
                                         </div>
                                     </>
                                 ) : (
@@ -993,9 +1062,9 @@ export default function DatasetDetailPage() {
                     <div className="relative w-full max-w-lg bg-slate-900 border border-slate-700 rounded-2xl p-6 shadow-2xl">
                         <div className="flex items-center justify-between mb-4">
                             <div>
-                                <h3 className="text-xl font-semibold text-white">Request Access</h3>
+                                <h3 className="text-xl font-semibold text-white">{requestEntryLabel}</h3>
                                 <p className="text-slate-400 text-sm">
-                                    Share intended use to route approval. Provider identity remains private.
+                                    {requestModalDescription}
                                 </p>
                             </div>
                             <button
@@ -1006,6 +1075,15 @@ export default function DatasetDetailPage() {
                                 X
                             </button>
                         </div>
+
+                        {minimumTrustNeedsReview && (
+                            <div className="mb-4 rounded-xl border border-amber-400/25 bg-amber-500/8 px-4 py-3 text-sm text-amber-100">
+                                <div className="font-semibold">{trustSignalStateLabel(minimumTrustState)}</div>
+                                <div className="mt-1 text-amber-50/85">
+                                    This request will route provider and reviewer checks before any live dataset access can be approved.
+                                </div>
+                            </div>
+                        )}
 
                         <div className="mb-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4">
                             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -1115,7 +1193,7 @@ export default function DatasetDetailPage() {
                                 onClick={handleSubmitRequest}
                                 disabled={!complianceChecked || !intendedUsage}
                             >
-                                Submit secure request
+                                {requestSubmitLabel}
                             </button>
                         </div>
                     </div>

@@ -1,5 +1,6 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import { ResponsibilityNotice } from '../components/trust/TrustLayer'
 import DatasetUnavailableState from '../components/DatasetUnavailableState'
 import DealProgressTracker from '../components/DealProgressTracker'
 import { DATASET_DETAILS, getDatasetDetailById } from '../data/datasetDetailData'
@@ -8,6 +9,7 @@ import { buildDealProgressModel } from '../domain/dealProgress'
 import { loadEscrowCheckoutByQuoteId } from '../domain/escrowCheckout'
 import {
     buildRightsQuote,
+    buildRightsUsageGuidance,
     deliveryModeOptions,
     durationOptions,
     exclusivityOptions,
@@ -206,6 +208,7 @@ export default function RightsQuoteBuilderPage() {
     const statusMeta = passportStatusMeta(passport.status)
 
     const quote = useMemo(() => buildRightsQuote(dataset, form, passport), [dataset, form, passport, quoteVersion])
+    const usageGuidance = useMemo(() => buildRightsUsageGuidance(dataset, quote), [dataset, quote])
     const savedQuotes = useMemo(() => loadRightsQuotes(dataset.id), [dataset.id, quoteVersion])
     const persistedCheckout = useMemo(() => loadEscrowCheckoutByQuoteId(quote.id), [quote.id, quoteVersion])
     const dealProgress = useMemo(
@@ -293,7 +296,10 @@ export default function RightsQuoteBuilderPage() {
                                 <div>
                                     <h2 className="text-lg font-semibold text-white">Reusable compliance passport applied</h2>
                                     <p className="mt-1 text-sm text-slate-200/80">
-                                        Pricing and reviewer readiness reflect your existing identity, legal, and verification state.
+                                        Pricing and reviewer readiness reflect reusable identity, legal, and verification context from your passport.
+                                    </p>
+                                    <p className="mt-3 text-xs leading-5 text-cyan-50/75">
+                                        Passport reuse helps organize review context in this demo. It does not grant legal approval or guaranteed access.
                                     </p>
                                 </div>
                                 <Link
@@ -464,7 +470,7 @@ export default function RightsQuoteBuilderPage() {
                             </div>
 
                             <div className="mt-5 rounded-2xl border border-white/8 bg-slate-950/45 p-4">
-                                <div className="text-xs uppercase tracking-[0.14em] text-slate-500">Rights Summary</div>
+                                <div className="text-xs uppercase tracking-[0.14em] text-slate-500">Usage rights summary</div>
                                 <div className="mt-3 flex flex-wrap gap-2">
                                     {quote.rightsSummary.map(item => (
                                         <span key={item} className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-200">
@@ -472,7 +478,31 @@ export default function RightsQuoteBuilderPage() {
                                         </span>
                                     ))}
                                 </div>
+                                <ul className="mt-4 space-y-2 text-sm leading-6 text-slate-300">
+                                    {usageGuidance.usageRightsSummary.map(item => (
+                                        <li key={item} className="rounded-xl border border-white/6 bg-slate-900/60 px-3 py-2.5">
+                                            {item}
+                                        </li>
+                                    ))}
+                                </ul>
                             </div>
+
+                            <div className="mt-4 rounded-2xl border border-rose-500/20 bg-rose-500/8 p-4">
+                                <div className="text-xs uppercase tracking-[0.14em] text-slate-500">Prohibited use</div>
+                                <ul className="mt-4 space-y-2 text-sm leading-6 text-slate-200">
+                                    {usageGuidance.prohibitedUses.map(item => (
+                                        <li key={item} className="rounded-xl border border-rose-500/15 bg-slate-950/45 px-3 py-2.5">
+                                            {item}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+
+                            <ResponsibilityNotice
+                                className="mt-4"
+                                title="Licensed use only"
+                                message="Quote terms describe licensed use and delivery scope in this demo. They do not prove ownership, lawful basis, or chain-of-title."
+                            />
 
                             <div className="mt-5 space-y-3">
                                 {quote.breakdown.map(line => (

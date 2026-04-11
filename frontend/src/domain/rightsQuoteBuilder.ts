@@ -55,6 +55,11 @@ export type RightsQuoteRequestPrefill = CompliancePassportRequestPrefill & {
     quoteSummary: string
 }
 
+export type RightsUsageGuidance = {
+    usageRightsSummary: string[]
+    prohibitedUses: string[]
+}
+
 const RIGHTS_QUOTE_STORAGE_KEY = 'Redoubt:rightsQuotes'
 
 const deliveryMeta: Record<QuoteDeliveryMode, { label: string; multiplier: number; detail: string }> = {
@@ -306,6 +311,38 @@ export const buildRightsQuote = (
     quote.checkoutNotes = buildCheckoutNotes(quote)
 
     return quote
+}
+
+export const buildRightsUsageGuidance = (dataset: DatasetDetail, quote: RightsQuote): RightsUsageGuidance => {
+    const usageRightsSummary = [
+        `${usageMeta[quote.input.usageRight].label}: ${usageMeta[quote.input.usageRight].detail}`,
+        `${deliveryMeta[quote.input.deliveryMode].label}: ${deliveryMeta[quote.input.deliveryMode].detail}`,
+        `${fieldPackMeta[quote.input.fieldPack].label}: ${fieldPackMeta[quote.input.fieldPack].detail}`,
+        `Purpose limitation: ${dataset.trustProfile.purposeLimitation.value}`,
+        `Ownership and license cue: ${dataset.trustProfile.ownershipAndLicense.value}`
+    ]
+
+    const prohibitedUses = [
+        `Use outside the stated purpose limitation: ${dataset.trustProfile.purposeLimitation.value}`,
+        quote.input.redistributionRights === 'not_allowed'
+            ? 'Redistribution, resale, or third-party sharing is not included in these terms.'
+            : null,
+        quote.input.attributionRequirement === 'required'
+            ? 'Removing required attribution from permitted downstream outputs.'
+            : null,
+        quote.input.geography !== 'global'
+            ? `Use outside the licensed ${geographyMeta[quote.input.geography].label.toLowerCase()} scope.`
+            : null,
+        dataset.trustProfile.reidentificationRisk.value.toLowerCase().includes('low re-identification risk')
+            ? null
+            : 'Attempts to re-identify people, households, cohorts, or sensitive units from outputs.',
+        'Treating quote terms as proof of ownership, lawful basis, or chain-of-title.'
+    ].filter((item): item is string => Boolean(item))
+
+    return {
+        usageRightsSummary,
+        prohibitedUses
+    }
 }
 
 export const saveRightsQuote = (quote: RightsQuote) => {

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode, type SVGProps } from 'react'
 import { Link } from 'react-router-dom'
+import { RiskLabelStrip } from '../components/trust/TrustLayer'
 import {
     DATASET_DISCOVERY_SUMMARIES,
     type AccessType,
@@ -11,6 +12,7 @@ import {
     dashboardComponentTokens
 } from '../dashboardTokens'
 import { getDatasetGeoAccessSignal } from '../domain/datasetGeoAccess'
+import { getDatasetTrustRiskLabels } from '../domain/datasetTrustProfile'
 import {
     emptyStep1FormState,
     onboardingStorageKeys,
@@ -532,6 +534,7 @@ export default function DatasetsPage() {
                                 <div className="space-y-4">
                                     {shortlistDatasets.map(dataset => {
                                         const geoAccessSignal = getDatasetGeoAccessSignal(dataset.id, buyerOrgCountry)
+                                        const trustRiskLabels = getDatasetTrustRiskLabels(dataset.trustProfile)
 
                                         return (
                                             <div key={dataset.id} className={`${subCardSurfaceClass} px-5 py-5`}>
@@ -557,6 +560,11 @@ export default function DatasetsPage() {
                                                 </div>
 
                                                 <p className="mt-3 text-xs leading-5 text-slate-400">{geoAccessSignal.detail}</p>
+
+                                                <div className="mt-4">
+                                                    <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Minimum trust layer</div>
+                                                    <RiskLabelStrip items={trustRiskLabels} compact className="mt-3" />
+                                                </div>
 
                                                 <div className="mt-5 grid gap-3 sm:grid-cols-2">
                                                     <CompactSignal label="Confidence" value={`${dataset.confidenceScore}%`} />
@@ -806,6 +814,7 @@ function DatasetDecisionCard({
     const freshnessTone = dataset.freshness >= 93 ? 'healthy' : dataset.freshness >= 88 ? 'scheduled' : 'monitoring'
     const consistencyTone = dataset.consistency >= 95 ? 'healthy' : dataset.consistency >= 90 ? 'scheduled' : 'monitoring'
     const geoAccessSignal = getDatasetGeoAccessSignal(dataset.id, buyerOrgCountry)
+    const trustRiskLabels = getDatasetTrustRiskLabels(dataset.trustProfile)
 
     return (
         <article aria-label={`Dataset card for ${dataset.title}`} className={`${cardSurfaceClass} min-h-[620px]`}>
@@ -838,6 +847,11 @@ function DatasetDecisionCard({
             </div>
 
             <p className="mt-3 text-xs leading-5 text-slate-400">{geoAccessSignal.detail}</p>
+
+            <div className="mt-5">
+                <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Minimum trust layer</div>
+                <RiskLabelStrip items={trustRiskLabels} compact className="mt-3" />
+            </div>
 
             <div className="mt-5 grid gap-3 sm:grid-cols-3">
                 <MetricPill label="Completeness" value={`${dataset.completeness}%`} tone={completenessTone} />

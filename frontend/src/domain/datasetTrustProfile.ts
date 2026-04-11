@@ -1,5 +1,15 @@
 export type TrustSignalState = 'documented' | 'provider_confirmation' | 'reviewer_confirmation'
 
+export type DatasetTrustSeverity = 'low' | 'medium' | 'high'
+
+export type DatasetTrustRiskLabelKey =
+    | 'sensitivity'
+    | 'legal_basis'
+    | 'rights'
+    | 'reidentification'
+    | 'audit'
+    | 'ethics'
+
 export type DatasetTrustSignal = {
     value: string
     state: TrustSignalState
@@ -20,6 +30,22 @@ export type DatasetTrustProfile = {
     responsibilityBoundary: DatasetTrustSignal
 }
 
+export type DatasetTrustRiskLabel = {
+    key: DatasetTrustRiskLabelKey
+    label: string
+    value: string
+    state: TrustSignalState
+    severity: DatasetTrustSeverity
+}
+
+export type DatasetTrustSummaryRow = {
+    key: string
+    label: string
+    value: string
+    state: TrustSignalState
+    severity: DatasetTrustSeverity
+}
+
 export const buildTrustSignal = (
     value: string,
     state: TrustSignalState = 'documented'
@@ -32,6 +58,226 @@ export const trustSignalStateLabel = (state: TrustSignalState) => {
     if (state === 'provider_confirmation') return 'Provider confirmation required'
     if (state === 'reviewer_confirmation') return 'Reviewer confirmation required'
     return 'Documented in demo'
+}
+
+const trustSignalStatePriority: Record<TrustSignalState, number> = {
+    documented: 0,
+    provider_confirmation: 1,
+    reviewer_confirmation: 2
+}
+
+const combineTrustSignalStates = (...states: TrustSignalState[]): TrustSignalState =>
+    states.reduce((current, candidate) =>
+        trustSignalStatePriority[candidate] > trustSignalStatePriority[current] ? candidate : current
+    )
+
+const getStateSeverity = (state: TrustSignalState): DatasetTrustSeverity => {
+    if (state === 'reviewer_confirmation') return 'high'
+    if (state === 'provider_confirmation') return 'medium'
+    return 'low'
+}
+
+const highestSeverity = (...severities: DatasetTrustSeverity[]): DatasetTrustSeverity => {
+    if (severities.includes('high')) return 'high'
+    if (severities.includes('medium')) return 'medium'
+    return 'low'
+}
+
+const getCompactStateValue = (state: TrustSignalState, documentedLabel = 'Summarized') => {
+    if (state === 'provider_confirmation') return 'Provider check'
+    if (state === 'reviewer_confirmation') return 'Review'
+    return documentedLabel
+}
+
+const getSensitivityBand = (value: string) => {
+    const normalized = value.toLowerCase()
+
+    if (normalized.includes('medium-to-high')) return 'Med-high'
+    if (normalized.includes('high sensitivity')) return 'High'
+    if (normalized.includes('medium sensitivity')) return 'Medium'
+    if (normalized.includes('low sensitivity')) return 'Low'
+    return 'Needs review'
+}
+
+const getSensitivitySeverity = (value: string): DatasetTrustSeverity => {
+    const band = getSensitivityBand(value)
+    if (band === 'High' || band === 'Med-high') return 'high'
+    if (band === 'Medium') return 'medium'
+    return 'low'
+}
+
+const getReidentificationLabel = (signal: DatasetTrustSignal) => {
+    const normalized = signal.value.toLowerCase()
+
+    if (signal.state !== 'documented') {
+        return getCompactStateValue(signal.state)
+    }
+
+    if (normalized.includes('low re-identification risk')) return 'Low'
+    if (normalized.includes('high') || normalized.includes('residual identifiability')) return 'High'
+    if (normalized.includes('medium')) return 'Medium'
+    return 'Elevated'
+}
+
+const getReidentificationSeverity = (signal: DatasetTrustSignal): DatasetTrustSeverity => {
+    const normalized = signal.value.toLowerCase()
+    if (signal.state === 'reviewer_confirmation') return 'high'
+    if (signal.state === 'provider_confirmation') return 'medium'
+    if (normalized.includes('low re-identification risk')) return 'low'
+    if (normalized.includes('high') || normalized.includes('residual identifiability')) return 'high'
+    return 'medium'
+}
+
+const getEthicsValue = (ethicalFlags: string[]) =>
+    ethicalFlags.length > 0 ? `${ethicalFlags.length} flag${ethicalFlags.length === 1 ? '' : 's'}` : 'None surfaced'
+
+const getEthicsRowValue = (ethicalFlags: string[]) =>
+    ethicalFlags.length > 0
+        ? ethicalFlags.join('; ')
+        : 'No additional ethical flags are surfaced in the current demo packet.'
+
+export const getMinimumTrustClarificationState = (profile: DatasetTrustProfile) =>
+    combineTrustSignalStates(
+        profile.legalBasis.state,
+        profile.consentPosture.state,
+        profile.ownershipAndLicense.state,
+        profile.reidentificationRisk.state,
+        profile.accessControl.state,
+        profile.auditVisibility.state,
+        profile.intellectualProperty.state
+    )
+
+export const getDatasetTrustRiskLabels = (profile: DatasetTrustProfile): DatasetTrustRiskLabel[] => {
+    const legalBasisState = combineTrustSignalStates(profile.legalBasis.state, profile.consentPosture.state)
+
+    return [
+        {
+            key: 'sensitivity',
+            label: 'Sensitivity',
+            value: getSensitivityBand(profile.sensitivity.value),
+            state: profile.sensitivity.state,
+            severity: getSensitivitySeverity(profile.sensitivity.value)
+        },
+        {
+            key: 'legal_basis',
+            label: 'Legal basis',
+            value: getCompactStateValue(legalBasisState),
+            state: legalBasisState,
+            severity: getStateSeverity(legalBasisState)
+        },
+        {
+            key: 'rights',
+            label: 'Rights',
+            value: getCompactStateValue(profile.ownershipAndLicense.state),
+            state: profile.ownershipAndLicense.state,
+            severity: getStateSeverity(profile.ownershipAndLicense.state)
+        },
+        {
+            key: 'reidentification',
+            label: 'Re-id',
+            value: getReidentificationLabel(profile.reidentificationRisk),
+            state: profile.reidentificationRisk.state,
+            severity: getReidentificationSeverity(profile.reidentificationRisk)
+        },
+        {
+            key: 'audit',
+            label: 'Audit',
+            value: profile.auditVisibility.state === 'documented' ? 'Visible' : getCompactStateValue(profile.auditVisibility.state),
+            state: profile.auditVisibility.state,
+            severity: getStateSeverity(profile.auditVisibility.state)
+        },
+        {
+            key: 'ethics',
+            label: 'Ethics',
+            value: getEthicsValue(profile.ethicalFlags),
+            state: 'documented',
+            severity: profile.ethicalFlags.length > 0 ? 'high' : 'low'
+        }
+    ]
+}
+
+export const getDatasetTrustSummaryRows = (profile: DatasetTrustProfile): DatasetTrustSummaryRow[] => {
+    const legalBasisState = combineTrustSignalStates(profile.legalBasis.state, profile.consentPosture.state)
+
+    return [
+        {
+            key: 'legal-basis-consent',
+            label: 'Legal basis / consent posture',
+            value: `${profile.legalBasis.value} ${profile.consentPosture.value}`,
+            state: legalBasisState,
+            severity: highestSeverity(getStateSeverity(legalBasisState))
+        },
+        {
+            key: 'purpose-limitation',
+            label: 'Purpose limitation',
+            value: profile.purposeLimitation.value,
+            state: profile.purposeLimitation.state,
+            severity: getStateSeverity(profile.purposeLimitation.state)
+        },
+        {
+            key: 'sensitivity',
+            label: 'Sensitivity',
+            value: profile.sensitivity.value,
+            state: profile.sensitivity.state,
+            severity: getSensitivitySeverity(profile.sensitivity.value)
+        },
+        {
+            key: 'ownership-license',
+            label: 'Ownership vs usage rights',
+            value: profile.ownershipAndLicense.value,
+            state: profile.ownershipAndLicense.state,
+            severity: getStateSeverity(profile.ownershipAndLicense.state)
+        },
+        {
+            key: 'reidentification',
+            label: 'Re-identification risk',
+            value: profile.reidentificationRisk.value,
+            state: profile.reidentificationRisk.state,
+            severity: getReidentificationSeverity(profile.reidentificationRisk)
+        },
+        {
+            key: 'access-control',
+            label: 'Access control posture',
+            value: profile.accessControl.value,
+            state: profile.accessControl.state,
+            severity: getStateSeverity(profile.accessControl.state)
+        },
+        {
+            key: 'audit-visibility',
+            label: 'Audit visibility',
+            value: profile.auditVisibility.value,
+            state: profile.auditVisibility.state,
+            severity: getStateSeverity(profile.auditVisibility.state)
+        },
+        {
+            key: 'quality-caveat',
+            label: 'Quality caveat',
+            value: profile.qualityCaveat.value,
+            state: profile.qualityCaveat.state,
+            severity: getStateSeverity(profile.qualityCaveat.state)
+        },
+        {
+            key: 'intellectual-property',
+            label: 'IP status',
+            value: profile.intellectualProperty.value,
+            state: profile.intellectualProperty.state,
+            severity: getStateSeverity(profile.intellectualProperty.state)
+        },
+        {
+            key: 'ethical-flags',
+            label: 'Ethical flags',
+            value: getEthicsRowValue(profile.ethicalFlags),
+            state: 'documented',
+            severity: profile.ethicalFlags.length > 0 ? 'high' : 'low'
+        },
+        {
+            key: 'responsibility-boundary',
+            label: 'Responsibility boundary',
+            value: profile.responsibilityBoundary.value,
+            state: profile.responsibilityBoundary.state,
+            severity: getStateSeverity(profile.responsibilityBoundary.state)
+        }
+    ]
 }
 
 export const DATASET_TRUST_PROFILE_LIBRARY = {
