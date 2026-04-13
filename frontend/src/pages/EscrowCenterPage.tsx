@@ -105,6 +105,32 @@ const riskPanelTabs: Array<{ key: RiskPanelKey; label: string }> = [
     { key: 'readiness', label: 'Readiness' }
 ]
 const feedbackTags = ['Accurate schema', 'Clean data', 'As described', 'Fast access', 'Schema mismatch', 'Poor quality']
+const postEvaluationExpansionPaths = [
+    {
+        title: 'Production API access',
+        detail: 'Approved evaluations can move into production credentials once the buyer validation gate clears.'
+    },
+    {
+        title: 'Pipeline handoff',
+        detail: 'Validated deals can shift from governed workspace review into downstream ingestion or model pipelines.'
+    },
+    {
+        title: 'Renewal',
+        detail: 'Teams can roll a successful protected evaluation into a renewal packet without reopening the first review.'
+    },
+    {
+        title: 'Broader package',
+        detail: 'Field coverage, rights, or delivery scope can expand after the first protected decision is documented.'
+    },
+    {
+        title: 'Longer duration',
+        detail: 'Short evaluation windows can convert into longer operating terms once controls and intent are confirmed.'
+    },
+    {
+        title: 'Multi-dataset expansion',
+        detail: 'Buyers can add adjacent datasets into the same guided motion after the first evaluation proves fit.'
+    }
+] as const
 const activeDisputes = [
     { id: 'ESC-2026-006', dataset: 'Satellite Land Use 2024', raisedBy: 'part_anon_008', reason: 'Data schema mismatch from description', raised: '2026-03-09', status: 'Under Investigation' }
 ]
@@ -696,6 +722,31 @@ export default function EscrowCenterPage() {
                             <div className="text-emerald-300">Status: Clean</div>
                         </div>
                     </div>
+
+                    {selectedCheckoutRecord && (
+                        <div className="bg-slate-900/70 border border-slate-700 rounded-lg p-4">
+                            <div className="flex items-start justify-between gap-3">
+                                <div>
+                                    <div className="text-sm font-medium text-slate-200">Post-evaluation paths</div>
+                                    <div className="mt-1 text-xs text-slate-400">
+                                        Successful protected evaluations often move into one of these guided expansion steps.
+                                    </div>
+                                </div>
+                                <span className="rounded-full border border-cyan-500/30 bg-cyan-500/10 px-2.5 py-1 text-[10px] font-semibold text-cyan-200">
+                                    Mock next steps
+                                </span>
+                            </div>
+
+                            <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                                {postEvaluationExpansionPaths.map(path => (
+                                    <div key={path.title} className="rounded-lg border border-slate-700/80 bg-slate-950/60 px-3 py-3">
+                                        <div className="text-xs font-semibold uppercase tracking-[0.1em] text-slate-300">{path.title}</div>
+                                        <div className="mt-2 text-xs leading-relaxed text-slate-400">{path.detail}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
                     {selectedTransaction.accessMethod === 'download' && (
                         <div className="bg-slate-900/70 border border-slate-700 rounded-lg p-4">

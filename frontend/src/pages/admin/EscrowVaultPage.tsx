@@ -557,6 +557,54 @@ export default function EscrowVaultPage() {
         [disputeCards.length, disputedAmount, fundsUnderControl, pendingReleaseAmount, pendingReleaseRows.length, settledThisMonthAmount]
     )
 
+    const reportingKpiCards: SummaryCard[] = useMemo(
+        () => [
+            {
+                label: 'Refund Rate',
+                value: '4.3%',
+                detail: 'Share of March GMV returned to buyers after dispute resolution.',
+                tone: 'rose'
+            },
+            {
+                label: 'Time to Release',
+                value: '31h avg',
+                detail: 'Median time from funded evaluation to provider release decision.',
+                tone: 'cyan'
+            },
+            {
+                label: 'Repeat-Provider Share',
+                value: '42%',
+                detail: 'Released deals coming from providers already through Redoubt once before.',
+                tone: 'emerald'
+            },
+            {
+                label: 'Pilot Cohort Deals',
+                value: '9',
+                detail: 'Guided lighthouse deals currently routed through the early-access motion.',
+                tone: 'amber'
+            },
+            {
+                label: 'LOI-Backed Opportunities',
+                value: '14',
+                detail: 'Open opportunities with draft or signed LOI support in the current queue.',
+                tone: 'cyan'
+            },
+            {
+                label: 'Waived Evaluations',
+                value: '4',
+                detail: 'Fee-waived pilot evaluations approved under the curated launch policy.',
+                tone: 'amber'
+            },
+            {
+                label: 'Production Access Conversion',
+                value: '61%',
+                detail: 'Protected evaluations that later moved into API or production access.',
+                tone: 'emerald'
+            }
+        ],
+        []
+    )
+
     const attentionItems = useMemo(
         () => [
             {
@@ -1318,6 +1366,28 @@ export default function EscrowVaultPage() {
                             </div>
 
                             <div className="space-y-5 p-5">
+                                <div>
+                                    <div className="mb-3">
+                                        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Program KPIs</p>
+                                        <p className="mt-1 text-xs text-slate-400">
+                                            Mock operating signals for refunds, guided pilot activity, and production conversion across the current launch cohort.
+                                        </p>
+                                    </div>
+
+                                    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                                        {reportingKpiCards.map(card => (
+                                            <article
+                                                key={card.label}
+                                                className={`rounded-xl border p-3 ${summaryAccentClasses[card.tone]}`}
+                                            >
+                                                <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">{card.label}</p>
+                                                <p className={`mt-2 text-xl font-semibold ${summaryValueClasses[card.tone]}`}>{card.value}</p>
+                                                <p className="mt-2 text-xs text-slate-400">{card.detail}</p>
+                                            </article>
+                                        ))}
+                                    </div>
+                                </div>
+
                                 <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                                     {summaryCards.map(card => (
                                         <article

@@ -1349,7 +1349,7 @@ export default function ContributionsPage() {
                                 <div className="flex items-center justify-center gap-2 mb-2">
                                     <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-xs font-medium text-emerald-300">High Confidence</span>
                                 </div>
-                                <div className="text-xs text-slate-300 text-center">Your dataset meets Redoubt's quality threshold. Buyers will see this score before requesting access.</div>
+                                <div className="text-xs text-slate-300 text-center">Your dataset meets Redoubt&apos;s quality threshold. Buyers will see this score before requesting protected evaluation.</div>
                             </div>
 
                             <div className="mt-4 pt-4 border-t border-slate-800">

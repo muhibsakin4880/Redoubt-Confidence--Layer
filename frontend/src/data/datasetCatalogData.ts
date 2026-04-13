@@ -440,7 +440,7 @@ export const DATASET_CATALOG: DatasetCatalogRecord[] = [
                 'High-frequency export paths require explicit approval beyond the baseline package.'
             ],
             providerNotes: [
-                'Venue and aggregator relationships are reviewed behind managed marketplace controls.',
+                'Venue and aggregator relationships are reviewed behind managed sourcing controls.',
                 'Outlier suppression and sequencing repair logs are available in governed review sessions.',
                 'Buyers receive operational notices if any venue falls behind consolidated SLAs.'
             ],

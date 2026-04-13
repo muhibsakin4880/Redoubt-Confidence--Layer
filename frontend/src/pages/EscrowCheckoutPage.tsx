@@ -743,7 +743,7 @@ export default function EscrowCheckoutPage() {
                                     <span className="font-semibold text-white">Standard Path:</span> buyers are charged for protected evaluation here, and successful programs can move into downstream API or production access pricing.
                                 </div>
                                 <div className="rounded-2xl border border-amber-500/25 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
-                                    <span className="font-semibold text-white">Pilot Cohort:</span> selected design partners may receive a fee-waived evaluation through Redoubt&apos;s LOI-backed early-access program. These requests still require feedback participation, commercial intent, and a credible production pathway.
+                                    <span className="font-semibold text-white">Pilot Cohort:</span> selected design partners may receive a fee-waived evaluation through Redoubt&apos;s LOI-backed early-access program. These requests still require feedback participation, commercial intent, a credible production pathway, and a guided team-assisted review with controlled disclosure.
                                 </div>
                             </div>
 

@@ -59,7 +59,7 @@ const STORAGE_GUIDED_TOUR_PERSONA_OVERRIDE = 'Redoubt:guidedTour:personaOverride
 
 const groupDescriptions: Record<StepGroup, string> = {
     'Shared readiness': 'Foundation work that keeps your profile, trust posture, and workspace context ready for live operations.',
-    'Buyer workflow': 'Operational steps for requesting access, setting usage boundaries, and moving governed analysis forward.',
+    'Buyer workflow': 'Operational steps for requesting protected evaluation, setting usage boundaries, and moving governed analysis forward.',
     'Provider workflow': 'Operational steps for publishing data, handling incoming requests, and protecting governed delivery.'
 }
 
@@ -591,7 +591,7 @@ function buildTourSteps(prefix: string): Record<TourMode, GuidedStep[]> {
         {
             id: 'buyer-datasets',
             title: 'Shortlist governed datasets and rights packages',
-            description: 'Review dataset quality, coverage, and rights posture before you begin requesting access to anything sensitive.',
+            description: 'Review dataset quality, coverage, and rights posture before you begin requesting protected evaluation for anything sensitive.',
             whyNow: 'Choosing the right governed dataset first reduces rework across requests, consent setup, and escrow timing.',
             to: joinPath(prefix, '/datasets'),
             ctaLabel: 'Open datasets',

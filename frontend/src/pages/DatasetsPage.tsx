@@ -294,13 +294,12 @@ export default function DatasetsPage() {
 
                         <div className="relative grid gap-8 xl:grid-cols-[minmax(0,1.68fr)_minmax(380px,0.96fr)] xl:items-start">
                             <div className="min-w-0">
-                                <div className={discoveryText.heroEyebrow}>Buyer discovery workspace</div>
+                                <div className={discoveryText.heroEyebrow}>Curated evaluation workspace</div>
                                 <h1 id="dataset-discovery-hero" className={`mt-2 ${discoveryText.heroTitle}`}>
-                                    Dataset Discovery
+                                    Curated Evaluation Opportunities
                                 </h1>
                                 <p className={`mt-4 max-w-3xl ${discoveryText.bodyStrong}`}>
-                                    Move from browsing into buyer-ready decision making. Shortlist governed datasets, compare trust and access signals, and figure out whether
-                                    you should keep researching or move toward request preparation.
+                                    Review a curated slate of governed dataset opportunities. Build a priority set, run side-by-side review of trust and access signals, and decide whether an opportunity is ready for protected evaluation.
                                 </p>
 
                                 <div className="mt-7 flex flex-wrap gap-3.5">
@@ -319,12 +318,19 @@ export default function DatasetsPage() {
                                     </p>
                                 </div>
 
+                                <div className="mt-5 max-w-3xl rounded-[22px] border border-amber-500/25 bg-amber-500/10 px-5 py-4">
+                                    <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-100">Launch posture</div>
+                                    <p className="mt-2 text-sm leading-6 text-slate-200">
+                                        Redoubt&apos;s early discovery flow is curated for selected buyers and providers. First sensitive evaluations are handled through a guided, team-assisted process with controlled disclosure before protected-evaluation eligibility is confirmed.
+                                    </p>
+                                </div>
+
                                 <div className="mt-8 flex flex-wrap gap-3.5">
                                     <a href="#shortlist-panel" className={primaryButtonClass}>
-                                        Review shortlist
+                                        Review priority set
                                     </a>
                                     <a href="#compare-panel" className={secondaryButtonClass}>
-                                        Compare datasets
+                                        Open side-by-side review
                                     </a>
                                 </div>
                             </div>
@@ -332,16 +338,16 @@ export default function DatasetsPage() {
                             <div className={`${subCardSurfaceClass} px-5 py-5 sm:px-6 sm:py-6`}>
                                 <div className={discoveryText.eyebrow}>Decision state</div>
                                 <h2 className="mt-3 text-[1.3rem] font-semibold tracking-[-0.03em] text-slate-50">
-                                    Turn discovery into the next action
+                                    Turn governed sourcing into the next action
                                 </h2>
                                 <p className={`mt-3 ${discoveryText.body}`}>
-                                    Track what you have shortlisted, what is queued for compare, and the most useful next move for this buyer workflow.
+                                    Track what sits in your priority set, what is queued for side-by-side review, and the clearest next move for this guided buyer workflow.
                                 </p>
 
                                 <div className="mt-6 grid gap-3 sm:grid-cols-3">
-                                    <DecisionStat label="Shortlisted" value={`${shortlistDatasets.length}`} />
-                                    <DecisionStat label="In compare" value={`${compareDatasets.length}`} />
-                                    <DecisionStat label="Visible results" value={`${filteredDatasets.length}`} />
+                                    <DecisionStat label="Priority set" value={`${shortlistDatasets.length}`} />
+                                    <DecisionStat label="In review" value={`${compareDatasets.length}`} />
+                                    <DecisionStat label="Eligible results" value={`${filteredDatasets.length}`} />
                                 </div>
 
                                 <div className={`mt-6 rounded-[22px] border px-5 py-5 ${getSignalToneMeta(decisionAction.tone).surfaceClassName}`}>
@@ -371,10 +377,10 @@ export default function DatasetsPage() {
                     <div className="px-6 py-6 sm:px-7 xl:px-8 xl:py-8">
                         <div className={discoveryText.eyebrow}>Search, filter, and sort</div>
                         <h2 id="dataset-filter-panel" className={`mt-3 ${discoveryText.panelTitle}`}>
-                            Narrow the catalog with buyer-relevant signals
+                            Narrow the curated slate with buyer-relevant signals
                         </h2>
                         <p className={`mt-3 max-w-4xl ${discoveryText.body}`}>
-                            Search datasets, choose the trust and freshness thresholds you care about, and reset quickly if a filter path gets too narrow.
+                            Search opportunities, choose the trust and freshness thresholds you care about, and reset quickly if a filter path gets too narrow.
                         </p>
 
                         <div className="mt-8 grid gap-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.82fr)]">
@@ -470,7 +476,7 @@ export default function DatasetsPage() {
                                         </button>
                                     ))
                                 ) : (
-                                    <span className={discoveryText.meta}>No active filters. Use the controls above to narrow the catalog.</span>
+                                    <span className={discoveryText.meta}>No active filters. Use the controls above to narrow the curated slate.</span>
                                 )}
                             </div>
 
@@ -487,12 +493,12 @@ export default function DatasetsPage() {
                         <div className="px-6 py-6 sm:px-7 xl:px-8 xl:py-8">
                             <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
                                 <div className="min-w-0">
-                                    <div className={discoveryText.eyebrow}>Matched datasets</div>
+                                    <div className={discoveryText.eyebrow}>Eligible opportunities</div>
                                     <h2 id="matched-datasets" className={`mt-3 ${discoveryText.panelTitle}`}>
                                         Decision-ready results
                                     </h2>
                                     <p className={`mt-3 max-w-4xl ${discoveryText.body}`}>
-                                        Cards are organized for buyer evaluation: trust, access path, coverage geography, geo policy, freshness, and reasons to shortlist come before deeper workflow actions.
+                                        Cards are organized for governed review: trust, access path, controlled-disclosure posture, coverage geography, geo policy, freshness, and reasons to prioritize come before deeper workflow actions.
                                     </p>
                                 </div>
 
@@ -525,9 +531,9 @@ export default function DatasetsPage() {
 
                     <div className="space-y-6 xl:sticky xl:top-[104px]">
                         <RailSection
-                            eyebrow="Shortlist"
-                            title="Review shortlist"
-                            description="Build a lightweight candidate list before you move into detail review, quote building, or access preparation."
+                            eyebrow="Priority set"
+                            title="Review priority set"
+                            description="Build a lightweight review set before you move into detail review, quote building, or protected-evaluation prep."
                             id="shortlist-panel"
                         >
                             {shortlistDatasets.length > 0 ? (
@@ -586,7 +592,7 @@ export default function DatasetsPage() {
                                                                 : 'border-white/10 bg-white/[0.04] text-slate-100 hover:border-cyan-400/30 hover:text-cyan-100 disabled:cursor-not-allowed disabled:border-slate-800 disabled:text-slate-500'
                                                         }`}
                                                     >
-                                                        {compareIds.includes(dataset.id) ? 'In compare' : 'Add to compare'}
+                                                        {compareIds.includes(dataset.id) ? 'In review' : 'Queue for review'}
                                                     </button>
                                                 </div>
                                             </div>
@@ -595,8 +601,8 @@ export default function DatasetsPage() {
                                 </div>
                             ) : (
                                 <EmptyRailState
-                                    title="No shortlisted datasets yet"
-                                    detail="Start with attested, high-confidence candidates and use shortlist to keep the strongest options together."
+                                    title="No priority set yet"
+                                    detail="Start with attested, high-confidence opportunities and use the priority set to keep the strongest options together."
                                     actionLabel="Open guided tour"
                                     actionTo="/guided-tour"
                                 />
@@ -604,9 +610,9 @@ export default function DatasetsPage() {
                         </RailSection>
 
                         <RailSection
-                            eyebrow="Compare"
-                            title="Compare datasets"
-                            description="Queue up to three datasets to compare trust, freshness, coverage geography, geo policy, and access path without leaving discovery."
+                            eyebrow="Side-by-side review"
+                            title="Review opportunities side by side"
+                            description="Queue up to three opportunities to compare trust, freshness, coverage geography, geo policy, and access path without leaving governed discovery."
                             id="compare-panel"
                             action={
                                 compareDatasets.length > 0 ? (
@@ -615,15 +621,15 @@ export default function DatasetsPage() {
                                         onClick={() => setCompareIds([])}
                                         className={`rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-semibold text-slate-200 transition-colors hover:border-cyan-400/30 hover:text-cyan-100 ${focusRingClass}`}
                                     >
-                                        Clear compare
+                                        Clear review queue
                                     </button>
                                 ) : undefined
                             }
                         >
                             <div className={`${subCardSurfaceClass} px-5 py-5`}>
-                                <div className="text-base font-semibold text-slate-50">Compare queue</div>
+                                <div className="text-base font-semibold text-slate-50">Side-by-side review queue</div>
                                 <p className={`mt-2 ${discoveryText.body}`}>
-                                    Add up to three datasets. Once the queue is full, compare buttons stay disabled until you remove one.
+                                    Add up to three opportunities. Once the queue is full, review buttons stay disabled until you remove one.
                                 </p>
                             </div>
 
@@ -658,16 +664,16 @@ export default function DatasetsPage() {
                                         <CompareTable datasets={compareDatasets} buyerOrgCountry={buyerOrgCountry} />
                                     ) : (
                                         <div className={`${subCardSurfaceClass} px-5 py-5`}>
-                                            <div className="text-base font-semibold text-slate-50">Add one more dataset to compare</div>
-                                            <p className={`mt-2 ${discoveryText.body}`}>Comparison becomes useful once at least two candidates are in the queue.</p>
+                                        <div className="text-base font-semibold text-slate-50">Add one more opportunity to review</div>
+                                            <p className={`mt-2 ${discoveryText.body}`}>Side-by-side review becomes useful once at least two governed opportunities are in the queue.</p>
                                         </div>
                                     )}
                                 </div>
                             ) : (
                                 <div className="mt-5">
                                     <EmptyRailState
-                                        title="No datasets in compare"
-                                        detail="Use compare when the shortlist has more than one viable option and you need a fast trust and access readout."
+                                        title="No opportunities in review"
+                                        detail="Use side-by-side review when the priority set has more than one viable option and you need a fast trust and access readout."
                                     />
                                 </div>
                             )}
@@ -676,7 +682,7 @@ export default function DatasetsPage() {
                         <RailSection
                             eyebrow="Request readiness"
                             title="Buyer guidance"
-                            description="Use the shortlist and compare state to decide whether to keep researching, inspect details, or move closer to request prep."
+                            description="Use the priority set and side-by-side review state to decide whether to keep researching, inspect details, or move closer to guided request prep."
                         >
                             <div className={`rounded-[24px] border px-5 py-5 ${getSignalToneMeta(requestReadiness.tone).surfaceClassName}`}>
                                 <div className="flex items-start gap-3">
@@ -689,7 +695,7 @@ export default function DatasetsPage() {
                             </div>
 
                             <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                                <CompactDecisionStat label="Shortlist" value={`${shortlistDatasets.length}`} />
+                                <CompactDecisionStat label="Priority set" value={`${shortlistDatasets.length}`} />
                                 <CompactDecisionStat label="Attested" value={`${attestedShortlistCount}`} />
                                 <CompactDecisionStat label="Average confidence" value={shortlistAverageConfidence} />
                             </div>
@@ -713,7 +719,7 @@ export default function DatasetsPage() {
                                 <Link to="/guided-tour" className={`${subCardSurfaceClass} block px-5 py-5 transition-all duration-200 hover:-translate-y-px hover:border-cyan-400/30`}>
                                     <div className="text-base font-semibold text-slate-50">Guided Tour</div>
                                     <p className={`mt-2 ${discoveryText.body}`}>
-                                        Use the buyer workflow if you want help moving from shortlist into access preparation.
+                                        Use the guided buyer workflow if you want Redoubt&apos;s team to help move from sourcing into evaluation prep.
                                     </p>
                                 </Link>
                                 <Link
@@ -721,12 +727,12 @@ export default function DatasetsPage() {
                                     className={`${subCardSurfaceClass} block px-5 py-5 transition-all duration-200 hover:-translate-y-px hover:border-cyan-400/30`}
                                 >
                                     <div className="text-base font-semibold text-slate-50">
-                                        {firstShortlistedDataset ? 'Top shortlist candidate' : 'Trust Profile'}
+                                        {firstShortlistedDataset ? 'Top priority candidate' : 'Trust Profile'}
                                     </div>
                                     <p className={`mt-2 ${discoveryText.body}`}>
                                         {firstShortlistedDataset
-                                            ? `Open ${firstShortlistedDataset.title} to inspect request rules, rights, and access workflow detail.`
-                                            : 'If you are still unsure which datasets to trust, review the trust surface before requesting access.'}
+                                            ? `Open ${firstShortlistedDataset.title} to inspect request rules, rights, and protected-evaluation workflow detail.`
+                                            : 'If you are still unsure which datasets to trust, review the trust surface before requesting evaluation.'}
                                     </p>
                                 </Link>
                             </div>
@@ -879,7 +885,7 @@ function DatasetDecisionCard({
                                 : 'border-white/10 bg-white/[0.04] text-slate-100 hover:border-cyan-400/30 hover:text-cyan-100'
                         }`}
                     >
-                        {shortlisted ? 'Shortlisted' : 'Add to shortlist'}
+                        {shortlisted ? 'In priority set' : 'Add to priority set'}
                     </button>
                     <button
                         type="button"
@@ -892,7 +898,7 @@ function DatasetDecisionCard({
                                 : 'border-white/10 bg-white/[0.04] text-slate-100 hover:border-cyan-400/30 hover:text-cyan-100 disabled:cursor-not-allowed disabled:border-slate-800 disabled:text-slate-500'
                         }`}
                     >
-                        {compared ? 'In compare' : 'Add to compare'}
+                        {compared ? 'In review' : 'Queue for review'}
                     </button>
                     <Link
                         to={`/datasets/${dataset.id}`}
@@ -905,7 +911,7 @@ function DatasetDecisionCard({
 
                 {compareDisabled ? (
                     <p className={`mt-4 ${discoveryText.meta}`}>
-                        Compare queue is full. Remove one candidate from compare to add another.
+                        Review queue is full. Remove one candidate from side-by-side review to add another.
                     </p>
                 ) : null}
             </div>
@@ -1512,8 +1518,8 @@ function buildActiveFilters(filters: FilterState): ActiveFilterChip[] {
 function getDecisionAction(shortlistDatasets: Dataset[], compareDatasets: Dataset[], filteredDatasets: Dataset[]): DecisionAction {
     if (compareDatasets.length >= 2) {
         return {
-            label: 'Compare queued datasets',
-            detail: 'You have enough candidates in compare to inspect trust, freshness, and access path side by side.',
+            label: 'Review queued opportunities',
+            detail: 'You have enough opportunities in side-by-side review to inspect trust, freshness, and access path together.',
             href: '#compare-panel',
             tone: 'healthy'
         }
@@ -1521,8 +1527,8 @@ function getDecisionAction(shortlistDatasets: Dataset[], compareDatasets: Datase
 
     if (shortlistDatasets.length > 0) {
         return {
-            label: 'Open top shortlisted dataset',
-            detail: `Start with ${shortlistDatasets[0].title} and inspect the governed access detail before preparing a request.`,
+            label: 'Open top priority candidate',
+            detail: `Start with ${shortlistDatasets[0].title} and inspect the governed access detail before preparing an evaluation request.`,
             to: `/datasets/${shortlistDatasets[0].id}`,
             tone: 'healthy'
         }
@@ -1530,8 +1536,8 @@ function getDecisionAction(shortlistDatasets: Dataset[], compareDatasets: Datase
 
     if (filteredDatasets.length > 0) {
         return {
-            label: 'Build a shortlist',
-            detail: 'Add one or two strong candidates to shortlist first so the decision surface becomes more useful.',
+            label: 'Build a priority set',
+            detail: 'Add one or two strong opportunities to the priority set first so the decision surface becomes more useful.',
             href: '#matched-datasets',
             tone: 'scheduled'
         }
@@ -1549,8 +1555,8 @@ function getRequestReadiness(shortlistDatasets: Dataset[], compareDatasets: Data
     if (shortlistDatasets.length === 0) {
         return {
             tone: 'scheduled',
-            title: 'Build a shortlist first',
-            detail: 'Shortlist at least one viable dataset before moving into detail review or buyer workflow guidance.',
+            title: 'Build a priority set first',
+            detail: 'Add at least one viable opportunity to the priority set before moving into detail review or buyer workflow guidance.',
             primaryLabel: 'Open guided tour',
             primaryTo: '/guided-tour',
             secondaryLabel: 'Review discovery results',
@@ -1561,11 +1567,11 @@ function getRequestReadiness(shortlistDatasets: Dataset[], compareDatasets: Data
     if (shortlistDatasets.some(dataset => dataset.verificationStatus === 'Under Review' || dataset.confidenceScore < 90)) {
         return {
             tone: 'monitoring',
-            title: 'Inspect details before requesting access',
-            detail: 'One or more shortlisted datasets still need a closer trust or verification review before they look request-ready.',
+            title: 'Inspect details before requesting evaluation',
+            detail: 'One or more priority-set opportunities still need a closer trust or verification review before they look evaluation-ready.',
             primaryLabel: `Open ${shortlistDatasets[0].title}`,
             primaryTo: `/datasets/${shortlistDatasets[0].id}`,
-            secondaryLabel: 'Compare shortlisted datasets',
+            secondaryLabel: 'Review queued opportunities',
             secondaryHref: '#compare-panel'
         }
     }
@@ -1573,9 +1579,9 @@ function getRequestReadiness(shortlistDatasets: Dataset[], compareDatasets: Data
     if (compareDatasets.length >= 2) {
         return {
             tone: 'healthy',
-            title: 'Ready to compare access paths',
-            detail: 'Your shortlist has multiple strong candidates. Compare them now, then open the strongest detail page for request preparation.',
-            primaryLabel: 'Review compare panel',
+            title: 'Ready for side-by-side review',
+            detail: 'Your priority set has multiple strong opportunities. Review them now, then open the strongest detail page for evaluation preparation.',
+            primaryLabel: 'Review side-by-side panel',
             primaryHref: '#compare-panel',
             secondaryLabel: 'Open access requests',
             secondaryTo: '/access-requests'
@@ -1585,7 +1591,7 @@ function getRequestReadiness(shortlistDatasets: Dataset[], compareDatasets: Data
     return {
         tone: 'healthy',
         title: 'Ready for detail review',
-        detail: 'The shortlist looks strong enough to move into dataset detail, rights, and governed access review.',
+        detail: 'The priority set looks strong enough to move into dataset detail, rights, and governed access review.',
         primaryLabel: `Open ${shortlistDatasets[0].title}`,
         primaryTo: `/datasets/${shortlistDatasets[0].id}`,
         secondaryLabel: 'Open trust profile',

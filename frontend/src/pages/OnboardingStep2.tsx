@@ -121,7 +121,7 @@ export default function OnboardingStep2() {
                             id="use-case-summary"
                             value={useCaseSummary}
                             onChange={(event) => handleUseCaseSummaryChange(event.target.value)}
-                            placeholder="Example: We want to evaluate privacy-reviewed healthcare datasets for model benchmarking before requesting access to a governed workspace."
+                            placeholder="Example: We want to evaluate privacy-reviewed healthcare datasets for model benchmarking before requesting protected evaluation in a governed workspace."
                             rows={5}
                             maxLength={MAX_USE_CASE_SUMMARY_LENGTH}
                             className="mt-4 w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:border-blue-500 focus:outline-none"
