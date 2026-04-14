@@ -870,13 +870,13 @@ const joinSegments = [
                                                     Trust Infrastructure
                                                 </span>
                                                 <h2 className="mt-3 w-full text-[1.45rem] font-semibold leading-[1.15] text-cyan-100 sm:text-[1.7rem]">
-                                                    The Governed Layer Regulated Data Deserves
+                                                    The Trusted Layer for Regulated Data
                                                 </h2>
                                                 <p className="mt-4 text-sm leading-[1.6] text-cyan-100/80 sm:text-base">
-                                                    Redoubt sits between data discovery and deployment, verifying providers, scoring
-                                                    datasets, enforcing compliance, and protecting every transaction through escrow.
-                                                    Built for Healthcare AI, Fintech, and Research teams who cannot afford to get data
-                                                    trust wrong.
+                                                    Redoubt commands the critical infrastructure between data acquisition and
+                                                    deployment. We enforce zero-trust compliance through AI interrogation, strictly
+                                                    scoring datasets and locking transactions in secure escrow. Built for enterprises
+                                                    that demand absolute data integrity.
                                                 </p>
                                                 <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 text-cyan-100/70">
                                                     <span className="inline-flex items-center gap-2 text-xs font-medium">
