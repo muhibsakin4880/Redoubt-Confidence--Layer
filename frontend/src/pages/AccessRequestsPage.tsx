@@ -35,13 +35,12 @@ type RequestWorkflowMeta = {
 }
 
 const pageClass = `relative min-h-screen ${dashboardColorTokens['surface-page']} ${dashboardColorTokens['text-primary']}`
-const shellClass = `relative mx-auto max-w-[1680px] ${dashboardSpacingTokens['page-padding']}`
-const sectionGapClass = dashboardSpacingTokens['section-gap']
+const shellClass = `relative mx-auto max-w-[1680px] space-y-4 ${dashboardSpacingTokens['page-padding']}`
 const sectionIntroClass = dashboardSpacingTokens['section-intro']
-const panelClass = `relative overflow-hidden ${dashboardRadiusTokens['radius-lg']} border ${dashboardColorTokens['border-subtle']} ${dashboardColorTokens['surface-panel']} ${dashboardSpacingTokens['panel-padding']} ${dashboardShadowTokens['shadow-card']} before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-16 before:bg-[linear-gradient(180deg,rgba(255,255,255,0.025),transparent)] before:content-['']`
-const quietPanelClass = `relative overflow-hidden ${dashboardRadiusTokens['radius-lg']} border ${dashboardColorTokens['border-soft']} bg-[#10182B]/86 ${dashboardSpacingTokens['panel-padding']} ${dashboardShadowTokens['shadow-card']} before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-12 before:bg-[linear-gradient(180deg,rgba(255,255,255,0.02),transparent)] before:content-['']`
-const cardClass = `relative overflow-hidden ${dashboardRadiusTokens['radius-md']} border ${dashboardColorTokens['border-card']} ${dashboardColorTokens['surface-card']} ${dashboardSpacingTokens['card-padding-compact']} shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]`
+const panelClass = `relative overflow-hidden ${dashboardRadiusTokens['radius-lg']} border ${dashboardColorTokens['border-subtle']} ${dashboardColorTokens['surface-panel']} p-5 sm:p-6 ${dashboardShadowTokens['shadow-card']} before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-14 before:bg-[linear-gradient(180deg,rgba(255,255,255,0.025),transparent)] before:content-['']`
+const quietPanelClass = `relative overflow-hidden ${dashboardRadiusTokens['radius-lg']} border ${dashboardColorTokens['border-soft']} bg-[#10182B]/86 p-5 sm:p-6 ${dashboardShadowTokens['shadow-card']} before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-12 before:bg-[linear-gradient(180deg,rgba(255,255,255,0.02),transparent)] before:content-['']`
 const headerStripCardClass = `relative overflow-hidden ${dashboardRadiusTokens['radius-md']} border ${dashboardColorTokens['border-soft']} bg-slate-950/45 px-4 py-3`
+const supportCardClass = `rounded-[1.15rem] border ${dashboardColorTokens['border-soft']} bg-slate-950/35 p-4`
 const secondaryButtonClass = `inline-flex items-center justify-center ${dashboardRadiusTokens['radius-md']} border ${dashboardColorTokens['border-soft']} bg-slate-950/45 px-3 py-2 text-xs font-semibold text-slate-100 transition-colors hover:border-cyan-400/40 hover:text-cyan-100`
 
 const text = {
@@ -53,8 +52,7 @@ const text = {
     body: dashboardTypographyTokens['text-body'],
     bodyStrong: dashboardTypographyTokens['text-body-strong'],
     meta: dashboardTypographyTokens['text-muted'],
-    metaStrong: dashboardTypographyTokens['text-muted-strong'],
-    value: dashboardTypographyTokens['text-value']
+    metaStrong: dashboardTypographyTokens['text-muted-strong']
 } as const
 
 function requestNeedsAction(request: DatasetRequest) {
@@ -137,12 +135,12 @@ export default function AccessRequestsPage() {
             <div className={dashboardComponentTokens['page-background']} />
 
             <div className={shellClass}>
-                <section className={sectionGapClass} aria-labelledby="access-requests-header">
+                <section aria-labelledby="access-requests-header">
                     <div className={panelClass}>
-                        <div className="relative flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
+                        <div className="relative grid gap-4 xl:grid-cols-[minmax(0,1.18fr)_minmax(420px,0.82fr)] xl:items-end">
                             <div className="max-w-3xl">
                                 <div className={text.heroEyebrow}>Participant workflow</div>
-                                <h1 id="access-requests-header" className={`mt-2 text-[1.9rem] font-semibold tracking-[-0.045em] text-slate-50 sm:text-[2.2rem]`}>
+                                <h1 id="access-requests-header" className="mt-2 text-[1.9rem] font-semibold tracking-[-0.045em] text-slate-50 sm:text-[2.2rem]">
                                     Access requests
                                 </h1>
                                 <p className={`mt-3 max-w-2xl ${text.bodyStrong}`}>
@@ -150,23 +148,17 @@ export default function AccessRequestsPage() {
                                 </p>
                             </div>
 
-                            <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] xl:min-w-[38rem]">
-                                <div className={headerStripCardClass}>
-                                    <div className={text.eyebrow}>Needs action</div>
-                                    <div className="mt-2 flex items-center gap-2">
-                                        <span className="h-2.5 w-2.5 rounded-full bg-amber-300" />
-                                        <span className="text-sm font-semibold text-slate-100">
-                                            {needsActionRequests.length} request{needsActionRequests.length === 1 ? '' : 's'}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <div className={headerStripCardClass}>
-                                    <div className={text.eyebrow}>Next review target</div>
-                                    <div className={`mt-2 text-sm font-semibold text-slate-100`}>{nextReviewTarget}</div>
-                                </div>
-
-                                <a href="#request-queue" className={`w-full justify-center sm:w-auto ${dashboardComponentTokens['action-button']} ${dashboardRadiusTokens['radius-md']} px-4 py-3 text-sm`}>
+                            <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
+                                <HeaderSignal
+                                    label="Needs action"
+                                    value={`${needsActionRequests.length} request${needsActionRequests.length === 1 ? '' : 's'}`}
+                                    dotClassName="bg-amber-300"
+                                />
+                                <HeaderSignal label="Next review target" value={nextReviewTarget} />
+                                <a
+                                    href="#request-queue"
+                                    className={`w-full justify-center sm:w-auto ${dashboardComponentTokens['action-button']} ${dashboardRadiusTokens['radius-md']} px-4 py-3 text-sm`}
+                                >
                                     Review queue
                                 </a>
                             </div>
@@ -174,163 +166,156 @@ export default function AccessRequestsPage() {
                     </div>
                 </section>
 
-                <section className={sectionGapClass} aria-labelledby="access-requests-main">
-                    <div className={`grid grid-cols-1 ${dashboardSpacingTokens['space-4']} xl:grid-cols-[minmax(0,1.82fr)_360px]`}>
-                        <section id="request-queue" className={panelClass} aria-labelledby="access-requests-main">
-                            <div className={`relative ${sectionIntroClass} flex flex-col gap-3 border-b ${dashboardColorTokens['border-soft']} pb-4 sm:flex-row sm:items-end sm:justify-between`}>
-                                <div>
-                                    <div className={text.eyebrow}>Primary workspace</div>
-                                    <h2 id="access-requests-main" className={`mt-2 ${text.sectionTitle}`}>Request queue</h2>
-                                    <p className={`mt-2 ${text.body}`}>
-                                        The operating surface for status, signal, and next-step review across the active access portfolio.
-                                    </p>
-                                </div>
-                                <div className="flex flex-wrap gap-2">
-                                    <QueueMetaChip label="Active requests" value={`${datasetRequests.length}`} />
-                                    <QueueMetaChip label="Pending review" value={`${pendingRequests.length}`} />
-                                    <QueueMetaChip label="Approved" value={`${approvedCount}`} />
-                                </div>
+                <section aria-labelledby="request-queue-heading" className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.55fr)_minmax(420px,0.95fr)]">
+                    <section id="request-queue" className={panelClass} aria-labelledby="request-queue-heading">
+                        <div className={`relative ${sectionIntroClass} flex flex-col gap-3 border-b ${dashboardColorTokens['border-soft']} pb-4 lg:flex-row lg:items-end lg:justify-between`}>
+                            <div>
+                                <div className={text.eyebrow}>Primary workspace</div>
+                                <h2 id="request-queue-heading" className={`mt-2 ${text.sectionTitle}`}>Request queue</h2>
+                                <p className={`mt-2 ${text.body}`}>
+                                    The operating surface for status, signal, and next-step review across the active access portfolio.
+                                </p>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                                <QueueMetaChip label="Active requests" value={`${datasetRequests.length}`} />
+                                <QueueMetaChip label="Pending review" value={`${pendingRequests.length}`} />
+                                <QueueMetaChip label="Approved" value={`${approvedCount}`} />
+                            </div>
+                        </div>
+
+                        <div className="-mx-2 overflow-x-auto px-2">
+                            <table className="min-w-[900px] w-full table-fixed text-sm">
+                                <colgroup>
+                                    <col className="w-[27%]" />
+                                    <col className="w-[12%]" />
+                                    <col className="w-[13%]" />
+                                    <col className="w-[24%]" />
+                                    <col className="w-[12%]" />
+                                    <col className="w-[12%]" />
+                                </colgroup>
+                                <thead className={`border-b ${dashboardColorTokens['border-soft']} text-[11px] uppercase tracking-[0.18em] text-slate-500`}>
+                                    <tr>
+                                        <th className="py-3 pr-4 text-left font-medium">Request</th>
+                                        <th className="py-3 px-4 text-left font-medium">Signal</th>
+                                        <th className="py-3 px-4 text-left font-medium">Status</th>
+                                        <th className="py-3 px-4 text-left font-medium">Your next step</th>
+                                        <th className="py-3 px-4 text-left font-medium">Updated</th>
+                                        <th className="py-3 pl-4 text-right font-medium">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-900/80">
+                                    {datasetRequests.map(request => (
+                                        <RequestTableRow key={request.id} request={request} />
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+
+                    <div className="grid content-start gap-4">
+                        <section className={quietPanelClass} aria-labelledby="needs-action-now">
+                            <div className={`relative ${sectionIntroClass} border-b ${dashboardColorTokens['border-soft']} pb-4`}>
+                                <div className={text.eyebrow}>Secondary support</div>
+                                <h2 id="needs-action-now" className={`mt-2 ${text.sectionTitle}`}>Needs your action now</h2>
+                                <p className={`mt-2 ${text.body}`}>
+                                    The requests most likely to move if you respond, clarify, or prepare a resubmission today.
+                                </p>
                             </div>
 
-                            <div className="overflow-x-auto">
-                                <table className="min-w-[1040px] w-full text-sm">
-                                    <thead className={`border-b ${dashboardColorTokens['border-soft']} text-[11px] uppercase tracking-[0.18em] text-slate-500`}>
-                                        <tr>
-                                            <th className="py-3 pr-4 text-left font-medium">Request</th>
-                                            <th className="py-3 px-4 text-left font-medium">Signal</th>
-                                            <th className="py-3 px-4 text-left font-medium">Status</th>
-                                            <th className="py-3 px-4 text-left font-medium">Your next step</th>
-                                            <th className="py-3 px-4 text-left font-medium">Updated</th>
-                                            <th className="py-3 pl-4 text-right font-medium">Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-slate-900/80">
-                                        {datasetRequests.map(request => (
-                                            <RequestTableRow key={request.id} request={request} />
-                                        ))}
-                                    </tbody>
-                                </table>
+                            <div className="divide-y divide-slate-900/80">
+                                {needsActionRequests.map(request => {
+                                    const workflow = getRequestWorkflowMeta(request)
+                                    return (
+                                        <ActionListItem
+                                            key={request.id}
+                                            title={request.name}
+                                            meta={request.requestNumber}
+                                            detail={workflow.detail}
+                                            chipLabel={workflow.label}
+                                            chipClassName={workflow.chipClassName}
+                                            action={<Link to={`/access-requests/${request.id}`} className={secondaryButtonClass}>{workflow.actionLabel}</Link>}
+                                        />
+                                    )
+                                })}
                             </div>
                         </section>
 
-                        <aside className="space-y-4">
-                            <SidebarPanel
-                                eyebrow="Action rail"
-                                title="Needs your action now"
-                                description="The requests most likely to move if you respond, clarify, or prepare a resubmission today."
-                            >
-                                <div className="space-y-3">
-                                    {needsActionRequests.map(request => {
-                                        const workflow = getRequestWorkflowMeta(request)
-                                        return (
-                                            <div key={request.id} className={`${cardClass} ${getWorkflowSurfaceClass(workflow.tone)}`}>
-                                                <div className="relative">
-                                                    <div className="flex items-start justify-between gap-3">
-                                                        <div className="min-w-0">
-                                                            <div className="truncate text-sm font-semibold text-white">{request.name}</div>
-                                                            <div className={`mt-1 ${text.meta}`}>{request.requestNumber}</div>
-                                                        </div>
-                                                        <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold ${workflow.chipClassName}`}>
-                                                            {workflow.label}
-                                                        </span>
-                                                    </div>
-                                                    <p className={`mt-3 ${text.body}`}>{workflow.detail}</p>
-                                                    <Link to={`/access-requests/${request.id}`} className={`mt-4 ${secondaryButtonClass}`}>
-                                                        {workflow.actionLabel}
-                                                    </Link>
-                                                </div>
-                                            </div>
-                                        )
-                                    })}
-                                </div>
-                            </SidebarPanel>
-
-                            <SidebarPanel
-                                eyebrow="Review posture"
-                                title="Workflow lanes"
-                                description="A compact read on where the request portfolio is sitting right now."
-                            >
-                                <div className="space-y-3">
-                                    {lanes.map(lane => (
-                                        <div key={lane.label} className={cardClass}>
-                                            <div className="relative flex items-start justify-between gap-4">
-                                                <div>
-                                                    <div className="text-sm font-semibold text-white">{lane.label}</div>
-                                                    <div className={`mt-2 ${text.body}`}>{lane.detail}</div>
-                                                </div>
-                                                <span className={`inline-flex min-w-[2.5rem] items-center justify-center rounded-full border px-3 py-1 text-sm font-semibold ${lane.badgeClassName}`}>
-                                                    {lane.count}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </SidebarPanel>
-
-                            <SidebarPanel
-                                eyebrow="Live access"
-                                title="Active access routes"
-                                description="Approved routes already in operation so the queue reads like a live portfolio, not just a review inbox."
-                            >
-                                <div className="space-y-3">
-                                    {approvedDatasets.map(dataset => (
-                                        <div key={dataset.id} className={cardClass}>
-                                            <div className="relative">
-                                                <div className="flex items-start justify-between gap-3">
-                                                    <div className="min-w-0">
-                                                        <div className="truncate text-sm font-semibold text-white">{dataset.name}</div>
-                                                        <div className={`mt-1 ${text.meta}`}>{dataset.accessRoute}</div>
-                                                    </div>
-                                                    <span className={`text-sm font-semibold ${confidenceColor(dataset.confidence)}`}>
-                                                        {dataset.confidence}%
-                                                    </span>
-                                                </div>
-                                                <div className={`mt-3 ${text.body}`}>{dataset.limits}</div>
-                                                <div className={`mt-2 ${text.meta}`}>{dataset.expiry}</div>
-                                                {dataset.detailLink ? (
-                                                    <Link to={dataset.detailLink} className={`mt-4 ${secondaryButtonClass}`}>
-                                                        Open route
-                                                    </Link>
-                                                ) : null}
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </SidebarPanel>
-                        </aside>
-                    </div>
-                </section>
-
-                <section className={sectionGapClass} aria-labelledby="recent-request-activity">
-                    <section className={quietPanelClass}>
-                        <div className={`relative ${sectionIntroClass} flex flex-col gap-3 border-b ${dashboardColorTokens['border-soft']} pb-4 sm:flex-row sm:items-end sm:justify-between`}>
-                            <div>
+                        <section className={quietPanelClass} aria-labelledby="recent-request-activity">
+                            <div className={`relative ${sectionIntroClass} border-b ${dashboardColorTokens['border-soft']} pb-4`}>
                                 <div className={text.eyebrow}>Operational log</div>
                                 <h2 id="recent-request-activity" className={`mt-2 ${text.sectionTitle}`}>Recent request activity</h2>
                                 <p className={`mt-2 ${text.body}`}>
                                     A compact timeline of approvals, pending review events, and decline outcomes across the current access pipeline.
                                 </p>
                             </div>
-                            <span className={`inline-flex rounded-full border ${dashboardColorTokens['border-soft']} bg-slate-950/45 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-300`}>
-                                {recentActivity.length} events
-                            </span>
+
+                            <div className="divide-y divide-slate-900/80">
+                                {recentActivity.map(item => (
+                                    <TimelineListItem
+                                        key={`${item.label}-${item.timestamp}`}
+                                        title={item.label}
+                                        detail={item.timestamp}
+                                        dotClassName={activityDot[item.type]}
+                                    />
+                                ))}
+                            </div>
+                        </section>
+                    </div>
+                </section>
+
+                <section className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(320px,0.86fr)_minmax(0,1.14fr)]">
+                    <section className={quietPanelClass} aria-labelledby="workflow-lanes">
+                        <div className={`relative ${sectionIntroClass} border-b ${dashboardColorTokens['border-soft']} pb-4`}>
+                            <div className={text.eyebrow}>Review posture</div>
+                            <h2 id="workflow-lanes" className={`mt-2 ${text.sectionTitle}`}>Workflow lanes</h2>
+                            <p className={`mt-2 ${text.body}`}>
+                                A compact read on where the request portfolio is sitting right now.
+                            </p>
+                        </div>
+
+                        <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-1 2xl:grid-cols-3">
+                            {lanes.map(lane => (
+                                <LaneTile key={lane.label} lane={lane} />
+                            ))}
+                        </div>
+                    </section>
+
+                    <section className={quietPanelClass} aria-labelledby="active-access-routes">
+                        <div className={`relative ${sectionIntroClass} border-b ${dashboardColorTokens['border-soft']} pb-4`}>
+                            <div className={text.eyebrow}>Live access</div>
+                            <h2 id="active-access-routes" className={`mt-2 ${text.sectionTitle}`}>Active access routes</h2>
+                            <p className={`mt-2 ${text.body}`}>
+                                Approved routes already in operation so the queue reads like a live portfolio, not just a review inbox.
+                            </p>
                         </div>
 
                         <div className="grid gap-3 lg:grid-cols-2">
-                            {recentActivity.map(item => (
-                                <article key={`${item.label}-${item.timestamp}`} className={cardClass}>
-                                    <div className="relative flex items-start gap-3">
-                                        <span className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${activityDot[item.type]}`} />
-                                        <div className="min-w-0">
-                                            <div className="text-sm font-semibold text-white">{item.label}</div>
-                                            <div className={`mt-2 ${text.meta}`}>{item.timestamp}</div>
-                                        </div>
-                                    </div>
-                                </article>
+                            {approvedDatasets.map(dataset => (
+                                <RouteTile key={dataset.id} dataset={dataset} />
                             ))}
                         </div>
                     </section>
                 </section>
+            </div>
+        </div>
+    )
+}
+
+function HeaderSignal({
+    label,
+    value,
+    dotClassName
+}: {
+    label: string
+    value: string
+    dotClassName?: string
+}) {
+    return (
+        <div className={headerStripCardClass}>
+            <div className={text.eyebrow}>{label}</div>
+            <div className="mt-2 flex items-start gap-2">
+                {dotClassName ? <span className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${dotClassName}`} /> : null}
+                <span className="text-sm font-semibold text-slate-100">{value}</span>
             </div>
         </div>
     )
@@ -345,41 +330,22 @@ function QueueMetaChip({ label, value }: { label: string; value: string }) {
     )
 }
 
-function SidebarPanel({
-    eyebrow,
-    title,
-    description,
-    children
-}: {
-    eyebrow: string
-    title: string
-    description: string
-    children: ReactNode
-}) {
-    return (
-        <section className={quietPanelClass}>
-            <div className={text.eyebrow}>{eyebrow}</div>
-            <h2 className={`mt-2 ${text.panelTitle}`}>{title}</h2>
-            <p className={`mt-2 ${text.body}`}>{description}</p>
-            <div className="mt-4">{children}</div>
-        </section>
-    )
-}
-
 function RequestTableRow({ request }: { request: DatasetRequest }) {
     const workflow = getRequestWorkflowMeta(request)
 
     return (
         <tr className={`align-top transition-colors ${getRowClassName(workflow.tone)}`}>
-            <td className="py-4 pr-4">
-                <div className="font-semibold text-white">{request.name}</div>
-                <div className={`mt-1 ${text.meta}`}>{request.requestNumber}</div>
-                <div className={`mt-2 ${text.metaStrong}`}>
-                    {request.category} · {request.delivery}
+            <td className="py-3.5 pr-4">
+                <div className="pr-2">
+                    <div className="font-semibold text-white">{request.name}</div>
+                    <div className={`mt-1 ${text.meta}`}>{request.requestNumber}</div>
+                    <div className={`mt-2 ${text.metaStrong}`}>
+                        {request.category} · {request.delivery}
+                    </div>
                 </div>
             </td>
-            <td className="py-4 px-4">
-                <div className={`text-lg font-semibold ${confidenceColor(request.confidence)}`}>{request.confidence}%</div>
+            <td className="py-3.5 px-4">
+                <div className={`text-base font-semibold ${confidenceColor(request.confidence)}`}>{request.confidence}%</div>
                 <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#0A1324]">
                     <div
                         className="h-full rounded-full bg-gradient-to-r from-cyan-400 via-emerald-400 to-emerald-500"
@@ -388,22 +354,22 @@ function RequestTableRow({ request }: { request: DatasetRequest }) {
                 </div>
                 <div className={`mt-2 ${text.meta}`}>Request signal</div>
             </td>
-            <td className="py-4 px-4">
+            <td className="py-3.5 px-4">
                 <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${statusStyles[request.status]}`}>
                     {requestStatusLabel(request.status)}
                 </span>
             </td>
-            <td className="py-4 px-4">
+            <td className="py-3.5 px-4">
                 <div className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold ${workflow.chipClassName}`}>
                     {workflow.label}
                 </div>
-                <p className={`mt-3 max-w-sm ${text.body}`}>{workflow.detail}</p>
+                <p className="mt-2 text-[13px] leading-5 text-slate-400">{workflow.detail}</p>
             </td>
-            <td className="py-4 px-4">
+            <td className="py-3.5 px-4">
                 <div className="text-sm text-slate-200">{request.lastUpdated}</div>
                 <div className={`mt-2 ${text.meta}`}>{request.submittedDate}</div>
             </td>
-            <td className="py-4 pl-4 text-right">
+            <td className="py-3.5 pl-4 text-right">
                 <Link to={`/access-requests/${request.id}`} className={secondaryButtonClass}>
                     {workflow.actionLabel}
                 </Link>
@@ -412,27 +378,109 @@ function RequestTableRow({ request }: { request: DatasetRequest }) {
     )
 }
 
-function getWorkflowSurfaceClass(tone: RequestWorkflowMeta['tone']) {
-    switch (tone) {
-        case 'approved':
-            return 'border-emerald-500/20 bg-emerald-500/[0.05]'
-        case 'attention':
-            return 'border-amber-500/20 bg-amber-500/[0.05]'
-        case 'rejected':
-            return 'border-rose-500/20 bg-rose-500/[0.05]'
-        default:
-            return 'border-cyan-500/20 bg-cyan-500/[0.04]'
-    }
+function ActionListItem({
+    title,
+    meta,
+    detail,
+    chipLabel,
+    chipClassName,
+    action
+}: {
+    title: string
+    meta: string
+    detail: string
+    chipLabel: string
+    chipClassName: string
+    action: ReactNode
+}) {
+    return (
+        <article className="py-3 first:pt-0 last:pb-0">
+            <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                    <div className="truncate text-sm font-semibold text-white">{title}</div>
+                    <div className={`mt-1 ${text.meta}`}>{meta}</div>
+                </div>
+                <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold ${chipClassName}`}>
+                    {chipLabel}
+                </span>
+            </div>
+            <p className={`mt-3 ${text.body}`}>{detail}</p>
+            <div className="mt-3">{action}</div>
+        </article>
+    )
+}
+
+function TimelineListItem({
+    title,
+    detail,
+    dotClassName
+}: {
+    title: string
+    detail: string
+    dotClassName: string
+}) {
+    return (
+        <article className="grid gap-2 py-3 first:pt-0 last:pb-0 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start sm:gap-4">
+            <div className="flex min-w-0 gap-3">
+                <span className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${dotClassName}`} />
+                <div className="min-w-0">
+                    <div className="text-sm font-semibold text-white">{title}</div>
+                </div>
+            </div>
+            <div className={`pl-5 sm:pl-0 ${text.meta}`}>{detail}</div>
+        </article>
+    )
+}
+
+function LaneTile({ lane }: { lane: WorkflowLane }) {
+    return (
+        <article className={supportCardClass}>
+            <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                    <div className="text-sm font-semibold text-white">{lane.label}</div>
+                    <div className={`mt-2 ${text.body}`}>{lane.detail}</div>
+                </div>
+                <span className={`inline-flex min-w-[2.75rem] items-center justify-center rounded-full border px-3 py-1 text-sm font-semibold ${lane.badgeClassName}`}>
+                    {lane.count}
+                </span>
+            </div>
+        </article>
+    )
+}
+
+function RouteTile({
+    dataset
+}: {
+    dataset: typeof approvedDatasets[number]
+}) {
+    return (
+        <article className={`${supportCardClass} flex h-full flex-col`}>
+            <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                    <div className="truncate text-sm font-semibold text-white">{dataset.name}</div>
+                    <div className={`mt-1 ${text.meta}`}>{dataset.accessRoute}</div>
+                </div>
+                <span className={`text-sm font-semibold ${confidenceColor(dataset.confidence)}`}>{dataset.confidence}%</span>
+            </div>
+            <div className={`mt-3 ${text.body}`}>{dataset.limits}</div>
+            <div className={`mt-2 ${text.meta}`}>{dataset.expiry}</div>
+            {dataset.detailLink ? (
+                <Link to={dataset.detailLink} className={`mt-4 self-start ${secondaryButtonClass}`}>
+                    Open route
+                </Link>
+            ) : null}
+        </article>
+    )
 }
 
 function getRowClassName(tone: RequestWorkflowMeta['tone']) {
     switch (tone) {
         case 'approved':
-            return 'hover:bg-emerald-500/[0.035]'
+            return 'hover:bg-emerald-500/[0.03]'
         case 'attention':
-            return 'bg-amber-500/[0.03] hover:bg-amber-500/[0.05]'
+            return 'bg-amber-500/[0.025] hover:bg-amber-500/[0.05]'
         case 'rejected':
-            return 'bg-rose-500/[0.03] hover:bg-rose-500/[0.05]'
+            return 'bg-rose-500/[0.025] hover:bg-rose-500/[0.05]'
         default:
             return 'hover:bg-cyan-500/[0.03]'
     }
