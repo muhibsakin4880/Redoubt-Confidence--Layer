@@ -1,34 +1,14 @@
 import { Link } from 'react-router-dom'
 import { useMemo, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
-
-type ContributionStatus = 'Processing' | 'Needs fixes' | 'Approved' | 'Restricted' | 'Rejected'
-type PipelineState = 'complete' | 'current' | 'pending' | 'blocked'
-type FeedbackType = 'Missing values' | 'Schema inconsistency' | 'Data freshness warning' | 'Format issue'
-
-type FeedbackItem = {
-    type: FeedbackType
-    detail: string
-    severity: 'warning' | 'error'
-}
-
-type UploadedDataset = {
-    id: string
-    title: string
-    uploadedAt: string
-    records: string
-    size: string
-    status: ContributionStatus
-    accessActivity: string
-    performance: {
-        totalRequests: number
-        approvedRequests: number
-        accessEvents: number
-        avgReliability: number
-    }
-    validationPipeline: PipelineState[]
-    feedback: FeedbackItem[]
-}
+import {
+    feedbackStyles,
+    getContributionStatusPath,
+    pipelineStateStyles,
+    statusStyles,
+    uploadedDatasets,
+    validationStages
+} from '../data/contributionStatusData'
 
 type AdvancedRightsConditions = {
     redistributionRights: string
@@ -121,14 +101,6 @@ const uploadSteps = [
     'Schema preview',
     'Privacy & Access Controls',
     'Submission confirmation'
-]
-
-const validationStages = [
-    'Upload received',
-    'Schema analysis',
-    'Quality evaluation',
-    'Compliance review',
-    'Approved for access'
 ]
 
 const accessMethodOptions: AccessMethodOption[] = [
@@ -294,106 +266,6 @@ const renderAccessMethodIcon = (icon: AccessMethodOption['icon']) => {
                 </svg>
             )
     }
-}
-
-const uploadedDatasets: UploadedDataset[] = [
-    {
-        id: 'cn-1001',
-        title: 'Mobility Sensor QA Sample',
-        uploadedAt: '2026-02-17',
-        records: '280K rows',
-        size: '4.1 GB',
-        status: 'Processing',
-        accessActivity: '5 access checks in last 24h',
-        performance: { totalRequests: 9, approvedRequests: 3, accessEvents: 12, avgReliability: 94 },
-        validationPipeline: ['complete', 'current', 'pending', 'pending', 'pending'],
-        feedback: []
-    },
-    {
-        id: 'cn-1002',
-        title: 'Climate Station Metadata Patch',
-        uploadedAt: '2026-02-16',
-        records: '80K rows',
-        size: '1.2 GB',
-        status: 'Needs fixes',
-        accessActivity: 'Validation rerun requested',
-        performance: { totalRequests: 4, approvedRequests: 0, accessEvents: 2, avgReliability: 81 },
-        validationPipeline: ['complete', 'complete', 'blocked', 'pending', 'pending'],
-        feedback: [
-            { type: 'Missing values', detail: '18% nulls in station altitude and region columns.', severity: 'warning' },
-            { type: 'Schema inconsistency', detail: 'Column `stationCode` appears as string and integer across files.', severity: 'error' }
-        ]
-    },
-    {
-        id: 'cn-1003',
-        title: 'Financial Tick Delta Batch',
-        uploadedAt: '2026-02-14',
-        records: '1.8M rows',
-        size: '9.7 GB',
-        status: 'Approved',
-        accessActivity: '42 approved access events this week',
-        performance: { totalRequests: 27, approvedRequests: 22, accessEvents: 64, avgReliability: 97 },
-        validationPipeline: ['complete', 'complete', 'complete', 'complete', 'complete'],
-        feedback: []
-    },
-    {
-        id: 'cn-1004',
-        title: 'Clinical Outcomes Delta',
-        uploadedAt: '2026-02-13',
-        records: '420K rows',
-        size: '5.0 GB',
-        status: 'Restricted',
-        accessActivity: 'Restricted to approved healthcare workspaces',
-        performance: { totalRequests: 14, approvedRequests: 5, accessEvents: 11, avgReliability: 90 },
-        validationPipeline: ['complete', 'complete', 'complete', 'complete', 'complete'],
-        feedback: [{ type: 'Data freshness warning', detail: 'Latest records lag expected refresh cadence by 48 hours.', severity: 'warning' }]
-    },
-    {
-        id: 'cn-1005',
-        title: 'Retail Event Enrichment Feed',
-        uploadedAt: '2026-02-11',
-        records: '610K rows',
-        size: '6.4 GB',
-        status: 'Rejected',
-        accessActivity: 'Submission closed after compliance rejection',
-        performance: { totalRequests: 6, approvedRequests: 0, accessEvents: 0, avgReliability: 72 },
-        validationPipeline: ['complete', 'complete', 'complete', 'blocked', 'pending'],
-        feedback: [
-            { type: 'Format issue', detail: 'Timestamp format mixed between ISO-8601 and locale-specific strings.', severity: 'error' },
-            { type: 'Schema inconsistency', detail: 'Primary key duplicates detected in merged partitions.', severity: 'error' }
-        ]
-    }
-]
-
-const statusStyles: Record<ContributionStatus, string> = {
-    Processing: 'border-blue-500/60 bg-blue-500/10 text-blue-200',
-    'Needs fixes': 'border-amber-500/60 bg-amber-500/10 text-amber-200',
-    Approved: 'border-emerald-500/60 bg-emerald-500/10 text-emerald-200',
-    Restricted: 'border-violet-500/60 bg-violet-500/10 text-violet-200',
-    Rejected: 'border-rose-500/60 bg-rose-500/10 text-rose-200'
-}
-
-const clickableStatusDetails: ContributionStatus[] = ['Needs fixes', 'Rejected', 'Restricted', 'Approved']
-
-const isStatusDetailsClickable = (status: ContributionStatus) => clickableStatusDetails.includes(status)
-
-const getStatusLink = (dataset: UploadedDataset) => {
-    if (dataset.id === 'cn-1003') {
-        return `/contributions/${dataset.id}`
-    }
-    return `/contributions/${dataset.id}/status-details`
-}
-
-const pipelineStateStyles: Record<PipelineState, { dot: string; line: string; text: string }> = {
-    complete: { dot: 'bg-emerald-400 border-emerald-300', line: 'bg-emerald-400/80', text: 'text-emerald-200' },
-    current: { dot: 'bg-blue-400 border-blue-300', line: 'bg-slate-700', text: 'text-blue-200' },
-    pending: { dot: 'bg-slate-700 border-slate-500', line: 'bg-slate-700', text: 'text-slate-400' },
-    blocked: { dot: 'bg-rose-400 border-rose-300', line: 'bg-slate-700', text: 'text-rose-200' }
-}
-
-const feedbackStyles: Record<FeedbackItem['severity'], string> = {
-    warning: 'border-amber-500/40 bg-amber-500/10 text-amber-100',
-    error: 'border-rose-500/40 bg-rose-500/10 text-rose-100'
 }
 
 const createDefaultPrivacyAccessTerms = (): PrivacyAccessTerms => ({
@@ -2237,19 +2109,13 @@ export default function ContributionsPage() {
                                                     <div className="text-xs text-slate-400">ID: {dataset.id} - {dataset.size}</div>
                                                 </td>
                                                 <td className="py-4 px-4 min-w-[150px]">
-                                                    {isStatusDetailsClickable(dataset.status) ? (
-                                                        <Link
-                                                            to={getStatusLink(dataset)}
-                                                            onClick={(event) => event.stopPropagation()}
-                                                            className={`inline-flex whitespace-nowrap px-3 py-1 rounded-full border text-xs font-medium hover:brightness-110 transition ${statusStyles[dataset.status]}`}
-                                                        >
-                                                            {dataset.status}
-                                                        </Link>
-                                                    ) : (
-                                                        <span className={`inline-flex whitespace-nowrap px-3 py-1 rounded-full border text-xs font-medium ${statusStyles[dataset.status]}`}>
-                                                            {dataset.status}
-                                                        </span>
-                                                    )}
+                                                    <Link
+                                                        to={getContributionStatusPath(dataset.id)}
+                                                        onClick={(event) => event.stopPropagation()}
+                                                        className={`inline-flex whitespace-nowrap px-3 py-1 rounded-full border text-xs font-medium hover:brightness-110 transition ${statusStyles[dataset.status]}`}
+                                                    >
+                                                        {dataset.status}
+                                                    </Link>
                                                 </td>
                                                 <td className="py-4 px-4 text-slate-300">{dataset.uploadedAt}</td>
                                                 <td className="py-4 px-4 text-slate-300">{dataset.accessActivity}</td>

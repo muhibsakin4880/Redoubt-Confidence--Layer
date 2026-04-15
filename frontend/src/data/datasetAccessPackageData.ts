@@ -273,7 +273,8 @@ const ACCESS_PACKAGES: Record<string, DatasetAccessPackage> = {
 }
 
 const CONTRIBUTION_ACCESS_PACKAGE_BY_ID: Record<string, string> = {
-    'cn-1003': 'platform-clean-room-standard'
+    'cn-1003': 'platform-clean-room-standard',
+    'cn-1004': 'clinical-safe-haven'
 }
 
 const DEFAULT_ACCESS_PACKAGE = ACCESS_PACKAGES['platform-clean-room-standard']
