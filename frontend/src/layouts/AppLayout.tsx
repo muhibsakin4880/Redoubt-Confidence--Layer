@@ -100,11 +100,8 @@ export default function AppLayout() {
                             <span className={shellBrandIconClass}>
                                 <PermissionGateMark className="h-6 w-6" />
                             </span>
-                            <span className="min-w-0">
-                                <span className="block text-[11px] uppercase tracking-[0.2em] text-slate-500">Participant Console</span>
-                                <span className="mt-1 block truncate text-sm font-semibold text-slate-100 transition-colors hover:text-blue-300">
-                                    Redoubt
-                                </span>
+                            <span className="min-w-0 truncate bg-gradient-to-b from-white via-cyan-100 to-[#67E8F9] bg-clip-text text-sm font-extrabold uppercase tracking-[0.16em] text-transparent [text-shadow:0_0_20px_rgba(103,232,249,0.5),0_0_70px_rgba(14,165,233,0.24)]">
+                                REDOUBT
                             </span>
                         </Link>
                     </div>
@@ -145,7 +142,6 @@ export default function AppLayout() {
                                 </span>
                                 <span className="min-w-0">
                                     <span className="block text-[11px] uppercase tracking-[0.2em] text-slate-500">Participant Console</span>
-                                    <span className="mt-1 block truncate text-sm font-semibold text-slate-100">Redoubt</span>
                                 </span>
                             </Link>
                         </div>

@@ -345,7 +345,7 @@ test.describe('participant onboarding', () => {
 
         const participantDashboardLink = page.getByRole('link', { name: 'Open participant dashboard' })
         await expect(page.getByText('Redoubt Workspace', { exact: true })).toHaveCount(0)
-        await expect(participantDashboardLink.getByText('Redoubt', { exact: true })).toBeVisible()
+        await expect(participantDashboardLink.getByText('Participant Console', { exact: true })).toBeVisible()
 
         await participantDashboardLink.click()
         await expect(page).toHaveURL(/\/dashboard$/)
