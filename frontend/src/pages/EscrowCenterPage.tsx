@@ -1,19 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { CONTRACT_STATE_LABELS, type ContractLifecycleState } from '../domain/accessContract'
-import LifecycleGuidancePanel from '../components/LifecycleGuidancePanel'
 import { canPerformBuyerEscrowAction } from '../domain/actionGuardrails'
-import SecurityAuditTimeline from '../components/SecurityAuditTimeline'
-import ContractHealthPanel from '../components/ContractHealthPanel'
-import TransitionImpactPanel from '../components/TransitionImpactPanel'
-import ExecutionRunbookPanel from '../components/ExecutionRunbookPanel'
-import ControlTowerPanel from '../components/ControlTowerPanel'
-import ResilienceInsightsPanel from '../components/ResilienceInsightsPanel'
-import PolicyAttestationPanel from '../components/PolicyAttestationPanel'
-import DecisionGatePanel from '../components/DecisionGatePanel'
-import AlertCenterPanel from '../components/AlertCenterPanel'
-import PortfolioAlertBoard from '../components/PortfolioAlertBoard'
-import RemediationQueuePanel from '../components/RemediationQueuePanel'
-import ReadinessCertificationPanel from '../components/ReadinessCertificationPanel'
 import {
     loadEscrowCheckouts,
     loadEscrowCheckoutTransactions,
@@ -28,21 +15,8 @@ type EscrowStatus = Extract<
 >
 
 type AccessMethod = 'platform' | 'download'
-type EscrowWorkspace = 'overview' | 'transactions' | 'riskControls' | 'disputes'
-type RiskPanelKey =
-    | 'portfolioResilience'
-    | 'portfolioAlerts'
-    | 'remediationQueue'
-    | 'readiness'
-    | 'guidance'
-    | 'integrity'
-    | 'impact'
-    | 'controlTower'
-    | 'attestation'
-    | 'decisionGate'
-    | 'alertCenter'
-    | 'runbook'
-    | 'timeline'
+type FilterTab = 'All' | 'Active' | 'Pending' | 'Release Pending' | 'Disputed' | 'Released'
+type GovernanceTone = 'neutral' | 'positive' | 'caution' | 'critical'
 
 type EscrowTransaction = {
     id: string
@@ -53,6 +27,10 @@ type EscrowTransaction = {
     accessMethod: AccessMethod
     status: EscrowStatus
 }
+
+const filterTabs: FilterTab[] = ['All', 'Active', 'Pending', 'Release Pending', 'Disputed', 'Released']
+const rowsPerPageOptions = [6, 8, 10, 12]
+const feedbackTags = ['Accurate schema', 'Clean data', 'As described', 'Fast access', 'Schema mismatch', 'Poor quality']
 
 const seedEscrowTransactions: EscrowTransaction[] = [
     { id: 'ESC-2026-001', dataset: 'Global Climate 2020-2024', buyer: 'part_anon_042', provider: 'anon_provider_003', amount: '$299', accessMethod: 'platform', status: 'REQUEST_SUBMITTED' },
@@ -66,13 +44,24 @@ const seedEscrowTransactions: EscrowTransaction[] = [
     { id: 'ESC-2026-009', dataset: 'Retail Transaction Logs', buyer: 'part_anon_063', provider: 'anon_provider_008', amount: '$449', accessMethod: 'platform', status: 'FUNDS_HELD' }
 ]
 
-const statusStyles: Record<EscrowStatus, { badge: string; text: string }> = {
-    REQUEST_SUBMITTED: { badge: 'border-slate-500/40 bg-slate-500/10 text-slate-300', text: CONTRACT_STATE_LABELS.REQUEST_SUBMITTED },
-    FUNDS_HELD: { badge: 'border-amber-500/40 bg-amber-500/10 text-amber-300', text: CONTRACT_STATE_LABELS.FUNDS_HELD },
-    ACCESS_ACTIVE: { badge: 'border-blue-500/40 bg-blue-500/10 text-blue-300', text: CONTRACT_STATE_LABELS.ACCESS_ACTIVE },
-    RELEASE_PENDING: { badge: 'border-indigo-500/40 bg-indigo-500/10 text-indigo-300', text: CONTRACT_STATE_LABELS.RELEASE_PENDING },
-    RELEASED_TO_PROVIDER: { badge: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300', text: CONTRACT_STATE_LABELS.RELEASED_TO_PROVIDER },
-    DISPUTE_OPEN: { badge: 'border-rose-500/40 bg-rose-500/10 text-rose-300', text: CONTRACT_STATE_LABELS.DISPUTE_OPEN }
+const activeDisputes = [
+    {
+        id: 'ESC-2026-006',
+        dataset: 'Satellite Land Use 2024',
+        raisedBy: 'part_anon_008',
+        reason: 'Data schema mismatch from description',
+        raised: '2026-03-09',
+        status: 'Under Investigation'
+    }
+] as const
+
+const statusStyles: Record<EscrowStatus, { badge: string; text: string; dot: string; row: string }> = {
+    REQUEST_SUBMITTED: { badge: 'border-slate-500/40 bg-slate-500/10 text-slate-300', text: CONTRACT_STATE_LABELS.REQUEST_SUBMITTED, dot: 'bg-slate-400', row: 'hover:bg-slate-800/55' },
+    FUNDS_HELD: { badge: 'border-amber-500/40 bg-amber-500/10 text-amber-300', text: CONTRACT_STATE_LABELS.FUNDS_HELD, dot: 'bg-amber-400', row: 'hover:bg-amber-500/[0.035]' },
+    ACCESS_ACTIVE: { badge: 'border-blue-500/40 bg-blue-500/10 text-blue-300', text: CONTRACT_STATE_LABELS.ACCESS_ACTIVE, dot: 'bg-blue-400', row: 'hover:bg-blue-500/[0.03]' },
+    RELEASE_PENDING: { badge: 'border-indigo-500/40 bg-indigo-500/10 text-indigo-300', text: CONTRACT_STATE_LABELS.RELEASE_PENDING, dot: 'bg-indigo-400', row: 'hover:bg-indigo-500/[0.035]' },
+    RELEASED_TO_PROVIDER: { badge: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300', text: CONTRACT_STATE_LABELS.RELEASED_TO_PROVIDER, dot: 'bg-emerald-400', row: 'hover:bg-emerald-500/[0.03]' },
+    DISPUTE_OPEN: { badge: 'border-rose-500/40 bg-rose-500/10 text-rose-300', text: CONTRACT_STATE_LABELS.DISPUTE_OPEN, dot: 'bg-rose-400', row: 'bg-rose-500/[0.03] hover:bg-rose-500/[0.055]' }
 }
 
 const accessMethodStyles: Record<AccessMethod, { badge: string; token: string; label: string }> = {
@@ -80,74 +69,19 @@ const accessMethodStyles: Record<AccessMethod, { badge: string; token: string; l
     download: { badge: 'border-blue-500/40 bg-blue-500/10 text-blue-300', token: 'DL', label: 'Platform + Download' }
 }
 
-const filterTabs = ['All', 'Active', 'Pending', 'Release Pending', 'Disputed', 'Released'] as const
-type FilterTab = (typeof filterTabs)[number]
-const workspaceTabs: Array<{ key: EscrowWorkspace; label: string; hint: string }> = [
-    { key: 'overview', label: 'Overview', hint: 'Track priority escrow actions with minimal scrolling.' },
-    { key: 'transactions', label: 'Transactions', hint: 'Browse the full ledger with search, filters, and paging.' },
-    { key: 'riskControls', label: 'Risk & Controls', hint: 'Open governance, guardrails, and operational intelligence.' },
-    { key: 'disputes', label: 'Disputes', hint: 'Review and resolve escalations requiring action.' }
-]
-const rowsPerPageOptions = [6, 8, 10, 12]
-const riskPanelTabs: Array<{ key: RiskPanelKey; label: string }> = [
-    { key: 'guidance', label: 'Guidance' },
-    { key: 'integrity', label: 'Integrity' },
-    { key: 'impact', label: 'Impact' },
-    { key: 'controlTower', label: 'Control Tower' },
-    { key: 'attestation', label: 'Attestation' },
-    { key: 'decisionGate', label: 'Decision Gate' },
-    { key: 'alertCenter', label: 'Alert Center' },
-    { key: 'runbook', label: 'Runbook' },
-    { key: 'timeline', label: 'Timeline' },
-    { key: 'portfolioResilience', label: 'Resilience' },
-    { key: 'portfolioAlerts', label: 'Portfolio Alerts' },
-    { key: 'remediationQueue', label: 'Remediation' },
-    { key: 'readiness', label: 'Readiness' }
-]
-const feedbackTags = ['Accurate schema', 'Clean data', 'As described', 'Fast access', 'Schema mismatch', 'Poor quality']
-const postEvaluationExpansionPaths = [
-    {
-        title: 'Production API access',
-        detail: 'Approved evaluations can move into production credentials once the buyer validation gate clears.'
-    },
-    {
-        title: 'Pipeline handoff',
-        detail: 'Validated deals can shift from governed workspace review into downstream ingestion or model pipelines.'
-    },
-    {
-        title: 'Renewal',
-        detail: 'Teams can roll a successful protected evaluation into a renewal packet without reopening the first review.'
-    },
-    {
-        title: 'Broader package',
-        detail: 'Field coverage, rights, or delivery scope can expand after the first protected decision is documented.'
-    },
-    {
-        title: 'Longer duration',
-        detail: 'Short evaluation windows can convert into longer operating terms once controls and intent are confirmed.'
-    },
-    {
-        title: 'Multi-dataset expansion',
-        detail: 'Buyers can add adjacent datasets into the same guided motion after the first evaluation proves fit.'
-    }
-] as const
-const activeDisputes = [
-    { id: 'ESC-2026-006', dataset: 'Satellite Land Use 2024', raisedBy: 'part_anon_008', reason: 'Data schema mismatch from description', raised: '2026-03-09', status: 'Under Investigation' }
-]
+const shellPanelClass = 'rounded-[1.75rem] border border-slate-800/90 bg-slate-950/45 shadow-[0_24px_90px_rgba(3,8,20,0.45)] backdrop-blur-sm'
+const quietPanelClass = 'rounded-[1.45rem] border border-slate-800/90 bg-slate-900/40 shadow-[0_16px_50px_rgba(3,8,20,0.35)]'
+const metricPanelClass = 'rounded-[1.2rem] border border-slate-800/90 bg-slate-950/45 px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]'
+const actionButtonClass = 'inline-flex items-center justify-center rounded-xl border border-slate-700 bg-slate-950/50 px-3 py-2 text-xs font-semibold text-slate-100 transition-colors hover:border-cyan-500/40 hover:text-cyan-100'
 
 export default function EscrowCenterPage() {
     const [recordsVersion, setRecordsVersion] = useState(0)
     const escrowCheckoutRecords = useMemo(() => loadEscrowCheckouts(), [recordsVersion])
-    const escrowTransactions = useMemo(
-        () => [...loadEscrowCheckoutTransactions(), ...seedEscrowTransactions],
-        [recordsVersion]
-    )
+    const escrowTransactions = useMemo(() => [...loadEscrowCheckoutTransactions(), ...seedEscrowTransactions], [recordsVersion])
     const [selectedId, setSelectedId] = useState(() => loadEscrowCheckoutTransactions()[0]?.id ?? 'ESC-2026-003')
     const [currentPage, setCurrentPage] = useState(1)
     const [rowsPerPage, setRowsPerPage] = useState(8)
     const [activeFilter, setActiveFilter] = useState<FilterTab>('All')
-    const [activeWorkspace, setActiveWorkspace] = useState<EscrowWorkspace>('overview')
-    const [activeRiskPanel, setActiveRiskPanel] = useState<RiskPanelKey>('guidance')
     const [searchQuery, setSearchQuery] = useState('')
     const [showFeedbackModal, setShowFeedbackModal] = useState(false)
     const [starRating, setStarRating] = useState(0)
@@ -155,32 +89,9 @@ export default function EscrowCenterPage() {
     const [comment, setComment] = useState('')
     const [showSuccessToast, setShowSuccessToast] = useState(false)
 
-    const selectedTransaction = useMemo(() => {
-        return escrowTransactions.find(item => item.id === selectedId) ?? escrowTransactions[0]
-    }, [escrowTransactions, selectedId])
-    const selectedCheckoutRecord = useMemo(
-        () => escrowCheckoutRecords.find(record => record.escrowId === selectedTransaction?.id) ?? null,
-        [escrowCheckoutRecords, selectedTransaction]
-    )
     const checkoutRecordByEscrowId = useMemo(
         () => new Map(escrowCheckoutRecords.map(record => [record.escrowId, record])),
         [escrowCheckoutRecords]
-    )
-    const protectedDealCount = escrowCheckoutRecords.length
-    const automaticCreditCount = escrowCheckoutRecords.filter(
-        record => record.outcomeProtection.credits.status === 'issued'
-    ).length
-    const releasePaymentGuardrail = useMemo(
-        () => canPerformBuyerEscrowAction('release_payment', selectedTransaction.status),
-        [selectedTransaction.status]
-    )
-    const openDisputeGuardrail = useMemo(
-        () => canPerformBuyerEscrowAction('open_dispute', selectedTransaction.status),
-        [selectedTransaction.status]
-    )
-    const extendWindowGuardrail = useMemo(
-        () => canPerformBuyerEscrowAction('extend_window', selectedTransaction.status),
-        [selectedTransaction.status]
     )
 
     const filteredTransactions = useMemo(() => {
@@ -188,17 +99,18 @@ export default function EscrowCenterPage() {
             activeFilter === 'All'
                 ? escrowTransactions
                 : activeFilter === 'Active'
-                  ? escrowTransactions.filter(t => t.status === 'ACCESS_ACTIVE')
+                  ? escrowTransactions.filter(transaction => transaction.status === 'ACCESS_ACTIVE')
                   : activeFilter === 'Pending'
-                    ? escrowTransactions.filter(t => t.status === 'REQUEST_SUBMITTED' || t.status === 'FUNDS_HELD')
+                    ? escrowTransactions.filter(transaction => transaction.status === 'REQUEST_SUBMITTED' || transaction.status === 'FUNDS_HELD')
                     : activeFilter === 'Release Pending'
-                      ? escrowTransactions.filter(t => t.status === 'RELEASE_PENDING')
+                      ? escrowTransactions.filter(transaction => transaction.status === 'RELEASE_PENDING')
                       : activeFilter === 'Disputed'
-                        ? escrowTransactions.filter(t => t.status === 'DISPUTE_OPEN')
-                        : escrowTransactions.filter(t => t.status === 'RELEASED_TO_PROVIDER')
+                        ? escrowTransactions.filter(transaction => transaction.status === 'DISPUTE_OPEN')
+                        : escrowTransactions.filter(transaction => transaction.status === 'RELEASED_TO_PROVIDER')
 
         const query = searchQuery.trim().toLowerCase()
         if (!query) return base
+
         return base.filter(transaction =>
             [transaction.id, transaction.dataset, transaction.buyer, transaction.provider, transaction.amount, statusStyles[transaction.status].text]
                 .some(value => value.toLowerCase().includes(query))
@@ -229,40 +141,38 @@ export default function EscrowCenterPage() {
         return filteredTransactions.slice(startIndex, startIndex + rowsPerPage)
     }, [currentPage, filteredTransactions, rowsPerPage])
 
-    const buyerPortfolioDigests = useMemo(
-        () =>
-            filteredTransactions.map(transaction => ({
-                contractId: transaction.id,
-                state: transaction.status,
-                role: 'buyer' as const
-            })),
-        [filteredTransactions]
+    const selectedTransaction = useMemo(
+        () => escrowTransactions.find(transaction => transaction.id === selectedId) ?? escrowTransactions[0],
+        [escrowTransactions, selectedId]
     )
 
-    const totalPageValue = useMemo(() => {
-        return paginatedTransactions.reduce((sum, t) => sum + parseInt(t.amount.replace('$', ''), 10), 0)
-    }, [paginatedTransactions])
+    const selectedCheckoutRecord = useMemo(
+        () => escrowCheckoutRecords.find(record => record.escrowId === selectedTransaction?.id) ?? null,
+        [escrowCheckoutRecords, selectedTransaction]
+    )
 
-    const summaryStats = useMemo(() => {
-        const activeEscrows = escrowTransactions.filter(t => t.status === 'ACCESS_ACTIVE').length
-        const pendingReview = escrowTransactions.filter(t => t.status === 'REQUEST_SUBMITTED' || t.status === 'FUNDS_HELD').length
-        const released = escrowTransactions.filter(t => t.status === 'RELEASED_TO_PROVIDER').length
-        const disputes = escrowTransactions.filter(t => t.status === 'DISPUTE_OPEN').length
-        const totalValue = escrowTransactions.reduce((sum, t) => sum + parseInt(t.amount.replace('$', ''), 10), 0)
+    const releasePaymentGuardrail = useMemo(() => canPerformBuyerEscrowAction('release_payment', selectedTransaction.status), [selectedTransaction.status])
+    const openDisputeGuardrail = useMemo(() => canPerformBuyerEscrowAction('open_dispute', selectedTransaction.status), [selectedTransaction.status])
+    const extendWindowGuardrail = useMemo(() => canPerformBuyerEscrowAction('extend_window', selectedTransaction.status), [selectedTransaction.status])
 
-        return [
-            { label: 'Access Active', value: `${activeEscrows}` },
-            { label: 'Pending Review/Hold', value: `${pendingReview}` },
-            { label: 'Released Cases', value: `${released}` },
-            { label: 'Disputes', value: `${disputes}` },
-            { label: 'Protected Deals', value: `${protectedDealCount}` },
-            { label: 'Auto Credits', value: `${automaticCreditCount}` },
-            { label: 'Total Value in Escrow', value: `$${totalValue.toLocaleString()}` }
-        ]
-    }, [automaticCreditCount, escrowTransactions, protectedDealCount])
+    const activeCount = useMemo(() => escrowTransactions.filter(transaction => transaction.status === 'ACCESS_ACTIVE').length, [escrowTransactions])
+    const heldCount = useMemo(() => escrowTransactions.filter(transaction => transaction.status === 'REQUEST_SUBMITTED' || transaction.status === 'FUNDS_HELD').length, [escrowTransactions])
+    const releasePendingCount = useMemo(() => escrowTransactions.filter(transaction => transaction.status === 'RELEASE_PENDING').length, [escrowTransactions])
+    const disputesCount = activeDisputes.length
+    const protectedDealCount = escrowCheckoutRecords.length
+    const automaticCreditCount = useMemo(() => escrowCheckoutRecords.filter(record => record.outcomeProtection.credits.status === 'issued').length, [escrowCheckoutRecords])
+    const totalValue = useMemo(() => escrowTransactions.reduce((sum, transaction) => sum + parseInt(transaction.amount.replace('$', ''), 10), 0), [escrowTransactions])
+    const releaseQueueLead = useMemo(() => escrowTransactions.find(transaction => transaction.status === 'RELEASE_PENDING') ?? null, [escrowTransactions])
+    const disputeLead = useMemo(() => activeDisputes.find(dispute => dispute.id === selectedTransaction.id) ?? activeDisputes[0] ?? null, [selectedTransaction.id])
+    const pageStartIndex = filteredTransactions.length === 0 ? 0 : (currentPage - 1) * rowsPerPage + 1
+    const pageEndIndex = Math.min(currentPage * rowsPerPage, filteredTransactions.length)
+    const hasFilteredResults = filteredTransactions.length > 0
+    const pageValue = useMemo(() => paginatedTransactions.reduce((sum, transaction) => sum + parseInt(transaction.amount.replace('$', ''), 10), 0), [paginatedTransactions])
+    const selectedCaseTone = getGovernanceTone(selectedTransaction.status, selectedCheckoutRecord?.outcomeProtection.credits.status === 'issued')
+    const selectedCaseSummary = getSelectedCaseSummary(selectedTransaction.status, releasePaymentGuardrail.allowed, selectedCheckoutRecord?.outcomeProtection.credits.status === 'issued')
 
     const toggleTag = (tag: string) => {
-        setSelectedTags(prev => (prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]))
+        setSelectedTags(previous => (previous.includes(tag) ? previous.filter(value => value !== tag) : [...previous, tag]))
     }
 
     const handleSubmitFeedback = () => {
@@ -280,202 +190,114 @@ export default function EscrowCenterPage() {
         setTimeout(() => setShowSuccessToast(false), 3000)
     }
 
-    const pageStartIndex = filteredTransactions.length === 0 ? 0 : (currentPage - 1) * rowsPerPage + 1
-    const pageEndIndex = Math.min(currentPage * rowsPerPage, filteredTransactions.length)
-    const hasFilteredResults = filteredTransactions.length > 0
-    const selectedWorkspaceHint = workspaceTabs.find(tab => tab.key === activeWorkspace)?.hint ?? ''
-    const activeRiskPanelLabel = riskPanelTabs.find(panel => panel.key === activeRiskPanel)?.label ?? 'Guidance'
-
-    const renderActiveRiskPanel = () => {
-        if (activeRiskPanel === 'portfolioResilience') {
-            return <ResilienceInsightsPanel digests={buyerPortfolioDigests} compact title="Buyer Portfolio Resilience" />
-        }
-        if (activeRiskPanel === 'portfolioAlerts') {
-            return <PortfolioAlertBoard digests={buyerPortfolioDigests} compact title="Buyer Portfolio Alerts" />
-        }
-        if (activeRiskPanel === 'remediationQueue') {
-            return <RemediationQueuePanel digests={buyerPortfolioDigests} compact title="Buyer Remediation Queue" />
-        }
-        if (activeRiskPanel === 'readiness') {
-            return <ReadinessCertificationPanel digests={buyerPortfolioDigests} compact title="Buyer Launch Certification" />
-        }
-        if (activeRiskPanel === 'guidance') {
-            return <LifecycleGuidancePanel role="buyer" state={selectedTransaction.status} compact title="Contract Guidance" />
-        }
-        if (activeRiskPanel === 'integrity') {
-            return (
-                <ContractHealthPanel
-                    contractId={selectedTransaction.id}
-                    state={selectedTransaction.status}
-                    compact
-                    title="Escrow Integrity Monitor"
-                />
-            )
-        }
-        if (activeRiskPanel === 'impact') {
-            return (
-                <TransitionImpactPanel
-                    contractId={selectedTransaction.id}
-                    state={selectedTransaction.status}
-                    role="buyer"
-                    compact
-                    title="Action Impact Simulator"
-                />
-            )
-        }
-        if (activeRiskPanel === 'controlTower') {
-            return (
-                <ControlTowerPanel
-                    contractId={selectedTransaction.id}
-                    state={selectedTransaction.status}
-                    role="buyer"
-                    compact
-                    title="Buyer Control Tower"
-                />
-            )
-        }
-        if (activeRiskPanel === 'attestation') {
-            return (
-                <PolicyAttestationPanel
-                    contractId={selectedTransaction.id}
-                    state={selectedTransaction.status}
-                    role="buyer"
-                    compact
-                    title="Buyer Policy Attestation"
-                />
-            )
-        }
-        if (activeRiskPanel === 'decisionGate') {
-            return (
-                <DecisionGatePanel
-                    contractId={selectedTransaction.id}
-                    state={selectedTransaction.status}
-                    role="buyer"
-                    compact
-                    title="Buyer Decision Gate"
-                />
-            )
-        }
-        if (activeRiskPanel === 'alertCenter') {
-            return (
-                <AlertCenterPanel
-                    contractId={selectedTransaction.id}
-                    state={selectedTransaction.status}
-                    role="buyer"
-                    compact
-                    title="Buyer Alert Center"
-                />
-            )
-        }
-        if (activeRiskPanel === 'runbook') {
-            return (
-                <ExecutionRunbookPanel
-                    contractId={selectedTransaction.id}
-                    state={selectedTransaction.status}
-                    role="buyer"
-                    compact
-                    title="Execution Runbook"
-                />
-            )
-        }
-        return (
-            <SecurityAuditTimeline
-                contractId={selectedTransaction.id}
-                state={selectedTransaction.status}
-                compact
-                title="Status + Policy Timeline"
-            />
-        )
-    }
-
     return (
-        <div className="container mx-auto px-4 py-10 space-y-6 text-white">
+        <div className="relative min-h-screen overflow-x-hidden bg-[#060C16] text-slate-100">
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.14),transparent_34%),radial-gradient(circle_at_78%_12%,rgba(99,102,241,0.10),transparent_28%),linear-gradient(180deg,rgba(255,255,255,0.015),transparent_26%)]" />
             {showSuccessToast && (
-                <div className="fixed top-4 right-4 z-50 rounded-lg border border-emerald-400 bg-emerald-600/90 px-4 py-3 text-white shadow-lg">
+                <div className="fixed right-4 top-4 z-50 rounded-xl border border-emerald-400/70 bg-emerald-600/90 px-4 py-3 text-sm font-medium text-white shadow-2xl">
                     Payment released successfully
                 </div>
             )}
-
-            <header className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-                <div>
-                    <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
-                        Escrow Center
-                    </div>
-                    <h1 className="mt-3 text-3xl font-bold">Escrow Center</h1>
-                    <p className="text-slate-400 text-sm mt-1">Secure transaction management for all dataset access requests</p>
-                </div>
-                <div className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm text-cyan-200">
-                    Escrow protections active across all transactions
-                </div>
-            </header>
-
-            {protectedDealCount > 0 && (
-                <section className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3">
-                    <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-                        <div>
-                            <div className="text-sm font-semibold text-white">Outcome-protected deals are active in this ledger</div>
-                            <div className="mt-1 text-xs text-emerald-100/80">
-                                {protectedDealCount} protected deal{protectedDealCount === 1 ? '' : 's'} loaded with buyer-validation gates
-                                {automaticCreditCount > 0 ? ` and ${automaticCreditCount} automatic credit${automaticCreditCount === 1 ? '' : 's'} issued.` : '.'}
+            <div className="relative mx-auto max-w-[1680px] space-y-5 px-4 py-8 sm:px-6 xl:px-8">
+                <header className={`${shellPanelClass} px-5 py-5 sm:px-6`}>
+                    <div className="grid gap-4 xl:grid-cols-[minmax(0,1.18fr)_minmax(360px,0.82fr)] xl:items-end">
+                        <div className="max-w-3xl">
+                            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+                                Escrow Center
                             </div>
+                            <h1 className="mt-3 text-[2rem] font-semibold tracking-[-0.045em] text-white sm:text-[2.3rem]">
+                                Escrow Center
+                            </h1>
+                            <p className="mt-2 max-w-2xl text-sm text-slate-400">
+                                Operate the escrow ledger, review the current case, and monitor release or dispute exposure without leaving the working surface.
+                            </p>
                         </div>
-                        <div className="rounded-full border border-emerald-400/35 bg-emerald-500/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-emerald-100">
-                            Visible in Escrow Center
+
+                        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
+                            <HeaderSignal label="Cases requiring attention" value={`${releasePendingCount + disputesCount + heldCount}`} accent="caution" />
+                            <HeaderSignal label="Protected evaluations" value={`${protectedDealCount}`} accent="positive" />
                         </div>
+                    </div>
+                </header>
+
+                <section aria-labelledby="escrow-kpis" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+                    <MetricTile label="Access active" value={`${activeCount}`} detail="Live cases in governed access" />
+                    <MetricTile label="Held or pending" value={`${heldCount}`} detail="Still waiting on release readiness" />
+                    <MetricTile label="Release pending" value={`${releasePendingCount}`} detail="Buyer validation already completed" />
+                    <MetricTile label="Disputes" value={`${disputesCount}`} detail="Escalated cases under review" tone="critical" />
+                    <MetricTile label="Value in escrow" value={`$${totalValue.toLocaleString()}`} detail="Total protected exposure across the ledger" tone="positive" />
+                </section>
+                <section className={`${quietPanelClass} px-5 py-5 sm:px-6`} aria-labelledby="governance-watch">
+                    <div className="flex flex-col gap-2 border-b border-slate-800/90 pb-4 sm:flex-row sm:items-end sm:justify-between">
+                        <div>
+                            <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Governance watch</div>
+                            <h2 id="governance-watch" className="mt-2 text-lg font-semibold text-white">
+                                Governance watch
+                            </h2>
+                            <p className="mt-2 max-w-3xl text-sm text-slate-400">
+                                Keep release readiness, protected evaluation posture, and dispute exposure visible without opening a separate control workspace.
+                            </p>
+                        </div>
+                        <span className="rounded-full border border-slate-700/80 bg-slate-950/50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-300">
+                            Main page governance summary
+                        </span>
+                    </div>
+
+                    <div className="mt-4 grid gap-3 lg:grid-cols-3">
+                        <GovernanceCard
+                            tone="positive"
+                            label="Protected evaluations"
+                            value={`${protectedDealCount} live`}
+                            detail={
+                                automaticCreditCount > 0
+                                    ? `${automaticCreditCount} automatic credit case${automaticCreditCount === 1 ? '' : 's'} already tracked in escrow.`
+                                    : 'Outcome-protected deals remain visible, but no auto-credit case is open right now.'
+                            }
+                        />
+                        <GovernanceCard
+                            tone={releasePendingCount > 0 ? 'caution' : 'neutral'}
+                            label="Release queue"
+                            value={releaseQueueLead ? `${releasePendingCount} waiting` : 'No queued release'}
+                            detail={
+                                releaseQueueLead
+                                    ? `${releaseQueueLead.id} is the next case ready for payout once the release gate clears.`
+                                    : 'No escrow record is currently sitting in a release-pending state.'
+                            }
+                        />
+                        <GovernanceCard
+                            tone={disputesCount > 0 ? 'critical' : 'neutral'}
+                            label="Dispute watch"
+                            value={disputesCount > 0 ? `${disputesCount} escalated` : 'No disputes'}
+                            detail={
+                                disputeLead
+                                    ? `${disputeLead.id} remains open for ${disputeLead.dataset} after a schema-mismatch escalation.`
+                                    : 'The ledger currently has no escalated dispute requiring buyer attention.'
+                            }
+                        />
                     </div>
                 </section>
-            )}
-
-            <section className="grid sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-7 gap-4">
-                {summaryStats.map(stat => (
-                    <div key={stat.label} className="bg-slate-900/70 border border-slate-700 rounded-xl p-4">
-                        <div className="text-xs uppercase tracking-[0.14em] text-slate-500">{stat.label}</div>
-                        <div className="text-2xl font-semibold mt-2">{stat.value}</div>
-                    </div>
-                ))}
-            </section>
-
-            <section className="rounded-xl border border-slate-700/70 bg-slate-900/55 px-4 py-3">
-                <div className="flex flex-wrap gap-2">
-                    {workspaceTabs.map(tab => (
-                        <button
-                            key={tab.key}
-                            onClick={() => setActiveWorkspace(tab.key)}
-                            className={`rounded-md border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] transition-colors ${
-                                activeWorkspace === tab.key
-                                    ? 'border-cyan-500/60 bg-cyan-500/15 text-cyan-200'
-                                    : 'border-slate-700/80 text-slate-400 hover:border-slate-600/80 hover:text-slate-200'
-                            }`}
-                        >
-                            {tab.label}
-                        </button>
-                    ))}
-                </div>
-                <p className="mt-2 text-xs text-slate-500">{selectedWorkspaceHint}</p>
-            </section>
-
-            {(activeWorkspace === 'overview' || activeWorkspace === 'transactions') && (
-                <section className="grid items-start gap-6 lg:grid-cols-[1.9fr_1fr]">
-                    <div className="overflow-hidden rounded-2xl border border-slate-700 bg-slate-800/60">
-                        <div className="border-b border-slate-700 px-5 py-4">
-                            <div className="flex flex-wrap items-center justify-between gap-3">
+                <section className="grid items-start gap-5 xl:grid-cols-[minmax(0,1.62fr)_minmax(360px,0.94fr)]">
+                    <section className={`${shellPanelClass} overflow-hidden`} aria-labelledby="escrow-ledger">
+                        <div className="border-b border-slate-800/90 px-5 py-4 sm:px-6">
+                            <div className="flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
                                 <div>
-                                    <h2 className="text-lg font-semibold">Escrow Transactions</h2>
-                                    <p className="mt-1 text-xs text-slate-500">
-                                        {activeWorkspace === 'overview'
-                                            ? 'Priority operations view with immediate actions.'
-                                            : 'Full transaction workspace with search and paging controls.'}
+                                    <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Primary workspace</div>
+                                    <h2 id="escrow-ledger" className="mt-2 text-lg font-semibold text-white">
+                                        Escrow ledger
+                                    </h2>
+                                    <p className="mt-2 max-w-3xl text-sm text-slate-400">
+                                        Review the active ledger, focus one case at a time, and keep release or dispute decisions tied to the selected record.
                                     </p>
                                 </div>
-                                <div className="flex flex-wrap gap-1">
+                                <div className="flex flex-wrap gap-2">
                                     {filterTabs.map(tab => (
                                         <button
                                             key={tab}
                                             onClick={() => setActiveFilter(tab)}
-                                            className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+                                            className={`rounded-full border px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] transition-colors ${
                                                 activeFilter === tab
-                                                    ? 'border-cyan-500/40 bg-cyan-500/20 text-cyan-200'
-                                                    : 'border-slate-700 text-slate-400 hover:text-white'
+                                                    ? 'border-cyan-500/50 bg-cyan-500/15 text-cyan-200'
+                                                    : 'border-slate-700/80 bg-slate-950/40 text-slate-400 hover:border-slate-600/80 hover:text-slate-200'
                                             }`}
                                         >
                                             {tab}
@@ -483,22 +305,23 @@ export default function EscrowCenterPage() {
                                     ))}
                                 </div>
                             </div>
-                            <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                                <label className="w-full sm:max-w-xs">
-                                    <span className="sr-only">Search transactions</span>
+
+                            <div className="mt-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                                <label className="w-full lg:max-w-sm">
+                                    <span className="sr-only">Search escrow records</span>
                                     <input
                                         value={searchQuery}
                                         onChange={event => setSearchQuery(event.target.value)}
-                                        placeholder="Search ID, dataset, buyer or provider"
-                                        className="w-full rounded-lg border border-slate-700 bg-slate-900/70 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-cyan-500/50 focus:outline-none"
+                                        placeholder="Search ID, dataset, buyer, provider"
+                                        className="w-full rounded-xl border border-slate-700/90 bg-slate-950/55 px-3.5 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:border-cyan-500/50 focus:outline-none"
                                     />
                                 </label>
-                                <label className="flex items-center gap-2 text-xs text-slate-400">
+                                <label className="flex items-center gap-2 text-xs font-medium text-slate-400">
                                     Rows
                                     <select
                                         value={rowsPerPage}
                                         onChange={event => setRowsPerPage(parseInt(event.target.value, 10))}
-                                        className="rounded-lg border border-slate-700 bg-slate-900/70 px-2 py-1.5 text-xs text-slate-200 focus:border-cyan-500/50 focus:outline-none"
+                                        className="rounded-xl border border-slate-700/90 bg-slate-950/55 px-2.5 py-2 text-xs text-slate-200 focus:border-cyan-500/50 focus:outline-none"
                                     >
                                         {rowsPerPageOptions.map(option => (
                                             <option key={option} value={option}>
@@ -509,87 +332,43 @@ export default function EscrowCenterPage() {
                                 </label>
                             </div>
                         </div>
+
                         <div className="overflow-x-auto">
-                            <table className="w-full min-w-[1120px] text-left text-sm">
-                            <thead className="bg-slate-900/90 text-xs uppercase text-slate-400">
-                                <tr>
-                                    <th className="px-3 py-3 font-medium">Request ID</th>
-                                    <th className="px-3 py-3 font-medium">Dataset</th>
-                                    <th className="px-3 py-3 font-medium">Buyer</th>
-                                    <th className="px-3 py-3 font-medium">Provider</th>
-                                    <th className="px-3 py-3 font-medium">Amount</th>
-                                    <th className="px-3 py-3 font-medium">Protection</th>
-                                    <th className="px-3 py-3 font-medium">Access Method</th>
-                                    <th className="px-3 py-3 font-medium">Status</th>
-                                    <th className="px-3 py-3 font-medium">Action</th>
-                                </tr>
-                            </thead>
-                                <tbody className="divide-y divide-slate-800">
-                                    {paginatedTransactions.map(row => {
-                                    const isSelected = row.id === selectedId
-                                    const statusStyle = statusStyles[row.status]
-                                    const accessStyle = accessMethodStyles[row.accessMethod]
-                                    const checkoutRecord = checkoutRecordByEscrowId.get(row.id)
-                                    return (
-                                        <tr
+                            <table className="min-w-[1040px] w-full table-fixed text-left text-sm">
+                                <colgroup>
+                                    <col className="w-[12%]" />
+                                    <col className="w-[21%]" />
+                                    <col className="w-[18%]" />
+                                    <col className="w-[11%]" />
+                                    <col className="w-[14%]" />
+                                    <col className="w-[11%]" />
+                                    <col className="w-[13%]" />
+                                </colgroup>
+                                <thead className="border-b border-slate-800/90 bg-slate-950/70 text-[11px] uppercase tracking-[0.18em] text-slate-500">
+                                    <tr>
+                                        <th className="px-4 py-3 font-medium">Escrow</th>
+                                        <th className="px-4 py-3 font-medium">Dataset</th>
+                                        <th className="px-4 py-3 font-medium">Parties</th>
+                                        <th className="px-4 py-3 font-medium">Amount</th>
+                                        <th className="px-4 py-3 font-medium">Protection</th>
+                                        <th className="px-4 py-3 font-medium">Access</th>
+                                        <th className="px-4 py-3 font-medium">Status</th>
+                                        <th className="px-4 py-3 text-right font-medium">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-900/90">
+                                    {paginatedTransactions.map(row => (
+                                        <EscrowLedgerRow
                                             key={row.id}
-                                            className={`cursor-pointer transition-colors ${isSelected ? 'bg-slate-700/50' : 'hover:bg-slate-800/50'}`}
-                                            onClick={() => setSelectedId(row.id)}
-                                        >
-                                            <td className="px-3 py-3 text-cyan-300 font-mono text-xs">{row.id}</td>
-                                            <td className="px-3 py-3 text-slate-200">{row.dataset}</td>
-                                            <td className="px-3 py-3 text-slate-400 font-mono text-xs">{row.buyer}</td>
-                                            <td className="px-3 py-3 text-slate-400 font-mono text-xs">{row.provider}</td>
-                                            <td className="px-3 py-3 text-slate-200 font-mono">{row.amount}</td>
-                                            <td className="px-3 py-3">
-                                                {checkoutRecord ? (
-                                                    <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/35 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-200">
-                                                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
-                                                        {outcomeStageMeta[checkoutRecord.outcomeProtection.stage].label}
-                                                    </span>
-                                                ) : (
-                                                    <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-700 bg-slate-900/60 px-2 py-0.5 text-[10px] font-medium text-slate-400">
-                                                        Standard escrow
-                                                    </span>
-                                                )}
-                                            </td>
-                                            <td className="px-3 py-3">
-                                                <span className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] font-medium ${accessStyle.badge}`}>
-                                                    <span className="font-semibold tracking-[0.1em]">{accessStyle.token}</span>
-                                                    {accessStyle.label}
-                                                </span>
-                                            </td>
-                                            <td className="px-3 py-3">
-                                                <span className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] font-medium ${statusStyle.badge}`}>
-                                                    <span
-                                                        className={`h-1.5 w-1.5 rounded-full ${
-                                                            row.status === 'ACCESS_ACTIVE'
-                                                                ? 'bg-blue-400'
-                                                                : row.status === 'DISPUTE_OPEN'
-                                                                  ? 'bg-rose-400'
-                                                                  : row.status === 'FUNDS_HELD' || row.status === 'REQUEST_SUBMITTED'
-                                                                    ? 'bg-amber-400'
-                                                                    : row.status === 'RELEASE_PENDING'
-                                                                      ? 'bg-indigo-400'
-                                                                      : row.status === 'RELEASED_TO_PROVIDER'
-                                                                        ? 'bg-emerald-400'
-                                                                        : 'bg-slate-400'
-                                                        }`}
-                                                    />
-                                                    {statusStyle.text}
-                                                </span>
-                                            </td>
-                                            <td className="px-3 py-3">
-                                                <button className="px-2 py-1 rounded border border-slate-600 text-xs text-slate-300 hover:border-cyan-500 hover:text-cyan-200 transition-colors">
-                                                    OPEN
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    )
-                                    })}
+                                            row={row}
+                                            checkoutRecord={checkoutRecordByEscrowId.get(row.id) ?? null}
+                                            isSelected={row.id === selectedId}
+                                            onSelect={() => setSelectedId(row.id)}
+                                        />
+                                    ))}
                                     {paginatedTransactions.length === 0 && (
                                         <tr>
-                                            <td colSpan={9} className="px-4 py-10 text-center text-sm text-slate-400">
+                                            <td colSpan={8} className="px-4 py-12 text-center text-sm text-slate-400">
                                                 No escrow transactions match this filter and search query.
                                             </td>
                                         </tr>
@@ -597,12 +376,13 @@ export default function EscrowCenterPage() {
                                 </tbody>
                             </table>
                         </div>
-                        <div className="flex flex-col gap-3 border-t border-slate-700 bg-slate-900/50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+
+                        <div className="flex flex-col gap-3 border-t border-slate-800/90 bg-slate-950/45 px-5 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
                             <div className="text-xs text-slate-400">
                                 {hasFilteredResults ? (
                                     <>
                                         Showing {pageStartIndex}-{pageEndIndex} of {filteredTransactions.length} records. Page value:{' '}
-                                        <span className="text-cyan-300 font-mono font-semibold">${totalPageValue.toLocaleString()}</span>
+                                        <span className="font-mono font-semibold text-cyan-300">${pageValue.toLocaleString()}</span>
                                     </>
                                 ) : (
                                     'No records in this view.'
@@ -610,12 +390,12 @@ export default function EscrowCenterPage() {
                             </div>
                             <div className="flex items-center gap-2">
                                 <button
-                                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                    onClick={() => setCurrentPage(previous => Math.max(1, previous - 1))}
                                     disabled={!hasFilteredResults || currentPage === 1}
-                                    className={`rounded border px-2 py-1 text-xs ${
+                                    className={`rounded-lg border px-2.5 py-1.5 text-xs ${
                                         !hasFilteredResults || currentPage === 1
-                                            ? 'cursor-not-allowed border-slate-700 text-slate-600'
-                                            : 'border-slate-600 text-slate-300 hover:text-white'
+                                            ? 'cursor-not-allowed border-slate-800 text-slate-600'
+                                            : 'border-slate-700 text-slate-300 hover:border-slate-600 hover:text-white'
                                     }`}
                                 >
                                     Prev
@@ -624,303 +404,149 @@ export default function EscrowCenterPage() {
                                     Page {hasFilteredResults ? currentPage : 0} / {hasFilteredResults ? totalPages : 0}
                                 </span>
                                 <button
-                                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                    onClick={() => setCurrentPage(previous => Math.min(totalPages, previous + 1))}
                                     disabled={!hasFilteredResults || currentPage === totalPages}
-                                    className={`rounded border px-2 py-1 text-xs ${
+                                    className={`rounded-lg border px-2.5 py-1.5 text-xs ${
                                         !hasFilteredResults || currentPage === totalPages
-                                            ? 'cursor-not-allowed border-slate-700 text-slate-600'
-                                            : 'border-slate-600 text-slate-300 hover:text-white'
+                                            ? 'cursor-not-allowed border-slate-800 text-slate-600'
+                                            : 'border-slate-700 text-slate-300 hover:border-slate-600 hover:text-white'
                                     }`}
                                 >
                                     Next
                                 </button>
                             </div>
                         </div>
-                    </div>
+                    </section>
 
-                    <div className="bg-slate-800/60 border border-slate-700 rounded-2xl p-5 space-y-5 lg:sticky lg:top-24 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto">
-                    <div>
-                        <h2 className="text-lg font-semibold">Escrow Detail - {selectedTransaction.id}</h2>
-                        <p className="text-xs text-slate-400 mt-1">Active escrow monitoring for {selectedTransaction.dataset}</p>
-                        <div className="mt-2 flex flex-wrap items-center gap-2">
-                            <span className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] font-medium ${accessMethodStyles[selectedTransaction.accessMethod].badge}`}>
-                                <span className="font-semibold tracking-[0.1em]">{accessMethodStyles[selectedTransaction.accessMethod].token}</span>
-                                {accessMethodStyles[selectedTransaction.accessMethod].label}
-                            </span>
-                            {selectedCheckoutRecord ? (
-                                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/35 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-200">
-                                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
-                                    Outcome-protected deal
+                    <aside className={`${shellPanelClass} p-5 sm:p-6 xl:sticky xl:top-24 xl:max-h-[calc(100vh-7rem)] xl:overflow-y-auto`} aria-labelledby="selected-case">
+                        <div className="border-b border-slate-800/90 pb-4">
+                            <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Secondary context</div>
+                            <h2 id="selected-case" className="mt-2 text-lg font-semibold text-white">
+                                Selected case
+                            </h2>
+                            <div className="mt-3 text-base font-semibold text-white">{selectedTransaction.dataset}</div>
+                            <div className="mt-1 text-xs font-medium text-cyan-300">{selectedTransaction.id}</div>
+                            <div className="mt-3 flex flex-wrap gap-2">
+                                <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold ${accessMethodStyles[selectedTransaction.accessMethod].badge}`}>
+                                    <span className="font-semibold tracking-[0.1em]">{accessMethodStyles[selectedTransaction.accessMethod].token}</span>
+                                    {accessMethodStyles[selectedTransaction.accessMethod].label}
                                 </span>
-                            ) : (
-                                <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-700 bg-slate-900/60 px-2 py-0.5 text-[10px] font-medium text-slate-400">
-                                    Standard escrow record
+                                <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold ${statusStyles[selectedTransaction.status].badge}`}>
+                                    <span className={`h-1.5 w-1.5 rounded-full ${statusStyles[selectedTransaction.status].dot}`} />
+                                    {statusStyles[selectedTransaction.status].text}
                                 </span>
-                            )}
-                        </div>
-                    </div>
-
-                    <div className="bg-slate-900/70 border border-slate-700 rounded-lg p-3 space-y-2">
-                        <div className="flex items-center justify-between text-sm">
-                            <span className="text-slate-400">Escrow window</span>
-                            <span className="text-amber-300 font-mono font-medium">
-                                {selectedCheckoutRecord
-                                    ? `${selectedCheckoutRecord.configuration.reviewWindowHours} hours`
-                                    : '47:23:11 remaining'}
-                            </span>
-                        </div>
-                        <div className="flex items-center justify-between text-sm">
-                            <span className="text-slate-400">Access type</span>
-                            <span className="text-slate-200">
-                                {selectedCheckoutRecord
-                                    ? selectedCheckoutRecord.configuration.accessMode.replace(/_/g, ' ')
-                                    : '48 hours Extended'}
-                            </span>
-                        </div>
-                    </div>
-
-                    {selectedCheckoutRecord ? (
-                        <div className="bg-slate-900/70 border border-slate-700 rounded-lg p-4 space-y-3">
-                            <div className="flex items-center justify-between gap-3">
-                                <div>
-                                    <div className="text-sm font-medium text-slate-200">Outcome Protection</div>
-                                    <div className="mt-1 text-xs text-slate-400">
-                                        Metadata preview included · Paid evaluation {selectedCheckoutRecord.outcomeProtection.evaluationFeeUsd.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })}
-                                    </div>
-                                </div>
-                                <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-semibold text-emerald-200">
-                                    {outcomeStageMeta[selectedCheckoutRecord.outcomeProtection.stage].label}
+                                <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold ${selectedCaseTone.badge}`}>
+                                    {selectedCaseTone.label}
                                 </span>
                             </div>
-                            <div className="grid grid-cols-2 gap-2 text-xs text-slate-400">
-                                <div>Schema version: {selectedCheckoutRecord.outcomeProtection.commitments.schemaVersion}</div>
-                                <div>Expected fields: {selectedCheckoutRecord.outcomeProtection.commitments.expectedFieldCount}</div>
-                                <div>Freshness: {selectedCheckoutRecord.outcomeProtection.commitments.freshnessCommitment}</div>
-                                <div>Freshness floor: {selectedCheckoutRecord.outcomeProtection.commitments.confidenceFloor}%</div>
-                            </div>
-                            {selectedCheckoutRecord.outcomeProtection.credits.status === 'issued' && (
-                                <div className="rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-100">
-                                    {selectedCheckoutRecord.outcomeProtection.credits.reason} Credit: {selectedCheckoutRecord.outcomeProtection.credits.amountUsd.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })}
-                                </div>
-                            )}
+                            <p className="mt-3 text-sm text-slate-400">{selectedCaseSummary}</p>
                         </div>
-                    ) : (
-                        <div className="bg-slate-900/70 border border-dashed border-slate-700 rounded-lg p-4">
-                            <div className="text-sm font-medium text-slate-200">Outcome Protection</div>
-                            <div className="mt-1 text-xs text-slate-400">
-                                This record is part of the legacy escrow set. Outcome-protected state appears on deals started through Escrow-Native Checkout, where the buyer validation gate and automatic-credit logic are attached to the contract.
-                            </div>
-                        </div>
-                    )}
 
-                    <div className="bg-slate-900/70 border border-slate-700 rounded-lg p-3">
-                            <div className="text-sm font-medium text-slate-200 mb-2">Monitoring Summary</div>
-                        <div className="grid grid-cols-2 gap-2 text-xs text-slate-400">
-                            <div>API calls made: 23</div>
-                            <div>Export attempts: 0</div>
-                            <div>Policy violations: 0</div>
-                            <div className="text-emerald-300">Status: Clean</div>
+                        <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
+                            <FactTile label="Escrow amount" value={selectedTransaction.amount} />
+                            <FactTile label="Review window" value={selectedCheckoutRecord ? `${selectedCheckoutRecord.configuration.reviewWindowHours} hours` : 'Legacy record'} />
+                            <FactTile label="Provider" value={selectedTransaction.provider} mono />
+                            <FactTile label="Buyer" value={selectedTransaction.buyer} mono />
                         </div>
-                    </div>
 
-                    {selectedCheckoutRecord && (
-                        <div className="bg-slate-900/70 border border-slate-700 rounded-lg p-4">
+                        <section className={`mt-5 ${quietPanelClass} p-4`}>
+                            <div className="text-sm font-semibold text-white">Operational monitor</div>
+                            <div className="mt-4 space-y-3">
+                                <InspectorRow label="Release gate" value={releasePaymentGuardrail.allowed ? 'Open' : 'Locked'} tone={releasePaymentGuardrail.allowed ? 'text-emerald-300' : 'text-amber-300'} />
+                                <InspectorRow label="Dispute path" value={openDisputeGuardrail.allowed ? 'Available' : 'Closed'} tone={openDisputeGuardrail.allowed ? 'text-rose-300' : 'text-slate-300'} />
+                                <InspectorRow label="Window extension" value={extendWindowGuardrail.allowed ? 'Available' : 'Closed'} tone={extendWindowGuardrail.allowed ? 'text-blue-300' : 'text-slate-300'} />
+                                <InspectorRow label="Integrity watch" value={selectedCaseTone.value} tone={selectedCaseTone.valueTone} />
+                            </div>
+                        </section>
+
+                        <section className={`mt-5 ${quietPanelClass} p-4`}>
                             <div className="flex items-start justify-between gap-3">
                                 <div>
-                                    <div className="text-sm font-medium text-slate-200">Post-evaluation paths</div>
+                                    <div className="text-sm font-semibold text-white">Outcome protection</div>
                                     <div className="mt-1 text-xs text-slate-400">
-                                        Successful protected evaluations often move into one of these guided expansion steps.
+                                        Outcome-protected deals show evaluation commitments and credit posture directly inside the case inspector.
                                     </div>
                                 </div>
-                                <span className="rounded-full border border-cyan-500/30 bg-cyan-500/10 px-2.5 py-1 text-[10px] font-semibold text-cyan-200">
-                                    Mock next steps
-                                </span>
-                            </div>
-
-                            <div className="mt-4 grid gap-2 sm:grid-cols-2">
-                                {postEvaluationExpansionPaths.map(path => (
-                                    <div key={path.title} className="rounded-lg border border-slate-700/80 bg-slate-950/60 px-3 py-3">
-                                        <div className="text-xs font-semibold uppercase tracking-[0.1em] text-slate-300">{path.title}</div>
-                                        <div className="mt-2 text-xs leading-relaxed text-slate-400">{path.detail}</div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    {selectedTransaction.accessMethod === 'download' && (
-                        <div className="bg-slate-900/70 border border-slate-700 rounded-lg p-4">
-                            <div className="text-sm font-medium text-slate-200 mb-3">Download Access</div>
-                            <div className="space-y-2 text-xs text-slate-300">
-                                <div>Encrypted download is available after buyer validation and release.</div>
-                                <div>AES-256 encryption and watermarking are enforced.</div>
-                                <div>Valid for 24 hours after release.</div>
-                                <div>Downloads remaining: 1 of 1.</div>
-                                <button
-                                    disabled
-                                    className="w-full mt-2 rounded-lg bg-blue-600/50 px-3 py-2 text-xs font-medium text-blue-200 cursor-not-allowed"
-                                >
-                                    Download Dataset
-                                </button>
-                                <div className="text-[10px] text-slate-500 text-center">Provider is notified after each download event.</div>
-                            </div>
-                        </div>
-                    )}
-
-                    <div className="grid gap-2">
-                        <button
-                            onClick={() => {
-                                if (selectedCheckoutRecord?.lifecycleState === 'RELEASE_PENDING') {
-                                    handleReleaseSelectedCheckout()
-                                    return
-                                }
-                                setShowFeedbackModal(true)
-                            }}
-                            disabled={!releasePaymentGuardrail.allowed}
-                            className={`w-full rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                                releasePaymentGuardrail.allowed
-                                    ? 'bg-emerald-600 text-white hover:bg-emerald-500'
-                                    : 'cursor-not-allowed border border-slate-600 bg-slate-700/60 text-slate-400'
-                            }`}
-                        >
-                            Confirm and Release Payment
-                        </button>
-                        <p className={`text-[11px] ${releasePaymentGuardrail.allowed ? 'text-slate-500' : 'text-amber-300'}`}>
-                            {releasePaymentGuardrail.allowed
-                                ? selectedCheckoutRecord?.lifecycleState === 'RELEASE_PENDING'
-                                    ? 'Buyer validation completed. Release is now unlocked by outcome protection policy.'
-                                    : 'Release is available for this escrow state.'
-                                : releasePaymentGuardrail.reason}
-                        </p>
-                        <button
-                            disabled={!openDisputeGuardrail.allowed}
-                            className={`w-full rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                                openDisputeGuardrail.allowed
-                                    ? 'border border-rose-500/50 text-rose-200 hover:bg-rose-500/10'
-                                    : 'cursor-not-allowed border border-slate-600 bg-slate-700/60 text-slate-400'
-                            }`}
-                        >
-                            Initiate Dispute
-                        </button>
-                        <p className={`text-[11px] ${openDisputeGuardrail.allowed ? 'text-slate-500' : 'text-amber-300'}`}>
-                            {openDisputeGuardrail.allowed
-                                ? 'Dispute can be opened while access is active or pending release.'
-                                : openDisputeGuardrail.reason}
-                        </p>
-                        <button
-                            disabled={!extendWindowGuardrail.allowed}
-                            className={`w-full rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                                extendWindowGuardrail.allowed
-                                    ? 'border border-blue-500/50 text-blue-200 hover:bg-blue-500/10'
-                                    : 'cursor-not-allowed border border-slate-600 bg-slate-700/60 text-slate-400'
-                            }`}
-                        >
-                            Extend Window
-                        </button>
-                        <p className={`text-[11px] ${extendWindowGuardrail.allowed ? 'text-slate-500' : 'text-amber-300'}`}>
-                            {extendWindowGuardrail.allowed
-                                ? 'Window extension is available for this contract stage.'
-                                : extendWindowGuardrail.reason}
-                        </p>
-                    </div>
-                </div>
-            </section>
-            )}
-
-            {activeWorkspace === 'riskControls' && (
-                <>
-                    <section className="rounded-xl border border-slate-700 bg-slate-900/55 p-4">
-                        <h2 className="text-lg font-semibold">Risk and Controls Workspace</h2>
-                        <p className="mt-1 text-sm text-slate-400">
-                            Focused escrow: <span className="font-mono text-cyan-300">{selectedTransaction.id}</span> ({selectedTransaction.dataset})
-                        </p>
-                        <p className="mt-1 text-xs text-slate-500">Use the Transactions workspace to change the focused escrow record.</p>
-                    </section>
-
-                    <section className="rounded-xl border border-slate-700 bg-slate-900/55 p-4">
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                            <h3 className="text-sm font-semibold text-slate-100">Active Panel: {activeRiskPanelLabel}</h3>
-                            <p className="text-xs text-slate-500">Switch views to inspect one control surface at a time.</p>
-                        </div>
-                        <div className="mt-3 flex flex-wrap gap-2">
-                            {riskPanelTabs.map(tab => (
-                                <button
-                                    key={tab.key}
-                                    onClick={() => setActiveRiskPanel(tab.key)}
-                                    className={`rounded-md border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.11em] transition-colors ${
-                                        activeRiskPanel === tab.key
-                                            ? 'border-cyan-500/60 bg-cyan-500/15 text-cyan-200'
-                                            : 'border-slate-700 text-slate-400 hover:border-slate-600 hover:text-slate-200'
-                                    }`}
-                                >
-                                    {tab.label}
-                                </button>
-                            ))}
-                        </div>
-
-                        <div className="mt-4 max-h-[70vh] overflow-y-auto pr-1">
-                            {renderActiveRiskPanel()}
-                        </div>
-                    </section>
-                </>
-            )}
-
-            {activeWorkspace === 'disputes' && (
-                <section className="bg-slate-800/60 border border-slate-700 rounded-2xl p-6">
-                    <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
-                        <div>
-                            <h2 className="text-lg font-semibold">Active Disputes</h2>
-                            <p className="text-xs text-slate-500">Escalations requiring review</p>
-                        </div>
-                    </div>
-                    <div className="space-y-4">
-                        {activeDisputes.map(dispute => (
-                            <div key={dispute.id} className="bg-slate-900/70 border border-rose-500/30 rounded-xl p-4">
-                                <div className="flex flex-col md:flex-row md:items-start justify-between gap-3">
-                                    <div className="space-y-1">
-                                        <div className="text-sm font-semibold text-white">{dispute.id} | {dispute.dataset}</div>
-                                        <div className="text-xs text-slate-400">Raised by: {dispute.raisedBy}</div>
-                                        <div className="text-xs text-slate-400">Reason: "{dispute.reason}"</div>
-                                        <div className="text-xs text-slate-500">Raised: {dispute.raised}</div>
-                                    </div>
-                                    <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/40 bg-amber-500/10 px-3 py-1 text-[10px] font-medium text-amber-200">
-                                        <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
-                                        {dispute.status}
+                                {selectedCheckoutRecord ? (
+                                    <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-semibold text-emerald-200">
+                                        {outcomeStageMeta[selectedCheckoutRecord.outcomeProtection.stage].label}
                                     </span>
-                                </div>
-                                <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
-                                    <button className="rounded-lg border border-slate-600 px-3 py-2 text-xs font-medium text-slate-300 hover:border-slate-400 hover:text-white">
-                                        View Evidence
-                                    </button>
-                                    <button className="rounded-lg bg-emerald-600 hover:bg-emerald-500 px-3 py-2 text-xs font-medium text-white">
-                                        Arbitrate: Refund Buyer
-                                    </button>
-                                    <button className="rounded-lg bg-blue-600 hover:bg-blue-500 px-3 py-2 text-xs font-medium text-white">
-                                        Arbitrate: Disburse Funds
-                                    </button>
-                                </div>
+                                ) : (
+                                    <span className="rounded-full border border-slate-700 bg-slate-950/60 px-2.5 py-1 text-[10px] font-semibold text-slate-300">
+                                        Standard escrow
+                                    </span>
+                                )}
                             </div>
-                        ))}
-                    </div>
-                </section>
-            )}
 
+                            {selectedCheckoutRecord ? (
+                                <>
+                                    <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
+                                        <FactTile label="Evaluation fee" value={selectedCheckoutRecord.outcomeProtection.evaluationFeeUsd.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })} />
+                                        <FactTile label="Metadata preview" value={selectedCheckoutRecord.outcomeProtection.metadataPreviewIncluded ? 'Included' : 'Not included'} />
+                                        <FactTile label="Schema version" value={selectedCheckoutRecord.outcomeProtection.commitments.schemaVersion} mono />
+                                        <FactTile label="Freshness floor" value={`${selectedCheckoutRecord.outcomeProtection.commitments.confidenceFloor}%`} />
+                                    </div>
+                                    <div className="mt-4 rounded-xl border border-slate-800/90 bg-slate-950/55 px-4 py-3 text-xs text-slate-300">
+                                        {selectedCheckoutRecord.outcomeProtection.engine.summary}
+                                    </div>
+                                    {selectedCheckoutRecord.outcomeProtection.credits.status === 'issued' && (
+                                        <div className="mt-3 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-xs text-rose-100">
+                                            {selectedCheckoutRecord.outcomeProtection.credits.reason} Credit: {selectedCheckoutRecord.outcomeProtection.credits.amountUsd.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })}
+                                        </div>
+                                    )}
+                                </>
+                            ) : (
+                                <div className="mt-4 rounded-xl border border-dashed border-slate-700/90 bg-slate-950/40 px-4 py-3 text-xs text-slate-400">
+                                    This record belongs to the legacy escrow set. Protected evaluation commitments appear only on deals started through Escrow-Native Checkout.
+                                </div>
+                            )}
+                        </section>
+
+                        <section className={`mt-5 ${quietPanelClass} p-4`}>
+                            <div className="text-sm font-semibold text-white">Case actions</div>
+                            <div className="mt-4 space-y-3">
+                                <ActionControl
+                                    buttonLabel="Confirm and Release Payment"
+                                    description={releasePaymentGuardrail.allowed ? selectedCheckoutRecord?.lifecycleState === 'RELEASE_PENDING' ? 'Buyer validation completed. Release is unlocked by the current outcome-protection policy.' : 'Release is available for this escrow state.' : releasePaymentGuardrail.reason}
+                                    tone={releasePaymentGuardrail.allowed ? 'primary' : 'disabled'}
+                                    onClick={() => {
+                                        if (selectedCheckoutRecord?.lifecycleState === 'RELEASE_PENDING') {
+                                            handleReleaseSelectedCheckout()
+                                            return
+                                        }
+                                        setShowFeedbackModal(true)
+                                    }}
+                                    disabled={!releasePaymentGuardrail.allowed}
+                                />
+                                <ActionControl
+                                    buttonLabel="Initiate Dispute"
+                                    description={openDisputeGuardrail.allowed ? 'Dispute can be opened while access is active or pending release.' : openDisputeGuardrail.reason}
+                                    tone={openDisputeGuardrail.allowed ? 'critical' : 'disabled'}
+                                    disabled={!openDisputeGuardrail.allowed}
+                                />
+                                <ActionControl
+                                    buttonLabel="Extend Window"
+                                    description={extendWindowGuardrail.allowed ? 'Window extension is available for this contract stage.' : extendWindowGuardrail.reason}
+                                    tone={extendWindowGuardrail.allowed ? 'secondary' : 'disabled'}
+                                    disabled={!extendWindowGuardrail.allowed}
+                                />
+                            </div>
+                        </section>
+                    </aside>
+                </section>
+            </div>
             {showFeedbackModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-                    <div className="bg-slate-800 border border-slate-700 rounded-2xl p-6 w-full max-w-md shadow-2xl">
-                        <h2 className="text-xl font-semibold">Rate Your Experience</h2>
-                        <p className="text-sm text-slate-400 mt-1">{selectedTransaction.dataset} - {selectedTransaction.id}</p>
-                        <p className="text-xs text-slate-500 mt-1">Your feedback directly impacts the provider's trust score</p>
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 px-4 backdrop-blur-sm">
+                    <div className={`${shellPanelClass} w-full max-w-md p-6`}>
+                        <h2 className="text-xl font-semibold text-white">Rate Your Experience</h2>
+                        <p className="mt-1 text-sm text-slate-400">{selectedTransaction.dataset} - {selectedTransaction.id}</p>
+                        <p className="mt-1 text-xs text-slate-500">Your feedback directly impacts the provider's trust score</p>
 
                         <div className="mt-5">
-                            <div className="text-xs text-slate-400 mb-2">Overall Dataset Quality</div>
+                            <div className="mb-2 text-xs text-slate-400">Overall Dataset Quality</div>
                             <div className="flex gap-1">
                                 {[1, 2, 3, 4, 5].map(star => (
-                                    <button
-                                        key={star}
-                                        onClick={() => setStarRating(star)}
-                                        className="text-2xl transition-colors"
-                                    >
+                                    <button key={star} onClick={() => setStarRating(star)} className="text-2xl transition-colors">
                                         {starRating >= star ? '⭐' : '☆'}
                                     </button>
                                 ))}
@@ -928,7 +554,7 @@ export default function EscrowCenterPage() {
                         </div>
 
                         <div className="mt-4">
-                            <div className="text-xs text-slate-400 mb-2">Select all that apply</div>
+                            <div className="mb-2 text-xs text-slate-400">Select all that apply</div>
                             <div className="flex flex-wrap gap-2">
                                 {feedbackTags.map(tag => {
                                     const isSelected = selectedTags.includes(tag)
@@ -937,11 +563,11 @@ export default function EscrowCenterPage() {
                                         <button
                                             key={tag}
                                             onClick={() => toggleTag(tag)}
-                                            className={`px-2 py-1 rounded-full text-xs border transition-colors ${
+                                            className={`rounded-full border px-2 py-1 text-xs transition-colors ${
                                                 isSelected
                                                     ? isNegative
-                                                        ? 'bg-rose-500/20 border-rose-500/40 text-rose-200'
-                                                        : 'bg-emerald-500/20 border-emerald-500/40 text-emerald-200'
+                                                        ? 'border-rose-500/40 bg-rose-500/20 text-rose-200'
+                                                        : 'border-emerald-500/40 bg-emerald-500/20 text-emerald-200'
                                                     : 'border-slate-600 text-slate-400 hover:text-white'
                                             }`}
                                         >
@@ -953,14 +579,14 @@ export default function EscrowCenterPage() {
                         </div>
 
                         <div className="mt-4">
-                            <div className="text-xs text-slate-400 mb-2">Optional comment</div>
+                            <div className="mb-2 text-xs text-slate-400">Optional comment</div>
                             <textarea
                                 value={comment}
-                                onChange={(e) => setComment(e.target.value.slice(0, 300))}
+                                onChange={event => setComment(event.target.value.slice(0, 300))}
                                 placeholder="Describe your experience..."
-                                className="w-full h-20 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-cyan-500/50"
+                                className="h-20 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:border-cyan-500/50 focus:outline-none"
                             />
-                            <div className="text-[10px] text-slate-500 text-right mt-1">{comment.length}/300</div>
+                            <div className="mt-1 text-right text-[10px] text-slate-500">{comment.length}/300</div>
                         </div>
 
                         <div className="mt-4 text-xs text-slate-500">Info: Your rating updates the provider's trust score within 24 hours. Ratings are anonymous.</div>
@@ -968,13 +594,13 @@ export default function EscrowCenterPage() {
                         <div className="mt-5 flex gap-3">
                             <button
                                 onClick={() => setShowFeedbackModal(false)}
-                                className="flex-1 rounded-lg border border-slate-600 px-3 py-2 text-sm font-medium text-slate-300 hover:text-white"
+                                className="flex-1 rounded-xl border border-slate-600 px-3 py-2 text-sm font-medium text-slate-300 hover:text-white"
                             >
                                 Skip and Release
                             </button>
                             <button
                                 onClick={handleSubmitFeedback}
-                                className="flex-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 px-3 py-2 text-sm font-medium text-white"
+                                className="flex-1 rounded-xl bg-emerald-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-500"
                             >
                                 Submit and Release
                             </button>
@@ -982,7 +608,259 @@ export default function EscrowCenterPage() {
                     </div>
                 </div>
             )}
-
         </div>
     )
+}
+
+function HeaderSignal({ label, value, accent }: { label: string; value: string; accent: 'positive' | 'caution' }) {
+    const accentClass = accent === 'positive' ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-100' : 'border-amber-500/30 bg-amber-500/10 text-amber-100'
+    return (
+        <div className={`rounded-2xl border px-4 py-3 ${accentClass}`}>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">{label}</div>
+            <div className="mt-2 text-sm font-semibold">{value}</div>
+        </div>
+    )
+}
+
+function MetricTile({
+    label,
+    value,
+    detail,
+    tone = 'neutral'
+}: {
+    label: string
+    value: string
+    detail: string
+    tone?: GovernanceTone
+}) {
+    return (
+        <div className={`${metricPanelClass} ${getTonePanelClass(tone)}`}>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.15em] text-slate-500">{label}</div>
+            <div className="mt-2 text-[1.7rem] font-semibold tracking-[-0.04em] text-white">{value}</div>
+            <div className="mt-2 text-xs text-slate-400">{detail}</div>
+        </div>
+    )
+}
+
+function GovernanceCard({
+    label,
+    value,
+    detail,
+    tone
+}: {
+    label: string
+    value: string
+    detail: string
+    tone: GovernanceTone
+}) {
+    return (
+        <article className={`${metricPanelClass} ${getTonePanelClass(tone)}`}>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.15em] text-slate-500">{label}</div>
+            <div className="mt-2 text-base font-semibold text-white">{value}</div>
+            <div className="mt-2 text-sm leading-6 text-slate-400">{detail}</div>
+        </article>
+    )
+}
+
+function EscrowLedgerRow({
+    row,
+    checkoutRecord,
+    isSelected,
+    onSelect
+}: {
+    row: EscrowTransaction
+    checkoutRecord: ReturnType<typeof loadEscrowCheckouts>[number] | null
+    isSelected: boolean
+    onSelect: () => void
+}) {
+    const statusStyle = statusStyles[row.status]
+    const accessStyle = accessMethodStyles[row.accessMethod]
+
+    return (
+        <tr className={`cursor-pointer align-top transition-colors ${statusStyle.row} ${isSelected ? 'bg-cyan-500/[0.09] ring-1 ring-inset ring-cyan-500/30' : ''}`} onClick={onSelect}>
+            <td className="px-4 py-3.5">
+                <div className="font-mono text-xs font-semibold text-cyan-300">{row.id}</div>
+            </td>
+            <td className="px-4 py-3.5">
+                <div className="pr-2 text-sm font-semibold text-white">{row.dataset}</div>
+            </td>
+            <td className="px-4 py-3.5">
+                <div className="space-y-1 text-[11px] text-slate-400">
+                    <div className="font-mono">{row.buyer}</div>
+                    <div className="font-mono">{row.provider}</div>
+                </div>
+            </td>
+            <td className="px-4 py-3.5 text-sm font-semibold text-slate-200">{row.amount}</td>
+            <td className="px-4 py-3.5">
+                {checkoutRecord ? (
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/35 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-medium text-emerald-200">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
+                        {outcomeStageMeta[checkoutRecord.outcomeProtection.stage].label}
+                    </span>
+                ) : (
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-700 bg-slate-950/60 px-2.5 py-1 text-[10px] font-medium text-slate-400">
+                        Standard escrow
+                    </span>
+                )}
+            </td>
+            <td className="px-4 py-3.5">
+                <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-medium ${accessStyle.badge}`}>
+                    <span className="font-semibold tracking-[0.1em]">{accessStyle.token}</span>
+                    {accessStyle.label}
+                </span>
+            </td>
+            <td className="px-4 py-3.5">
+                <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-medium ${statusStyle.badge}`}>
+                    <span className={`h-1.5 w-1.5 rounded-full ${statusStyle.dot}`} />
+                    {statusStyle.text}
+                </span>
+            </td>
+            <td className="px-4 py-3.5 text-right">
+                <button
+                    onClick={event => {
+                        event.stopPropagation()
+                        onSelect()
+                    }}
+                    className={actionButtonClass}
+                >
+                    Open
+                </button>
+            </td>
+        </tr>
+    )
+}
+
+function FactTile({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
+    return (
+        <div className={`${metricPanelClass} px-4 py-3`}>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.15em] text-slate-500">{label}</div>
+            <div className={`mt-2 text-sm font-semibold text-white ${mono ? 'font-mono' : ''}`}>{value}</div>
+        </div>
+    )
+}
+
+function InspectorRow({ label, value, tone }: { label: string; value: string; tone: string }) {
+    return (
+        <div className="flex items-center justify-between gap-3 text-sm">
+            <span className="text-slate-400">{label}</span>
+            <span className={`font-medium ${tone}`}>{value}</span>
+        </div>
+    )
+}
+
+function ActionControl({
+    buttonLabel,
+    description,
+    tone,
+    onClick,
+    disabled
+}: {
+    buttonLabel: string
+    description: string
+    tone: 'primary' | 'secondary' | 'critical' | 'disabled'
+    onClick?: () => void
+    disabled?: boolean
+}) {
+    const buttonClassName =
+        tone === 'primary'
+            ? 'bg-emerald-600 text-white hover:bg-emerald-500'
+            : tone === 'critical'
+              ? 'border border-rose-500/50 text-rose-200 hover:bg-rose-500/10'
+              : tone === 'secondary'
+                ? 'border border-blue-500/50 text-blue-200 hover:bg-blue-500/10'
+                : 'cursor-not-allowed border border-slate-700 bg-slate-800/60 text-slate-400'
+
+    return (
+        <div>
+            <button
+                onClick={onClick}
+                disabled={disabled}
+                className={`w-full rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${buttonClassName}`}
+            >
+                {buttonLabel}
+            </button>
+            <p className={`mt-2 text-[11px] ${disabled ? 'text-amber-300' : 'text-slate-500'}`}>{description}</p>
+        </div>
+    )
+}
+
+function getTonePanelClass(tone: GovernanceTone) {
+    switch (tone) {
+        case 'positive':
+            return 'border-emerald-500/20'
+        case 'caution':
+            return 'border-amber-500/20'
+        case 'critical':
+            return 'border-rose-500/20'
+        default:
+            return ''
+    }
+}
+
+function getGovernanceTone(status: EscrowStatus, hasCredit: boolean | undefined) {
+    if (status === 'DISPUTE_OPEN') {
+        return {
+            badge: 'border-rose-500/40 bg-rose-500/10 text-rose-200',
+            label: 'Escalated case',
+            value: 'Dispute open',
+            valueTone: 'text-rose-300'
+        }
+    }
+    if (hasCredit) {
+        return {
+            badge: 'border-amber-500/40 bg-amber-500/10 text-amber-200',
+            label: 'Protected credit',
+            value: 'Credit issued',
+            valueTone: 'text-amber-300'
+        }
+    }
+    if (status === 'RELEASE_PENDING') {
+        return {
+            badge: 'border-indigo-500/40 bg-indigo-500/10 text-indigo-200',
+            label: 'Release ready',
+            value: 'Awaiting payout',
+            valueTone: 'text-indigo-300'
+        }
+    }
+    if (status === 'RELEASED_TO_PROVIDER') {
+        return {
+            badge: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200',
+            label: 'Closed record',
+            value: 'Released',
+            valueTone: 'text-emerald-300'
+        }
+    }
+    if (status === 'ACCESS_ACTIVE') {
+        return {
+            badge: 'border-blue-500/40 bg-blue-500/10 text-blue-200',
+            label: 'Live access',
+            value: 'Under watch',
+            valueTone: 'text-blue-300'
+        }
+    }
+    return {
+        badge: 'border-slate-600 bg-slate-800/80 text-slate-200',
+        label: 'Pre-release',
+        value: 'In review',
+        valueTone: 'text-slate-300'
+    }
+}
+
+function getSelectedCaseSummary(status: EscrowStatus, releaseOpen: boolean, hasCredit: boolean | undefined) {
+    if (status === 'DISPUTE_OPEN') {
+        return 'This escrow is already escalated. Release and extension actions stay subordinate to dispute handling until the investigation closes.'
+    }
+    if (hasCredit) {
+        return 'A protected commitment missed during evaluation, so the case is still visible with automatic-credit posture attached.'
+    }
+    if (status === 'RELEASE_PENDING' && releaseOpen) {
+        return 'Buyer validation is complete and the case is sitting in the final payout lane.'
+    }
+    if (status === 'ACCESS_ACTIVE') {
+        return 'Access is live and still governed, so the main decision is whether the current session should continue, extend, or move into dispute.'
+    }
+    if (status === 'RELEASED_TO_PROVIDER') {
+        return 'This escrow has already completed provider release and now sits in closed-record monitoring.'
+    }
+    return 'This case is still moving through initial hold and review controls before live access or release can happen.'
 }
