@@ -79,6 +79,11 @@ const navGroups: NavGroup[] = [
 export default function AppLayout() {
     const consoleFocusRingClass =
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950'
+    const shellHeaderHeightClass = 'h-[72px]'
+    const shellHeaderBorderClass = 'border-b border-cyan-500/20'
+    const shellBrandLinkClass = `flex items-center gap-3 rounded-xl ${consoleFocusRingClass}`
+    const shellBrandIconClass =
+        'flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] border border-cyan-500/30 bg-cyan-500/10 text-cyan-200 shadow-[0_0_18px_rgba(34,211,238,0.12)]'
 
     return (
         <div className="relative h-screen overflow-hidden bg-slate-900 text-white">
@@ -90,14 +95,18 @@ export default function AppLayout() {
             </a>
             <aside className="fixed inset-y-0 left-0 z-40 hidden w-[260px] border-r border-slate-800 bg-slate-950/90 backdrop-blur-xl md:flex">
                 <div className="flex h-full w-full flex-col overflow-hidden">
-                    <div className="border-b border-slate-800 px-5 py-5">
-                        <Link to="/dashboard" className={`flex items-center gap-3 rounded-xl ${consoleFocusRingClass}`}>
-                            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] border border-cyan-500/25 bg-cyan-500/10 text-cyan-100 shadow-[0_0_18px_rgba(34,211,238,0.14)]">
+                    <div className={`${shellHeaderHeightClass} ${shellHeaderBorderClass} flex items-center px-5`}>
+                        <Link to="/dashboard" className={`${shellBrandLinkClass} w-full`}>
+                            <span className={shellBrandIconClass}>
                                 <PermissionGateMark className="h-6 w-6" />
                             </span>
-                            <span className="text-xl font-bold text-white transition-colors hover:text-blue-300">Redoubt</span>
+                            <span className="min-w-0">
+                                <span className="block text-[11px] uppercase tracking-[0.2em] text-slate-500">Participant Console</span>
+                                <span className="mt-1 block truncate text-sm font-semibold text-slate-100 transition-colors hover:text-blue-300">
+                                    Redoubt
+                                </span>
+                            </span>
                         </Link>
-                        <p className="pl-[3.25rem] pt-1 text-xs text-slate-300">Participant Console</p>
                     </div>
                     <nav className="flex-1 overflow-y-auto p-4 space-y-4">
                         {navGroups.map((group, groupIndex) => (
@@ -127,11 +136,11 @@ export default function AppLayout() {
             </aside>
 
             <div className="relative h-full min-w-0 md:pl-[260px]">
-                <header className="fixed inset-x-0 top-0 z-30 h-[72px] border-b border-cyan-500/20 bg-black/80 backdrop-blur-xl md:left-[260px]">
+                <header className={`fixed inset-x-0 top-0 z-30 ${shellHeaderHeightClass} ${shellHeaderBorderClass} bg-black/80 backdrop-blur-xl md:left-[260px]`}>
                     <div className="flex h-full items-center justify-between gap-3 px-4 sm:px-6">
                         <div className="flex items-center gap-4">
-                            <Link to="/dashboard" className={`flex items-center gap-3 rounded-xl ${consoleFocusRingClass}`} aria-label="Open participant dashboard">
-                                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[12px] border border-cyan-500/30 bg-cyan-500/10 text-cyan-200 sm:h-10 sm:w-10">
+                            <Link to="/dashboard" className={shellBrandLinkClass} aria-label="Open participant dashboard">
+                                <span className={`${shellBrandIconClass} h-9 w-9 sm:h-10 sm:w-10`}>
                                     <PermissionGateMark className="h-5 w-5 sm:h-6 sm:w-6" />
                                 </span>
                                 <span className="min-w-0">
