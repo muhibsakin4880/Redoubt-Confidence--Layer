@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { useAuth } from '../contexts/AuthContext'
@@ -186,9 +186,6 @@ function ReviewSection({
 export default function OnboardingStep5() {
     const navigate = useNavigate()
     const { submitApplication } = useAuth()
-    const commitmentsPanelRef = useRef<HTMLElement | null>(null)
-    const postSubmitPanelRef = useRef<HTMLElement | null>(null)
-    const commitmentsTranslateYRef = useRef(0)
     const reviewSnapshot = useMemo(() => readOnboardingSnapshot(), [])
     const step1Data = reviewSnapshot.step1 as Step1ReviewState
     const structuredUseCase = useMemo(
@@ -198,7 +195,6 @@ export default function OnboardingStep5() {
     const [state, setState] = useState<ComplianceCommitment>(() =>
         readOnboardingValue(onboardingStorageKeys.compliance, emptyComplianceCommitment)
     )
-    const [commitmentsTranslateY, setCommitmentsTranslateY] = useState(0)
 
     const handleChange = (field: keyof ComplianceCommitment, value: boolean) => {
         const next = { ...state, [field]: value }
@@ -258,70 +254,6 @@ export default function OnboardingStep5() {
 
     const missingItems = readinessItems.filter((item) => !item.complete)
 
-    useLayoutEffect(() => {
-        const commitmentsPanelElement = commitmentsPanelRef.current
-        const postSubmitPanelElement = postSubmitPanelRef.current
-
-        if (!commitmentsPanelElement || !postSubmitPanelElement) {
-            return
-        }
-
-        let rafId = 0
-        let followupRafId = 0
-
-        const updateTranslateY = (nextValue: number) => {
-            commitmentsTranslateYRef.current = nextValue
-            setCommitmentsTranslateY((previous) => (Math.abs(previous - nextValue) < 1 ? previous : nextValue))
-        }
-
-        const measureAlignment = () => {
-            if (window.innerWidth < 1280) {
-                updateTranslateY(0)
-                return
-            }
-
-            const postSubmitBottom = postSubmitPanelElement.getBoundingClientRect().bottom
-            const commitmentsBottom = commitmentsPanelElement.getBoundingClientRect().bottom
-            const difference = postSubmitBottom - commitmentsBottom
-            const nextTranslateY = Math.max(0, commitmentsTranslateYRef.current + difference)
-
-            if (Math.abs(nextTranslateY - commitmentsTranslateYRef.current) >= 1) {
-                updateTranslateY(nextTranslateY)
-            }
-        }
-
-        const scheduleMeasurement = () => {
-            cancelAnimationFrame(rafId)
-            cancelAnimationFrame(followupRafId)
-
-            rafId = requestAnimationFrame(() => {
-                followupRafId = requestAnimationFrame(measureAlignment)
-            })
-        }
-
-        scheduleMeasurement()
-
-        const resizeObserver =
-            typeof ResizeObserver !== 'undefined'
-                ? new ResizeObserver(() => {
-                      scheduleMeasurement()
-                  })
-                : null
-
-        resizeObserver?.observe(commitmentsPanelElement)
-        resizeObserver?.observe(postSubmitPanelElement)
-        window.addEventListener('resize', scheduleMeasurement)
-        window.addEventListener('load', scheduleMeasurement)
-
-        return () => {
-            cancelAnimationFrame(rafId)
-            cancelAnimationFrame(followupRafId)
-            resizeObserver?.disconnect()
-            window.removeEventListener('resize', scheduleMeasurement)
-            window.removeEventListener('load', scheduleMeasurement)
-        }
-    }, [])
-
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault()
 
@@ -340,7 +272,7 @@ export default function OnboardingStep5() {
     }
 
     const helperPanel = (
-        <div className="sticky top-8 flex flex-col gap-5 lg:pl-3">
+        <div className="sticky top-8 flex flex-col gap-5 lg:pl-3 xl:h-full xl:min-h-full xl:gap-0">
             <section className="overflow-hidden rounded-[34px] border border-cyan-400/20 bg-[linear-gradient(180deg,rgba(8,47,73,0.94)_0%,rgba(15,23,42,0.96)_100%)] shadow-[0_28px_68px_rgba(8,47,73,0.22)] backdrop-blur-sm">
                 <div className="px-6 py-6 sm:px-7 sm:py-7">
                     <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-cyan-100/80">
@@ -439,11 +371,7 @@ export default function OnboardingStep5() {
                 </div>
             </section>
 
-            <section
-                ref={commitmentsPanelRef}
-                style={commitmentsTranslateY > 0 ? { transform: `translateY(${commitmentsTranslateY}px)` } : undefined}
-                className="rounded-[32px] border border-white/10 bg-slate-900/82 p-6 shadow-[0_24px_56px_rgba(2,6,23,0.24)] backdrop-blur-sm transition-transform duration-300 sm:p-7 xl:will-change-transform"
-            >
+            <section className="rounded-[32px] border border-white/10 bg-slate-900/82 p-6 shadow-[0_24px_56px_rgba(2,6,23,0.24)] backdrop-blur-sm sm:p-7 xl:mt-auto">
                 <div className="flex items-start justify-between gap-3">
                     <div>
                         <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
@@ -579,7 +507,7 @@ export default function OnboardingStep5() {
                         </div>
                     </section>
 
-                    <section ref={postSubmitPanelRef} className={reviewSectionClassName}>
+                    <section className={reviewSectionClassName}>
                         <div className="grid gap-6 2xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
                             <div className={reviewSubPanelClassName}>
                                 <div className="flex flex-wrap items-start justify-between gap-3">
