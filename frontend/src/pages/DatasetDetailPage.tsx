@@ -162,6 +162,12 @@ function getUaeJurisdictionResidencyPanel(geographyLabel: string): UaeJurisdicti
     )
 }
 
+function getAccessPostureBadgeClass(state: 'available' | 'protected' | 'approval'): string {
+    if (state === 'available') return 'border-white/10 bg-white/5 text-slate-100'
+    if (state === 'protected') return 'border-cyan-400/25 bg-cyan-500/10 text-cyan-100'
+    return 'border-emerald-400/25 bg-emerald-500/10 text-emerald-100'
+}
+
 export default function DatasetDetailPage() {
     const { id } = useParams()
     const location = useLocation()
@@ -292,6 +298,54 @@ export default function DatasetDetailPage() {
         accessPackage.deliveryDetail.buyerSummary
     ].filter(Boolean).join(' ')
     const uaeJurisdictionResidencyPanel = getUaeJurisdictionResidencyPanel(accessPackage.geography.label)
+    const validationWindowHours = latestCheckout?.configuration.reviewWindowHours ?? recommendedQuote.input.validationWindowHours
+    const accessPostureItems = [
+        {
+            title: 'Preview only',
+            badge: 'Available',
+            tone: 'available' as const,
+            detail: 'Inspect metadata, schema shape, and AI summaries before any live dataset handling begins.'
+        },
+        {
+            title: 'Governed evaluation',
+            badge: 'Protected path',
+            tone: 'protected' as const,
+            detail: 'Run review inside a governed workspace with scoped access, audit controls, and escrow-backed validation.'
+        },
+        {
+            title: 'Production access after approval',
+            badge: requestStatus === 'REQUEST_APPROVED' ? 'Approved' : 'Approval gated',
+            tone: 'approval' as const,
+            detail:
+                requestStatus === 'REQUEST_APPROVED'
+                    ? 'Broader access can move into configured delivery and instruction handling for this approved request.'
+                    : 'Broader access follows provider and reviewer approval before production-grade delivery is discussed.'
+        }
+    ]
+    const protectionSummaryItems = [
+        {
+            label: 'Provider identity shielding',
+            detail: 'Provider identity stays protected until managed approval and routing conditions allow disclosure.'
+        },
+        {
+            label: 'Controlled export',
+            detail: `${accessPackage.deliveryDetail.label} keeps movement governed and ${accessPackage.advancedRights.redistribution.toLowerCase()} redistribution rights in force.`
+        },
+        {
+            label: 'Audit logging',
+            detail: `${accessPackage.advancedRights.auditLogging} logging remains attached to approved sessions and governed actions.`
+        },
+        {
+            label: 'Release only after validation',
+            detail: `Escrow settles after buyer validation inside the ${validationWindowHours}-hour window or the configured expiry path.`
+        }
+    ]
+    const buyerObligationItems = [
+        { label: 'Accepted use', value: accessPackage.usageRights.label },
+        { label: 'No redistribution', value: accessPackage.advancedRights.redistribution },
+        { label: 'Validation window', value: `${validationWindowHours} hours` },
+        { label: 'Review / dispute conditions', value: 'Confirm release or open dispute before settlement.' }
+    ]
     const minimumTrustState = getMinimumTrustClarificationState(dataset.trustProfile)
     const minimumTrustNeedsReview = minimumTrustState !== 'documented'
     const trustRiskLabels = getDatasetTrustRiskLabels(dataset.trustProfile)
@@ -801,6 +855,57 @@ export default function DatasetDetailPage() {
                                         This summarizes Redoubt&apos;s operating posture for regulated evaluation workflows and does not constitute legal advice.
                                     </p>
                                 </section>
+
+                                <div className="mt-7 grid gap-4 xl:grid-cols-2">
+                                    <article className="rounded-2xl border border-slate-700/80 bg-slate-950/45 p-5">
+                                        <div className="text-[11px] uppercase tracking-[0.18em] text-cyan-200/80">Access posture</div>
+                                        <h4 className="mt-2 text-lg font-semibold text-white">How access expands</h4>
+                                        <p className="mt-2 text-sm leading-6 text-slate-300">
+                                            Buyers move from preview into governed evaluation before any broader delivery path is considered.
+                                        </p>
+                                        <div className="mt-5 space-y-3">
+                                            {accessPostureItems.map(item => (
+                                                <div key={item.title} className="rounded-xl border border-white/8 bg-slate-900/70 px-4 py-4">
+                                                    <div className="flex flex-wrap items-start justify-between gap-3">
+                                                        <div className="text-sm font-semibold text-white">{item.title}</div>
+                                                        <span className={`rounded-full border px-2.5 py-1 text-[10px] font-semibold ${getAccessPostureBadgeClass(item.tone)}`}>
+                                                            {item.badge}
+                                                        </span>
+                                                    </div>
+                                                    <p className="mt-2 text-sm leading-6 text-slate-300">{item.detail}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </article>
+
+                                    <article className="rounded-2xl border border-slate-700/80 bg-slate-950/45 p-5">
+                                        <div className="text-[11px] uppercase tracking-[0.18em] text-cyan-200/80">Protection summary</div>
+                                        <h4 className="mt-2 text-lg font-semibold text-white">What is protected during evaluation</h4>
+                                        <p className="mt-2 text-sm leading-6 text-slate-300">
+                                            The evaluation path keeps identity, movement, logging, and settlement controls visible before production access expands.
+                                        </p>
+                                        <div className="mt-5 space-y-3">
+                                            {protectionSummaryItems.map(item => (
+                                                <div key={item.label} className="rounded-xl border border-white/8 bg-slate-900/70 px-4 py-4">
+                                                    <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">{item.label}</div>
+                                                    <p className="mt-2 text-sm leading-6 text-slate-300">{item.detail}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </article>
+                                </div>
+
+                                <div className="mt-4 rounded-2xl border border-slate-700/80 bg-slate-950/35 p-4">
+                                    <div className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Buyer obligations</div>
+                                    <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                                        {buyerObligationItems.map(item => (
+                                            <div key={item.label} className="rounded-xl border border-white/8 bg-slate-900/65 px-4 py-3">
+                                                <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">{item.label}</div>
+                                                <div className="mt-2 text-sm font-medium leading-6 text-slate-100">{item.value}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
 
                                 <div className="mt-7 grid gap-4 xl:grid-cols-2">
                                     <DetailSummaryCard
