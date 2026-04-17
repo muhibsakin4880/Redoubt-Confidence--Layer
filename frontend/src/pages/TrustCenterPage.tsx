@@ -120,6 +120,53 @@ const uaeRegulatoryCoverage = [
     }
 ]
 
+const uaeResidencyTransferPostures = [
+    {
+        title: 'Local-only',
+        decision: 'Allowed posture',
+        summary: 'Review remains inside a UAE-local workspace when the operating boundary does not permit routine external transfer.',
+        workspaceBoundary: 'Execution, reviewer access, and visible outputs stay inside the approved local environment.',
+        transferPath: 'Exports remain tightly restricted and evaluation artifacts stay within the governed local boundary.'
+    },
+    {
+        title: 'GCC-limited',
+        decision: 'Conditional posture',
+        summary: 'Review can operate within an approved GCC footprint when regional infrastructure or reviewers are in scope.',
+        workspaceBoundary: 'Access is limited to approved GCC locations and governed review surfaces.',
+        transferPath: 'Movement is restricted to the permitted regional path and remains subject to policy routing.'
+    },
+    {
+        title: 'Cross-border review required',
+        decision: 'Conditional or blocked',
+        summary: 'Review depends on movement beyond UAE or GCC boundaries and requires explicit transfer review before release.',
+        workspaceBoundary: 'Cross-border reviewer location, processing, or export cannot be assumed from the initial request.',
+        transferPath: 'The request proceeds only when the transfer path, approvals, and review controls support that operating model.'
+    }
+]
+
+const uaeTransferSafeguards = [
+    'Governed workspace',
+    'Restricted export',
+    'Watermarking',
+    'Audit trail',
+    'Scoped credentials'
+]
+
+const residencyDecisionStates = [
+    {
+        state: 'Allowed',
+        detail: 'The requested workspace, reviewer path, and output handling already fit the approved residency posture.'
+    },
+    {
+        state: 'Conditional',
+        detail: 'The request can proceed only with tighter routing, added safeguards, or a narrower transfer path.'
+    },
+    {
+        state: 'Blocked',
+        detail: 'The requested reviewer location, export path, or movement boundary falls outside the approved posture.'
+    }
+]
+
 const riskReductionOutcomes = [
     'Reduce late-stage surprises around classification, residency, or approval requirements.',
     'Make protected evaluation a visible decision gate instead of an opaque technical handoff.',
@@ -285,6 +332,71 @@ export default function TrustCenterPage() {
                                 </div>
                             </article>
                         ))}
+                    </div>
+                </section>
+
+                <section className="mt-10 rounded-[2rem] border border-sky-500/15 bg-[radial-gradient(circle_at_top_right,rgba(56,189,248,0.12),transparent_34%),linear-gradient(180deg,rgba(15,23,42,0.94)_0%,rgba(2,8,20,0.98)_100%)] p-8 shadow-[0_0_70px_rgba(14,116,144,0.08)]">
+                    <div className="max-w-3xl">
+                        <div className="inline-flex items-center gap-2 rounded-full border border-sky-400/20 bg-sky-400/10 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-100">
+                            Residency and Transfer Posture
+                        </div>
+                        <h2 className="mt-5 text-3xl font-semibold text-white">How review requests move across local, regional, and cross-border boundaries</h2>
+                        <p className="mt-3 text-slate-300">
+                            Redoubt helps teams express whether a request stays local, remains GCC-limited, or needs explicit cross-border review before regulated evaluation begins.
+                        </p>
+                    </div>
+
+                    <div className="mt-8 grid gap-5 lg:grid-cols-3">
+                        {uaeResidencyTransferPostures.map(posture => (
+                            <article key={posture.title} className="flex h-full flex-col rounded-3xl border border-white/10 bg-slate-950/55 p-6 shadow-[0_18px_45px_rgba(2,8,20,0.2)]">
+                                <div className="flex items-start justify-between gap-3">
+                                    <h3 className="text-lg font-semibold text-white">{posture.title}</h3>
+                                    <div className="rounded-full border border-sky-400/15 bg-sky-400/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-sky-100">
+                                        {posture.decision}
+                                    </div>
+                                </div>
+                                <p className="mt-4 text-sm leading-7 text-slate-300">{posture.summary}</p>
+
+                                <div className="mt-6 space-y-3">
+                                    <div className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3">
+                                        <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-sky-300">Workspace boundary</div>
+                                        <p className="mt-2 text-sm leading-6 text-slate-300">{posture.workspaceBoundary}</p>
+                                    </div>
+                                    <div className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3">
+                                        <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-sky-300">Transfer path</div>
+                                        <p className="mt-2 text-sm leading-6 text-slate-300">{posture.transferPath}</p>
+                                    </div>
+                                </div>
+                            </article>
+                        ))}
+                    </div>
+
+                    <div className="mt-8 grid gap-5 lg:grid-cols-[0.85fr_1.15fr]">
+                        <div className="rounded-3xl border border-white/10 bg-slate-950/45 p-6">
+                            <h3 className="text-lg font-semibold text-white">Safeguards typically kept in force</h3>
+                            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                                {uaeTransferSafeguards.map(safeguard => (
+                                    <div
+                                        key={safeguard}
+                                        className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3 text-sm font-medium text-slate-200"
+                                    >
+                                        {safeguard}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="rounded-3xl border border-white/10 bg-slate-950/45 p-6">
+                            <h3 className="text-lg font-semibold text-white">Why a request may be allowed, conditional, or blocked</h3>
+                            <div className="mt-5 grid gap-3 md:grid-cols-3">
+                                {residencyDecisionStates.map(item => (
+                                    <article key={item.state} className="rounded-2xl border border-white/8 bg-white/5 px-4 py-4">
+                                        <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-sky-300">{item.state}</div>
+                                        <p className="mt-3 text-sm leading-6 text-slate-300">{item.detail}</p>
+                                    </article>
+                                ))}
+                            </div>
+                        </div>
                     </div>
                 </section>
 
