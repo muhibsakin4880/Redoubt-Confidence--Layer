@@ -415,6 +415,53 @@ export default function ContributionsPage() {
         }
     }, [])
 
+    const personalDataFields = schemaFieldData.filter(field => field.piiStatus !== 'safe')
+    const restrictedFields = schemaFieldData.filter(field => field.piiStatus === 'flagged')
+    const localOnlyFields = schemaFieldData.filter(field => field.residency === 'local')
+    const transferSensitiveFields = schemaFieldData.filter(
+        field =>
+            field.piiStatus === 'review' ||
+            /gray zone|local processing required|sensitive personal data/i.test(field.aiDescription)
+    )
+
+    const providerPackagingLane =
+        restrictedFields.length > 0 || localOnlyFields.length > 0
+            ? 'Restricted packaging and residency review'
+            : personalDataFields.length > 0
+                ? 'Governed provider review packet'
+                : 'Standard provider packaging'
+
+    const providerComplianceCards = [
+        {
+            title: 'Personal data present',
+            value: personalDataFields.length > 0 ? `Yes · ${personalDataFields.length} fields` : 'No',
+            status: personalDataFields.length > 0 ? 'Provider review required' : 'Preview-safe',
+            tone: 'border-amber-500/30 bg-amber-500/10 text-amber-100',
+            detail: 'Direct identifiers, location-linked attributes, or regulated profile signals are present in the current schema review.'
+        },
+        {
+            title: 'Restricted fields',
+            value: restrictedFields.length > 0 ? `${restrictedFields.length} fields` : 'None',
+            status: restrictedFields.length > 0 ? 'Restricted packaging' : 'No restricted package',
+            tone: 'border-rose-500/30 bg-rose-500/10 text-rose-100',
+            detail: 'Critical fields should stay behind tighter packaging and should not expand into broader buyer-facing access by default.'
+        },
+        {
+            title: 'Local-only fields',
+            value: localOnlyFields.length > 0 ? `${localOnlyFields.length} fields` : 'None',
+            status: localOnlyFields.length > 0 ? 'Residency-bound' : 'Portable',
+            tone: 'border-cyan-500/30 bg-cyan-500/10 text-cyan-100',
+            detail: 'These fields should stay in the local review lane and inherit the stricter residency posture configured for the provider pack.'
+        },
+        {
+            title: 'Transfer-sensitive fields',
+            value: transferSensitiveFields.length > 0 ? `${transferSensitiveFields.length} fields` : 'None',
+            status: transferSensitiveFields.length > 0 ? 'Manual transfer review' : 'No transfer signal',
+            tone: 'border-blue-500/30 bg-blue-500/10 text-blue-100',
+            detail: 'Gray-zone fields may need narrower geography, stronger buyer commitments, or manual approval before transfer is discussed.'
+        }
+    ]
+
     const updatePrivacyAccessTerm = (
         field: Exclude<keyof typeof privacyAccessTerms, 'advanced' | 'security'>,
         value: string
@@ -2072,6 +2119,43 @@ export default function ContributionsPage() {
                             <div className="text-xs uppercase tracking-[0.12em] text-slate-400 mb-2">Access activity</div>
                             <div className="text-3xl font-semibold">{summary.totalAccessEvents}</div>
                             <div className="text-xs text-slate-400">Total access events</div>
+                        </div>
+                    </section>
+
+                    <section className="rounded-2xl border border-slate-700 bg-slate-800/60 p-6 shadow-xl">
+                        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                            <div>
+                                <div className="text-[11px] uppercase tracking-[0.18em] text-cyan-200/80">Provider compliance workspace</div>
+                                <h2 className="mt-2 text-xl font-semibold text-white">Classification summary for {selectedDataset.title}</h2>
+                                <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-400">
+                                    Keep compliance packaging operational: the cards below show which fields should stay restricted, local-only, or transfer-reviewed before buyer evaluation expands.
+                                </p>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                                <span className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold ${statusStyles[selectedDataset.status]}`}>
+                                    {selectedDataset.status}
+                                </span>
+                                <span className="inline-flex rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-[11px] font-semibold text-cyan-100">
+                                    {providerPackagingLane}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                            {providerComplianceCards.map(card => (
+                                <article key={card.title} className="rounded-xl border border-slate-700 bg-slate-900/70 p-4">
+                                    <div className="text-xs uppercase tracking-[0.12em] text-slate-400">{card.title}</div>
+                                    <div className="mt-3 text-2xl font-semibold text-white">{card.value}</div>
+                                    <div className={`mt-3 inline-flex rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${card.tone}`}>
+                                        {card.status}
+                                    </div>
+                                    <p className="mt-3 text-sm leading-6 text-slate-300">{card.detail}</p>
+                                </article>
+                            ))}
+                        </div>
+
+                        <div className="mt-5 rounded-xl border border-slate-700 bg-slate-900/50 px-4 py-3 text-xs leading-6 text-slate-400">
+                            Classification and transfer pressure stay visible in the contribution workspace so providers can package compliance posture before buyer-facing access terms are finalized.
                         </div>
                     </section>
 
