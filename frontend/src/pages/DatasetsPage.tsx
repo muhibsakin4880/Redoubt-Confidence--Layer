@@ -22,6 +22,12 @@ import {
 type SortOption = 'best-match' | 'highest-confidence' | 'highest-provider-trust' | 'most-recent'
 type SignalTone = 'healthy' | 'monitoring' | 'scheduled'
 type Dataset = DatasetDiscoverySummary
+type RegulatedDiscoveryFilter =
+    | 'All'
+    | 'UAE local-only'
+    | 'Regulated-use ready'
+    | 'Cross-border review required'
+    | 'Provider-shielded'
 
 type FilterState = {
     searchTerm: string
@@ -31,6 +37,7 @@ type FilterState = {
     verificationStatus: 'All' | VerificationStatus
     freshnessBucket: string
     minConfidence: number
+    regulatedDiscovery: RegulatedDiscoveryFilter
 }
 
 type ActiveFilterChip = {
@@ -71,6 +78,19 @@ type SidebarSectionState = Record<SidebarSectionKey, boolean>
 type RailSectionKey = 'shortlist' | 'compare' | 'requestReadiness'
 type RailSectionState = Record<RailSectionKey, boolean>
 
+type RegulatedCardBadge = {
+    label: string
+    tone: SignalTone
+}
+
+type RegulatedDiscoveryProfile = {
+    uaeLocalOnly: boolean
+    regulatedUseReady: boolean
+    crossBorderReviewRequired: boolean
+    providerShielded: boolean
+    cardBadges: RegulatedCardBadge[]
+}
+
 const STORAGE_DATASET_SHORTLIST = 'Redoubt:datasets:shortlist'
 const STORAGE_DATASET_COMPARE = 'Redoubt:datasets:compare'
 const MAX_COMPARE_ITEMS = 3
@@ -84,7 +104,8 @@ const defaultFilters: FilterState = {
     geography: 'All',
     verificationStatus: 'All',
     freshnessBucket: 'All',
-    minConfidence: 0
+    minConfidence: 0,
+    regulatedDiscovery: 'All'
 }
 
 const defaultSidebarSections: SidebarSectionState = {
@@ -115,6 +136,102 @@ const geographies = ['All', ...new Set(DATASETS.map(dataset => dataset.geography
 const verificationStates: FilterState['verificationStatus'][] = ['All', 'Attested', 'Under Review']
 const freshnessBuckets = ['All', 'Real-time / <1h', 'Daily', 'Weekly']
 const minConfidenceOptions = [0, 85, 90, 95]
+const regulatedDiscoveryFilters: RegulatedDiscoveryFilter[] = [
+    'All',
+    'UAE local-only',
+    'Regulated-use ready',
+    'Cross-border review required',
+    'Provider-shielded'
+]
+
+const REGULATED_DISCOVERY_PROFILES: Record<number, RegulatedDiscoveryProfile> = {
+    1: {
+        uaeLocalOnly: false,
+        regulatedUseReady: true,
+        crossBorderReviewRequired: true,
+        providerShielded: false,
+        cardBadges: [
+            { label: 'Regulated-use ready', tone: 'healthy' },
+            { label: 'Cross-border review', tone: 'monitoring' },
+            { label: 'Governed transfer', tone: 'scheduled' }
+        ]
+    },
+    2: {
+        uaeLocalOnly: false,
+        regulatedUseReady: true,
+        crossBorderReviewRequired: true,
+        providerShielded: true,
+        cardBadges: [
+            { label: 'Regulated-use ready', tone: 'healthy' },
+            { label: 'Cross-border review', tone: 'monitoring' },
+            { label: 'Provider-shielded', tone: 'scheduled' }
+        ]
+    },
+    3: {
+        uaeLocalOnly: false,
+        regulatedUseReady: true,
+        crossBorderReviewRequired: true,
+        providerShielded: true,
+        cardBadges: [
+            { label: 'Regulated-use ready', tone: 'healthy' },
+            { label: 'Cross-border review', tone: 'monitoring' },
+            { label: 'Provider-shielded', tone: 'scheduled' }
+        ]
+    },
+    4: {
+        uaeLocalOnly: true,
+        regulatedUseReady: true,
+        crossBorderReviewRequired: false,
+        providerShielded: true,
+        cardBadges: [
+            { label: 'UAE local-only', tone: 'healthy' },
+            { label: 'Regulated-use ready', tone: 'healthy' },
+            { label: 'Provider-shielded', tone: 'scheduled' }
+        ]
+    },
+    5: {
+        uaeLocalOnly: false,
+        regulatedUseReady: false,
+        crossBorderReviewRequired: true,
+        providerShielded: false,
+        cardBadges: [
+            { label: 'Cross-border review', tone: 'monitoring' },
+            { label: 'Governed transfer', tone: 'scheduled' }
+        ]
+    },
+    6: {
+        uaeLocalOnly: false,
+        regulatedUseReady: false,
+        crossBorderReviewRequired: true,
+        providerShielded: true,
+        cardBadges: [
+            { label: 'Cross-border review', tone: 'monitoring' },
+            { label: 'Provider-shielded', tone: 'scheduled' }
+        ]
+    },
+    7: {
+        uaeLocalOnly: true,
+        regulatedUseReady: true,
+        crossBorderReviewRequired: false,
+        providerShielded: true,
+        cardBadges: [
+            { label: 'UAE local-only', tone: 'healthy' },
+            { label: 'Regulated-use ready', tone: 'healthy' },
+            { label: 'Provider-shielded', tone: 'scheduled' }
+        ]
+    },
+    8: {
+        uaeLocalOnly: false,
+        regulatedUseReady: true,
+        crossBorderReviewRequired: true,
+        providerShielded: true,
+        cardBadges: [
+            { label: 'Regulated-use ready', tone: 'healthy' },
+            { label: 'Cross-border review', tone: 'monitoring' },
+            { label: 'Provider-shielded', tone: 'scheduled' }
+        ]
+    }
+}
 
 const focusRingClass =
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0d1117]'
@@ -188,6 +305,7 @@ export default function DatasetsPage() {
         const searchTerm = filters.searchTerm.trim().toLowerCase()
 
         const datasets = DATASETS.filter(dataset => {
+            const regulatedProfile = getRegulatedDiscoveryProfile(dataset)
             const searchableText = [
                 dataset.title,
                 dataset.description,
@@ -205,6 +323,12 @@ export default function DatasetsPage() {
             const matchesFreshness =
                 filters.freshnessBucket === 'All' || bucketFreshness(dataset.freshness) === filters.freshnessBucket
             const matchesConfidence = dataset.confidenceScore >= filters.minConfidence
+            const matchesRegulatedDiscovery =
+                filters.regulatedDiscovery === 'All' ||
+                (filters.regulatedDiscovery === 'UAE local-only' && regulatedProfile.uaeLocalOnly) ||
+                (filters.regulatedDiscovery === 'Regulated-use ready' && regulatedProfile.regulatedUseReady) ||
+                (filters.regulatedDiscovery === 'Cross-border review required' && regulatedProfile.crossBorderReviewRequired) ||
+                (filters.regulatedDiscovery === 'Provider-shielded' && regulatedProfile.providerShielded)
 
             return (
                 matchesSearch &&
@@ -213,7 +337,8 @@ export default function DatasetsPage() {
                 matchesGeography &&
                 matchesVerification &&
                 matchesFreshness &&
-                matchesConfidence
+                matchesConfidence &&
+                matchesRegulatedDiscovery
             )
         })
 
@@ -301,6 +426,9 @@ export default function DatasetsPage() {
                                 <p className={`mt-4 max-w-3xl ${discoveryText.bodyStrong}`}>
                                     Review a curated slate of governed dataset opportunities. Build a priority set, run side-by-side review of trust and access signals, and decide whether an opportunity is ready for protected evaluation.
                                 </p>
+                                <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-300">
+                                    Sensitive and residency-bound opportunities are surfaced for governed evaluation, controlled disclosure, and review-first access rather than open public marketplace self-serve.
+                                </p>
 
                                 <div className="mt-7 flex flex-wrap gap-3.5">
                                     <HeroMetricChip label="Attested datasets" value={`${attestedCount}`} />
@@ -380,7 +508,7 @@ export default function DatasetsPage() {
                             Narrow the curated slate with buyer-relevant signals
                         </h2>
                         <p className={`mt-3 max-w-4xl ${discoveryText.body}`}>
-                            Search opportunities, choose the trust and freshness thresholds you care about, and reset quickly if a filter path gets too narrow.
+                            Search opportunities, choose the trust and freshness thresholds you care about, and use Market coverage for the regions a dataset covers while posture filters handle regulatory and access conditions.
                         </p>
 
                         <div className="mt-8 grid gap-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.82fr)]">
@@ -427,6 +555,31 @@ export default function DatasetsPage() {
                             </div>
                         </div>
 
+                        <div className="mt-8">
+                            <div className={discoveryText.eyebrow}>Regulated discovery</div>
+                            <p className={`mt-3 max-w-4xl ${discoveryText.body}`}>
+                                Use curated posture filters to focus on provider-shielded, residency-aware opportunities that are better suited to governed evaluation for sensitive datasets.
+                            </p>
+                            <div className="mt-4 flex flex-wrap gap-2.5">
+                                {regulatedDiscoveryFilters.map(filter => (
+                                    <button
+                                        key={filter}
+                                        type="button"
+                                        aria-label={`Filter regulated discovery by ${filter}`}
+                                        aria-pressed={filters.regulatedDiscovery === filter}
+                                        onClick={() => updateFilter('regulatedDiscovery', filter)}
+                                        className={`rounded-full border px-4 py-2 text-xs font-semibold transition-all duration-200 ${focusRingClass} ${
+                                            filters.regulatedDiscovery === filter
+                                                ? 'border-cyan-400/35 bg-cyan-500/12 text-cyan-100'
+                                                : 'border-white/10 bg-white/[0.04] text-slate-300 hover:border-cyan-400/25 hover:text-slate-100'
+                                        }`}
+                                    >
+                                        {filter}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
                         <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-5">
                             <FilterSelect
                                 label="Data type"
@@ -435,7 +588,7 @@ export default function DatasetsPage() {
                                 options={dataTypes}
                             />
                             <FilterSelect
-                                label="Geography"
+                                label="Market coverage"
                                 value={filters.geography}
                                 onChange={value => updateFilter('geography', value)}
                                 options={geographies}
@@ -830,6 +983,7 @@ function DatasetDecisionCard({
     const consistencyTone = dataset.consistency >= 95 ? 'healthy' : dataset.consistency >= 90 ? 'scheduled' : 'monitoring'
     const geoAccessSignal = getDatasetGeoAccessSignal(dataset.id, buyerOrgCountry)
     const trustRiskLabels = getDatasetTrustRiskLabels(dataset.trustProfile)
+    const regulatedProfile = getRegulatedDiscoveryProfile(dataset)
 
     return (
         <article aria-label={`Dataset card for ${dataset.title}`} className={`${cardSurfaceClass} min-h-[620px] min-w-0`}>
@@ -859,6 +1013,9 @@ function DatasetDecisionCard({
                 <InlineNeutralChip label={`Coverage: ${dataset.geography}`} />
                 <InlineNeutralChip label={bucketFreshness(dataset.freshness)} />
                 <StatusChip label={geoAccessSignal.label} tone={geoAccessSignal.tone} />
+                {regulatedProfile.cardBadges.map(badge => (
+                    <StatusChip key={badge.label} label={badge.label} tone={badge.tone} />
+                ))}
             </div>
 
             <p className="mt-3 text-xs leading-5 text-slate-400">{geoAccessSignal.detail}</p>
@@ -1516,12 +1673,25 @@ function buildActiveFilters(filters: FilterState): ActiveFilterChip[] {
     if (filters.searchTerm.trim()) chips.push({ key: 'searchTerm', label: `Search: ${filters.searchTerm}` })
     if (filters.domain !== 'All') chips.push({ key: 'domain', label: `Domain: ${filters.domain}` })
     if (filters.dataType !== 'All') chips.push({ key: 'dataType', label: `Type: ${filters.dataType}` })
-    if (filters.geography !== 'All') chips.push({ key: 'geography', label: `Geography: ${filters.geography}` })
+    if (filters.geography !== 'All') chips.push({ key: 'geography', label: `Market coverage: ${filters.geography}` })
     if (filters.verificationStatus !== 'All') chips.push({ key: 'verificationStatus', label: `Verification: ${filters.verificationStatus}` })
     if (filters.freshnessBucket !== 'All') chips.push({ key: 'freshnessBucket', label: `Freshness: ${filters.freshnessBucket}` })
     if (filters.minConfidence > 0) chips.push({ key: 'minConfidence', label: `Confidence: ${filters.minConfidence}+` })
+    if (filters.regulatedDiscovery !== 'All') chips.push({ key: 'regulatedDiscovery', label: `Regulated: ${filters.regulatedDiscovery}` })
 
     return chips
+}
+
+function getRegulatedDiscoveryProfile(dataset: Dataset): RegulatedDiscoveryProfile {
+    return (
+        REGULATED_DISCOVERY_PROFILES[dataset.id] ?? {
+            uaeLocalOnly: false,
+            regulatedUseReady: false,
+            crossBorderReviewRequired: false,
+            providerShielded: false,
+            cardBadges: []
+        }
+    )
 }
 
 function getDecisionAction(shortlistDatasets: Dataset[], compareDatasets: Dataset[], filteredDatasets: Dataset[]): DecisionAction {
