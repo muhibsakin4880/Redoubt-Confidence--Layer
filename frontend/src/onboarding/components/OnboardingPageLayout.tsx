@@ -14,6 +14,7 @@ type OnboardingPageLayoutProps = {
     helperPanel?: ReactNode
     showDefaultHelperPanel?: boolean
     canvasWidth?: 'compact' | 'standard' | 'wide' | 'full'
+    headerWidth?: 'canvas' | 'full'
     headerActions?: ReactNode
     headerSubtitle?: string
     headerTitle?: string
@@ -131,6 +132,7 @@ export default function OnboardingPageLayout({
     helperPanel,
     showDefaultHelperPanel = true,
     canvasWidth = 'wide',
+    headerWidth = 'full',
     headerActions,
     headerSubtitle,
     headerTitle,
@@ -222,6 +224,8 @@ export default function OnboardingPageLayout({
     const hasHelperPanel = Boolean(resolvedHelperPanel)
     const resolvedHeaderTitle = headerTitle ?? (normalizedStep ? visibleSteps[normalizedStep - 1] : participantOnboardingTitle)
     const resolvedHeaderSubtitle = headerSubtitle ?? currentStepMeta?.description ?? participantOnboardingSubtitle
+    const resolvedHeaderWidthClassName =
+        headerWidth === 'canvas' ? canvasWidthClassName[canvasWidth] : 'max-w-none'
     const resolvedEyebrow =
         pageEyebrow ??
         (normalizedStep
@@ -234,86 +238,48 @@ export default function OnboardingPageLayout({
             <div className="absolute inset-x-0 top-0 h-[520px] bg-[linear-gradient(180deg,rgba(15,23,42,0.08)_0%,rgba(2,6,23,0)_100%)]" />
 
             <div className="relative mx-auto max-w-[1440px] px-4 py-8 sm:px-6 sm:py-10 lg:px-8 lg:py-12">
-                <header className="rounded-[34px] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.94)_0%,rgba(2,6,23,0.88)_100%)] p-6 shadow-[0_30px_80px_rgba(2,6,23,0.45)] backdrop-blur-sm sm:p-8 lg:p-10">
-                    <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_320px]">
-                        <div className="min-w-0">
-                            <div className="text-[11px] font-semibold uppercase tracking-[0.26em] text-cyan-200/80">
-                                {resolvedEyebrow}
-                            </div>
-
-                            <div className="mt-4 flex flex-wrap items-center gap-3">
-                                {normalizedStep && (
-                                    <span className="inline-flex rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-200">
-                                        Step {normalizedStep} of {visibleSteps.length}
-                                    </span>
-                                )}
-                                {normalizedStep && (
-                                    <span className="inline-flex rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-300">
-                                        {remainingSteps === 0 ? 'Final stage' : `${remainingSteps} step${remainingSteps === 1 ? '' : 's'} remaining`}
-                                    </span>
-                                )}
-                                {currentStepMeta && (
-                                    <span
-                                        className={cx(
-                                            'inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em]',
-                                            emphasisPillClassName[currentEmphasis]
-                                        )}
-                                    >
-                                        {emphasisLabelMap[currentEmphasis]}
-                                    </span>
-                                )}
-                            </div>
-
-                            <div className="mt-5 max-w-4xl">
-                                <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl lg:text-[2.8rem] lg:leading-[1.05]">
-                                    {resolvedHeaderTitle}
-                                </h1>
-                                <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-300 sm:text-base">
-                                    {resolvedHeaderSubtitle}
-                                </p>
-                            </div>
+                <header
+                    className={cx(
+                        'rounded-[34px] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.94)_0%,rgba(2,6,23,0.88)_100%)] p-6 shadow-[0_30px_80px_rgba(2,6,23,0.45)] backdrop-blur-sm sm:p-8 lg:p-10',
+                        resolvedHeaderWidthClassName,
+                        headerWidth === 'canvas' && 'mx-auto'
+                    )}
+                >
+                    <div className="min-w-0 max-w-5xl">
+                        <div className="text-[11px] font-semibold uppercase tracking-[0.26em] text-cyan-200/80">
+                            {resolvedEyebrow}
                         </div>
 
-                        <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
-                            <section className="rounded-[24px] border border-white/10 bg-white/5 p-4">
-                                <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
-                                    Current Position
-                                </div>
-                                <div className="mt-3 text-lg font-semibold text-white">
-                                    {normalizedStep ? `Step ${normalizedStep}` : 'Overview'}
-                                </div>
-                                <p className="mt-2 text-sm text-slate-400">
-                                    {currentStepMeta?.subtitle ?? participantOnboardingTitle}
-                                </p>
-                            </section>
+                        <div className="mt-4 flex flex-wrap items-center gap-3">
+                            {normalizedStep && (
+                                <span className="inline-flex rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-200">
+                                    Step {normalizedStep} of {visibleSteps.length}
+                                </span>
+                            )}
+                            {normalizedStep && (
+                                <span className="inline-flex rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-300">
+                                    {remainingSteps === 0 ? 'Final stage' : `${remainingSteps} step${remainingSteps === 1 ? '' : 's'} remaining`}
+                                </span>
+                            )}
+                            {currentStepMeta && (
+                                <span
+                                    className={cx(
+                                        'inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em]',
+                                        emphasisPillClassName[currentEmphasis]
+                                    )}
+                                >
+                                    {emphasisLabelMap[currentEmphasis]}
+                                </span>
+                            )}
+                        </div>
 
-                            <section className="rounded-[24px] border border-white/10 bg-white/5 p-4">
-                                <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
-                                    Remaining
-                                </div>
-                                <div className="mt-3 text-lg font-semibold text-white">
-                                    {normalizedStep
-                                        ? remainingSteps === 0
-                                            ? 'Final stage'
-                                            : `${remainingSteps} step${remainingSteps === 1 ? '' : 's'}`
-                                        : `${visibleSteps.length} stages`}
-                                </div>
-                                <p className="mt-2 text-sm text-slate-400">
-                                    {normalizedStep ? 'Progress is preserved across onboarding steps.' : participantOnboardingSubtitle}
-                                </p>
-                            </section>
-
-                            <section className="rounded-[24px] border border-white/10 bg-white/5 p-4">
-                                <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
-                                    Review Weight
-                                </div>
-                                <div className="mt-3 text-lg font-semibold text-white">
-                                    {currentStepMeta ? emphasisLabelMap[currentEmphasis] : 'Structured'}
-                                </div>
-                                <p className="mt-2 text-sm text-slate-400">
-                                    {currentStepMeta ? emphasisDetailMap[currentEmphasis] : participantOnboardingSubtitle}
-                                </p>
-                            </section>
+                        <div className="mt-5 max-w-4xl">
+                            <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl lg:text-[2.8rem] lg:leading-[1.05]">
+                                {resolvedHeaderTitle}
+                            </h1>
+                            <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-300 sm:text-base">
+                                {resolvedHeaderSubtitle}
+                            </p>
                         </div>
                     </div>
 

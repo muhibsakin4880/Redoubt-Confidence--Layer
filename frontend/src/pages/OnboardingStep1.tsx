@@ -99,78 +99,6 @@ export default function OnboardingStep1() {
 
     const stepReady = useMemo(() => isStep1Complete(state), [state])
 
-    const helperPanel = (
-        <div className="space-y-6">
-            <section className="rounded-[32px] border border-cyan-400/20 bg-[linear-gradient(180deg,rgba(8,47,73,0.92)_0%,rgba(15,23,42,0.95)_100%)] p-6 shadow-[0_28px_68px_rgba(8,47,73,0.22)] backdrop-blur-sm">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-cyan-100/80">
-                    Identity Review
-                </div>
-                <h2 className="mt-4 text-[1.35rem] font-semibold leading-8 text-white">Why this first step matters</h2>
-                <p className="mt-4 text-sm leading-7 text-slate-200">
-                    Redoubt starts by establishing the corporate identity behind the request so later governance,
-                    verification, and reviewer routing all begin from a trusted organization record.
-                </p>
-
-                <div className="mt-6 overflow-hidden rounded-[26px] border border-white/10 bg-white/[0.04] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                    <div className="border-b border-white/10 px-5 py-5">
-                        <div className="text-[11px] uppercase tracking-[0.18em] text-slate-400">
-                            Typical approval timing
-                        </div>
-                        <div className="mt-2 text-lg font-semibold text-white">
-                            {participantOnboardingEstimatedReviewTime}
-                        </div>
-                        <p className="mt-2 text-sm text-slate-300">
-                            Review may move faster when identity and organization details are consistent.
-                        </p>
-                    </div>
-                    <div className="px-5 py-5">
-                        <div className="text-[11px] uppercase tracking-[0.18em] text-slate-400">
-                            Invite code
-                        </div>
-                        <div className="mt-2 text-lg font-semibold text-white">Optional</div>
-                        <p className="mt-2 text-sm text-slate-300">
-                            You can continue without a code. If you have one, it helps route the request more quickly.
-                        </p>
-                    </div>
-                </div>
-            </section>
-
-            <section className="overflow-hidden rounded-[30px] border border-white/10 bg-slate-900/78 shadow-[0_24px_60px_rgba(2,6,23,0.22)] backdrop-blur-sm">
-                <div className="border-b border-white/10 px-6 py-6">
-                    <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
-                        What Gets Checked
-                    </div>
-                </div>
-
-                <div className="space-y-4 px-6 py-6">
-                    {reviewChecks.map((check) => (
-                        <div
-                            key={check.title}
-                            className="rounded-[24px] border border-slate-800/90 bg-slate-950/78 p-5 shadow-[0_18px_40px_rgba(2,6,23,0.18)]"
-                        >
-                            <div className="text-sm font-semibold text-white">{check.title}</div>
-                            <p className="mt-2 text-sm leading-6 text-slate-400">{check.description}</p>
-                        </div>
-                    ))}
-
-                    <div className="border-t border-white/10 pt-6">
-                        <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
-                            Invite Code Guidance
-                        </div>
-                        <p className="mt-4 text-sm leading-7 text-slate-300">
-                            If your organization received an invite code, enter it exactly as issued. If not, leave the
-                            field blank and continue. The current review flow still accepts the request without one.
-                        </p>
-                        <div className="mt-5 rounded-[24px] border border-cyan-400/20 bg-cyan-400/10 px-5 py-4 text-sm text-cyan-100">
-                            This step records your identity and organization context first. Verification depth increases in
-                            later stages, not here.
-                        </div>
-                    </div>
-                </div>
-            </section>
-        </div>
-    )
-
     const handleNext = () => {
         if (!stepReady) {
             setShowError(true)
@@ -185,7 +113,7 @@ export default function OnboardingStep1() {
             <OnboardingPageLayout
                 activeStep={1}
                 showDefaultHelperPanel={false}
-                helperPanel={helperPanel}
+                canvasWidth="full"
                 headerTitle="Organization & Identity"
                 headerSubtitle="Establish the verified corporate identity behind this request before deeper governance and verification review begin."
                 pageEyebrow="Participant onboarding · Identity review"
@@ -360,22 +288,105 @@ export default function OnboardingStep1() {
                         )}
                     </section>
 
-                    <section className="rounded-[30px] border border-white/10 bg-slate-900/68 px-6 py-5 shadow-[0_20px_48px_rgba(2,6,23,0.18)] backdrop-blur-sm">
-                        <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-                        <div>
-                            <div className="text-sm font-semibold text-white">Next step</div>
-                            <p className="mt-1 text-sm text-slate-400">
-                                After identity intake, onboarding moves into intended platform usage and request scope.
-                            </p>
+                    <section className="rounded-[34px] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.74)_0%,rgba(2,6,23,0.66)_100%)] p-7 shadow-[0_24px_64px_rgba(2,6,23,0.2)] backdrop-blur-sm sm:p-8 lg:p-10">
+                        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
+                            <div className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(280px,0.9fr)]">
+                                <section className="rounded-[30px] border border-cyan-400/20 bg-[linear-gradient(180deg,rgba(8,47,73,0.9)_0%,rgba(15,23,42,0.92)_100%)] p-6 shadow-[0_24px_58px_rgba(8,47,73,0.18)] backdrop-blur-sm sm:p-7">
+                                    <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-cyan-100/80">
+                                        Identity Review
+                                    </div>
+                                    <h3 className="mt-4 text-[1.2rem] font-semibold leading-8 text-white">
+                                        Why this first step matters
+                                    </h3>
+                                    <p className="mt-4 text-sm leading-7 text-slate-200">
+                                        Redoubt starts by establishing the corporate identity behind the request so later
+                                        governance, verification, and reviewer routing all begin from a trusted
+                                        organization record.
+                                    </p>
+                                </section>
+
+                                <section className="overflow-hidden rounded-[30px] border border-white/10 bg-white/[0.04] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                                    <div className="border-b border-white/10 px-5 py-5">
+                                        <div className="text-[11px] uppercase tracking-[0.18em] text-slate-400">
+                                            Typical approval timing
+                                        </div>
+                                        <div className="mt-2 text-lg font-semibold text-white">
+                                            {participantOnboardingEstimatedReviewTime}
+                                        </div>
+                                        <p className="mt-2 text-sm text-slate-300">
+                                            Review may move faster when identity and organization details are consistent.
+                                        </p>
+                                    </div>
+                                    <div className="px-5 py-5">
+                                        <div className="text-[11px] uppercase tracking-[0.18em] text-slate-400">
+                                            Invite code
+                                        </div>
+                                        <div className="mt-2 text-lg font-semibold text-white">Optional</div>
+                                        <p className="mt-2 text-sm text-slate-300">
+                                            You can continue without a code. If you have one, it helps route the request
+                                            more quickly.
+                                        </p>
+                                    </div>
+                                </section>
+                            </div>
+
+                            <section className="overflow-hidden rounded-[30px] border border-white/10 bg-slate-900/78 shadow-[0_24px_60px_rgba(2,6,23,0.22)] backdrop-blur-sm">
+                                <div className="border-b border-white/10 px-6 py-6">
+                                    <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+                                        What Gets Checked
+                                    </div>
+                                </div>
+
+                                <div className="grid gap-4 px-6 py-6">
+                                    {reviewChecks.map((check) => (
+                                        <div
+                                            key={check.title}
+                                            className="rounded-[24px] border border-slate-800/90 bg-slate-950/78 p-5 shadow-[0_18px_40px_rgba(2,6,23,0.18)]"
+                                        >
+                                            <div className="text-sm font-semibold text-white">{check.title}</div>
+                                            <p className="mt-2 text-sm leading-6 text-slate-400">{check.description}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </section>
                         </div>
 
-                        <button
-                            type="button"
-                            onClick={handleNext}
-                            className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:opacity-60"
-                        >
-                            Continue to Step 2
-                        </button>
+                        <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.55fr)]">
+                            <section className="rounded-[30px] border border-white/10 bg-slate-900/70 p-6 shadow-[0_20px_48px_rgba(2,6,23,0.18)] backdrop-blur-sm sm:p-7">
+                                <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+                                    Invite Code Guidance
+                                </div>
+                                <p className="mt-4 text-sm leading-7 text-slate-300">
+                                    If your organization received an invite code, enter it exactly as issued. If not,
+                                    leave the field blank and continue. The current review flow still accepts the
+                                    request without one.
+                                </p>
+                            </section>
+
+                            <div className="rounded-[30px] border border-cyan-400/20 bg-cyan-400/10 px-6 py-5 text-sm text-cyan-100 shadow-[0_18px_44px_rgba(8,47,73,0.14)] sm:px-7 sm:py-6">
+                                This step records your identity and organization context first. Verification depth
+                                increases in later stages, not here.
+                            </div>
+                        </div>
+                    </section>
+
+                    <section className="rounded-[30px] border border-white/10 bg-slate-900/68 px-6 py-5 shadow-[0_20px_48px_rgba(2,6,23,0.18)] backdrop-blur-sm">
+                        <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+                            <div>
+                                <div className="text-sm font-semibold text-white">Next step</div>
+                                <p className="mt-1 text-sm text-slate-400">
+                                    After identity intake, onboarding moves into intended platform usage and request
+                                    scope.
+                                </p>
+                            </div>
+
+                            <button
+                                type="button"
+                                onClick={handleNext}
+                                className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:opacity-60"
+                            >
+                                Continue to Step 2
+                            </button>
                         </div>
                     </section>
                 </div>

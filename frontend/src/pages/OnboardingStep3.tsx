@@ -113,158 +113,6 @@ export default function OnboardingStep3() {
     const stepReady = isStep3Complete(participationIntent, legalAcknowledgment)
     const completedAcknowledgments = Object.values(legalAcknowledgment).filter(Boolean).length
 
-    const helperPanel = (
-        <div className="space-y-6">
-            <section className="rounded-[32px] border border-amber-400/20 bg-[linear-gradient(180deg,rgba(120,53,15,0.22)_0%,rgba(15,23,42,0.96)_100%)] p-6 shadow-[0_28px_70px_rgba(120,53,15,0.16)] backdrop-blur-sm">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-amber-100/80">
-                    Governance Review
-                </div>
-                <h2 className="mt-4 text-[1.35rem] font-semibold leading-8 text-white">Required before protected access review</h2>
-                <p className="mt-4 text-sm leading-7 text-slate-200">
-                    Redoubt requires explicit organizational acknowledgments before reviewers can assess requests for
-                    controlled access, collaboration, or protected evaluation workflows.
-                </p>
-
-                <div className="mt-6 overflow-hidden rounded-[26px] border border-white/10 bg-white/[0.04] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                    <div className="border-b border-white/10 px-5 py-5">
-                        <div className="text-[11px] uppercase tracking-[0.18em] text-slate-400">
-                            Acknowledgment status
-                        </div>
-                        <div className="mt-2 text-lg font-semibold text-white">
-                            {completedAcknowledgments}/3 complete
-                        </div>
-                        <p className="mt-2 text-sm text-slate-300">
-                            All governance confirmations are required before the request can move to verification review.
-                        </p>
-                    </div>
-                    <div className="px-5 py-5">
-                        <div className="text-[11px] uppercase tracking-[0.18em] text-slate-400">
-                            Who should agree
-                        </div>
-                        <p className="mt-2 text-sm text-slate-300">
-                            A representative who can speak for the organization, accept policy scope, and confirm the request purpose.
-                        </p>
-                    </div>
-                </div>
-            </section>
-
-            <section className="overflow-hidden rounded-[30px] border border-white/10 bg-slate-900/80 shadow-[0_24px_60px_rgba(2,6,23,0.22)] backdrop-blur-sm">
-                <div className="border-b border-white/10 px-6 py-6">
-                    <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
-                        Legal and governance acknowledgments
-                    </div>
-                    <p className="mt-3 text-sm leading-7 text-slate-400">
-                        These are concise review gates, not a full legal document. They confirm authority, policy understanding, and purpose limitation.
-                    </p>
-                </div>
-
-                <div className="space-y-4 px-6 py-6">
-                    <label
-                        className={cx(
-                            'block cursor-pointer rounded-[24px] border p-5 transition-all duration-200 shadow-[0_18px_40px_rgba(2,6,23,0.18)]',
-                            legalAcknowledgment.authorizedRepresentative
-                                ? 'border-amber-400/45 bg-amber-500/10'
-                                : 'border-slate-800/90 bg-slate-950/78 hover:border-amber-400/35'
-                        )}
-                    >
-                        <div className="flex items-start gap-4">
-                            <input
-                                type="checkbox"
-                                className="mt-1"
-                                checked={legalAcknowledgment.authorizedRepresentative}
-                                onChange={(event) => handleLegalChange('authorizedRepresentative', event.target.checked)}
-                            />
-                            <div>
-                                <div className="text-sm font-semibold text-white">Authorized representative</div>
-                                <p className="mt-2 text-sm leading-6 text-slate-300">
-                                    I confirm that I am authorised to represent my organisation for controlled access requests on Redoubt.
-                                </p>
-                            </div>
-                        </div>
-                    </label>
-
-                    <label
-                        className={cx(
-                            'block cursor-pointer rounded-[24px] border p-5 transition-all duration-200 shadow-[0_18px_40px_rgba(2,6,23,0.18)]',
-                            legalAcknowledgment.governancePolicyAccepted
-                                ? 'border-amber-400/45 bg-amber-500/10'
-                                : 'border-slate-800/90 bg-slate-950/78 hover:border-amber-400/35'
-                        )}
-                    >
-                        <div className="flex items-start gap-4">
-                            <input
-                                type="checkbox"
-                                className="mt-1"
-                                checked={legalAcknowledgment.governancePolicyAccepted}
-                                onChange={(event) => handleLegalChange('governancePolicyAccepted', event.target.checked)}
-                            />
-                            <div>
-                                <div className="text-sm font-semibold text-white">Governance policy scope</div>
-                                <p className="mt-2 text-sm leading-6 text-slate-300">
-                                    I have reviewed the{' '}
-                                    <Link
-                                        to={participantOnboardingPolicyPath}
-                                        className="text-blue-400 underline underline-offset-2"
-                                    >
-                                        {participantOnboardingPolicyLabel}
-                                    </Link>{' '}
-                                    and understand that requests are logged, policy-scoped, and reviewed against contributor permissions and governance controls.
-                                </p>
-                            </div>
-                        </div>
-                    </label>
-
-                    <label
-                        className={cx(
-                            'block cursor-pointer rounded-[24px] border p-5 transition-all duration-200 shadow-[0_18px_40px_rgba(2,6,23,0.18)]',
-                            legalAcknowledgment.nonRedistributionAcknowledged
-                                ? 'border-amber-400/45 bg-amber-500/10'
-                                : 'border-slate-800/90 bg-slate-950/78 hover:border-amber-400/35'
-                        )}
-                    >
-                        <div className="flex items-start gap-4">
-                            <input
-                                type="checkbox"
-                                className="mt-1"
-                                checked={legalAcknowledgment.nonRedistributionAcknowledged}
-                                onChange={(event) => handleLegalChange('nonRedistributionAcknowledged', event.target.checked)}
-                            />
-                            <div>
-                                <div className="text-sm font-semibold text-white">Purpose limitation and non-redistribution</div>
-                                <p className="mt-2 text-sm leading-6 text-slate-300">
-                                    I acknowledge that approved data access is limited to the stated purpose in this application and may not be redistributed, resold, or repurposed without explicit written consent.
-                                </p>
-                            </div>
-                        </div>
-                    </label>
-                    <div className="border-t border-white/10 pt-6">
-                        <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
-                            Compact Explainers
-                        </div>
-
-                        <div className="mt-4 space-y-4">
-                    {governanceExplainers.map((item) => (
-                        <details
-                            key={item.title}
-                            className="rounded-[24px] border border-slate-800/90 bg-slate-950/78 px-5 py-4 text-sm text-slate-300 shadow-[0_16px_36px_rgba(2,6,23,0.18)]"
-                        >
-                            <summary className="cursor-pointer list-none font-semibold text-white">
-                                {item.title}
-                            </summary>
-                            <p className="mt-3 leading-6 text-slate-400">{item.content}</p>
-                        </details>
-                    ))}
-                        </div>
-
-                        <div className="mt-5 rounded-[24px] border border-cyan-400/20 bg-cyan-400/10 px-5 py-4 text-sm text-cyan-100">
-                            Governance acknowledgments are required because later verification and protected-access review rely on a confirmed organizational authority and purpose-bounded request.
-                        </div>
-                    </div>
-                </div>
-            </section>
-        </div>
-    )
-
     const handleNext = () => {
         if (stepReady) {
             navigate(participantOnboardingPaths.step4)
@@ -276,7 +124,7 @@ export default function OnboardingStep3() {
             <OnboardingPageLayout
                 activeStep={3}
                 showDefaultHelperPanel={false}
-                helperPanel={helperPanel}
+                canvasWidth="full"
                 headerTitle="Participation Intent & Governance"
                 headerSubtitle="Clarify how your organization intends to participate, then confirm the governance obligations required before protected access review can proceed."
                 pageEyebrow="Participant onboarding · Governance review"
@@ -392,6 +240,166 @@ export default function OnboardingStep3() {
                                     : 'No participation mode selected yet.'}
                             </p>
                         </div>
+                    </section>
+
+                    <section className="rounded-[34px] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.78)_0%,rgba(2,6,23,0.7)_100%)] p-7 shadow-[0_26px_68px_rgba(2,6,23,0.22)] backdrop-blur-sm sm:p-8 lg:p-10">
+                        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(320px,0.95fr)]">
+                            <section className="rounded-[32px] border border-amber-400/20 bg-[linear-gradient(180deg,rgba(120,53,15,0.22)_0%,rgba(15,23,42,0.96)_100%)] p-6 shadow-[0_28px_70px_rgba(120,53,15,0.16)] backdrop-blur-sm sm:p-7">
+                                <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-amber-100/80">
+                                    Governance Review
+                                </div>
+                                <h2 className="mt-4 text-[1.35rem] font-semibold leading-8 text-white">
+                                    Required before protected access review
+                                </h2>
+                                <p className="mt-4 text-sm leading-7 text-slate-200">
+                                    Redoubt requires explicit organizational acknowledgments before reviewers can assess
+                                    requests for controlled access, collaboration, or protected evaluation workflows.
+                                </p>
+                            </section>
+
+                            <section className="overflow-hidden rounded-[30px] border border-white/10 bg-white/[0.04] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                                <div className="border-b border-white/10 px-5 py-5">
+                                    <div className="text-[11px] uppercase tracking-[0.18em] text-slate-400">
+                                        Acknowledgment status
+                                    </div>
+                                    <div className="mt-2 text-lg font-semibold text-white">
+                                        {completedAcknowledgments}/3 complete
+                                    </div>
+                                    <p className="mt-2 text-sm text-slate-300">
+                                        All governance confirmations are required before the request can move to
+                                        verification review.
+                                    </p>
+                                </div>
+                                <div className="px-5 py-5">
+                                    <div className="text-[11px] uppercase tracking-[0.18em] text-slate-400">
+                                        Who should agree
+                                    </div>
+                                    <p className="mt-2 text-sm text-slate-300">
+                                        A representative who can speak for the organization, accept policy scope, and
+                                        confirm the request purpose.
+                                    </p>
+                                </div>
+                            </section>
+                        </div>
+
+                        <section className="mt-6 overflow-hidden rounded-[30px] border border-white/10 bg-slate-900/80 shadow-[0_24px_60px_rgba(2,6,23,0.22)] backdrop-blur-sm">
+                            <div className="border-b border-white/10 px-6 py-6">
+                                <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+                                    Legal and governance acknowledgments
+                                </div>
+                                <p className="mt-3 text-sm leading-7 text-slate-400">
+                                    These are concise review gates, not a full legal document. They confirm authority,
+                                    policy understanding, and purpose limitation.
+                                </p>
+                            </div>
+
+                            <div className="space-y-4 px-6 py-6">
+                                <label
+                                    className={cx(
+                                        'block cursor-pointer rounded-[24px] border p-5 transition-all duration-200 shadow-[0_18px_40px_rgba(2,6,23,0.18)]',
+                                        legalAcknowledgment.authorizedRepresentative
+                                            ? 'border-amber-400/45 bg-amber-500/10'
+                                            : 'border-slate-800/90 bg-slate-950/78 hover:border-amber-400/35'
+                                    )}
+                                >
+                                    <div className="flex items-start gap-4">
+                                        <input
+                                            type="checkbox"
+                                            className="mt-1"
+                                            checked={legalAcknowledgment.authorizedRepresentative}
+                                            onChange={(event) => handleLegalChange('authorizedRepresentative', event.target.checked)}
+                                        />
+                                        <div>
+                                            <div className="text-sm font-semibold text-white">Authorized representative</div>
+                                            <p className="mt-2 text-sm leading-6 text-slate-300">
+                                                I confirm that I am authorised to represent my organisation for controlled access requests on Redoubt.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </label>
+
+                                <label
+                                    className={cx(
+                                        'block cursor-pointer rounded-[24px] border p-5 transition-all duration-200 shadow-[0_18px_40px_rgba(2,6,23,0.18)]',
+                                        legalAcknowledgment.governancePolicyAccepted
+                                            ? 'border-amber-400/45 bg-amber-500/10'
+                                            : 'border-slate-800/90 bg-slate-950/78 hover:border-amber-400/35'
+                                    )}
+                                >
+                                    <div className="flex items-start gap-4">
+                                        <input
+                                            type="checkbox"
+                                            className="mt-1"
+                                            checked={legalAcknowledgment.governancePolicyAccepted}
+                                            onChange={(event) => handleLegalChange('governancePolicyAccepted', event.target.checked)}
+                                        />
+                                        <div>
+                                            <div className="text-sm font-semibold text-white">Governance policy scope</div>
+                                            <p className="mt-2 text-sm leading-6 text-slate-300">
+                                                I have reviewed the{' '}
+                                                <Link
+                                                    to={participantOnboardingPolicyPath}
+                                                    className="text-blue-400 underline underline-offset-2"
+                                                >
+                                                    {participantOnboardingPolicyLabel}
+                                                </Link>{' '}
+                                                and understand that requests are logged, policy-scoped, and reviewed against contributor permissions and governance controls.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </label>
+
+                                <label
+                                    className={cx(
+                                        'block cursor-pointer rounded-[24px] border p-5 transition-all duration-200 shadow-[0_18px_40px_rgba(2,6,23,0.18)]',
+                                        legalAcknowledgment.nonRedistributionAcknowledged
+                                            ? 'border-amber-400/45 bg-amber-500/10'
+                                            : 'border-slate-800/90 bg-slate-950/78 hover:border-amber-400/35'
+                                    )}
+                                >
+                                    <div className="flex items-start gap-4">
+                                        <input
+                                            type="checkbox"
+                                            className="mt-1"
+                                            checked={legalAcknowledgment.nonRedistributionAcknowledged}
+                                            onChange={(event) => handleLegalChange('nonRedistributionAcknowledged', event.target.checked)}
+                                        />
+                                        <div>
+                                            <div className="text-sm font-semibold text-white">
+                                                Purpose limitation and non-redistribution
+                                            </div>
+                                            <p className="mt-2 text-sm leading-6 text-slate-300">
+                                                I acknowledge that approved data access is limited to the stated purpose in this application and may not be redistributed, resold, or repurposed without explicit written consent.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </label>
+
+                                <div className="border-t border-white/10 pt-6">
+                                    <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+                                        Compact Explainers
+                                    </div>
+
+                                    <div className="mt-4 grid gap-4 xl:grid-cols-3">
+                                        {governanceExplainers.map((item) => (
+                                            <details
+                                                key={item.title}
+                                                className="rounded-[24px] border border-slate-800/90 bg-slate-950/78 px-5 py-4 text-sm text-slate-300 shadow-[0_16px_36px_rgba(2,6,23,0.18)]"
+                                            >
+                                                <summary className="cursor-pointer list-none font-semibold text-white">
+                                                    {item.title}
+                                                </summary>
+                                                <p className="mt-3 leading-6 text-slate-400">{item.content}</p>
+                                            </details>
+                                        ))}
+                                    </div>
+
+                                    <div className="mt-5 rounded-[24px] border border-cyan-400/20 bg-cyan-400/10 px-5 py-4 text-sm text-cyan-100">
+                                        Governance acknowledgments are required because later verification and protected-access review rely on a confirmed organizational authority and purpose-bounded request.
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
                     </section>
 
                     <section className="rounded-[30px] border border-white/10 bg-slate-900/68 px-6 py-5 shadow-[0_20px_48px_rgba(2,6,23,0.18)] backdrop-blur-sm">

@@ -28,22 +28,6 @@ function cx(...classes: Array<string | false | null | undefined>) {
     return classes.filter(Boolean).join(' ')
 }
 
-function getStateLabel(currentStep: number, activeStep: number) {
-    if (currentStep < activeStep) {
-        return 'Completed'
-    }
-
-    if (currentStep === activeStep) {
-        return 'Current focus'
-    }
-
-    if (currentStep === activeStep + 1) {
-        return 'Up next'
-    }
-
-    return 'Upcoming'
-}
-
 export default function OnboardingProgress({
     activeStep,
     steps,
@@ -125,17 +109,6 @@ export default function OnboardingProgress({
                 )}
 
                 <div className="mt-2 text-sm font-semibold leading-5 text-white">{title}</div>
-
-                <div
-                    className={cx(
-                        'mt-auto inline-flex w-fit rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em]',
-                        done && 'bg-emerald-500/12 text-emerald-200',
-                        active && 'bg-blue-500/12 text-blue-100',
-                        !done && !active && 'bg-slate-800 text-slate-400'
-                    )}
-                >
-                    {getStateLabel(stepNumber, activeStep)}
-                </div>
             </div>
         )
     })
@@ -175,10 +148,12 @@ export default function OnboardingProgress({
                 <div className="mt-5 overflow-x-auto pb-1">
                     <div className="flex min-w-[1040px] items-stretch gap-3">
                         {cards.map((card, idx) => (
-                            <div key={steps[idx]} className="flex min-w-0 flex-1 items-center gap-3">
-                                <div className="min-w-[196px] flex-1">{card}</div>
+                            <div key={steps[idx]} className="contents">
+                                <div className="min-w-[196px] flex-1 basis-0">{card}</div>
                                 {idx < cards.length - 1 && (
-                                    <div className="hidden h-px flex-1 rounded-full bg-slate-800/80 xl:block" />
+                                    <div className="hidden w-10 shrink-0 items-center xl:flex">
+                                        <div className="h-px w-full rounded-full bg-slate-800/80" />
+                                    </div>
                                 )}
                             </div>
                         ))}

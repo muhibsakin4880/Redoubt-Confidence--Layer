@@ -64,7 +64,12 @@ export default function OnboardingConfirmation() {
     ]
 
     return (
-        <OnboardingPageLayout activeStep={6}>
+        <OnboardingPageLayout
+            headerWidth="canvas"
+            headerTitle="Application Submitted"
+            headerSubtitle="Your onboarding package has been staged for review and the next actions are now operational rather than form-driven."
+            pageEyebrow="Participant onboarding · Submitted"
+        >
             <section className="rounded-2xl border border-amber-500/30 bg-[linear-gradient(180deg,rgba(120,53,15,0.28)_0%,rgba(15,23,42,0.88)_100%)] p-6 md:p-8 shadow-[0_24px_60px_rgba(120,53,15,0.24)]">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                     <div className="space-y-3">
