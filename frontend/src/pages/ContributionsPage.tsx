@@ -462,6 +462,91 @@ export default function ContributionsPage() {
         }
     ]
 
+    const preferredOperatingRegion =
+        localOnlyFields.length > 0 || restrictedFields.length > 0
+            ? 'uae_local_only'
+            : transferSensitiveFields.length > 0
+                ? 'gcc_review'
+                : 'external_review'
+
+    const operatingRegionOptions = [
+        {
+            key: 'uae_local_only',
+            title: 'UAE local only',
+            status: preferredOperatingRegion === 'uae_local_only' ? 'Preferred posture' : 'Available',
+            tone: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-100',
+            detail: 'Keep restricted and local-only fields inside a UAE-governed packaging lane with no external review path by default.'
+        },
+        {
+            key: 'gcc_review',
+            title: 'GCC review',
+            status: preferredOperatingRegion === 'gcc_review' ? 'Preferred posture' : 'Conditional',
+            tone: 'border-cyan-500/30 bg-cyan-500/10 text-cyan-100',
+            detail: 'Allow review inside GCC-scoped operating lanes when provider packaging and regional access restrictions stay aligned.'
+        },
+        {
+            key: 'external_review',
+            title: 'External review subject to safeguards',
+            status: preferredOperatingRegion === 'external_review' ? 'Preferred posture' : 'Safeguards required',
+            tone: 'border-amber-500/30 bg-amber-500/10 text-amber-100',
+            detail: 'Only open an external review route when cross-border safeguards remain active and release still stays gated.'
+        }
+    ] as const
+
+    const crossBorderSafeguards = [
+        {
+            label: 'Evaluation only',
+            detail: 'External review stays limited to governed evaluation rather than open operational use.'
+        },
+        {
+            label: 'No raw export',
+            detail: 'Raw rows and unrestricted file movement remain blocked during cross-border review.'
+        },
+        {
+            label: 'Watermarking',
+            detail: 'Derived outputs can carry traceability marks before any approved release is considered.'
+        },
+        {
+            label: 'Audit logging',
+            detail: 'Session activity and policy actions stay visible as part of the provider evidence trail.'
+        },
+        {
+            label: 'Restricted credentials',
+            detail: 'Short-lived access stays tied to the reviewed task, workspace, and operating window.'
+        }
+    ]
+
+    const buyerVerified = selectedDataset.performance.approvedRequests > 0
+    const validationCompleted = selectedDataset.status === 'Approved' || selectedDataset.status === 'Restricted'
+    const noDisputeOpen = validationCompleted && selectedDataset.status !== 'Rejected'
+
+    const providerReleaseConditions = [
+        {
+            label: 'Buyer verified',
+            badge: buyerVerified ? 'Ready' : 'Pending',
+            value: buyerVerified ? 'Verified in current request history' : 'Required before release',
+            tone: buyerVerified
+                ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-100'
+                : 'border-slate-600 bg-slate-800/80 text-slate-300'
+        },
+        {
+            label: 'Validation completed',
+            badge: validationCompleted ? 'Ready' : 'In review',
+            value: validationCompleted ? 'Validation and packaging ready' : 'Still in validation flow',
+            tone: validationCompleted
+                ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-100'
+                : 'border-amber-500/30 bg-amber-500/10 text-amber-100'
+        },
+        {
+            label: 'No dispute open',
+            badge: noDisputeOpen ? 'Clear' : 'Hold',
+            value: noDisputeOpen ? 'No blocking dispute signal' : 'Hold until release path is clear',
+            tone: noDisputeOpen
+                ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-100'
+                : 'border-amber-500/30 bg-amber-500/10 text-amber-100'
+        }
+    ]
+
     const updatePrivacyAccessTerm = (
         field: Exclude<keyof typeof privacyAccessTerms, 'advanced' | 'security'>,
         value: string
@@ -2156,6 +2241,77 @@ export default function ContributionsPage() {
 
                         <div className="mt-5 rounded-xl border border-slate-700 bg-slate-900/50 px-4 py-3 text-xs leading-6 text-slate-400">
                             Classification and transfer pressure stay visible in the contribution workspace so providers can package compliance posture before buyer-facing access terms are finalized.
+                        </div>
+                    </section>
+
+                    <section className="rounded-2xl border border-slate-700 bg-slate-800/60 p-6 shadow-xl">
+                        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                            <div>
+                                <div className="text-[11px] uppercase tracking-[0.18em] text-cyan-200/80">Operating regions & safeguards</div>
+                                <h2 className="mt-2 text-xl font-semibold text-white">Provider operating region posture</h2>
+                                <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-400">
+                                    Configure the operating lane before release discussions expand. Region posture, cross-border safeguards, and release conditions stay visible in one provider-facing workspace.
+                                </p>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                                <span className="inline-flex rounded-full border border-slate-600 bg-slate-900/70 px-3 py-1 text-[11px] font-semibold text-slate-200">
+                                    {uploadGovernanceSummary.dataResidency}
+                                </span>
+                                <span className="inline-flex rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-[11px] font-semibold text-cyan-100">
+                                    {uploadGovernanceSummary.regionalAccessRestriction}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="mt-6 grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+                            <div className="space-y-4">
+                                <div className="text-sm font-semibold text-white">Allowed operating regions</div>
+                                <div className="grid gap-4 md:grid-cols-3">
+                                    {operatingRegionOptions.map(option => (
+                                        <article key={option.key} className="rounded-xl border border-slate-700 bg-slate-900/70 p-4">
+                                            <div className={`inline-flex rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${option.tone}`}>
+                                                {option.status}
+                                            </div>
+                                            <h3 className="mt-3 text-lg font-semibold text-white">{option.title}</h3>
+                                            <p className="mt-3 text-sm leading-6 text-slate-300">{option.detail}</p>
+                                        </article>
+                                    ))}
+                                </div>
+                                <div className="rounded-xl border border-slate-700 bg-slate-900/50 px-4 py-3 text-xs leading-6 text-slate-400">
+                                    {uploadGovernanceSummary.restrictionReason}
+                                </div>
+                            </div>
+
+                            <div className="space-y-4">
+                                <article className="rounded-xl border border-slate-700 bg-slate-900/70 p-4">
+                                    <div className="text-sm font-semibold text-white">Cross-border safeguards</div>
+                                    <div className="mt-4 space-y-3">
+                                        {crossBorderSafeguards.map(item => (
+                                            <div key={item.label} className="rounded-lg border border-slate-700 bg-slate-950/45 px-3 py-3">
+                                                <div className="text-sm font-semibold text-white">{item.label}</div>
+                                                <div className="mt-1 text-xs leading-5 text-slate-400">{item.detail}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </article>
+
+                                <article className="rounded-xl border border-slate-700 bg-slate-900/70 p-4">
+                                    <div className="text-sm font-semibold text-white">Provider release conditions</div>
+                                    <div className="mt-4 space-y-3">
+                                        {providerReleaseConditions.map(condition => (
+                                            <div key={condition.label} className="flex items-center justify-between gap-3 rounded-lg border border-slate-700 bg-slate-950/45 px-3 py-3">
+                                                <div>
+                                                    <div className="text-sm font-semibold text-white">{condition.label}</div>
+                                                    <div className="mt-1 text-xs text-slate-400">{condition.value}</div>
+                                                </div>
+                                                <span className={`inline-flex rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${condition.tone}`}>
+                                                    {condition.badge}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </article>
+                            </div>
                         </div>
                     </section>
 
