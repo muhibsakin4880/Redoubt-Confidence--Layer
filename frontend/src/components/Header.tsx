@@ -8,11 +8,12 @@ import {
     participantOnboardingPolicyPath
 } from '../onboarding/constants'
 
-export type PublicHeaderVariant = 'default' | 'onboarding'
+export type PublicHeaderVariant = 'default' | 'onboarding' | 'protectedEvaluation'
 
 export const publicHeaderOffsetClassName: Record<PublicHeaderVariant, string> = {
     default: 'pt-[88px]',
-    onboarding: 'pt-16'
+    onboarding: 'pt-16',
+    protectedEvaluation: 'pt-16'
 }
 
 type PublicNavItem = {
@@ -42,9 +43,10 @@ export default function Header({ variant = 'default' }: { variant?: PublicHeader
 
     const hideBrand = location.pathname === '/login'
     const isOnboardingVariant = variant === 'onboarding'
+    const isProtectedEvaluationVariant = variant === 'protectedEvaluation'
     const navItems = variant === 'onboarding' ? onboardingNav : publicNav
-    const showRequestAccess = variant === 'default'
-    const shellHeightClassName = variant === 'onboarding' ? 'h-16' : 'h-[4.5rem]'
+    const showRequestAccess = !isOnboardingVariant
+    const shellHeightClassName = isOnboardingVariant || isProtectedEvaluationVariant ? 'h-16' : 'h-[4.5rem]'
     const shellClassName = isOnboardingVariant
         ? 'bg-slate-950/88 backdrop-blur-md border-b border-slate-800/80 shadow-[0_16px_34px_rgba(2,6,23,0.26)]'
         : 'bg-slate-900/90 backdrop-blur-sm border-b border-slate-800'
@@ -132,7 +134,7 @@ export default function Header({ variant = 'default' }: { variant?: PublicHeader
                     </>
                 ) : (
                     <>
-                        {!hideBrand ? (
+                        {!isProtectedEvaluationVariant && !hideBrand && (
                             <Link to="/" className="flex items-center gap-4">
                                 <div className="flex h-10 w-10 items-center justify-center rounded-[1rem] bg-[#58c7ee] shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_12px_28px_rgba(34,211,238,0.16)]">
                                     <span className="text-lg font-bold text-white">R</span>
@@ -144,8 +146,6 @@ export default function Header({ variant = 'default' }: { variant?: PublicHeader
                                     REDOUBT
                                 </span>
                             </Link>
-                        ) : (
-                            <div />
                         )}
 
                         <nav className="hidden md:flex items-center gap-8 text-sm">

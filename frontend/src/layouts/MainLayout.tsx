@@ -6,10 +6,15 @@ import { participantOnboardingPaths } from '../onboarding/constants'
 export default function MainLayout() {
     const location = useLocation()
     const isLandingPage = location.pathname === '/'
+    const isProtectedEvaluationRoute = location.pathname === '/protected-evaluation'
     const isParticipantOnboardingRoute =
         location.pathname.startsWith(participantOnboardingPaths.entry) ||
         location.pathname === participantOnboardingPaths.applicationStatus
-    const headerVariant: PublicHeaderVariant = isParticipantOnboardingRoute ? 'onboarding' : 'default'
+    const headerVariant: PublicHeaderVariant = isParticipantOnboardingRoute
+        ? 'onboarding'
+        : isProtectedEvaluationRoute
+            ? 'protectedEvaluation'
+            : 'default'
     const mainOffsetClassName = isLandingPage ? '' : publicHeaderOffsetClassName[headerVariant]
 
     return (
