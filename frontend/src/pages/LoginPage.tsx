@@ -34,6 +34,10 @@ function normalizeVerificationKey(value: string) {
     return value.trim().toLowerCase()
 }
 
+function isAcceptedMockVerificationKey(value: string) {
+    return value.trim().length > 0
+}
+
 function SecurityFooter({ sessionId, timestamp }: { sessionId: string; timestamp: string }) {
     return (
         <div className="mt-6 border-t border-slate-800 pt-4">
@@ -110,9 +114,15 @@ export default function LoginPage() {
         validationTimerRef.current = setTimeout(() => {
             setLoadingState(null)
 
+            const matchesRegisteredKey =
+                registeredVerificationKey &&
+                normalizeVerificationKey(verificationKey) === normalizeVerificationKey(registeredVerificationKey)
+            const acceptsMockCredential = MOCK_AUTH && isAcceptedMockVerificationKey(verificationKey)
+
             if (
                 registeredVerificationKey &&
-                normalizeVerificationKey(verificationKey) !== normalizeVerificationKey(registeredVerificationKey)
+                !matchesRegisteredKey &&
+                !acceptsMockCredential
             ) {
                 setVerificationError('Verification key not recognized. Check your saved credential or DNS TXT record.')
                 return

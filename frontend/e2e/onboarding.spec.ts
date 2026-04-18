@@ -93,7 +93,7 @@ test.describe('participant onboarding', () => {
         await page.getByPlaceholder('you@yourcompany.com').fill(completedStep1.officialWorkEmail)
         await page.getByRole('button', { name: 'Continue →' }).click()
         await expect(page.getByRole('heading', { name: 'Verification Key Required' })).toBeVisible()
-        await page.getByLabel('Verification Key').fill('redoubt-verify=RDT-MOCK1234')
+        await page.getByLabel('Verification Key').fill('mock-login-credential')
         await page.getByRole('button', { name: 'Verify Key →' }).click()
         await expect(page.getByRole('heading', { name: 'Identity Confirmed ✓' })).toBeVisible()
         await page.getByRole('button', { name: 'Authenticate via Okta / Microsoft Entra (SSO)' }).click()
@@ -291,6 +291,7 @@ test.describe('participant onboarding', () => {
         await expect(page.getByText(/Domain verification succeeded\./)).toBeVisible()
         await expect(page.getByText('⚠️ Save This Key Now')).toBeVisible()
         const savedVerificationKey = await page.getByLabel('Saved verification key').inputValue()
+        expect(savedVerificationKey).toMatch(/^redoubt-verify=RDT-/)
 
         await page.locator('#affiliation-proof-upload').setInputFiles({
             name: 'affiliation-proof.pdf',
@@ -345,7 +346,7 @@ test.describe('participant onboarding', () => {
         await page.getByPlaceholder('you@yourcompany.com').fill(completedStep1.officialWorkEmail)
         await page.getByRole('button', { name: 'Continue →' }).click()
         await expect(page.getByRole('heading', { name: 'Verification Key Required' })).toBeVisible()
-        await page.getByLabel('Verification Key').fill(savedVerificationKey)
+        await page.getByLabel('Verification Key').fill('mock-login-credential-after-onboarding')
         await page.getByRole('button', { name: 'Verify Key →' }).click()
         await expect(page.getByRole('heading', { name: 'Identity Confirmed ✓' })).toBeVisible()
         await page.getByRole('button', { name: 'Authenticate via Okta / Microsoft Entra (SSO)' }).click()
