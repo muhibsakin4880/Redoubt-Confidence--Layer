@@ -1,4 +1,5 @@
 import { onboardingStorageKeys, readOnboardingValue } from '../onboarding/storage'
+import { hasAcceptedCorporateDomain } from '../onboarding/flow'
 import type {
     ComplianceCommitment,
     LegalAcknowledgment,
@@ -79,9 +80,10 @@ const defaultVerification: VerificationSnapshot = {
     authorizationFileName: 'northbridge-compliance-letter.pdf',
     authenticationMethod: 'hardware_key',
     ssoDomain: '',
+    hardwareKeyType: 'YubiKey 5 Series',
+    hardwareKeyReference: '',
     corporateDomain: 'northbridgehealth.org',
-    verificationKey: 'redoubt-verify=RDT-NB7K4P2Q',
-    verificationKeySaved: true
+    dnsVerificationToken: 'redoubt-verify=RDT-NB7K4P2Q'
 }
 const defaultCommitments: ComplianceCommitment = {
     responsibleDataUsage: true,
@@ -212,6 +214,7 @@ export const buildCompliancePassport = (): CompliancePassport => {
                 Boolean(verification.affiliationFileName) &&
                 Boolean(verification.authorizationFileName) &&
                 Boolean(verification.authenticationMethod) &&
+                hasAcceptedCorporateDomain(organization.officialWorkEmail, verification.corporateDomain) &&
                 (verification.authenticationMethod !== 'sso' || verification.ssoDomain.trim().length > 0),
             detail: verification.linkedInConnected && verification.domainVerified
                 ? `${verification.affiliationFileName ?? 'Affiliation file'} · ${verification.authorizationFileName ?? 'Authorization file'}`

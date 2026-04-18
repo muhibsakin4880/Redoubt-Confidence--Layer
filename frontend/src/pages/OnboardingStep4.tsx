@@ -8,21 +8,25 @@ import {
 } from '../onboarding/constants'
 import OnboardingPageLayout from '../onboarding/components/OnboardingPageLayout'
 import OnboardingStepGuard from '../onboarding/components/OnboardingStepGuard'
-import { isStep4Complete } from '../onboarding/flow'
+import { hasAcceptedCorporateDomain, isStep4Complete } from '../onboarding/flow'
 import {
-    emptyVerificationSnapshot,
+    emptyStep1FormState,
     onboardingStorageKeys,
+    readOnboardingValue,
     readVerificationSnapshot,
     writeOnboardingValue
 } from '../onboarding/storage'
 import type { AuthenticationMethod } from '../onboarding/types'
+import { doesCorporateDomainMatchEmail, getEmailDomain, normalizeCorporateDomain } from '../onboarding/validators'
 
 type StatusTone = 'info' | 'neutral' | 'success' | 'warning'
 type VerificationFileTarget = 'affiliation' | 'authorization'
 
+const MOCK_AUTH = (import.meta.env.VITE_MOCK_AUTH ?? 'true') === 'true'
+
 const allowedFileExtensions = new Set(['pdf', 'jpg', 'jpeg', 'png'])
 const maxFileSizeBytes = 5 * 1024 * 1024
-const verificationKeyCharacters = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+const dnsVerificationTokenCharacters = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
 
 const topReviewCards = [
     {
@@ -31,11 +35,11 @@ const topReviewCards = [
     },
     {
         title: 'Domain control',
-        description: 'DNS verification proves control of the corporate domain associated with the request and later access identity.'
+        description: 'DNS verification proves control of the corporate domain associated with the submitted work email.'
     },
     {
         title: 'Evidence packet',
-        description: 'Affiliation evidence, authorization evidence, and authentication setup become the verification packet used for access governance.'
+        description: 'Affiliation evidence, authorization evidence, and the declared post-approval authentication method become the verification packet used for access governance.'
     }
 ] as const
 
@@ -44,6 +48,20 @@ const dnsSetupSteps = [
     'Ask your IT or DNS administrator to publish the TXT verification record.',
     'Return here and run the verification check after the record propagates.'
 ] as const
+
+const hardwareKeyTypeOptions = [
+    'YubiKey 5 Series',
+    'YubiKey Bio Series',
+    'Windows Hello',
+    'Apple Face ID / Touch ID',
+    'Other FIDO2 Security Key'
+] as const
+
+const hardwareKeyReferenceHelpText =
+    'This helps reviewers\nprepare the correct enrollment\nflow after approval.'
+
+const hardwareKeyReviewerInfo =
+    'Physical key enrollment and\nbinding happens after approval\nduring access provisioning.\nThis information is for\nreviewer reference only.'
 
 const affiliationExamples = [
     'Employee badge or staff ID',
@@ -71,7 +89,7 @@ const authorizationChecks = [
 
 const afterVerificationSteps = [
     'The completed verification packet is handed to reviewers with your prior identity, use-case, and governance inputs.',
-    'Reviewers confirm identity alignment, organization authority, and access-control readiness.',
+    'Reviewers confirm identity alignment, organization authority, and post-approval access-control expectations.',
     'You receive the review decision and any next access steps after manual review.'
 ] as const
 
@@ -129,10 +147,10 @@ function getAuthenticationStatus(authenticationMethod: AuthenticationMethod | nu
     return { label: 'Missing', tone: 'neutral' as const }
 }
 
-function generateVerificationKey() {
+function generateDnsVerificationToken() {
     let suffix = ''
     for (let index = 0; index < 8; index += 1) {
-        suffix += verificationKeyCharacters[Math.floor(Math.random() * verificationKeyCharacters.length)]
+        suffix += dnsVerificationTokenCharacters[Math.floor(Math.random() * dnsVerificationTokenCharacters.length)]
     }
     return `redoubt-verify=RDT-${suffix}`
 }
@@ -152,6 +170,7 @@ async function copyToClipboard(value: string) {
 
 export default function OnboardingStep4() {
     const navigate = useNavigate()
+    const step1Snapshot = readOnboardingValue<{ officialWorkEmail: string }>(onboardingStorageKeys.step1, emptyStep1FormState)
     const snapshot = readVerificationSnapshot()
     const linkedInTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const dnsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -165,6 +184,8 @@ export default function OnboardingStep4() {
     const [authorizationFileName, setAuthorizationFileName] = useState<string | null>(snapshot.authorizationFileName)
     const [authenticationMethod, setAuthenticationMethod] = useState<AuthenticationMethod | null>(snapshot.authenticationMethod)
     const [ssoDomain, setSSODomain] = useState(snapshot.ssoDomain)
+    const [hardwareKeyType, setHardwareKeyType] = useState(snapshot.hardwareKeyType)
+    const [hardwareKeyReference, setHardwareKeyReference] = useState(snapshot.hardwareKeyReference)
     const [affiliationError, setAffiliationError] = useState<string | null>(null)
     const [authorizationError, setAuthorizationError] = useState<string | null>(null)
     const [dragTarget, setDragTarget] = useState<VerificationFileTarget | null>(null)
@@ -173,9 +194,15 @@ export default function OnboardingStep4() {
     const [domainVerificationStep, setDomainVerificationStep] = useState<1 | 2 | 3>(() =>
         snapshot.domainVerified ? 3 : snapshot.corporateDomain.trim().length > 0 ? 2 : 1
     )
-    const [verificationKey, setVerificationKey] = useState(() => snapshot.verificationKey || generateVerificationKey())
-    const [isVerificationKeySaved, setIsVerificationKeySaved] = useState(snapshot.verificationKeySaved)
+    const [dnsVerificationToken, setDnsVerificationToken] = useState(
+        () => snapshot.dnsVerificationToken || generateDnsVerificationToken()
+    )
     const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'failed'>('idle')
+    const submittedWorkEmail = step1Snapshot.officialWorkEmail.trim()
+    const expectedDomain = getEmailDomain(submittedWorkEmail)
+    const normalizedCorporateDomain = normalizeCorporateDomain(corporateDomain)
+    const domainMatchesWorkEmail = doesCorporateDomainMatchEmail(submittedWorkEmail, corporateDomain)
+    const domainAccepted = hasAcceptedCorporateDomain(submittedWorkEmail, corporateDomain)
 
     useEffect(() => {
         return () => {
@@ -201,20 +228,22 @@ export default function OnboardingStep4() {
             authorizationFileName,
             authenticationMethod,
             ssoDomain,
+            hardwareKeyType,
+            hardwareKeyReference,
             corporateDomain,
-            verificationKey,
-            verificationKeySaved: isVerificationKeySaved
+            dnsVerificationToken
         })
     }, [
         affiliationFileName,
         authenticationMethod,
         authorizationFileName,
         corporateDomain,
+        dnsVerificationToken,
+        hardwareKeyReference,
+        hardwareKeyType,
         isDomainVerified,
         isLinkedInConnected,
-        isVerificationKeySaved,
-        ssoDomain,
-        verificationKey
+        ssoDomain
     ])
 
     const handleLinkedInConnect = () => {
@@ -240,8 +269,8 @@ export default function OnboardingStep4() {
         }, 2000)
     }
 
-    const handleCopyVerificationKey = async () => {
-        const copied = await copyToClipboard(verificationKey)
+    const handleCopyVerificationToken = async () => {
+        const copied = await copyToClipboard(dnsVerificationToken)
         setCopyStatus(copied ? 'copied' : 'failed')
 
         if (copyTimerRef.current) {
@@ -251,11 +280,6 @@ export default function OnboardingStep4() {
         copyTimerRef.current = setTimeout(() => {
             setCopyStatus('idle')
         }, 2200)
-    }
-
-    const handleSaveVerificationKey = () => {
-        setIsVerificationKeySaved(true)
-        setCopyStatus('idle')
     }
 
     const handleFileSelection = (file: File | null | undefined, target: VerificationFileTarget) => {
@@ -294,12 +318,16 @@ export default function OnboardingStep4() {
 
     const handleAuthenticationMethodSelect = (method: AuthenticationMethod) => {
         setAuthenticationMethod(method)
+        if (method !== 'sso') {
+            setSSODomain('')
+        }
         setShowError(false)
     }
 
     const authenticationReady =
         Boolean(authenticationMethod) &&
         (authenticationMethod !== 'sso' || ssoDomain.trim().length > 0)
+    const domainReady = domainAccepted && normalizedCorporateDomain.length > 0
     const stepReady = isStep4Complete({
         linkedInConnected: isLinkedInConnected,
         domainVerified: isDomainVerified,
@@ -307,10 +335,11 @@ export default function OnboardingStep4() {
         authorizationFileName,
         authenticationMethod,
         ssoDomain,
+        hardwareKeyType,
+        hardwareKeyReference,
         corporateDomain,
-        verificationKey,
-        verificationKeySaved: isVerificationKeySaved
-    })
+        dnsVerificationToken
+    }, submittedWorkEmail)
 
     const linkedInStatus = isLinkedInConnected
         ? { label: 'Verified', tone: 'success' as const }
@@ -319,6 +348,8 @@ export default function OnboardingStep4() {
             : { label: 'Missing', tone: 'neutral' as const }
     const dnsStatus = isDomainVerified
         ? { label: 'Verified', tone: 'success' as const }
+        : !MOCK_AUTH && normalizedCorporateDomain.length > 0 && !domainMatchesWorkEmail
+            ? { label: 'Mismatch', tone: 'warning' as const }
         : isDNSVerifying
             ? { label: 'Checking', tone: 'info' as const }
             : domainVerificationStep > 1 || corporateDomain
@@ -337,7 +368,7 @@ export default function OnboardingStep4() {
         },
         {
             label: 'Domain / DNS verification',
-            complete: isDomainVerified,
+            complete: isDomainVerified && domainAccepted,
             statusLabel: dnsStatus.label,
             tone: dnsStatus.tone
         },
@@ -354,7 +385,7 @@ export default function OnboardingStep4() {
             tone: authorizationStatus.tone
         },
         {
-            label: 'Authentication setup',
+            label: 'Declared authentication method',
             complete: authenticationReady,
             statusLabel: authenticationStatus.label,
             tone: authenticationStatus.tone
@@ -379,14 +410,14 @@ export default function OnboardingStep4() {
     const fillMockData = () => {
         setIsLinkedInConnected(true)
         setIsDomainVerified(true)
-        setCorporateDomain('demo.redoubt.local')
+        const mockDomain = expectedDomain || 'demo.redoubt.local'
+        setCorporateDomain(mockDomain)
         setDomainVerificationStep(3)
         setAffiliationFileName('affiliation-proof.pdf')
         setAuthorizationFileName('authorization-letter.pdf')
         setAuthenticationMethod('hardware_key')
         setSSODomain('')
-        setVerificationKey((current) => current || generateVerificationKey())
-        setIsVerificationKeySaved(true)
+        setDnsVerificationToken((current) => current || generateDnsVerificationToken())
         setCopyStatus('idle')
         setAffiliationError(null)
         setAuthorizationError(null)
@@ -401,7 +432,7 @@ export default function OnboardingStep4() {
                 </div>
                 <h2 className="mt-4 text-[1.35rem] font-semibold leading-8 text-white">Current packet status</h2>
                 <p className="mt-4 text-sm leading-7 text-slate-200">
-                    Reviewers use this packet to confirm identity, organization authority, and login-readiness before any protected access is approved.
+                    Reviewers use this packet to confirm identity, organization authority, and the declared post-approval authentication method before protected access is approved.
                 </p>
 
                 <div className="mt-6 overflow-hidden rounded-[26px] border border-white/10 bg-white/[0.04] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
@@ -612,10 +643,29 @@ export default function OnboardingStep4() {
                                     <div>
                                         <div className="text-base font-semibold text-white">Corporate domain / DNS verification</div>
                                         <p className="mt-2 text-sm leading-6 text-slate-400">
-                                            Prove control of the corporate domain associated with the work email and later access identity.
+                                            Prove control of the corporate domain associated with the submitted work email for this request.
                                         </p>
                                     </div>
                                     <StatusChip label={dnsStatus.label} tone={dnsStatus.tone} />
+                                </div>
+
+                                <div className="mt-4 grid gap-3 md:grid-cols-2">
+                                    <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
+                                        <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                                            Submitted work email
+                                        </div>
+                                        <p className="mt-2 break-all text-sm text-slate-200">
+                                            {submittedWorkEmail || 'No work email found from Step 1.'}
+                                        </p>
+                                    </div>
+                                    <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
+                                        <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                                            Expected domain
+                                        </div>
+                                        <p className="mt-2 text-sm text-slate-200">
+                                            {expectedDomain || 'Not derived from Step 1 yet.'}
+                                        </p>
+                                    </div>
                                 </div>
 
                                 <div className="mt-4 rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
@@ -642,7 +692,7 @@ export default function OnboardingStep4() {
                                                 value={corporateDomain}
                                                 onChange={(event) => {
                                                     setCorporateDomain(event.target.value)
-                                                    setIsVerificationKeySaved(false)
+                                                    setIsDomainVerified(false)
                                                     setCopyStatus('idle')
                                                 }}
                                                 placeholder="yourcompany.com"
@@ -651,23 +701,52 @@ export default function OnboardingStep4() {
                                             <p className="mt-2 text-xs text-slate-500">
                                                 This should match the organization domain behind the request, not a personal mailbox provider.
                                             </p>
+                                            {MOCK_AUTH && (
+                                                <div className="mt-3 rounded-2xl border border-cyan-400/20 bg-cyan-400/10 px-4 py-3 text-sm text-cyan-100">
+                                                    Mock mode accepts any non-empty demo domain here.
+                                                </div>
+                                            )}
+                                            {!MOCK_AUTH && normalizedCorporateDomain.length > 0 && !domainMatchesWorkEmail && (
+                                                <div className="mt-3 rounded-2xl border border-amber-400/35 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+                                                    The corporate domain must exactly match the submitted work email domain:
+                                                    {' '}
+                                                    <span className="font-semibold">{expectedDomain || 'no domain on file'}</span>.
+                                                </div>
+                                            )}
                                         </div>
                                     )}
 
-                                    {domainVerificationStep >= 2 && corporateDomain && (
+                                    {domainVerificationStep >= 2 && corporateDomain && !isDomainVerified && domainAccepted && (
                                         <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
                                             <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                                                TXT record to publish
+                                                DNS verification token
                                             </div>
                                             <p className="mt-2 text-sm text-slate-300">
                                                 Add the following TXT record to the DNS zone for <span className="font-semibold text-white">{corporateDomain}</span>:
                                             </p>
                                             <div className="mt-3 rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 font-mono text-sm text-emerald-300">
-                                                {verificationKey}
+                                                {dnsVerificationToken}
                                             </div>
                                             <p className="mt-3 text-xs leading-6 text-slate-500">
                                                 Ask your DNS administrator to add the record at the root or correct verification location for the domain. Propagation can take time before the check succeeds.
                                             </p>
+                                            <div className="mt-4 flex flex-wrap gap-3">
+                                                <button
+                                                    type="button"
+                                                    onClick={handleCopyVerificationToken}
+                                                    className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
+                                                >
+                                                    Copy token
+                                                </button>
+                                            </div>
+                                            {copyStatus === 'copied' && (
+                                                <p className="mt-3 text-xs text-emerald-200">DNS verification token copied to clipboard.</p>
+                                            )}
+                                            {copyStatus === 'failed' && (
+                                                <p className="mt-3 text-xs text-amber-100/80">
+                                                    Clipboard access is unavailable here. Copy the DNS verification token manually.
+                                                </p>
+                                            )}
                                         </div>
                                     )}
 
@@ -689,75 +768,13 @@ export default function OnboardingStep4() {
                                         </div>
                                     )}
 
-                                    {isDomainVerified && (
-                                        <div className="rounded-2xl border border-amber-400/35 bg-[linear-gradient(180deg,rgba(180,83,9,0.18)_0%,rgba(15,23,42,0.82)_100%)] p-5 shadow-[0_18px_42px_rgba(180,83,9,0.14)]">
-                                            <div className="flex flex-wrap items-start justify-between gap-3">
-                                                <div>
-                                                    <div className="text-base font-semibold text-amber-100">⚠️ Save This Key Now</div>
-                                                    <p className="mt-3 whitespace-pre-line text-sm leading-7 text-amber-50/90">
-                                                        This is your permanent login credential.
-                                                        {'\n'}
-                                                        Store it securely —
-                                                        {'\n'}
-                                                        it cannot be recovered
-                                                        {'\n'}
-                                                        if lost.
-                                                    </p>
-                                                </div>
-                                                {isVerificationKeySaved && <StatusChip label="Saved" tone="success" />}
-                                            </div>
-
-                                            <div className="mt-5">
-                                                <label
-                                                    htmlFor="saved-verification-key"
-                                                    className="block text-xs font-semibold uppercase tracking-[0.16em] text-amber-100/70"
-                                                >
-                                                    Permanent login credential
-                                                </label>
-                                                <input
-                                                    id="saved-verification-key"
-                                                    aria-label="Saved verification key"
-                                                    readOnly
-                                                    value={verificationKey}
-                                                    onFocus={(event) => event.currentTarget.select()}
-                                                    className="mt-2 w-full rounded-xl border border-amber-300/20 bg-slate-950 px-4 py-3 font-mono text-sm text-amber-100 focus:border-amber-300/40 focus:outline-none"
-                                                />
-                                            </div>
-
-                                            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                                                <button
-                                                    type="button"
-                                                    onClick={handleCopyVerificationKey}
-                                                    className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
-                                                >
-                                                    Copy Key
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={handleSaveVerificationKey}
-                                                    className="rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-700"
-                                                >
-                                                    I have saved my key
-                                                </button>
-                                            </div>
-
-                                            {copyStatus === 'copied' && (
-                                                <p className="mt-3 text-xs text-emerald-200">Verification key copied to clipboard.</p>
-                                            )}
-                                            {copyStatus === 'failed' && (
-                                                <p className="mt-3 text-xs text-amber-100/80">
-                                                    Clipboard access is unavailable here. Copy the key manually before continuing.
-                                                </p>
-                                            )}
-                                        </div>
-                                    )}
-
                                     <div className="flex flex-wrap gap-3">
                                         {domainVerificationStep === 1 && corporateDomain && (
                                             <button
                                                 type="button"
                                                 onClick={() => setDomainVerificationStep(2)}
-                                                className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
+                                                disabled={!domainReady}
+                                                className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
                                             >
                                                 Continue to DNS setup
                                             </button>
@@ -777,7 +794,7 @@ export default function OnboardingStep4() {
                                             <button
                                                 type="button"
                                                 onClick={handleDNSVerification}
-                                                disabled={isDNSVerifying}
+                                                disabled={isDNSVerifying || !domainReady}
                                                 className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
                                             >
                                                 {isDNSVerifying ? 'Verifying…' : 'Verify domain'}
@@ -794,9 +811,9 @@ export default function OnboardingStep4() {
                             <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
                                 Zone 3 · organization evidence
                             </div>
-                            <h3 className="mt-2 text-xl font-semibold text-white">Add affiliation evidence, authorization evidence, and access identity</h3>
+                            <h3 className="mt-2 text-xl font-semibold text-white">Add affiliation evidence, authorization evidence, and the declared authentication method</h3>
                             <p className="mt-4 text-sm leading-7 text-slate-400">
-                                This zone turns your verification inputs into a review packet. Upload clear evidence, identify an approving authority, and confirm how access will be authenticated if approval is granted.
+                                This zone turns your verification inputs into a review packet. Upload clear evidence, identify an approving authority, and declare how access should be authenticated if approval is granted.
                             </p>
                         </div>
 
@@ -964,12 +981,21 @@ export default function OnboardingStep4() {
                         <article className="mt-5 rounded-[24px] border border-slate-800 bg-slate-950/75 p-5">
                             <div className="flex flex-wrap items-start justify-between gap-3">
                                 <div>
-                                    <div className="text-base font-semibold text-white">Authentication method / access identity setup</div>
+                                    <div className="text-base font-semibold text-white">Expected authentication method after approval</div>
                                     <p className="mt-2 text-sm leading-6 text-slate-400">
-                                        Choose how approved users will authenticate if the request is granted. This becomes part of the access identity reviewers see.
+                                        Declare the authentication method reviewers should expect if this request is approved. This is reviewer-facing configuration, not live credential enrollment.
                                     </p>
                                 </div>
                                 <StatusChip label={authenticationStatus.label} tone={authenticationStatus.tone} />
+                            </div>
+
+                            <div className="mt-4 grid gap-3 md:grid-cols-2">
+                                <div className="rounded-2xl border border-slate-800 bg-slate-900/70 px-4 py-3 text-sm text-slate-300">
+                                    Submitted work email: <span className="font-semibold text-slate-100">{submittedWorkEmail || 'Not captured yet'}</span>
+                                </div>
+                                <div className="rounded-2xl border border-slate-800 bg-slate-900/70 px-4 py-3 text-sm text-slate-300">
+                                    Expected domain: <span className="font-semibold text-slate-100">{expectedDomain || 'Not derived yet'}</span>
+                                </div>
                             </div>
 
                             <div className="mt-5 grid gap-4 xl:grid-cols-2">
@@ -999,7 +1025,7 @@ export default function OnboardingStep4() {
                                             <div>
                                                 <h4 className="text-sm font-semibold text-white">Okta / Microsoft Entra (SSO)</h4>
                                                 <p className="mt-1 text-sm text-slate-400">
-                                                    Use your organization&apos;s SSO identity provider for access control.
+                                                    Declare the organization SSO provider reviewers should route to after approval.
                                                 </p>
                                             </div>
                                         </div>
@@ -1029,7 +1055,7 @@ export default function OnboardingStep4() {
                                                 className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-200 placeholder:text-slate-500 focus:border-blue-500 focus:outline-none"
                                             />
                                             <p className="text-xs text-slate-500">
-                                                Your IT or identity team can provide the correct SSO domain or tenant path.
+                                                Your IT or identity team can provide the SSO tenant or domain reference reviewers should expect.
                                             </p>
                                         </div>
                                     )}
@@ -1060,7 +1086,7 @@ export default function OnboardingStep4() {
                                             <div>
                                                 <h4 className="text-sm font-semibold text-white">Hardware key (YubiKey / WebAuthn)</h4>
                                                 <p className="mt-1 text-sm text-slate-400">
-                                                    Use a physical security key for the strongest login identity signal.
+                                                    Declare a hardware-key-based login path for the strongest post-approval identity signal.
                                                 </p>
                                             </div>
                                         </div>
@@ -1075,12 +1101,64 @@ export default function OnboardingStep4() {
                                     </div>
 
                                     {authenticationMethod === 'hardware_key' && (
-                                        <div className="mt-4 rounded-xl border border-emerald-500/30 bg-slate-900/70 p-3">
-                                            <div className="flex items-center justify-between gap-3">
-                                                <p className="text-sm text-slate-200">
-                                                    The hardware key will be registered on first login if the request is approved.
-                                                </p>
-                                                <StatusChip label="High assurance" tone="success" />
+                                        <div className="mt-4 space-y-4 rounded-xl border border-emerald-500/30 bg-slate-900/70 p-4">
+                                            <div className="grid gap-4 md:grid-cols-2">
+                                                <div>
+                                                    <label
+                                                        htmlFor="hardware-key-type"
+                                                        className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400"
+                                                    >
+                                                        Key Type
+                                                    </label>
+                                                    <select
+                                                        id="hardware-key-type"
+                                                        value={hardwareKeyType}
+                                                        onChange={(event) => {
+                                                            setHardwareKeyType(event.target.value)
+                                                            setShowError(false)
+                                                        }}
+                                                        className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-200 focus:border-emerald-500 focus:outline-none"
+                                                    >
+                                                        <option value="">Select key type</option>
+                                                        {hardwareKeyTypeOptions.map((option) => (
+                                                            <option key={option} value={option}>
+                                                                {option}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+
+                                                <div>
+                                                    <label
+                                                        htmlFor="hardware-key-reference"
+                                                        className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400"
+                                                    >
+                                                        Key Serial / Device Reference
+                                                    </label>
+                                                    <input
+                                                        id="hardware-key-reference"
+                                                        type="text"
+                                                        value={hardwareKeyReference}
+                                                        onChange={(event) => {
+                                                            setHardwareKeyReference(event.target.value)
+                                                            setShowError(false)
+                                                        }}
+                                                        placeholder="Optional — printed on back of YubiKey or device identifier"
+                                                        className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-200 placeholder:text-slate-500 focus:border-emerald-500 focus:outline-none"
+                                                    />
+                                                    <p className="mt-2 whitespace-pre-line text-xs leading-5 text-slate-500">
+                                                        {hardwareKeyReferenceHelpText}
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <div className="rounded-2xl border border-emerald-400/25 bg-emerald-500/10 px-4 py-4">
+                                                <div className="flex flex-wrap items-start justify-between gap-3">
+                                                    <p className="whitespace-pre-line text-sm leading-6 text-emerald-100">
+                                                        {hardwareKeyReviewerInfo}
+                                                    </p>
+                                                    <StatusChip label="HIGH ASSURANCE" tone="success" />
+                                                </div>
                                             </div>
                                         </div>
                                     )}
@@ -1089,17 +1167,21 @@ export default function OnboardingStep4() {
 
                             <div className="mt-4 grid gap-3 md:grid-cols-2">
                                 <div className="rounded-2xl border border-amber-400/25 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
-                                    Personal email providers are not accepted. A verified corporate domain is required for this step.
+                                    {MOCK_AUTH
+                                        ? 'Mock mode accepts any non-empty demo domain here. In a live flow the DNS-verified domain would need to match the submitted work email domain.'
+                                        : 'Personal email providers are not accepted. The DNS-verified corporate domain must exactly match the submitted work email domain.'}
                                 </div>
                                 <div className="rounded-2xl border border-slate-800 bg-slate-900/70 px-4 py-3 text-sm text-slate-300">
-                                    After approval, the selected authentication method becomes the expected login identity for the participant environment.
+                                    After approval, the selected method becomes the expected authentication route for the participant environment.
                                 </div>
                             </div>
                         </article>
 
                         {showError && !stepReady && (
                             <div className="mt-5 rounded-2xl border border-amber-400/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
-                                Complete LinkedIn verification, domain verification, both evidence uploads, and authentication setup before continuing.
+                                {MOCK_AUTH
+                                    ? 'Complete LinkedIn verification, domain verification, both evidence uploads, and the declared authentication method before continuing.'
+                                    : 'Complete LinkedIn verification, domain verification with an exact email-domain match, both evidence uploads, and the declared authentication method before continuing.'}
                             </div>
                         )}
                     </section>

@@ -32,7 +32,7 @@ export default function OnboardingConfirmation() {
 
     const submissionMeta = readSubmissionMeta(emptySubmissionMeta)
     const snapshot = readOnboardingSnapshot()
-    const verificationReady = isStep4Complete(snapshot.verification)
+    const verificationReady = isStep4Complete(snapshot.verification, snapshot.step1.officialWorkEmail)
     const authMethod = snapshot.verification.authenticationMethod
         ? authenticationMethodLabels[snapshot.verification.authenticationMethod]
         : 'Not selected'
@@ -79,7 +79,7 @@ export default function OnboardingConfirmation() {
                             <div className="mt-2 text-sm text-white">{submissionMeta.submittedDate}</div>
                         </div>
                         <div className="rounded-[20px] border border-white/10 bg-white/[0.04] px-4 py-3">
-                            <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">Authentication Method</div>
+                            <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">Declared Authentication Method</div>
                             <div className="mt-2 text-sm text-white">{authMethod}</div>
                         </div>
                         <div className="rounded-[20px] border border-white/10 bg-white/[0.04] px-4 py-3">

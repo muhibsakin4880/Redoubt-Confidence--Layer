@@ -14,6 +14,7 @@ import OnboardingPageLayout from '../onboarding/components/OnboardingPageLayout'
 import OnboardingStepGuard from '../onboarding/components/OnboardingStepGuard'
 import {
     getFirstIncompleteOnboardingPath,
+    hasAcceptedCorporateDomain,
     isStep1Complete,
     isStep2Complete,
     isStep3Complete,
@@ -30,8 +31,11 @@ import {
     writeSubmissionMeta
 } from '../onboarding/storage'
 import type { AuthenticationMethod, ComplianceCommitment } from '../onboarding/types'
+import { doesCorporateDomainMatchEmail, getEmailDomain } from '../onboarding/validators'
 
 type StatusTone = 'info' | 'neutral' | 'success' | 'warning'
+
+const MOCK_AUTH = (import.meta.env.VITE_MOCK_AUTH ?? 'true') === 'true'
 
 type Step1ReviewState = {
     country: string
@@ -205,11 +209,20 @@ export default function OnboardingStep5() {
     const step1Ready = isStep1Complete(reviewSnapshot.step1)
     const step2Ready = isStep2Complete(reviewSnapshot.intendedUsage, reviewSnapshot.useCaseSummary)
     const step3Ready = isStep3Complete(reviewSnapshot.participationIntent, reviewSnapshot.legalAcknowledgment)
-    const step4Ready = isStep4Complete(reviewSnapshot.verification)
+    const step4Ready = isStep4Complete(reviewSnapshot.verification, reviewSnapshot.step1.officialWorkEmail)
     const step5Ready = isStep5Complete(state)
     const allClear = step1Ready && step2Ready && step3Ready && step4Ready && step5Ready
     const commitmentCount = Object.values(state).filter(Boolean).length
     const contactEmail = step1Data.officialWorkEmail.trim() || 'your corporate email'
+    const expectedDomain = getEmailDomain(step1Data.officialWorkEmail)
+    const domainMatchesWorkEmail = doesCorporateDomainMatchEmail(
+        step1Data.officialWorkEmail,
+        reviewSnapshot.verification.corporateDomain
+    )
+    const domainAccepted = hasAcceptedCorporateDomain(
+        step1Data.officialWorkEmail,
+        reviewSnapshot.verification.corporateDomain
+    )
     const usageSummary =
         reviewSnapshot.intendedUsage.length > 0
             ? reviewSnapshot.intendedUsage.join(', ')
@@ -240,7 +253,7 @@ export default function OnboardingStep5() {
         },
         {
             label: 'Verification packet',
-            description: 'Identity proof, domain control, evidence files, and authentication setup are in place.',
+            description: 'Identity proof, domain alignment, evidence files, and the declared post-approval authentication method are in place.',
             complete: step4Ready,
             path: participantOnboardingPaths.step4
         },
@@ -716,8 +729,8 @@ export default function OnboardingStep5() {
 
                     <ReviewSection
                         stepLabel="Step 4 · Verification"
-                        title="Verification packet and authentication setup"
-                        description="Reviewers use this packet to confirm identity alignment, organizational authority, and the access-control setup that would apply if the request is approved."
+                        title="Verification packet and declared authentication method"
+                        description="Reviewers use this packet to confirm identity alignment, corporate-domain control, and the authentication method expected after approval."
                         statusLabel={step4Ready ? 'Ready' : 'Needs review'}
                         statusTone={step4Ready ? 'success' : 'warning'}
                         onEdit={() => navigate(participantOnboardingPaths.step4)}
@@ -751,22 +764,69 @@ export default function OnboardingStep5() {
 
                             <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
                                 <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                                    Authentication method
+                                    Declared authentication method
                                 </div>
                                 <p className="mt-3 text-sm leading-6 text-slate-200">
                                     {reviewSnapshot.verification.authenticationMethod
                                         ? authenticationMethodLabels[reviewSnapshot.verification.authenticationMethod]
                                         : 'Not configured'}
                                 </p>
-                                {reviewSnapshot.verification.ssoDomain.trim() && (
+                                {reviewSnapshot.verification.authenticationMethod === 'sso' &&
+                                    reviewSnapshot.verification.ssoDomain.trim() && (
                                     <p className="mt-2 text-sm text-slate-400">
                                         SSO reference: {reviewSnapshot.verification.ssoDomain}
                                     </p>
-                                )}
+                                    )}
                             </div>
                         </div>
 
-                        <div className="mt-4 grid gap-4 md:grid-cols-2">
+                        <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                            <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
+                                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                                    Submitted work email
+                                </div>
+                                <p className="mt-3 break-all text-sm text-slate-200">
+                                    {step1Data.officialWorkEmail || 'Not provided'}
+                                </p>
+                            </div>
+
+                            <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
+                                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                                    Expected domain
+                                </div>
+                                <p className="mt-3 text-sm text-slate-200">
+                                    {expectedDomain || 'Not derived'}
+                                </p>
+                            </div>
+
+                            <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
+                                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                                    Entered corporate domain
+                                </div>
+                                <p className="mt-3 text-sm text-slate-200">
+                                    {reviewSnapshot.verification.corporateDomain || 'Not provided'}
+                                </p>
+                            </div>
+
+                            <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
+                                <div className="flex items-center justify-between gap-3">
+                                    <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                                        Domain alignment
+                                    </div>
+                                    <StatusChip
+                                        label={domainMatchesWorkEmail ? 'Matches' : domainAccepted ? 'Mock accepted' : 'Mismatch'}
+                                        tone={domainAccepted ? 'success' : 'warning'}
+                                    />
+                                </div>
+                                <p className="mt-3 text-sm leading-6 text-slate-400">
+                                    {domainMatchesWorkEmail
+                                        ? 'The submitted work email domain matches the corporate domain used for DNS verification.'
+                                        : domainAccepted && MOCK_AUTH
+                                            ? 'Mock mode accepted the provided corporate domain even though it differs from the work email on file.'
+                                            : 'The Step 4 corporate domain must exactly match the submitted work email domain.'}
+                                </p>
+                            </div>
+
                             <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
                                 <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
                                     Affiliation evidence

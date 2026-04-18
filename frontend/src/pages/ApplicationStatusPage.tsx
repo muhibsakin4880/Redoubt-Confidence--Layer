@@ -41,7 +41,7 @@ const timelineSteps: TimelineStep[] = [
 export default function ApplicationStatusPage() {
     const [submissionMeta] = useState(() => readSubmissionMeta(emptySubmissionMeta))
     const [snapshot] = useState(() => readOnboardingSnapshot())
-    const verificationReady = isStep4Complete(snapshot.verification)
+    const verificationReady = isStep4Complete(snapshot.verification, snapshot.step1.officialWorkEmail)
 
     return (
         <div className="bg-slate-900 min-h-screen text-white">

@@ -22,9 +22,10 @@ export type VerificationSnapshot = {
     authorizationFileName: string | null
     authenticationMethod: AuthenticationMethod | null
     ssoDomain: string
+    hardwareKeyType: string
+    hardwareKeyReference: string
     corporateDomain: string
-    verificationKey: string
-    verificationKeySaved: boolean
+    dnsVerificationToken: string
 }
 
 export type ComplianceCommitment = {

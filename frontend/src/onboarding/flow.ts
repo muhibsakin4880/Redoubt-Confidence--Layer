@@ -16,7 +16,14 @@ import type {
     Step1FormState,
     VerificationSnapshot
 } from './types'
-import { isCorporateEmail, isInviteCodeValid, isUseCaseSummaryValid } from './validators'
+import {
+    doesCorporateDomainMatchEmail,
+    isCorporateEmail,
+    isInviteCodeValid,
+    isUseCaseSummaryValid
+} from './validators'
+
+const MOCK_AUTH = (import.meta.env.VITE_MOCK_AUTH ?? 'true') === 'true'
 
 export const readOnboardingSnapshot = (): OnboardingSnapshot => ({
     step1: readOnboardingValue(onboardingStorageKeys.step1, emptyStep1FormState),
@@ -49,11 +56,17 @@ const hasAuthenticationSetup = (verification: VerificationSnapshot) =>
     verification.authenticationMethod !== null &&
     (verification.authenticationMethod !== 'sso' || verification.ssoDomain.trim().length > 0)
 
-export const isStep4Complete = (verification: VerificationSnapshot) =>
+export const hasAcceptedCorporateDomain = (officialWorkEmail: string, corporateDomain: string) =>
+    MOCK_AUTH
+        ? corporateDomain.trim().length > 0
+        : doesCorporateDomainMatchEmail(officialWorkEmail, corporateDomain)
+
+export const isStep4Complete = (verification: VerificationSnapshot, officialWorkEmail: string) =>
     verification.linkedInConnected &&
     verification.domainVerified &&
     Boolean(verification.affiliationFileName) &&
     Boolean(verification.authorizationFileName) &&
+    hasAcceptedCorporateDomain(officialWorkEmail, verification.corporateDomain) &&
     hasAuthenticationSetup(verification)
 
 export const isStep5Complete = (compliance: ComplianceCommitment) =>
@@ -67,7 +80,7 @@ export const getFirstIncompleteOnboardingPath = (snapshot = readOnboardingSnapsh
     if (!isStep3Complete(snapshot.participationIntent, snapshot.legalAcknowledgment)) {
         return participantOnboardingPaths.step3
     }
-    if (!isStep4Complete(snapshot.verification)) return participantOnboardingPaths.step4
+    if (!isStep4Complete(snapshot.verification, snapshot.step1.officialWorkEmail)) return participantOnboardingPaths.step4
     if (!isStep5Complete(snapshot.compliance)) return participantOnboardingPaths.step5
     return null
 }
@@ -120,7 +133,7 @@ export const getOnboardingGuardRedirect = (currentPath: string, snapshot = readO
             if (!isStep3Complete(snapshot.participationIntent, snapshot.legalAcknowledgment)) {
                 return participantOnboardingPaths.step3
             }
-            return isStep4Complete(snapshot.verification) ? null : participantOnboardingPaths.step4
+            return isStep4Complete(snapshot.verification, snapshot.step1.officialWorkEmail) ? null : participantOnboardingPaths.step4
         case participantOnboardingPaths.confirmation:
             return participantOnboardingPaths.step5
         default:

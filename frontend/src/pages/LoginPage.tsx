@@ -1,11 +1,19 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
+
 import { useAuth } from '../contexts/AuthContext'
-import { readVerificationSnapshot } from '../onboarding/storage'
+import {
+    emptyStep1FormState,
+    onboardingStorageKeys,
+    readOnboardingValue,
+    readVerificationSnapshot
+} from '../onboarding/storage'
 import type { AuthenticationMethod } from '../onboarding/types'
+import { isCorporateEmail } from '../onboarding/validators'
 
 const MOCK_AUTH = (import.meta.env.VITE_MOCK_AUTH ?? 'true') === 'true'
 const sessionCharacters = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+
 const authenticationMethodLabels: Record<AuthenticationMethod, string> = {
     sso: 'Okta / Microsoft Entra (SSO)',
     hardware_key: 'Hardware Key (WebAuthn / YubiKey)'
@@ -28,15 +36,7 @@ const generateTimestamp = () => {
     return now.toISOString().replace('T', ' ').substring(0, 19) + ' UTC'
 }
 
-type AuthScreen = 'entry' | 'verification' | 'authenticated'
-
-function normalizeVerificationKey(value: string) {
-    return value.trim().toLowerCase()
-}
-
-function isAcceptedMockVerificationKey(value: string) {
-    return value.trim().length > 0
-}
+type AuthScreen = 'entry' | 'method'
 
 function SecurityFooter({ sessionId, timestamp }: { sessionId: string; timestamp: string }) {
     return (
@@ -57,26 +57,27 @@ function SecurityFooter({ sessionId, timestamp }: { sessionId: string; timestamp
 }
 
 export default function LoginPage() {
-    const { isAuthenticated, accessStatus, signIn, workspaceRole, updateWorkspaceRole } = useAuth()
+    const { isAuthenticated, accessStatus, applicantEmail, signIn, workspaceRole, updateWorkspaceRole } = useAuth()
     const navigate = useNavigate()
     const verificationSnapshot = readVerificationSnapshot()
-    const registeredVerificationKey = verificationSnapshot.verificationKey.trim()
-    const registeredAuthMethod = verificationSnapshot.authenticationMethod ?? 'sso'
+    const storedStep1 = readOnboardingValue<{ officialWorkEmail: string }>(onboardingStorageKeys.step1, emptyStep1FormState)
+    const declaredAuthMethod = verificationSnapshot.authenticationMethod
+    const expectedEmail =
+        storedStep1.officialWorkEmail.trim() ||
+        (accessStatus === 'not_started' ? '' : applicantEmail.trim())
     const [email, setEmail] = useState('')
-    const [verificationKey, setVerificationKey] = useState('')
     const [screen, setScreen] = useState<AuthScreen>('entry')
-    const [loadingState, setLoadingState] = useState<'resolving' | 'validating' | null>(null)
-    const [verificationError, setVerificationError] = useState<string | null>(null)
+    const [loadingState, setLoadingState] = useState<'resolving' | null>(null)
+    const [lookupError, setLookupError] = useState<string | null>(null)
     const [sessionId] = useState(() => generateSessionId())
     const [timestamp] = useState(() => generateTimestamp())
     const resolvingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-    const validationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const hasMockConsoleAccess = MOCK_AUTH && (accessStatus === 'pending' || accessStatus === 'not_started')
     const hasMockReviewAccess = MOCK_AUTH && accessStatus === 'pending'
 
     if (isAuthenticated && accessStatus === 'approved') {
-        const targetPath = workspaceRole === 'provider' || workspaceRole === 'hybrid' 
-            ? '/provider/dashboard' 
+        const targetPath = workspaceRole === 'provider' || workspaceRole === 'hybrid'
+            ? '/provider/dashboard'
             : '/dashboard'
         return <Navigate to={targetPath} replace />
     }
@@ -86,67 +87,48 @@ export default function LoginPage() {
             if (resolvingTimerRef.current) {
                 clearTimeout(resolvingTimerRef.current)
             }
-
-            if (validationTimerRef.current) {
-                clearTimeout(validationTimerRef.current)
-            }
         }
     }, [])
 
-    const handleContinue = (e: React.FormEvent) => {
-        e.preventDefault()
-        if (!email.trim()) return
+    const handleContinue = (event: React.FormEvent) => {
+        event.preventDefault()
 
-        setVerificationError(null)
+        const trimmedEmail = email.trim()
+        if (!trimmedEmail) return
+
+        const acceptsMockCredential = MOCK_AUTH && trimmedEmail.length > 0
+
+        if (!acceptsMockCredential && !isCorporateEmail(trimmedEmail)) {
+            setLookupError('Use a valid corporate email address for this demo lookup.')
+            return
+        }
+
+        if (!acceptsMockCredential && expectedEmail && trimmedEmail.toLowerCase() !== expectedEmail.toLowerCase()) {
+            setLookupError('This email does not match the submitted corporate email on file for this demo session.')
+            return
+        }
+
+        setLookupError(null)
         setLoadingState('resolving')
         resolvingTimerRef.current = setTimeout(() => {
             setLoadingState(null)
-            setScreen('verification')
-        }, 1500)
+            setScreen('method')
+        }, 1200)
     }
 
-    const handleVerifyKey = (e: React.FormEvent) => {
-        e.preventDefault()
-        if (!verificationKey.trim()) return
-
-        setVerificationError(null)
-        setLoadingState('validating')
-        validationTimerRef.current = setTimeout(() => {
-            setLoadingState(null)
-
-            const matchesRegisteredKey =
-                registeredVerificationKey &&
-                normalizeVerificationKey(verificationKey) === normalizeVerificationKey(registeredVerificationKey)
-            const acceptsMockCredential = MOCK_AUTH && isAcceptedMockVerificationKey(verificationKey)
-
-            if (
-                registeredVerificationKey &&
-                !matchesRegisteredKey &&
-                !acceptsMockCredential
-            ) {
-                setVerificationError('Verification key not recognized. Check your saved credential or DNS TXT record.')
-                return
-            }
-
-            setScreen('authenticated')
-        }, 1500)
-    }
-
-    const handleAuthenticate = () => {
+    const handleAuthenticate = (_method: AuthenticationMethod) => {
         const didSignIn = signIn()
         if (!didSignIn) return
 
-        const isProvider = email.toLowerCase().includes('provider') || email.toLowerCase().includes('contrib')
+        const normalizedEmail = email.toLowerCase()
+        const isProvider = normalizedEmail.includes('provider') || normalizedEmail.includes('contrib')
         updateWorkspaceRole(isProvider ? 'provider' : 'buyer')
         navigate('/dashboard')
     }
 
     const handleStartOver = () => {
         setScreen('entry')
-        setEmail('')
-        setVerificationKey('')
-        setLoadingState(null)
-        setVerificationError(null)
+        setLookupError(null)
     }
 
     if (accessStatus === 'pending' && !hasMockReviewAccess) {
@@ -196,17 +178,22 @@ export default function LoginPage() {
         )
     }
 
+    const renderedEmail = email.trim() || expectedEmail || 'No email on file'
+    const declaredMethodLabel = declaredAuthMethod ? authenticationMethodLabels[declaredAuthMethod] : 'Not declared in this demo session'
+    const primaryMethod = declaredAuthMethod ?? 'sso'
+    const secondaryMethod: AuthenticationMethod = primaryMethod === 'sso' ? 'hardware_key' : 'sso'
+
     return (
         <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-black" />
             <div className="absolute inset-0 backdrop-blur-sm bg-black/60" />
-            
+
             <div className="relative bg-slate-900 rounded-xl border border-slate-700 p-6 max-w-md w-full shadow-2xl">
                 {hasMockReviewAccess && (
                     <div className="mb-5 rounded-lg border border-amber-400/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
                         <div className="font-semibold">Application review is still pending.</div>
                         <div className="mt-1 text-amber-100/80">
-                            Mock access is enabled, so you can still enter the participant console while the review UI stays visible.
+                            Mock console access is enabled, so you can continue through the frontend demo while review remains in progress.
                         </div>
                         <div className="mt-3">
                             <Link
@@ -224,7 +211,9 @@ export default function LoginPage() {
                         <div className="text-center mb-6">
                             <h1 className="text-2xl font-bold text-white mb-1">Secure Node Entry</h1>
                             <p className="text-sm text-slate-400">
-                                Enter your verified corporate email to begin authentication
+                                {MOCK_AUTH
+                                    ? 'Enter your corporate email or any mock credential to continue the frontend demo.'
+                                    : 'Enter your verified corporate email so this demo can look up the declared authentication route.'}
                             </p>
                         </div>
 
@@ -237,13 +226,37 @@ export default function LoginPage() {
                                 className="w-full px-4 py-3 bg-slate-950 border border-slate-700 rounded-lg text-slate-200 font-mono text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 transition-all placeholder:text-slate-600"
                                 placeholder="you@yourcompany.com"
                                 value={email}
-                                onChange={(e) => setEmail(e.target.value)}
+                                onChange={(event) => {
+                                    setEmail(event.target.value)
+                                    setLookupError(null)
+                                }}
                                 disabled={loadingState === 'resolving'}
                             />
                             <p className="mt-2 text-xs text-slate-500">
-                                Personal email addresses are not accepted
+                                {MOCK_AUTH
+                                    ? 'Mock mode accepts any non-empty value here.'
+                                    : 'Personal email addresses are not accepted.'}
                             </p>
                         </div>
+
+                        {expectedEmail && (
+                            <div className="mb-4 rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-slate-300">
+                                {MOCK_AUTH ? 'Reference email on file for this demo session:' : 'Expected email for this demo session:'}
+                                {' '}
+                                <span className="font-medium text-white">{expectedEmail}</span>
+                                {MOCK_AUTH && (
+                                    <div className="mt-2 text-xs text-slate-500">
+                                        Mock mode does not require this exact email match.
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {lookupError && (
+                            <div className="mb-4 rounded-lg border border-amber-400/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+                                {lookupError}
+                            </div>
+                        )}
 
                         <button
                             type="submit"
@@ -256,146 +269,91 @@ export default function LoginPage() {
                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                                     </svg>
-                                    <span>Resolving Node...</span>
+                                    <span>Looking up declared method...</span>
                                 </>
                             ) : (
                                 <span>Continue →</span>
                             )}
                         </button>
-
-                    </form>
-                ) : screen === 'verification' ? (
-                    <form onSubmit={handleVerifyKey} noValidate>
-                        <div className="text-center mb-6">
-                            <h1 className="text-2xl font-bold text-white mb-1">Verification Key Required</h1>
-                            <p className="mx-auto max-w-[17rem] whitespace-pre-line text-sm text-slate-400">
-                                Enter the unique verification
-                                {'\n'}
-                                key generated during your
-                                {'\n'}
-                                onboarding process.
-                            </p>
-                        </div>
-
-                        <div className="mb-4">
-                            <label htmlFor="verification-key-input" className="block text-xs uppercase tracking-[0.16em] text-slate-400 mb-2">
-                                Verification Key
-                            </label>
-                            <input
-                                id="verification-key-input"
-                                type="text"
-                                className="w-full px-4 py-3 bg-slate-950 border border-slate-700 rounded-lg text-slate-200 font-mono text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 transition-all placeholder:text-slate-600"
-                                placeholder="redoubt-verify=RDT-xxxxxxxx"
-                                value={verificationKey}
-                                onChange={(event) => {
-                                    setVerificationKey(event.target.value)
-                                    setVerificationError(null)
-                                }}
-                                disabled={loadingState === 'validating'}
-                            />
-                        </div>
-
-                        <p className="mb-4 whitespace-pre-line text-xs leading-6 text-slate-500">
-                            This key was generated when you
-                            {'\n'}
-                            verified your corporate domain
-                            {'\n'}
-                            during onboarding.
-                            {'\n'}
-                            Check your saved credentials
-                            {'\n'}
-                            or your DNS TXT records.
-                        </p>
-
-                        {verificationError && (
-                            <div className="mb-4 rounded-lg border border-amber-400/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
-                                {verificationError}
-                            </div>
-                        )}
-
-                        <button
-                            type="submit"
-                            disabled={loadingState === 'validating' || !verificationKey.trim()}
-                            className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
-                        >
-                            {loadingState === 'validating' ? (
-                                <>
-                                    <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                                    </svg>
-                                    <span>Validating Key...</span>
-                                </>
-                            ) : (
-                                <span>Verify Key →</span>
-                            )}
-                        </button>
-
-                        <div className="mt-4 text-center">
-                            <a
-                                href="mailto:support@redoubt.io?subject=Lost%20verification%20key"
-                                className="whitespace-pre-line text-xs text-slate-500 transition-colors hover:text-slate-300"
-                            >
-                                Lost your verification key?
-                                {'\n'}
-                                Contact support →
-                            </a>
-                        </div>
                     </form>
                 ) : (
                     <div>
                         <div className="text-center mb-6">
-                            <h1 className="text-2xl font-bold text-emerald-300 mb-1">Identity Confirmed ✓</h1>
-                            <p className="mx-auto max-w-[17rem] whitespace-pre-line text-sm text-slate-400">
-                                Complete authentication
-                                {'\n'}
-                                using your registered method.
+                            <h1 className="text-2xl font-bold text-emerald-300 mb-1">Identity Lookup Complete</h1>
+                            <p className="mx-auto max-w-[18rem] text-sm text-slate-400">
+                                This frontend demo found the declared authentication route for the corporate identity on file.
                             </p>
                         </div>
 
-                        <div className="mb-5 rounded-lg border border-slate-700 bg-slate-950 px-4 py-3">
-                            <div className="text-[11px] uppercase tracking-[0.16em] text-slate-500">Registered method</div>
-                            <div className="mt-2 text-sm text-white">{authenticationMethodLabels[registeredAuthMethod]}</div>
+                        <div className="mb-5 rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 space-y-3">
+                            <div>
+                                <div className="text-[11px] uppercase tracking-[0.16em] text-slate-500">Corporate email</div>
+                                <div className="mt-2 break-all text-sm text-white">{renderedEmail}</div>
+                            </div>
+                            <div>
+                                <div className="text-[11px] uppercase tracking-[0.16em] text-slate-500">Declared method</div>
+                                <div className="mt-2 text-sm text-white">{declaredMethodLabel}</div>
+                            </div>
+                            {declaredAuthMethod === 'sso' && verificationSnapshot.ssoDomain.trim() && (
+                                <div>
+                                    <div className="text-[11px] uppercase tracking-[0.16em] text-slate-500">SSO reference</div>
+                                    <div className="mt-2 break-all text-sm text-slate-300">{verificationSnapshot.ssoDomain}</div>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="mb-5 rounded-lg border border-cyan-400/30 bg-cyan-400/10 px-4 py-3 text-sm text-cyan-100">
+                            Demo note: these buttons continue the local frontend demo only. No live IdP redirect or WebAuthn ceremony is performed here.
                         </div>
 
                         <div className="space-y-3">
                             <button
                                 type="button"
-                                onClick={handleAuthenticate}
+                                onClick={() => handleAuthenticate(primaryMethod)}
                                 className={cx(
                                     'w-full rounded-lg border px-4 py-4 text-left transition-colors',
-                                    registeredAuthMethod === 'sso'
+                                    primaryMethod === 'sso'
                                         ? 'border-blue-500/70 bg-blue-500/10 hover:bg-blue-500/15'
-                                        : 'border-slate-700 bg-slate-950 hover:border-blue-500/50'
+                                        : 'border-emerald-500/60 bg-emerald-500/10 hover:bg-emerald-500/15'
                                 )}
                             >
                                 <div className="flex items-start justify-between gap-3">
-                                    <span className="text-sm font-semibold text-white">Authenticate via Okta / Microsoft Entra (SSO)</span>
-                                    {registeredAuthMethod === 'sso' && (
-                                        <span className="rounded-full border border-blue-400/35 bg-blue-500/10 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-blue-200">
-                                            Registered
+                                    <div>
+                                        <div className="text-sm font-semibold text-white">
+                                            {primaryMethod === 'sso' ? 'Continue with SSO demo' : 'Continue with hardware key demo'}
+                                        </div>
+                                        <p className="mt-1 text-sm text-slate-300">
+                                            {primaryMethod === 'sso'
+                                                ? 'Proceed using the declared SSO route for this local demo session.'
+                                                : 'Proceed using the declared hardware-key route for this local demo session.'}
+                                        </p>
+                                    </div>
+                                    {declaredAuthMethod === primaryMethod && (
+                                        <span
+                                            className={cx(
+                                                'rounded-full border px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.16em]',
+                                                primaryMethod === 'sso'
+                                                    ? 'border-blue-400/35 bg-blue-500/10 text-blue-200'
+                                                    : 'border-emerald-400/35 bg-emerald-500/10 text-emerald-200'
+                                            )}
+                                        >
+                                            Declared
                                         </span>
                                     )}
                                 </div>
                             </button>
+
                             <button
                                 type="button"
-                                onClick={handleAuthenticate}
-                                className={cx(
-                                    'w-full rounded-lg border px-4 py-4 text-left transition-colors',
-                                    registeredAuthMethod === 'hardware_key'
-                                        ? 'border-emerald-500/60 bg-emerald-500/10 hover:bg-emerald-500/15'
-                                        : 'border-slate-700 bg-slate-950 hover:border-emerald-500/40'
-                                )}
+                                onClick={() => handleAuthenticate(secondaryMethod)}
+                                className="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-4 text-left transition-colors hover:border-slate-500"
                             >
-                                <div className="flex items-start justify-between gap-3">
-                                    <span className="text-sm font-semibold text-white">Use Hardware Key (WebAuthn / YubiKey)</span>
-                                    {registeredAuthMethod === 'hardware_key' && (
-                                        <span className="rounded-full border border-emerald-400/35 bg-emerald-500/10 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-200">
-                                            Registered
-                                        </span>
-                                    )}
+                                <div className="text-sm font-semibold text-white">
+                                    {secondaryMethod === 'sso' ? 'Use SSO demo instead' : 'Use hardware key demo instead'}
                                 </div>
+                                <p className="mt-1 text-sm text-slate-400">
+                                    Switch paths for demo purposes. This does not change the declared onboarding preference.
+                                </p>
                             </button>
                         </div>
 
