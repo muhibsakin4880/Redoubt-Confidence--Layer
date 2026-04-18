@@ -23,6 +23,30 @@ const authenticationMethodLabels: Record<string, string> = {
     hardware_key: 'Hardware Key (YubiKey / WebAuthn)'
 }
 
+const getConfiguredLoginRoute = (authenticationMethod: string | null) => {
+    if (authenticationMethod === 'sso') {
+        return 'Login route: Okta / Microsoft Entra (SSO)'
+    }
+
+    if (authenticationMethod === 'hardware_key') {
+        return 'Login route: Hardware key'
+    }
+
+    return 'Login route: Not selected'
+}
+
+const getConfiguredLoginKey = (authenticationMethod: string | null) => {
+    if (authenticationMethod === 'sso') {
+        return 'Login key: DNS TXT verification token'
+    }
+
+    if (authenticationMethod === 'hardware_key') {
+        return 'Login key: Physical security key'
+    }
+
+    return 'Login key: Not selected'
+}
+
 export default function OnboardingConfirmation() {
     const hasSubmission = hasStoredOnboardingValue(onboardingStorageKeys.submissionMeta)
 
@@ -79,8 +103,14 @@ export default function OnboardingConfirmation() {
                             <div className="mt-2 text-sm text-white">{submissionMeta.submittedDate}</div>
                         </div>
                         <div className="rounded-[20px] border border-white/10 bg-white/[0.04] px-4 py-3">
-                            <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">Declared Authentication Method</div>
+                            <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">Configured Authentication</div>
                             <div className="mt-2 text-sm text-white">{authMethod}</div>
+                            <div className="mt-2 text-xs leading-5 text-slate-300">
+                                {getConfiguredLoginRoute(snapshot.verification.authenticationMethod)}
+                            </div>
+                            <div className="mt-1 text-xs leading-5 text-slate-300">
+                                {getConfiguredLoginKey(snapshot.verification.authenticationMethod)}
+                            </div>
                         </div>
                         <div className="rounded-[20px] border border-white/10 bg-white/[0.04] px-4 py-3">
                             <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">Verification Package</div>

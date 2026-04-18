@@ -94,9 +94,12 @@ test.describe('participant onboarding', () => {
         await page.getByPlaceholder('you@yourcompany.com').fill('mock-demo-credential')
         await page.getByRole('button', { name: 'Continue →' }).click()
         await expect(page.getByRole('heading', { name: 'Identity Lookup Complete' })).toBeVisible()
-        await expect(page.getByText(/No live IdP redirect or WebAuthn ceremony is performed here\./)).toBeVisible()
-        await expect(page.getByText('Verification Key Required')).toHaveCount(0)
-        await page.getByRole('button', { name: 'Continue with SSO demo' }).click()
+        await expect(page.getByText(/the SSO path continues to a DNS TXT login-key screen/i)).toBeVisible()
+        await page.getByRole('button', { name: 'Continue with SSO' }).click()
+        await expect(page.getByRole('heading', { name: 'DNS TXT Login Key' })).toBeVisible()
+        await expect(page.getByText(/Mock mode accepts any non-empty DNS TXT login key here\./)).toBeVisible()
+        await page.getByPlaceholder('redoubt-verify=RDT-...').fill('mock-txt-key')
+        await page.getByRole('button', { name: 'Sign in with DNS TXT login key' }).click()
 
         await expect(page).toHaveURL(/\/dashboard$/)
     })
@@ -292,13 +295,23 @@ test.describe('participant onboarding', () => {
         await expect(page.getByText('redoubt-verify=RDT-', { exact: false })).toBeVisible()
 
         await page.locator('label').filter({ hasText: 'Okta / Microsoft Entra (SSO)' }).click()
+        await expect(page.getByText('Save this DNS TXT record')).toBeVisible()
+        await expect(page.getByText('It will be your login key after approval.')).toBeVisible()
+        await expect(page.getByRole('button', { name: 'Copy login key' })).toBeVisible()
         await page.getByPlaceholder('yourcompany.okta.com or login.microsoftonline.com/...').fill('northwind.okta.com')
         await page.locator('label').filter({ hasText: 'Hardware key (YubiKey / WebAuthn)' }).click()
+        await expect(page.getByText('Your physical security key is your credential.')).toBeVisible()
+        await expect(
+            page.getByText('DNS verification still proves organization control, but the DNS TXT record is not used to sign in when Hardware Key is selected.')
+        ).toBeVisible()
+        await expect(page.getByText('Save this DNS TXT record')).toHaveCount(0)
 
         await page.getByRole('button', { name: 'Connect LinkedIn' }).click()
         await expect(page.getByText(/LinkedIn verification succeeded\./)).toBeVisible()
         await page.getByRole('button', { name: 'Verify domain' }).click()
         await expect(page.getByText(/Domain verification succeeded\./)).toBeVisible()
+        await expect(page.getByRole('button', { name: 'Copy token' })).toBeVisible()
+        await expect(page.getByText(/Keep a copy of the TXT record used to verify/)).toBeVisible()
 
         await page.locator('#affiliation-proof-upload').setInputFiles({
             name: 'affiliation-proof.pdf',
@@ -349,9 +362,49 @@ test.describe('participant onboarding', () => {
         await page.locator('#hardware-key-reference').fill('YK-5C-NFC-7781')
         await expect(page.locator('#hardware-key-reference')).toHaveValue('YK-5C-NFC-7781')
 
+        await expect(page.getByText('Your physical security key is your credential.')).toBeVisible()
+        await expect(page.getByText('Save this DNS TXT record')).toHaveCount(0)
         await expect(page.getByText(/This helps reviewers/)).toBeVisible()
         await expect(page.getByText(/Physical key enrollment and/)).toBeVisible()
         await expect(page.getByText('HIGH ASSURANCE')).toBeVisible()
+    })
+
+    test('declared sso login uses the DNS TXT token screen before sign-in', async ({ page }) => {
+        await seedAppState(page, {
+            auth: {
+                accessStatus: 'pending',
+                applicantEmail: completedStep1.officialWorkEmail
+            },
+            onboarding: {
+                step1: completedStep1,
+                verification: {
+                    linkedInConnected: true,
+                    domainVerified: true,
+                    affiliationFileName: 'affiliation-proof.pdf',
+                    authorizationFileName: 'authorization-letter.pdf',
+                    authenticationMethod: 'sso',
+                    ssoDomain: 'northwind.okta.com',
+                    corporateDomain: 'northwindresearch.com',
+                    dnsVerificationToken: 'redoubt-verify=RDT-SSO12345'
+                }
+            }
+        })
+
+        await page.goto('/login')
+
+        await page.getByPlaceholder('you@yourcompany.com').fill(completedStep1.officialWorkEmail)
+        await page.getByRole('button', { name: 'Continue →' }).click()
+        await expect(page.getByRole('heading', { name: 'Identity Lookup Complete' })).toBeVisible()
+        await expect(page.getByText('Okta / Microsoft Entra (SSO)')).toBeVisible()
+        await page.getByRole('button', { name: 'Continue with SSO' }).click()
+
+        await expect(page.getByRole('heading', { name: 'DNS TXT Login Key' })).toBeVisible()
+        await expect(page.getByText('Enter DNS TXT verification token as login key')).toBeVisible()
+        await expect(page.getByText('northwind.okta.com')).toBeVisible()
+        await page.getByPlaceholder('redoubt-verify=RDT-...').fill('mock-sso-key')
+        await page.getByRole('button', { name: 'Sign in with DNS TXT login key' }).click()
+
+        await expect(page).toHaveURL(/\/dashboard$/)
     })
 
     test('legacy verificationKey storage still hydrates the dns verification token setup state', async ({ page }) => {
@@ -418,6 +471,7 @@ test.describe('participant onboarding', () => {
         await expect(page.getByRole('heading', { name: 'Final Review & Submission' })).toBeVisible()
         await expect(page.getByText(completedUseCaseSummary)).toBeVisible()
         await expect(page.getByText('Hardware key (YubiKey / WebAuthn)', { exact: true })).toBeVisible()
+        await expect(page.getByText('Login key: Physical security key')).toBeVisible()
 
         await page.getByRole('checkbox', { name: /Responsible data usage/i }).check()
         await page.getByRole('checkbox', { name: /No unauthorized sharing/i }).check()
@@ -430,6 +484,7 @@ test.describe('participant onboarding', () => {
         await expect(page.getByText('In review', { exact: true })).toBeVisible()
         await expect(page.getByText(/#RDT-2026-\d{4}/)).toBeVisible()
         await expect(page.getByText('Ready for reviewer handoff').first()).toBeVisible()
+        await expect(page.getByText('Login key: Physical security key')).toBeVisible()
         await expect(page.getByRole('heading', { name: 'What Happens Next' })).toBeVisible()
         await expect(page.getByRole('link', { name: 'Open Participant Console' })).toBeVisible()
         await expect(page.getByRole('link', { name: 'View Application Status' })).toBeVisible()
@@ -453,8 +508,7 @@ test.describe('participant onboarding', () => {
         await expect(page.getByRole('heading', { name: 'Identity Lookup Complete' })).toBeVisible()
         await expect(page.getByText(/Declared method/i)).toBeVisible()
         await expect(page.getByText('Hardware Key (WebAuthn / YubiKey)')).toBeVisible()
-        await expect(page.getByText(/No live IdP redirect or WebAuthn ceremony is performed here\./)).toBeVisible()
-        await expect(page.getByText('Verification Key Required')).toHaveCount(0)
+        await expect(page.getByText(/hardware-key path stays a local frontend demo/i)).toBeVisible()
         await page.getByRole('button', { name: 'Continue with hardware key demo' }).click()
 
         await expect(page).toHaveURL(/\/dashboard$/)

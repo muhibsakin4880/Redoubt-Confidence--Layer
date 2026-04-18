@@ -716,19 +716,23 @@ export default function OnboardingStep4() {
                                         </div>
                                     )}
 
-                                    {domainVerificationStep >= 2 && corporateDomain && !isDomainVerified && domainAccepted && (
+                                    {domainVerificationStep >= 2 && corporateDomain && domainAccepted && (
                                         <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
                                             <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
                                                 DNS verification token
                                             </div>
                                             <p className="mt-2 text-sm text-slate-300">
-                                                Add the following TXT record to the DNS zone for <span className="font-semibold text-white">{corporateDomain}</span>:
+                                                {isDomainVerified
+                                                    ? <>Keep a copy of the TXT record used to verify <span className="font-semibold text-white">{corporateDomain}</span>:</>
+                                                    : <>Add the following TXT record to the DNS zone for <span className="font-semibold text-white">{corporateDomain}</span>:</>}
                                             </p>
                                             <div className="mt-3 rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 font-mono text-sm text-emerald-300">
                                                 {dnsVerificationToken}
                                             </div>
                                             <p className="mt-3 text-xs leading-6 text-slate-500">
-                                                Ask your DNS administrator to add the record at the root or correct verification location for the domain. Propagation can take time before the check succeeds.
+                                                {isDomainVerified
+                                                    ? 'Verification succeeded, but this token remains important for sign-in setup and any future reference in this onboarding flow.'
+                                                    : 'Ask your DNS administrator to add the record at the root or correct verification location for the domain. Propagation can take time before the check succeeds.'}
                                             </p>
                                             <div className="mt-4 flex flex-wrap gap-3">
                                                 <button
@@ -762,7 +766,7 @@ export default function OnboardingStep4() {
                                                 </div>
                                             ) : isDomainVerified ? (
                                                 <div className="rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
-                                                    Domain verification succeeded. This domain proof is now included in your reviewer packet.
+                                                    Domain verification succeeded. This domain proof is now ready for sign-in setup and reviewer review.
                                                 </div>
                                             ) : null}
                                         </div>
@@ -983,7 +987,7 @@ export default function OnboardingStep4() {
                                 <div>
                                     <div className="text-base font-semibold text-white">Expected authentication method after approval</div>
                                     <p className="mt-2 text-sm leading-6 text-slate-400">
-                                        Declare the authentication method reviewers should expect if this request is approved. This is reviewer-facing configuration, not live credential enrollment.
+                                        Choose the authentication route this identity will use after approval. DNS verification still proves organization control, and the selected method determines which credential is used at sign-in.
                                     </p>
                                 </div>
                                 <StatusChip label={authenticationStatus.label} tone={authenticationStatus.tone} />
@@ -1025,7 +1029,7 @@ export default function OnboardingStep4() {
                                             <div>
                                                 <h4 className="text-sm font-semibold text-white">Okta / Microsoft Entra (SSO)</h4>
                                                 <p className="mt-1 text-sm text-slate-400">
-                                                    Declare the organization SSO provider reviewers should route to after approval.
+                                                    Use the organization SSO route after approval, with the DNS TXT record serving as the login key entered before the SSO step.
                                                 </p>
                                             </div>
                                         </div>
@@ -1040,23 +1044,57 @@ export default function OnboardingStep4() {
                                     </div>
 
                                     {authenticationMethod === 'sso' && (
-                                        <div className="mt-4 space-y-2 rounded-xl border border-blue-500/30 bg-slate-900/70 p-3">
-                                            <label className="block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
-                                                SSO domain or tenant reference
-                                            </label>
-                                            <input
-                                                type="text"
-                                                value={ssoDomain}
-                                                onChange={(event) => {
-                                                    setSSODomain(event.target.value)
-                                                    setShowError(false)
-                                                }}
-                                                placeholder="yourcompany.okta.com or login.microsoftonline.com/..."
-                                                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-200 placeholder:text-slate-500 focus:border-blue-500 focus:outline-none"
-                                            />
-                                            <p className="text-xs text-slate-500">
-                                                Your IT or identity team can provide the SSO tenant or domain reference reviewers should expect.
-                                            </p>
+                                        <div className="mt-4 space-y-4 rounded-xl border border-blue-500/30 bg-slate-900/70 p-4">
+                                            <div className="space-y-2 rounded-xl border border-blue-500/20 bg-slate-950/70 p-3">
+                                                <label className="block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                                                    SSO domain or tenant reference
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    value={ssoDomain}
+                                                    onChange={(event) => {
+                                                        setSSODomain(event.target.value)
+                                                        setShowError(false)
+                                                    }}
+                                                    placeholder="yourcompany.okta.com or login.microsoftonline.com/..."
+                                                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-200 placeholder:text-slate-500 focus:border-blue-500 focus:outline-none"
+                                                />
+                                                <p className="text-xs text-slate-500">
+                                                    Your IT or identity team can provide the SSO tenant or domain reference used after the DNS TXT login key is entered.
+                                                </p>
+                                            </div>
+
+                                            <div className="rounded-2xl border border-amber-400/35 bg-amber-500/10 px-4 py-4">
+                                                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-200">
+                                                    Save this DNS TXT record
+                                                </div>
+                                                <p className="mt-2 text-sm leading-6 text-amber-100">
+                                                    It will be your login key after approval.
+                                                </p>
+                                                <div className="mt-3 rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 font-mono text-sm text-emerald-300">
+                                                    {dnsVerificationToken}
+                                                </div>
+                                                <p className="mt-3 text-xs leading-6 text-amber-100/80">
+                                                    In the login flow, users choose the SSO path first and then enter this DNS TXT record as the login key before the SSO handoff completes.
+                                                </p>
+                                                <div className="mt-4 flex flex-wrap gap-3">
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleCopyVerificationToken}
+                                                        className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
+                                                    >
+                                                        Copy login key
+                                                    </button>
+                                                </div>
+                                                {copyStatus === 'copied' && (
+                                                    <p className="mt-3 text-xs text-emerald-200">DNS TXT login key copied to clipboard.</p>
+                                                )}
+                                                {copyStatus === 'failed' && (
+                                                    <p className="mt-3 text-xs text-amber-100/80">
+                                                        Clipboard access is unavailable here. Copy the DNS TXT login key manually.
+                                                    </p>
+                                                )}
+                                            </div>
                                         </div>
                                     )}
                                 </label>
@@ -1101,12 +1139,12 @@ export default function OnboardingStep4() {
                                     </div>
 
                                     {authenticationMethod === 'hardware_key' && (
-                                        <div className="mt-4 space-y-4 rounded-xl border border-emerald-500/30 bg-slate-900/70 p-4">
-                                            <div className="grid gap-4 md:grid-cols-2">
-                                                <div>
+                                        <div className="mt-5 space-y-5 rounded-2xl border border-emerald-500/30 bg-slate-900/70 p-5">
+                                            <div className="grid items-start gap-5 md:grid-cols-2">
+                                                <div className="flex h-full flex-col">
                                                     <label
                                                         htmlFor="hardware-key-type"
-                                                        className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400"
+                                                        className="min-h-[2.75rem] text-xs font-semibold uppercase tracking-[0.16em] text-slate-400"
                                                     >
                                                         Key Type
                                                     </label>
@@ -1117,7 +1155,7 @@ export default function OnboardingStep4() {
                                                             setHardwareKeyType(event.target.value)
                                                             setShowError(false)
                                                         }}
-                                                        className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-200 focus:border-emerald-500 focus:outline-none"
+                                                        className="mt-2 h-12 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2 text-sm text-slate-200 focus:border-emerald-500 focus:outline-none"
                                                     >
                                                         <option value="">Select key type</option>
                                                         {hardwareKeyTypeOptions.map((option) => (
@@ -1128,10 +1166,10 @@ export default function OnboardingStep4() {
                                                     </select>
                                                 </div>
 
-                                                <div>
+                                                <div className="flex h-full flex-col">
                                                     <label
                                                         htmlFor="hardware-key-reference"
-                                                        className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400"
+                                                        className="min-h-[2.75rem] text-xs font-semibold uppercase tracking-[0.16em] text-slate-400"
                                                     >
                                                         Key Serial / Device Reference
                                                     </label>
@@ -1144,20 +1182,30 @@ export default function OnboardingStep4() {
                                                             setShowError(false)
                                                         }}
                                                         placeholder="Optional — printed on back of YubiKey or device identifier"
-                                                        className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-200 placeholder:text-slate-500 focus:border-emerald-500 focus:outline-none"
+                                                        className="mt-2 h-12 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2 text-sm text-slate-200 placeholder:text-slate-500 focus:border-emerald-500 focus:outline-none"
                                                     />
-                                                    <p className="mt-2 whitespace-pre-line text-xs leading-5 text-slate-500">
+                                                    <p className="mt-3 whitespace-pre-line text-xs leading-5 text-slate-500">
                                                         {hardwareKeyReferenceHelpText}
                                                     </p>
                                                 </div>
                                             </div>
 
-                                            <div className="rounded-2xl border border-emerald-400/25 bg-emerald-500/10 px-4 py-4">
-                                                <div className="flex flex-wrap items-start justify-between gap-3">
-                                                    <p className="whitespace-pre-line text-sm leading-6 text-emerald-100">
-                                                        {hardwareKeyReviewerInfo}
-                                                    </p>
-                                                    <StatusChip label="HIGH ASSURANCE" tone="success" />
+                                            <div className="rounded-[24px] border border-emerald-400/25 bg-emerald-500/10 px-5 py-5">
+                                                <div className="flex flex-col gap-5">
+                                                    <div className="space-y-4">
+                                                        <p className="text-sm font-semibold text-emerald-100">
+                                                            Your physical security key is your credential.
+                                                        </p>
+                                                        <p className="text-sm leading-6 text-emerald-100/85">
+                                                            DNS verification still proves organization control, but the DNS TXT record is not used to sign in when Hardware Key is selected.
+                                                        </p>
+                                                        <p className="whitespace-pre-line text-sm leading-6 text-emerald-100/80">
+                                                            {hardwareKeyReviewerInfo}
+                                                        </p>
+                                                    </div>
+                                                    <div className="pt-1">
+                                                        <StatusChip label="HIGH ASSURANCE" tone="success" />
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -1172,7 +1220,7 @@ export default function OnboardingStep4() {
                                         : 'Personal email providers are not accepted. The DNS-verified corporate domain must exactly match the submitted work email domain.'}
                                 </div>
                                 <div className="rounded-2xl border border-slate-800 bg-slate-900/70 px-4 py-3 text-sm text-slate-300">
-                                    After approval, the selected method becomes the expected authentication route for the participant environment.
+                                    After approval, the selected method becomes the live sign-in route for the participant environment.
                                 </div>
                             </div>
                         </article>

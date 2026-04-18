@@ -36,7 +36,7 @@ const generateTimestamp = () => {
     return now.toISOString().replace('T', ' ').substring(0, 19) + ' UTC'
 }
 
-type AuthScreen = 'entry' | 'method'
+type AuthScreen = 'entry' | 'method' | 'sso_key'
 
 function SecurityFooter({ sessionId, timestamp }: { sessionId: string; timestamp: string }) {
     return (
@@ -67,8 +67,11 @@ export default function LoginPage() {
         (accessStatus === 'not_started' ? '' : applicantEmail.trim())
     const [email, setEmail] = useState('')
     const [screen, setScreen] = useState<AuthScreen>('entry')
+    const [selectedMethod, setSelectedMethod] = useState<AuthenticationMethod | null>(null)
+    const [loginKey, setLoginKey] = useState('')
     const [loadingState, setLoadingState] = useState<'resolving' | null>(null)
     const [lookupError, setLookupError] = useState<string | null>(null)
+    const [loginKeyError, setLoginKeyError] = useState<string | null>(null)
     const [sessionId] = useState(() => generateSessionId())
     const [timestamp] = useState(() => generateTimestamp())
     const resolvingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -112,6 +115,9 @@ export default function LoginPage() {
         setLoadingState('resolving')
         resolvingTimerRef.current = setTimeout(() => {
             setLoadingState(null)
+            setSelectedMethod(null)
+            setLoginKey('')
+            setLoginKeyError(null)
             setScreen('method')
         }, 1200)
     }
@@ -126,9 +132,46 @@ export default function LoginPage() {
         navigate('/dashboard')
     }
 
+    const handleMethodContinue = (method: AuthenticationMethod) => {
+        setSelectedMethod(method)
+        setLoginKey('')
+        setLoginKeyError(null)
+
+        if (method === 'sso') {
+            setScreen('sso_key')
+            return
+        }
+
+        handleAuthenticate(method)
+    }
+
+    const handleSubmitSsoLoginKey = (event: React.FormEvent) => {
+        event.preventDefault()
+
+        const trimmedKey = loginKey.trim()
+        if (!trimmedKey) {
+            setLoginKeyError('Enter the DNS TXT verification token saved during onboarding.')
+            return
+        }
+
+        const acceptsMockCredential = MOCK_AUTH && trimmedKey.length > 0
+        const storedLoginKey = verificationSnapshot.dnsVerificationToken.trim()
+
+        if (!acceptsMockCredential && (!storedLoginKey || trimmedKey !== storedLoginKey)) {
+            setLoginKeyError('This DNS TXT login key does not match the token saved for this demo session.')
+            return
+        }
+
+        setLoginKeyError(null)
+        handleAuthenticate('sso')
+    }
+
     const handleStartOver = () => {
         setScreen('entry')
+        setSelectedMethod(null)
+        setLoginKey('')
         setLookupError(null)
+        setLoginKeyError(null)
     }
 
     if (accessStatus === 'pending' && !hasMockReviewAccess) {
@@ -182,6 +225,7 @@ export default function LoginPage() {
     const declaredMethodLabel = declaredAuthMethod ? authenticationMethodLabels[declaredAuthMethod] : 'Not declared in this demo session'
     const primaryMethod = declaredAuthMethod ?? 'sso'
     const secondaryMethod: AuthenticationMethod = primaryMethod === 'sso' ? 'hardware_key' : 'sso'
+    const renderedMethod = selectedMethod ?? primaryMethod
 
     return (
         <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
@@ -276,7 +320,7 @@ export default function LoginPage() {
                             )}
                         </button>
                     </form>
-                ) : (
+                ) : screen === 'method' ? (
                     <div>
                         <div className="text-center mb-6">
                             <h1 className="text-2xl font-bold text-emerald-300 mb-1">Identity Lookup Complete</h1>
@@ -303,13 +347,13 @@ export default function LoginPage() {
                         </div>
 
                         <div className="mb-5 rounded-lg border border-cyan-400/30 bg-cyan-400/10 px-4 py-3 text-sm text-cyan-100">
-                            Demo note: these buttons continue the local frontend demo only. No live IdP redirect or WebAuthn ceremony is performed here.
+                            Demo note: the SSO path continues to a DNS TXT login-key screen, while the hardware-key path stays a local frontend demo without a live WebAuthn ceremony.
                         </div>
 
                         <div className="space-y-3">
                             <button
                                 type="button"
-                                onClick={() => handleAuthenticate(primaryMethod)}
+                                onClick={() => handleMethodContinue(primaryMethod)}
                                 className={cx(
                                     'w-full rounded-lg border px-4 py-4 text-left transition-colors',
                                     primaryMethod === 'sso'
@@ -320,11 +364,11 @@ export default function LoginPage() {
                                 <div className="flex items-start justify-between gap-3">
                                     <div>
                                         <div className="text-sm font-semibold text-white">
-                                            {primaryMethod === 'sso' ? 'Continue with SSO demo' : 'Continue with hardware key demo'}
+                                            {primaryMethod === 'sso' ? 'Continue with SSO' : 'Continue with hardware key demo'}
                                         </div>
                                         <p className="mt-1 text-sm text-slate-300">
                                             {primaryMethod === 'sso'
-                                                ? 'Proceed using the declared SSO route for this local demo session.'
+                                                ? 'Choose the SSO route first, then enter the DNS TXT verification token as the login key.'
                                                 : 'Proceed using the declared hardware-key route for this local demo session.'}
                                         </p>
                                     </div>
@@ -345,11 +389,11 @@ export default function LoginPage() {
 
                             <button
                                 type="button"
-                                onClick={() => handleAuthenticate(secondaryMethod)}
+                                onClick={() => handleMethodContinue(secondaryMethod)}
                                 className="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-4 text-left transition-colors hover:border-slate-500"
                             >
                                 <div className="text-sm font-semibold text-white">
-                                    {secondaryMethod === 'sso' ? 'Use SSO demo instead' : 'Use hardware key demo instead'}
+                                    {secondaryMethod === 'sso' ? 'Use SSO instead' : 'Use hardware key demo instead'}
                                 </div>
                                 <p className="mt-1 text-sm text-slate-400">
                                     Switch paths for demo purposes. This does not change the declared onboarding preference.
@@ -365,6 +409,97 @@ export default function LoginPage() {
                             Wrong account? ← Start over
                         </button>
                     </div>
+                ) : (
+                    <form onSubmit={handleSubmitSsoLoginKey} noValidate>
+                        <div className="text-center mb-6">
+                            <h1 className="text-2xl font-bold text-emerald-300 mb-1">DNS TXT Login Key</h1>
+                            <p className="mx-auto max-w-[18rem] text-sm text-slate-400">
+                                The SSO path was selected. Enter the DNS TXT verification token saved during Step 4 to complete sign-in.
+                            </p>
+                        </div>
+
+                        <div className="mb-5 rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 space-y-3">
+                            <div>
+                                <div className="text-[11px] uppercase tracking-[0.16em] text-slate-500">Corporate email</div>
+                                <div className="mt-2 break-all text-sm text-white">{renderedEmail}</div>
+                            </div>
+                            <div>
+                                <div className="text-[11px] uppercase tracking-[0.16em] text-slate-500">Login route</div>
+                                <div className="mt-2 text-sm text-white">
+                                    {renderedMethod === 'sso' ? 'Okta / Microsoft Entra (SSO)' : declaredMethodLabel}
+                                </div>
+                            </div>
+                            <div>
+                                <div className="text-[11px] uppercase tracking-[0.16em] text-slate-500">Login step</div>
+                                <div className="mt-2 text-sm text-slate-300">Enter DNS TXT verification token as login key</div>
+                            </div>
+                            {verificationSnapshot.ssoDomain.trim() && (
+                                <div>
+                                    <div className="text-[11px] uppercase tracking-[0.16em] text-slate-500">SSO reference</div>
+                                    <div className="mt-2 break-all text-sm text-slate-300">{verificationSnapshot.ssoDomain}</div>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="mb-4 rounded-lg border border-amber-400/35 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+                            Use the DNS TXT verification token saved during Step 4. In this demo, successful entry signs you in directly after the SSO path is chosen.
+                        </div>
+
+                        <div className="mb-4">
+                            <label className="mb-2 block text-xs uppercase tracking-[0.16em] text-slate-400">
+                                DNS TXT verification token
+                            </label>
+                            <input
+                                type="text"
+                                className="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 font-mono text-sm text-slate-200 transition-all placeholder:text-slate-600 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500/50"
+                                placeholder="redoubt-verify=RDT-..."
+                                value={loginKey}
+                                onChange={(event) => {
+                                    setLoginKey(event.target.value)
+                                    setLoginKeyError(null)
+                                }}
+                            />
+                            <p className="mt-2 text-xs text-slate-500">
+                                {MOCK_AUTH
+                                    ? 'Mock mode accepts any non-empty DNS TXT login key here.'
+                                    : 'This must match the DNS TXT verification token saved during onboarding.'}
+                            </p>
+                        </div>
+
+                        {loginKeyError && (
+                            <div className="mb-4 rounded-lg border border-amber-400/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+                                {loginKeyError}
+                            </div>
+                        )}
+
+                        <div className="space-y-3">
+                            <button
+                                type="submit"
+                                disabled={!loginKey.trim()}
+                                className="w-full rounded-lg bg-blue-600 px-4 py-3 font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-700"
+                            >
+                                Sign in with DNS TXT login key
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setScreen('method')
+                                    setLoginKeyError(null)
+                                }}
+                                className="w-full rounded-lg border border-slate-700 px-4 py-3 text-sm font-medium text-slate-200 transition-colors hover:border-slate-500"
+                            >
+                                Back to method selection
+                            </button>
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={handleStartOver}
+                            className="mt-4 w-full text-center text-sm text-slate-500 transition-colors hover:text-slate-300"
+                        >
+                            Wrong account? ← Start over
+                        </button>
+                    </form>
                 )}
 
                 <SecurityFooter sessionId={sessionId} timestamp={timestamp} />

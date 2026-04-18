@@ -83,6 +83,30 @@ const authenticationMethodLabels: Record<AuthenticationMethod, string> = {
     hardware_key: 'Hardware key (YubiKey / WebAuthn)'
 }
 
+const getAuthenticationRouteSummary = (authenticationMethod: AuthenticationMethod | null) => {
+    if (authenticationMethod === 'sso') {
+        return 'Login route: Okta / Microsoft Entra (SSO)'
+    }
+
+    if (authenticationMethod === 'hardware_key') {
+        return 'Login route: Hardware key'
+    }
+
+    return 'Login route: Not configured'
+}
+
+const getAuthenticationKeySummary = (authenticationMethod: AuthenticationMethod | null) => {
+    if (authenticationMethod === 'sso') {
+        return 'Login key: DNS TXT verification token'
+    }
+
+    if (authenticationMethod === 'hardware_key') {
+        return 'Login key: Physical security key'
+    }
+
+    return 'Login key: Not configured'
+}
+
 const possibleOutcomes = [
     {
         title: 'Approved',
@@ -729,8 +753,8 @@ export default function OnboardingStep5() {
 
                     <ReviewSection
                         stepLabel="Step 4 · Verification"
-                        title="Verification packet and declared authentication method"
-                        description="Reviewers use this packet to confirm identity alignment, corporate-domain control, and the authentication method expected after approval."
+                        title="Verification packet and configured authentication method"
+                        description="Reviewers use this packet to confirm identity alignment, corporate-domain control, and the sign-in route that will be used after approval."
                         statusLabel={step4Ready ? 'Ready' : 'Needs review'}
                         statusTone={step4Ready ? 'success' : 'warning'}
                         onEdit={() => navigate(participantOnboardingPaths.step4)}
@@ -764,12 +788,18 @@ export default function OnboardingStep5() {
 
                             <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
                                 <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                                    Declared authentication method
+                                    Configured authentication method
                                 </div>
                                 <p className="mt-3 text-sm leading-6 text-slate-200">
                                     {reviewSnapshot.verification.authenticationMethod
                                         ? authenticationMethodLabels[reviewSnapshot.verification.authenticationMethod]
                                         : 'Not configured'}
+                                </p>
+                                <p className="mt-2 text-sm text-slate-400">
+                                    {getAuthenticationRouteSummary(reviewSnapshot.verification.authenticationMethod)}
+                                </p>
+                                <p className="mt-2 text-sm text-slate-400">
+                                    {getAuthenticationKeySummary(reviewSnapshot.verification.authenticationMethod)}
                                 </p>
                                 {reviewSnapshot.verification.authenticationMethod === 'sso' &&
                                     reviewSnapshot.verification.ssoDomain.trim() && (
