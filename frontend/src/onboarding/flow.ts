@@ -2,11 +2,11 @@ import { participantOnboardingPaths, participantOnboardingPostSubmitPath } from 
 import {
     emptyComplianceCommitment,
     emptyLegalAcknowledgment,
-    emptyStep1FormState,
     emptyUseCaseSummary,
     hasStoredOnboardingValue,
     onboardingStorageKeys,
     readOnboardingValue,
+    readStep1Snapshot,
     readVerificationSnapshot
 } from './storage'
 import type {
@@ -20,13 +20,14 @@ import {
     doesCorporateDomainMatchEmail,
     isCorporateEmail,
     isInviteCodeValid,
+    isWorkEmail,
     isUseCaseSummaryValid
 } from './validators'
 
 const MOCK_AUTH = (import.meta.env.VITE_MOCK_AUTH ?? 'true') === 'true'
 
 export const readOnboardingSnapshot = (): OnboardingSnapshot => ({
-    step1: readOnboardingValue(onboardingStorageKeys.step1, emptyStep1FormState),
+    step1: readStep1Snapshot(),
     intendedUsage: readOnboardingValue(onboardingStorageKeys.intendedUsage, []),
     useCaseSummary: readOnboardingValue(onboardingStorageKeys.useCaseSummary, emptyUseCaseSummary),
     participationIntent: readOnboardingValue(onboardingStorageKeys.participationIntent, []),
@@ -35,13 +36,28 @@ export const readOnboardingSnapshot = (): OnboardingSnapshot => ({
     compliance: readOnboardingValue(onboardingStorageKeys.compliance, emptyComplianceCommitment)
 })
 
-export const isStep1Complete = (step1: Step1FormState) =>
-    step1.organizationName.trim().length > 0 &&
-    isCorporateEmail(step1.officialWorkEmail.trim()) &&
-    isInviteCodeValid(step1.inviteCode) &&
-    step1.roleInOrganization.trim().length > 0 &&
-    step1.industryDomain.trim().length > 0 &&
-    step1.country.trim().length > 0
+export const isOrganizationParticipant = (step1: Pick<Step1FormState, 'participantType'>) =>
+    step1.participantType === 'organization'
+
+export const isIndividualParticipant = (step1: Pick<Step1FormState, 'participantType'>) =>
+    step1.participantType === 'individual'
+
+export const isStep1Complete = (step1: Step1FormState) => {
+    if (!step1.participantType) return false
+
+    const hasCoreIdentityRecord =
+        step1.organizationName.trim().length > 0 &&
+        isInviteCodeValid(step1.inviteCode) &&
+        step1.roleInOrganization.trim().length > 0 &&
+        step1.industryDomain.trim().length > 0 &&
+        step1.country.trim().length > 0
+
+    if (!hasCoreIdentityRecord) return false
+
+    return isOrganizationParticipant(step1)
+        ? isCorporateEmail(step1.officialWorkEmail.trim())
+        : isWorkEmail(step1.officialWorkEmail.trim())
+}
 
 export const isStep2Complete = (intendedUsage: string[], useCaseSummary: string) =>
     intendedUsage.length > 0 && isUseCaseSummaryValid(useCaseSummary)
@@ -61,13 +77,19 @@ export const hasAcceptedCorporateDomain = (officialWorkEmail: string, corporateD
         ? corporateDomain.trim().length > 0
         : doesCorporateDomainMatchEmail(officialWorkEmail, corporateDomain)
 
-export const isStep4Complete = (verification: VerificationSnapshot, officialWorkEmail: string) =>
-    verification.linkedInConnected &&
-    verification.domainVerified &&
-    Boolean(verification.affiliationFileName) &&
-    Boolean(verification.authorizationFileName) &&
-    hasAcceptedCorporateDomain(officialWorkEmail, verification.corporateDomain) &&
-    hasAuthenticationSetup(verification)
+export const isStep4Complete = (step1: Step1FormState, verification: VerificationSnapshot) => {
+    if (!verification.linkedInConnected) return false
+    if (!verification.domainVerified) return false
+    if (!Boolean(verification.affiliationFileName) || !Boolean(verification.authorizationFileName)) return false
+
+    if (!hasAuthenticationSetup(verification)) return false
+
+    if (isIndividualParticipant(step1)) {
+        return verification.authenticationMethod === 'hardware_key'
+    }
+
+    return hasAcceptedCorporateDomain(step1.officialWorkEmail, verification.corporateDomain)
+}
 
 export const isStep5Complete = (compliance: ComplianceCommitment) =>
     compliance.responsibleDataUsage &&
@@ -80,7 +102,7 @@ export const getFirstIncompleteOnboardingPath = (snapshot = readOnboardingSnapsh
     if (!isStep3Complete(snapshot.participationIntent, snapshot.legalAcknowledgment)) {
         return participantOnboardingPaths.step3
     }
-    if (!isStep4Complete(snapshot.verification, snapshot.step1.officialWorkEmail)) return participantOnboardingPaths.step4
+    if (!isStep4Complete(snapshot.step1, snapshot.verification)) return participantOnboardingPaths.step4
     if (!isStep5Complete(snapshot.compliance)) return participantOnboardingPaths.step5
     return null
 }
@@ -133,7 +155,7 @@ export const getOnboardingGuardRedirect = (currentPath: string, snapshot = readO
             if (!isStep3Complete(snapshot.participationIntent, snapshot.legalAcknowledgment)) {
                 return participantOnboardingPaths.step3
             }
-            return isStep4Complete(snapshot.verification, snapshot.step1.officialWorkEmail) ? null : participantOnboardingPaths.step4
+            return isStep4Complete(snapshot.step1, snapshot.verification) ? null : participantOnboardingPaths.step4
         case participantOnboardingPaths.confirmation:
             return participantOnboardingPaths.step5
         default:

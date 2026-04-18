@@ -8,7 +8,7 @@ import {
     participantOnboardingReviewStatus
 } from '../onboarding/constants'
 import OnboardingPageLayout from '../onboarding/components/OnboardingPageLayout'
-import { getFirstIncompleteOnboardingPath, isStep4Complete, readOnboardingSnapshot } from '../onboarding/flow'
+import { getFirstIncompleteOnboardingPath, isIndividualParticipant, isStep4Complete, readOnboardingSnapshot } from '../onboarding/flow'
 import {
     emptySubmissionMeta,
     hasStoredOnboardingValue,
@@ -35,17 +35,8 @@ const getConfiguredLoginRoute = (authenticationMethod: string | null) => {
     return 'Login route: Not selected'
 }
 
-const getConfiguredLoginKey = (authenticationMethod: string | null) => {
-    if (authenticationMethod === 'sso') {
-        return 'Login key: DNS TXT verification token'
-    }
-
-    if (authenticationMethod === 'hardware_key') {
-        return 'Login key: Physical security key'
-    }
-
-    return 'Login key: Not selected'
-}
+const getConfiguredLoginKey = (nodeId: string) =>
+    nodeId.trim().length > 0 ? `Primary credential: ${nodeId}` : 'Primary credential: Node ID not issued'
 
 export default function OnboardingConfirmation() {
     const hasSubmission = hasStoredOnboardingValue(onboardingStorageKeys.submissionMeta)
@@ -56,7 +47,8 @@ export default function OnboardingConfirmation() {
 
     const submissionMeta = readSubmissionMeta(emptySubmissionMeta)
     const snapshot = readOnboardingSnapshot()
-    const verificationReady = isStep4Complete(snapshot.verification, snapshot.step1.officialWorkEmail)
+    const verificationReady = isStep4Complete(snapshot.step1, snapshot.verification)
+    const isIndividualPath = isIndividualParticipant(snapshot.step1)
     const authMethod = snapshot.verification.authenticationMethod
         ? authenticationMethodLabels[snapshot.verification.authenticationMethod]
         : 'Not selected'
@@ -80,6 +72,11 @@ export default function OnboardingConfirmation() {
                             <h2 className="mt-4 text-2xl font-semibold text-white md:text-[1.85rem]">Application Submitted</h2>
                             <p className="mt-2 text-sm leading-7 text-slate-200 md:text-base">
                                 Your mock participant application is queued for manual review, and the current verification package has been preserved from the demo flow.
+                            </p>
+                            <p className="mt-2 text-sm leading-7 text-slate-300">
+                                {isIndividualPath
+                                    ? 'This individual onboarding path is still fully mock-driven, including the identity check, Node ID issuance, and hardware-key route.'
+                                    : 'This organization onboarding path is still fully mock-driven, including DNS verification, Node ID issuance, and the configured post-approval sign-in route.'}
                             </p>
                         </div>
 
@@ -109,7 +106,7 @@ export default function OnboardingConfirmation() {
                                 {getConfiguredLoginRoute(snapshot.verification.authenticationMethod)}
                             </div>
                             <div className="mt-1 text-xs leading-5 text-slate-300">
-                                {getConfiguredLoginKey(snapshot.verification.authenticationMethod)}
+                                {getConfiguredLoginKey(snapshot.verification.nodeId)}
                             </div>
                         </div>
                         <div className="rounded-[20px] border border-white/10 bg-white/[0.04] px-4 py-3">

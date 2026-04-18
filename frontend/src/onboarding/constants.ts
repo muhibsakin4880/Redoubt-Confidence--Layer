@@ -1,6 +1,6 @@
 export const participantOnboardingTitle = 'Participant Onboarding'
 export const participantOnboardingSubtitle =
-    'Identity, domain, and governance verification for controlled participation.'
+    'Identity, verification, and governance checks for controlled participation.'
 
 export const participantOnboardingPaths = {
     entry: '/onboarding',
@@ -16,7 +16,7 @@ export const participantOnboardingPaths = {
 export const participantOnboardingPostSubmitPath = participantOnboardingPaths.confirmation
 
 export const participantOnboardingStepTitles = [
-    'Organization & Identity',
+    'Join Path & Identity',
     'Intended Platform Usage',
     'Participation Intent',
     'Verification & Credentials',
@@ -30,7 +30,7 @@ export const participantOnboardingPolicyPath = '/trust-center'
 export const participantOnboardingPolicyLabel = 'Redoubt Trust Center and Governance Overview'
 
 export const participantOnboardingVerificationSummary =
-    'We review LinkedIn, corporate domain, and supporting authorization documents together before access is approved.'
+    'We review identity signals, verification checkpoints, and supporting evidence together before access is approved.'
 
 export const participantOnboardingVerificationModel = 'LinkedIn, DNS, and document review'
 export const participantOnboardingReviewStatus = 'In review'

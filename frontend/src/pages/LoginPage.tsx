@@ -3,13 +3,11 @@ import { Link, Navigate, useNavigate } from 'react-router-dom'
 
 import { useAuth } from '../contexts/AuthContext'
 import {
-    emptyStep1FormState,
-    onboardingStorageKeys,
-    readOnboardingValue,
+    readStep1Snapshot,
     readVerificationSnapshot
 } from '../onboarding/storage'
 import type { AuthenticationMethod } from '../onboarding/types'
-import { isCorporateEmail } from '../onboarding/validators'
+import { isCorporateEmail, isWorkEmail } from '../onboarding/validators'
 
 const MOCK_AUTH = (import.meta.env.VITE_MOCK_AUTH ?? 'true') === 'true'
 const sessionCharacters = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
@@ -36,7 +34,7 @@ const generateTimestamp = () => {
     return now.toISOString().replace('T', ' ').substring(0, 19) + ' UTC'
 }
 
-type AuthScreen = 'entry' | 'method' | 'sso_key'
+type AuthScreen = 'entry' | 'method' | 'node_id'
 
 function SecurityFooter({ sessionId, timestamp }: { sessionId: string; timestamp: string }) {
     return (
@@ -60,8 +58,10 @@ export default function LoginPage() {
     const { isAuthenticated, accessStatus, applicantEmail, signIn, workspaceRole, updateWorkspaceRole } = useAuth()
     const navigate = useNavigate()
     const verificationSnapshot = readVerificationSnapshot()
-    const storedStep1 = readOnboardingValue<{ officialWorkEmail: string }>(onboardingStorageKeys.step1, emptyStep1FormState)
+    const storedStep1 = readStep1Snapshot()
+    const isIndividualPath = storedStep1.participantType === 'individual'
     const declaredAuthMethod = verificationSnapshot.authenticationMethod
+    const storedNodeId = verificationSnapshot.nodeId.trim()
     const expectedEmail =
         storedStep1.officialWorkEmail.trim() ||
         (accessStatus === 'not_started' ? '' : applicantEmail.trim())
@@ -101,13 +101,21 @@ export default function LoginPage() {
 
         const acceptsMockCredential = MOCK_AUTH && trimmedEmail.length > 0
 
-        if (!acceptsMockCredential && !isCorporateEmail(trimmedEmail)) {
-            setLookupError('Use a valid corporate email address for this demo lookup.')
+        if (!acceptsMockCredential && !(isIndividualPath ? isWorkEmail(trimmedEmail) : isCorporateEmail(trimmedEmail))) {
+            setLookupError(
+                isIndividualPath
+                    ? 'Use a valid email address for this demo lookup.'
+                    : 'Use a valid corporate email address for this demo lookup.'
+            )
             return
         }
 
         if (!acceptsMockCredential && expectedEmail && trimmedEmail.toLowerCase() !== expectedEmail.toLowerCase()) {
-            setLookupError('This email does not match the submitted corporate email on file for this demo session.')
+            setLookupError(
+                isIndividualPath
+                    ? 'This email does not match the submitted contact email on file for this demo session.'
+                    : 'This email does not match the submitted corporate email on file for this demo session.'
+            )
             return
         }
 
@@ -136,34 +144,28 @@ export default function LoginPage() {
         setSelectedMethod(method)
         setLoginKey('')
         setLoginKeyError(null)
-
-        if (method === 'sso') {
-            setScreen('sso_key')
-            return
-        }
-
-        handleAuthenticate(method)
+        setScreen('node_id')
     }
 
-    const handleSubmitSsoLoginKey = (event: React.FormEvent) => {
+    const handleSubmitNodeId = (event: React.FormEvent) => {
         event.preventDefault()
 
         const trimmedKey = loginKey.trim()
         if (!trimmedKey) {
-            setLoginKeyError('Enter the DNS TXT verification token saved during onboarding.')
+            setLoginKeyError('Enter the Node ID saved during onboarding.')
             return
         }
 
         const acceptsMockCredential = MOCK_AUTH && trimmedKey.length > 0
-        const storedLoginKey = verificationSnapshot.dnsVerificationToken.trim()
+        const declaredMethod = selectedMethod ?? declaredAuthMethod ?? (isIndividualPath ? 'hardware_key' : 'sso')
 
-        if (!acceptsMockCredential && (!storedLoginKey || trimmedKey !== storedLoginKey)) {
-            setLoginKeyError('This DNS TXT login key does not match the token saved for this demo session.')
+        if (!acceptsMockCredential && (!storedNodeId || trimmedKey !== storedNodeId)) {
+            setLoginKeyError('This Node ID does not match the credential saved for this demo session.')
             return
         }
 
         setLoginKeyError(null)
-        handleAuthenticate('sso')
+        handleAuthenticate(declaredMethod)
     }
 
     const handleStartOver = () => {
@@ -223,8 +225,7 @@ export default function LoginPage() {
 
     const renderedEmail = email.trim() || expectedEmail || 'No email on file'
     const declaredMethodLabel = declaredAuthMethod ? authenticationMethodLabels[declaredAuthMethod] : 'Not declared in this demo session'
-    const primaryMethod = declaredAuthMethod ?? 'sso'
-    const secondaryMethod: AuthenticationMethod = primaryMethod === 'sso' ? 'hardware_key' : 'sso'
+    const primaryMethod = declaredAuthMethod ?? (isIndividualPath ? 'hardware_key' : 'sso')
     const renderedMethod = selectedMethod ?? primaryMethod
 
     return (
@@ -256,19 +257,19 @@ export default function LoginPage() {
                             <h1 className="text-2xl font-bold text-white mb-1">Secure Node Entry</h1>
                             <p className="text-sm text-slate-400">
                                 {MOCK_AUTH
-                                    ? 'Enter your corporate email or any mock credential to continue the frontend demo.'
-                                    : 'Enter your verified corporate email so this demo can look up the declared authentication route.'}
+                                    ? `Enter ${isIndividualPath ? 'your contact email' : 'your corporate email'} or any mock credential to continue the frontend demo.`
+                                    : `Enter your verified ${isIndividualPath ? 'contact email' : 'corporate email'} so this demo can look up the declared authentication route.`}
                             </p>
                         </div>
 
                         <div className="mb-4">
                             <label className="block text-xs uppercase tracking-[0.16em] text-slate-400 mb-2">
-                                Corporate Email
+                                {isIndividualPath ? 'Email Address' : 'Corporate Email'}
                             </label>
                             <input
                                 type="email"
                                 className="w-full px-4 py-3 bg-slate-950 border border-slate-700 rounded-lg text-slate-200 font-mono text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 transition-all placeholder:text-slate-600"
-                                placeholder="you@yourcompany.com"
+                                placeholder={isIndividualPath ? 'you@example.com' : 'you@yourcompany.com'}
                                 value={email}
                                 onChange={(event) => {
                                     setEmail(event.target.value)
@@ -279,7 +280,9 @@ export default function LoginPage() {
                             <p className="mt-2 text-xs text-slate-500">
                                 {MOCK_AUTH
                                     ? 'Mock mode accepts any non-empty value here.'
-                                    : 'Personal email addresses are not accepted.'}
+                                    : isIndividualPath
+                                        ? 'Use the same email submitted during onboarding.'
+                                        : 'Personal email addresses are not accepted.'}
                             </p>
                         </div>
 
@@ -325,13 +328,15 @@ export default function LoginPage() {
                         <div className="text-center mb-6">
                             <h1 className="text-2xl font-bold text-emerald-300 mb-1">Identity Lookup Complete</h1>
                             <p className="mx-auto max-w-[18rem] text-sm text-slate-400">
-                                This frontend demo found the declared authentication route for the corporate identity on file.
+                                This frontend demo found the declared authentication route for the identity on file.
                             </p>
                         </div>
 
                         <div className="mb-5 rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 space-y-3">
                             <div>
-                                <div className="text-[11px] uppercase tracking-[0.16em] text-slate-500">Corporate email</div>
+                                <div className="text-[11px] uppercase tracking-[0.16em] text-slate-500">
+                                    {isIndividualPath ? 'Contact email' : 'Corporate email'}
+                                </div>
                                 <div className="mt-2 break-all text-sm text-white">{renderedEmail}</div>
                             </div>
                             <div>
@@ -347,7 +352,7 @@ export default function LoginPage() {
                         </div>
 
                         <div className="mb-5 rounded-lg border border-cyan-400/30 bg-cyan-400/10 px-4 py-3 text-sm text-cyan-100">
-                            Demo note: the SSO path continues to a DNS TXT login-key screen, while the hardware-key path stays a local frontend demo without a live WebAuthn ceremony.
+                            Demo note: every mock sign-in path now uses the issued Node ID as the primary credential. The declared method still determines whether the route is SSO-backed or hardware-key-backed after approval.
                         </div>
 
                         <div className="space-y-3">
@@ -360,19 +365,19 @@ export default function LoginPage() {
                                         ? 'border-blue-500/70 bg-blue-500/10 hover:bg-blue-500/15'
                                         : 'border-emerald-500/60 bg-emerald-500/10 hover:bg-emerald-500/15'
                                 )}
-                            >
-                                <div className="flex items-start justify-between gap-3">
-                                    <div>
-                                        <div className="text-sm font-semibold text-white">
-                                            {primaryMethod === 'sso' ? 'Continue with SSO' : 'Continue with hardware key demo'}
+                                >
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div>
+                                            <div className="text-sm font-semibold text-white">
+                                                {primaryMethod === 'sso' ? 'Continue with SSO' : 'Continue with hardware key'}
+                                            </div>
+                                            <p className="mt-1 text-sm text-slate-300">
+                                                {primaryMethod === 'sso'
+                                                    ? 'Continue to the Node ID prompt, then complete the mock SSO route.'
+                                                    : 'Continue to the Node ID prompt, then complete the mock hardware-key route.'}
+                                            </p>
                                         </div>
-                                        <p className="mt-1 text-sm text-slate-300">
-                                            {primaryMethod === 'sso'
-                                                ? 'Choose the SSO route first, then enter the DNS TXT verification token as the login key.'
-                                                : 'Proceed using the declared hardware-key route for this local demo session.'}
-                                        </p>
-                                    </div>
-                                    {declaredAuthMethod === primaryMethod && (
+                                        {declaredAuthMethod === primaryMethod && (
                                         <span
                                             className={cx(
                                                 'rounded-full border px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.16em]',
@@ -384,21 +389,8 @@ export default function LoginPage() {
                                             Declared
                                         </span>
                                     )}
-                                </div>
-                            </button>
-
-                            <button
-                                type="button"
-                                onClick={() => handleMethodContinue(secondaryMethod)}
-                                className="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-4 text-left transition-colors hover:border-slate-500"
-                            >
-                                <div className="text-sm font-semibold text-white">
-                                    {secondaryMethod === 'sso' ? 'Use SSO instead' : 'Use hardware key demo instead'}
-                                </div>
-                                <p className="mt-1 text-sm text-slate-400">
-                                    Switch paths for demo purposes. This does not change the declared onboarding preference.
-                                </p>
-                            </button>
+                                    </div>
+                                </button>
                         </div>
 
                         <button
@@ -410,28 +402,30 @@ export default function LoginPage() {
                         </button>
                     </div>
                 ) : (
-                    <form onSubmit={handleSubmitSsoLoginKey} noValidate>
+                    <form onSubmit={handleSubmitNodeId} noValidate>
                         <div className="text-center mb-6">
-                            <h1 className="text-2xl font-bold text-emerald-300 mb-1">DNS TXT Login Key</h1>
+                            <h1 className="text-2xl font-bold text-emerald-300 mb-1">Node ID Check</h1>
                             <p className="mx-auto max-w-[18rem] text-sm text-slate-400">
-                                The SSO path was selected. Enter the DNS TXT verification token saved during Step 4 to complete sign-in.
+                                Enter the Node ID saved during Step 4 to complete this mock sign-in flow.
                             </p>
                         </div>
 
                         <div className="mb-5 rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 space-y-3">
                             <div>
-                                <div className="text-[11px] uppercase tracking-[0.16em] text-slate-500">Corporate email</div>
+                                <div className="text-[11px] uppercase tracking-[0.16em] text-slate-500">
+                                    {isIndividualPath ? 'Contact email' : 'Corporate email'}
+                                </div>
                                 <div className="mt-2 break-all text-sm text-white">{renderedEmail}</div>
                             </div>
                             <div>
                                 <div className="text-[11px] uppercase tracking-[0.16em] text-slate-500">Login route</div>
                                 <div className="mt-2 text-sm text-white">
-                                    {renderedMethod === 'sso' ? 'Okta / Microsoft Entra (SSO)' : declaredMethodLabel}
+                                    {renderedMethod === 'sso' ? 'Okta / Microsoft Entra (SSO)' : authenticationMethodLabels.hardware_key}
                                 </div>
                             </div>
                             <div>
                                 <div className="text-[11px] uppercase tracking-[0.16em] text-slate-500">Login step</div>
-                                <div className="mt-2 text-sm text-slate-300">Enter DNS TXT verification token as login key</div>
+                                <div className="mt-2 text-sm text-slate-300">Enter Node ID as primary credential</div>
                             </div>
                             {verificationSnapshot.ssoDomain.trim() && (
                                 <div>
@@ -439,20 +433,26 @@ export default function LoginPage() {
                                     <div className="mt-2 break-all text-sm text-slate-300">{verificationSnapshot.ssoDomain}</div>
                                 </div>
                             )}
+                            {storedNodeId && (
+                                <div>
+                                    <div className="text-[11px] uppercase tracking-[0.16em] text-slate-500">Node ID on file</div>
+                                    <div className="mt-2 break-all text-sm font-mono text-slate-300">{storedNodeId}</div>
+                                </div>
+                            )}
                         </div>
 
                         <div className="mb-4 rounded-lg border border-amber-400/35 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
-                            Use the DNS TXT verification token saved during Step 4. In this demo, successful entry signs you in directly after the SSO path is chosen.
+                            Use the Node ID saved during Step 4. In this demo, successful entry signs you in directly after the declared route is confirmed.
                         </div>
 
                         <div className="mb-4">
                             <label className="mb-2 block text-xs uppercase tracking-[0.16em] text-slate-400">
-                                DNS TXT verification token
+                                Node ID
                             </label>
                             <input
                                 type="text"
                                 className="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 font-mono text-sm text-slate-200 transition-all placeholder:text-slate-600 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500/50"
-                                placeholder="redoubt-verify=RDT-..."
+                                placeholder="RDT-a3f8b2c1"
                                 value={loginKey}
                                 onChange={(event) => {
                                     setLoginKey(event.target.value)
@@ -461,8 +461,8 @@ export default function LoginPage() {
                             />
                             <p className="mt-2 text-xs text-slate-500">
                                 {MOCK_AUTH
-                                    ? 'Mock mode accepts any non-empty DNS TXT login key here.'
-                                    : 'This must match the DNS TXT verification token saved during onboarding.'}
+                                    ? 'Mock mode accepts any non-empty Node ID here.'
+                                    : 'This must match the Node ID saved during onboarding.'}
                             </p>
                         </div>
 
@@ -478,7 +478,7 @@ export default function LoginPage() {
                                 disabled={!loginKey.trim()}
                                 className="w-full rounded-lg bg-blue-600 px-4 py-3 font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-700"
                             >
-                                Sign in with DNS TXT login key
+                                Sign in with Node ID
                             </button>
                             <button
                                 type="button"

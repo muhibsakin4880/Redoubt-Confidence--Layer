@@ -15,6 +15,7 @@ import OnboardingStepGuard from '../onboarding/components/OnboardingStepGuard'
 import {
     getFirstIncompleteOnboardingPath,
     hasAcceptedCorporateDomain,
+    isIndividualParticipant,
     isStep1Complete,
     isStep2Complete,
     isStep3Complete,
@@ -30,22 +31,12 @@ import {
     writeOnboardingValue,
     writeSubmissionMeta
 } from '../onboarding/storage'
-import type { AuthenticationMethod, ComplianceCommitment } from '../onboarding/types'
+import type { AuthenticationMethod, ComplianceCommitment, Step1FormState } from '../onboarding/types'
 import { doesCorporateDomainMatchEmail, getEmailDomain } from '../onboarding/validators'
 
 type StatusTone = 'info' | 'neutral' | 'success' | 'warning'
 
 const MOCK_AUTH = (import.meta.env.VITE_MOCK_AUTH ?? 'true') === 'true'
-
-type Step1ReviewState = {
-    country: string
-    industryDomain: string
-    inviteCode: string
-    officialWorkEmail: string
-    organizationName: string
-    organizationWebsite?: string
-    roleInOrganization: string
-}
 
 type Step2StructuredReviewState = {
     accessAudience: string
@@ -95,17 +86,8 @@ const getAuthenticationRouteSummary = (authenticationMethod: AuthenticationMetho
     return 'Login route: Not configured'
 }
 
-const getAuthenticationKeySummary = (authenticationMethod: AuthenticationMethod | null) => {
-    if (authenticationMethod === 'sso') {
-        return 'Login key: DNS TXT verification token'
-    }
-
-    if (authenticationMethod === 'hardware_key') {
-        return 'Login key: Physical security key'
-    }
-
-    return 'Login key: Not configured'
-}
+const getAuthenticationKeySummary = (nodeId: string) =>
+    nodeId.trim().length > 0 ? `Primary credential: ${nodeId}` : 'Primary credential: Node ID not issued'
 
 const possibleOutcomes = [
     {
@@ -215,7 +197,7 @@ export default function OnboardingStep5() {
     const navigate = useNavigate()
     const { submitApplication } = useAuth()
     const reviewSnapshot = useMemo(() => readOnboardingSnapshot(), [])
-    const step1Data = reviewSnapshot.step1 as Step1ReviewState
+    const step1Data = reviewSnapshot.step1 as Step1FormState
     const structuredUseCase = useMemo(
         () => readOnboardingValue<Step2StructuredReviewState>(step2StructuredStorageKey, emptyStructuredState),
         []
@@ -233,11 +215,12 @@ export default function OnboardingStep5() {
     const step1Ready = isStep1Complete(reviewSnapshot.step1)
     const step2Ready = isStep2Complete(reviewSnapshot.intendedUsage, reviewSnapshot.useCaseSummary)
     const step3Ready = isStep3Complete(reviewSnapshot.participationIntent, reviewSnapshot.legalAcknowledgment)
-    const step4Ready = isStep4Complete(reviewSnapshot.verification, reviewSnapshot.step1.officialWorkEmail)
+    const step4Ready = isStep4Complete(reviewSnapshot.step1, reviewSnapshot.verification)
     const step5Ready = isStep5Complete(state)
     const allClear = step1Ready && step2Ready && step3Ready && step4Ready && step5Ready
     const commitmentCount = Object.values(state).filter(Boolean).length
-    const contactEmail = step1Data.officialWorkEmail.trim() || 'your corporate email'
+    const isIndividualPath = isIndividualParticipant(step1Data)
+    const contactEmail = step1Data.officialWorkEmail.trim() || 'your contact email'
     const expectedDomain = getEmailDomain(step1Data.officialWorkEmail)
     const domainMatchesWorkEmail = doesCorporateDomainMatchEmail(
         step1Data.officialWorkEmail,
@@ -255,11 +238,17 @@ export default function OnboardingStep5() {
         reviewSnapshot.participationIntent.length > 0
             ? reviewSnapshot.participationIntent.join(', ')
             : 'No participation mode selected.'
+    const identitySectionTitle = isIndividualPath ? 'Participant identity' : 'Organization and participant identity'
+    const identitySectionDescription = isIndividualPath
+        ? 'Reviewers use this information to anchor the application to a clearly accountable individual participant.'
+        : 'Reviewers use this information to anchor the application to a legitimate organization and a clearly accountable representative.'
 
     const readinessItems = [
         {
-            label: 'Organization and identity record',
-            description: 'Representative details, corporate email, and organization context are ready for reviewer use.',
+            label: isIndividualPath ? 'Participant identity record' : 'Organization and identity record',
+            description: isIndividualPath
+                ? 'Participant details, contact email, and identity context are ready for reviewer use.'
+                : 'Representative details, corporate email, and organization context are ready for reviewer use.',
             complete: step1Ready,
             path: participantOnboardingPaths.step1
         },
@@ -277,7 +266,9 @@ export default function OnboardingStep5() {
         },
         {
             label: 'Verification packet',
-            description: 'Identity proof, domain alignment, evidence files, and the declared post-approval authentication method are in place.',
+            description: isIndividualPath
+                ? 'Identity proof, evidence files, Node ID issuance, and the hardware-key authentication route are in place.'
+                : 'Identity proof, domain alignment, evidence files, and the declared post-approval authentication method are in place.',
             complete: step4Ready,
             path: participantOnboardingPaths.step4
         },
@@ -351,7 +342,7 @@ export default function OnboardingStep5() {
                             </div>
                             <div className="mt-2 break-all text-base font-semibold text-white">{contactEmail}</div>
                             <p className="mt-2 text-sm text-slate-300">
-                                Review decisions and clarification requests are sent to the submitting corporate address.
+                                Review decisions and clarification requests are sent to the submitting contact address.
                             </p>
                         </div>
                     </div>
@@ -552,11 +543,9 @@ export default function OnboardingStep5() {
                                         <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
                                             Step 1 · Identity
                                         </div>
-                                        <h2 className="mt-2 text-xl font-semibold text-white">
-                                            Organization and participant identity
-                                        </h2>
+                                        <h2 className="mt-2 text-xl font-semibold text-white">{identitySectionTitle}</h2>
                                         <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-400">
-                                            Reviewers use this information to anchor the application to a legitimate organization and a clearly accountable representative.
+                                            {identitySectionDescription}
                                         </p>
                                     </div>
 
@@ -576,17 +565,20 @@ export default function OnboardingStep5() {
                                 </div>
 
                                 <div className="mt-6 grid gap-x-5 gap-y-6 sm:grid-cols-2">
-                                    <ReviewDetail label="Organization" value={step1Data.organizationName || 'Not provided'} />
                                     <ReviewDetail
-                                        label="Organization website"
+                                        label={isIndividualPath ? 'Joining as' : 'Organization'}
+                                        value={step1Data.organizationName || 'Not provided'}
+                                    />
+                                    <ReviewDetail
+                                        label={isIndividualPath ? 'Portfolio or website' : 'Organization website'}
                                         value={step1Data.organizationWebsite?.trim() || 'Not provided'}
                                     />
                                     <ReviewDetail
-                                        label="Representative role / team"
+                                        label={isIndividualPath ? 'Participant role' : 'Representative role / team'}
                                         value={step1Data.roleInOrganization || 'Not provided'}
                                     />
                                     <ReviewDetail
-                                        label="Official work email"
+                                        label={isIndividualPath ? 'Contact email' : 'Official work email'}
                                         value={step1Data.officialWorkEmail || 'Not provided'}
                                     />
                                     <ReviewDetail
@@ -600,6 +592,8 @@ export default function OnboardingStep5() {
                                 </div>
 
                                 <div className="mt-6 rounded-[22px] border border-slate-800 bg-slate-900/70 px-4 py-3 text-sm text-slate-300">
+                                    Join path: {isIndividualPath ? 'Individual' : 'Organization'}
+                                    <span className="mx-2 text-slate-500">•</span>
                                     Invite code: {step1Data.inviteCode.trim() || 'None supplied. The current flow still allows submission without one.'}
                                 </div>
                             </div>
@@ -683,7 +677,11 @@ export default function OnboardingStep5() {
                     <ReviewSection
                         stepLabel="Step 3 · Governance"
                         title="Participation intent and governance acknowledgments"
-                        description="These signals tell reviewers how the organization intends to participate and whether the submitter has already accepted the required governance boundaries."
+                        description={
+                            isIndividualPath
+                                ? 'These signals tell reviewers how the participant intends to participate and whether the submitter has already accepted the required governance boundaries.'
+                                : 'These signals tell reviewers how the organization intends to participate and whether the submitter has already accepted the required governance boundaries.'
+                        }
                         statusLabel={step3Ready ? 'Ready' : 'Needs review'}
                         statusTone={step3Ready ? 'success' : 'warning'}
                         onEdit={() => navigate(participantOnboardingPaths.step3)}
@@ -702,7 +700,9 @@ export default function OnboardingStep5() {
                                 </div>
                                 <div className="mt-3 space-y-3">
                                     <div className="flex items-center justify-between gap-3">
-                                        <span className="text-sm text-slate-200">Authorized representative confirmation</span>
+                                        <span className="text-sm text-slate-200">
+                                            {isIndividualPath ? 'Accountable participant confirmation' : 'Authorized representative confirmation'}
+                                        </span>
                                         <StatusChip
                                             label={
                                                 reviewSnapshot.legalAcknowledgment.authorizedRepresentative
@@ -754,7 +754,11 @@ export default function OnboardingStep5() {
                     <ReviewSection
                         stepLabel="Step 4 · Verification"
                         title="Verification packet and configured authentication method"
-                        description="Reviewers use this packet to confirm identity alignment, corporate-domain control, and the sign-in route that will be used after approval."
+                        description={
+                            isIndividualPath
+                                ? 'Reviewers use this packet to confirm identity alignment, individual accountability, Node ID issuance, and the sign-in route that will be used after approval.'
+                                : 'Reviewers use this packet to confirm identity alignment, corporate-domain control, and the sign-in route that will be used after approval.'
+                        }
                         statusLabel={step4Ready ? 'Ready' : 'Needs review'}
                         statusTone={step4Ready ? 'success' : 'warning'}
                         onEdit={() => navigate(participantOnboardingPaths.step4)}
@@ -775,14 +779,18 @@ export default function OnboardingStep5() {
 
                             <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
                                 <div className="flex items-center justify-between gap-3">
-                                    <div className="text-sm font-semibold text-white">Domain / DNS verification</div>
+                                    <div className="text-sm font-semibold text-white">
+                                        {isIndividualPath ? 'Identity verification' : 'Domain / DNS verification'}
+                                    </div>
                                     <StatusChip
                                         label={reviewSnapshot.verification.domainVerified ? 'Verified' : 'Missing'}
                                         tone={reviewSnapshot.verification.domainVerified ? 'success' : 'warning'}
                                     />
                                 </div>
                                 <p className="mt-3 text-sm leading-6 text-slate-400">
-                                    Confirms control of the corporate domain connected to this request.
+                                    {isIndividualPath
+                                        ? 'Confirms the individual identity used for this request and issues the Node ID shown in the packet.'
+                                        : 'Confirms control of the corporate domain connected to this request.'}
                                 </p>
                             </div>
 
@@ -799,7 +807,7 @@ export default function OnboardingStep5() {
                                     {getAuthenticationRouteSummary(reviewSnapshot.verification.authenticationMethod)}
                                 </p>
                                 <p className="mt-2 text-sm text-slate-400">
-                                    {getAuthenticationKeySummary(reviewSnapshot.verification.authenticationMethod)}
+                                    {getAuthenticationKeySummary(reviewSnapshot.verification.nodeId)}
                                 </p>
                                 {reviewSnapshot.verification.authenticationMethod === 'sso' &&
                                     reviewSnapshot.verification.ssoDomain.trim() && (
@@ -810,52 +818,86 @@ export default function OnboardingStep5() {
                             </div>
                         </div>
 
-                        <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                        <div className={cx('mt-4 grid gap-4 md:grid-cols-2', isIndividualPath ? 'xl:grid-cols-3' : 'xl:grid-cols-4')}>
                             <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
                                 <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                                    Submitted work email
+                                    {isIndividualPath ? 'Submitted email' : 'Submitted work email'}
                                 </div>
                                 <p className="mt-3 break-all text-sm text-slate-200">
                                     {step1Data.officialWorkEmail || 'Not provided'}
                                 </p>
                             </div>
 
-                            <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
-                                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                                    Expected domain
-                                </div>
-                                <p className="mt-3 text-sm text-slate-200">
-                                    {expectedDomain || 'Not derived'}
-                                </p>
-                            </div>
-
-                            <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
-                                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                                    Entered corporate domain
-                                </div>
-                                <p className="mt-3 text-sm text-slate-200">
-                                    {reviewSnapshot.verification.corporateDomain || 'Not provided'}
-                                </p>
-                            </div>
-
-                            <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
-                                <div className="flex items-center justify-between gap-3">
-                                    <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                                        Domain alignment
+                            {!isIndividualPath && (
+                                <>
+                                    <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
+                                        <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                                            Expected domain
+                                        </div>
+                                        <p className="mt-3 text-sm text-slate-200">
+                                            {expectedDomain || 'Not derived'}
+                                        </p>
                                     </div>
-                                    <StatusChip
-                                        label={domainMatchesWorkEmail ? 'Matches' : domainAccepted ? 'Mock accepted' : 'Mismatch'}
-                                        tone={domainAccepted ? 'success' : 'warning'}
-                                    />
-                                </div>
-                                <p className="mt-3 text-sm leading-6 text-slate-400">
-                                    {domainMatchesWorkEmail
-                                        ? 'The submitted work email domain matches the corporate domain used for DNS verification.'
-                                        : domainAccepted && MOCK_AUTH
-                                            ? 'Mock mode accepted the provided corporate domain even though it differs from the work email on file.'
-                                            : 'The Step 4 corporate domain must exactly match the submitted work email domain.'}
-                                </p>
-                            </div>
+
+                                    <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
+                                        <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                                            Entered corporate domain
+                                        </div>
+                                        <p className="mt-3 text-sm text-slate-200">
+                                            {reviewSnapshot.verification.corporateDomain || 'Not provided'}
+                                        </p>
+                                    </div>
+
+                                    <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
+                                        <div className="flex items-center justify-between gap-3">
+                                            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                                                Domain alignment
+                                            </div>
+                                            <StatusChip
+                                                label={domainMatchesWorkEmail ? 'Matches' : domainAccepted ? 'Mock accepted' : 'Mismatch'}
+                                                tone={domainAccepted ? 'success' : 'warning'}
+                                            />
+                                        </div>
+                                        <p className="mt-3 text-sm leading-6 text-slate-400">
+                                            {domainMatchesWorkEmail
+                                                ? 'The submitted work email domain matches the corporate domain used for DNS verification.'
+                                                : domainAccepted && MOCK_AUTH
+                                                    ? 'Mock mode accepted the provided corporate domain even though it differs from the work email on file.'
+                                                    : 'The Step 4 corporate domain must exactly match the submitted work email domain.'}
+                                        </p>
+                                    </div>
+                                </>
+                            )}
+
+                            {isIndividualPath && (
+                                <>
+                                    <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
+                                        <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                                            Node ID
+                                        </div>
+                                        <p className="mt-3 font-mono text-sm text-slate-200">
+                                            {reviewSnapshot.verification.nodeId || 'Not issued'}
+                                        </p>
+                                    </div>
+
+                                    <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
+                                        <div className="flex items-center justify-between gap-3">
+                                            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                                                Node ID status
+                                            </div>
+                                            <StatusChip
+                                                label={reviewSnapshot.verification.nodeIdSaved ? 'Saved' : reviewSnapshot.verification.nodeId ? 'Issued' : 'Missing'}
+                                                tone={reviewSnapshot.verification.nodeId ? 'success' : 'warning'}
+                                            />
+                                        </div>
+                                        <p className="mt-3 text-sm leading-6 text-slate-400">
+                                            {reviewSnapshot.verification.nodeIdSaved
+                                                ? 'The Node ID was issued and marked as saved during the mock verification flow.'
+                                                : 'Issue and save the Node ID during Step 4 before final submission.'}
+                                        </p>
+                                    </div>
+                                </>
+                            )}
 
                             <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
                                 <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
@@ -877,7 +919,9 @@ export default function OnboardingStep5() {
                         </div>
 
                         <div className="mt-4 rounded-2xl border border-cyan-400/20 bg-cyan-400/10 px-4 py-3 text-sm text-cyan-100">
-                            {participantOnboardingVerificationSummary}
+                            {isIndividualPath
+                                ? 'Reviewers see identity proof, accountability evidence, Node ID issuance, and the hardware-key route together as a single protected-access packet.'
+                                : participantOnboardingVerificationSummary}
                         </div>
                     </ReviewSection>
 

@@ -10,9 +10,8 @@ import OnboardingPageLayout from '../onboarding/components/OnboardingPageLayout'
 import OnboardingStepGuard from '../onboarding/components/OnboardingStepGuard'
 import { hasAcceptedCorporateDomain, isStep4Complete } from '../onboarding/flow'
 import {
-    emptyStep1FormState,
     onboardingStorageKeys,
-    readOnboardingValue,
+    readStep1Snapshot,
     readVerificationSnapshot,
     writeOnboardingValue
 } from '../onboarding/storage'
@@ -29,7 +28,7 @@ const maxFileSizeBytes = 5 * 1024 * 1024
 const dnsVerificationTokenCharacters = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
 const nodeIdCharacters = 'abcdefghijklmnopqrstuvwxyz0123456789'
 
-const topReviewCards = [
+const organizationTopReviewCards = [
     {
         title: 'Identity match',
         description: 'Reviewers validate that the submitting profile maps to a real professional identity and organizational role.'
@@ -41,6 +40,21 @@ const topReviewCards = [
     {
         title: 'Evidence packet',
         description: 'Affiliation evidence, authorization evidence, and the declared post-approval authentication method become the verification packet used for access governance.'
+    }
+] as const
+
+const individualTopReviewCards = [
+    {
+        title: 'Identity match',
+        description: 'Reviewers validate that the submitting profile maps to a real individual participant and the use case stated in the request.'
+    },
+    {
+        title: 'Credential route',
+        description: 'Identity verification issues the Node ID, while the hardware-key route becomes the only approved sign-in method for an individual participant.'
+    },
+    {
+        title: 'Evidence packet',
+        description: 'Affiliation evidence, accountability evidence, and the declared hardware-key path become the verification packet used for access governance.'
     }
 ] as const
 
@@ -67,10 +81,22 @@ const affiliationExamples = [
     'Employment confirmation or team roster excerpt'
 ] as const
 
+const individualAffiliationExamples = [
+    'Professional profile, portfolio, or public bio screenshot',
+    'Personal research page, publication profile, or speaker page',
+    'Independent consultant, fellowship, or lab affiliation proof'
+] as const
+
 const affiliationChecks = [
     'Name and organization line up with the request',
     'Role or affiliation is visible and readable',
     'The document appears current and attributable'
+] as const
+
+const individualAffiliationChecks = [
+    'The identity in the document lines up with the request',
+    'The participant role or public affiliation is visible and readable',
+    'The evidence appears current and attributable'
 ] as const
 
 const authorizationExamples = [
@@ -79,15 +105,33 @@ const authorizationExamples = [
     'IRB, DPA, or formal approval document covering the request'
 ] as const
 
+const individualAuthorizationExamples = [
+    'Signed self-attestation describing the intended controlled-access use',
+    'Project sponsor approval, fellowship note, or engagement letter',
+    'A short authorization memo covering the requested evaluation or collaboration scope'
+] as const
+
 const authorizationChecks = [
     'The request is backed by the organization, not just the individual',
     'The approval scope matches the stated workflow or evaluation',
     'The document identifies an accountable approver or function'
 ] as const
 
+const individualAuthorizationChecks = [
+    'The intended use is explicitly acknowledged and scoped',
+    'The stated workflow or evaluation matches the request summary',
+    'The evidence identifies the accountable individual or approving sponsor'
+] as const
+
 const afterVerificationSteps = [
     'The completed verification packet is handed to reviewers with your prior identity, use-case, and governance inputs.',
     'Reviewers confirm identity alignment, organization authority, and post-approval access-control expectations.',
+    'You receive the review decision and any next access steps after manual review.'
+] as const
+
+const individualAfterVerificationSteps = [
+    'The completed verification packet is handed to reviewers with your identity, use-case, and governance inputs.',
+    'Reviewers confirm identity alignment, participant accountability, and the hardware-key sign-in path.',
     'You receive the review decision and any next access steps after manual review.'
 ] as const
 
@@ -187,7 +231,7 @@ async function copyToClipboard(value: string) {
 
 export default function OnboardingStep4() {
     const navigate = useNavigate()
-    const step1Snapshot = readOnboardingValue<{ officialWorkEmail: string }>(onboardingStorageKeys.step1, emptyStep1FormState)
+    const step1Snapshot = readStep1Snapshot()
     const snapshot = readVerificationSnapshot()
     const initialNodeId = snapshot.nodeId || (snapshot.domainVerified ? generateNodeId() : '')
     const linkedInTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -218,11 +262,19 @@ export default function OnboardingStep4() {
     const [nodeId, setNodeId] = useState(initialNodeId)
     const [isNodeIdSaved, setIsNodeIdSaved] = useState(snapshot.nodeIdSaved && initialNodeId.length > 0)
     const [nodeIdCopyStatus, setNodeIdCopyStatus] = useState<'idle' | 'copied' | 'failed'>('idle')
+    const isIndividualPath = step1Snapshot.participantType === 'individual'
+    const isOrganizationPath = step1Snapshot.participantType === 'organization'
     const submittedWorkEmail = step1Snapshot.officialWorkEmail.trim()
     const expectedDomain = getEmailDomain(submittedWorkEmail)
     const normalizedCorporateDomain = normalizeCorporateDomain(corporateDomain)
     const domainMatchesWorkEmail = doesCorporateDomainMatchEmail(submittedWorkEmail, corporateDomain)
     const domainAccepted = hasAcceptedCorporateDomain(submittedWorkEmail, corporateDomain)
+    const reviewCards = isIndividualPath ? individualTopReviewCards : organizationTopReviewCards
+    const activeAffiliationExamples = isIndividualPath ? individualAffiliationExamples : affiliationExamples
+    const activeAffiliationChecks = isIndividualPath ? individualAffiliationChecks : affiliationChecks
+    const activeAuthorizationExamples = isIndividualPath ? individualAuthorizationExamples : authorizationExamples
+    const activeAuthorizationChecks = isIndividualPath ? individualAuthorizationChecks : authorizationChecks
+    const activeAfterVerificationSteps = isIndividualPath ? individualAfterVerificationSteps : afterVerificationSteps
 
     useEffect(() => {
         return () => {
@@ -239,6 +291,18 @@ export default function OnboardingStep4() {
             }
         }
     }, [])
+
+    useEffect(() => {
+        if (!isIndividualPath) return
+
+        if (authenticationMethod !== 'hardware_key') {
+            setAuthenticationMethod('hardware_key')
+        }
+
+        if (ssoDomain.trim().length > 0) {
+            setSSODomain('')
+        }
+    }, [authenticationMethod, isIndividualPath, ssoDomain])
 
     useEffect(() => {
         writeOnboardingValue(onboardingStorageKeys.verification, {
@@ -362,7 +426,7 @@ export default function OnboardingStep4() {
         Boolean(authenticationMethod) &&
         (authenticationMethod !== 'sso' || ssoDomain.trim().length > 0)
     const domainReady = domainAccepted && normalizedCorporateDomain.length > 0
-    const stepReady = isStep4Complete({
+    const stepReady = isStep4Complete(step1Snapshot, {
         linkedInConnected: isLinkedInConnected,
         domainVerified: isDomainVerified,
         affiliationFileName,
@@ -375,7 +439,7 @@ export default function OnboardingStep4() {
         dnsVerificationToken,
         nodeId,
         nodeIdSaved: isNodeIdSaved
-    }, submittedWorkEmail)
+    })
 
     const linkedInStatus = isLinkedInConnected
         ? { label: 'Verified', tone: 'success' as const }
@@ -403,8 +467,8 @@ export default function OnboardingStep4() {
             tone: linkedInStatus.tone
         },
         {
-            label: 'Domain / DNS verification',
-            complete: isDomainVerified && domainAccepted,
+            label: isIndividualPath ? 'Identity verification' : 'Domain / DNS verification',
+            complete: isIndividualPath ? isDomainVerified : isDomainVerified && domainAccepted,
             statusLabel: dnsStatus.label,
             tone: dnsStatus.tone
         },
@@ -421,7 +485,7 @@ export default function OnboardingStep4() {
             tone: authorizationStatus.tone
         },
         {
-            label: 'Declared authentication method',
+            label: isIndividualPath ? 'Hardware-key authentication route' : 'Declared authentication method',
             complete: authenticationReady,
             statusLabel: authenticationStatus.label,
             tone: authenticationStatus.tone
@@ -447,13 +511,15 @@ export default function OnboardingStep4() {
         setIsLinkedInConnected(true)
         setIsDomainVerified(true)
         const mockDomain = expectedDomain || 'demo.redoubt.local'
-        setCorporateDomain(mockDomain)
+        setCorporateDomain(isIndividualPath ? '' : mockDomain)
         setDomainVerificationStep(3)
-        setAffiliationFileName('affiliation-proof.pdf')
-        setAuthorizationFileName('authorization-letter.pdf')
+        setAffiliationFileName(isIndividualPath ? 'independent-profile.pdf' : 'affiliation-proof.pdf')
+        setAuthorizationFileName(isIndividualPath ? 'participant-attestation.pdf' : 'authorization-letter.pdf')
         setAuthenticationMethod('hardware_key')
         setSSODomain('')
         setDnsVerificationToken((current) => current || generateDnsVerificationToken())
+        setHardwareKeyType('YubiKey 5 Series')
+        setHardwareKeyReference(isIndividualPath ? 'RDT-DEMO-IND-01' : '')
         setNodeId((current) => current || generateNodeId())
         setIsNodeIdSaved(false)
         setNodeIdCopyStatus('idle')
@@ -470,7 +536,9 @@ export default function OnboardingStep4() {
                 </div>
                 <h2 className="mt-4 text-[1.35rem] font-semibold leading-8 text-white">Current packet status</h2>
                 <p className="mt-4 text-sm leading-7 text-slate-200">
-                    Reviewers use this packet to confirm identity, organization authority, and the declared post-approval authentication method before protected access is approved.
+                    {isIndividualPath
+                        ? 'Reviewers use this packet to confirm identity, participant accountability, and the declared post-approval authentication method before protected access is approved.'
+                        : 'Reviewers use this packet to confirm identity, organization authority, and the declared post-approval authentication method before protected access is approved.'}
                 </p>
 
                 <div className="mt-6 overflow-hidden rounded-[26px] border border-white/10 bg-white/[0.04] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
@@ -518,18 +586,22 @@ export default function OnboardingStep4() {
 
                 <div className="space-y-6 px-6 py-6 text-sm text-slate-300">
                     <div className="rounded-[24px] border border-slate-800/90 bg-slate-950/78 p-5 shadow-[0_18px_40px_rgba(2,6,23,0.18)]">
-                        <div className="font-semibold text-white">Affiliation evidence</div>
+                        <div className="font-semibold text-white">
+                            {isIndividualPath ? 'Identity / affiliation evidence' : 'Affiliation evidence'}
+                        </div>
                         <ul className="mt-3 space-y-2 text-slate-400">
-                            {affiliationExamples.map((example) => (
+                            {activeAffiliationExamples.map((example) => (
                                 <li key={example}>• {example}</li>
                             ))}
                         </ul>
                     </div>
 
                     <div className="rounded-[24px] border border-slate-800/90 bg-slate-950/78 p-5 shadow-[0_18px_40px_rgba(2,6,23,0.18)]">
-                        <div className="font-semibold text-white">Authorization evidence</div>
+                        <div className="font-semibold text-white">
+                            {isIndividualPath ? 'Accountability evidence' : 'Authorization evidence'}
+                        </div>
                         <ul className="mt-3 space-y-2 text-slate-400">
-                            {authorizationExamples.map((example) => (
+                            {activeAuthorizationExamples.map((example) => (
                                 <li key={example}>• {example}</li>
                             ))}
                         </ul>
@@ -539,7 +611,7 @@ export default function OnboardingStep4() {
                             What reviewers look for
                         </div>
                         <div className="mt-4 space-y-3 text-sm text-slate-300">
-                            {helperPanelNotes.map((note) => (
+                            {[...activeAffiliationChecks, ...activeAuthorizationChecks, ...helperPanelNotes].map((note) => (
                                 <div
                                     key={note}
                                     className="rounded-[24px] border border-slate-800/90 bg-slate-950/78 px-5 py-4 shadow-[0_16px_36px_rgba(2,6,23,0.18)]"
@@ -555,7 +627,7 @@ export default function OnboardingStep4() {
                             What happens after verification succeeds
                         </div>
                         <div className="mt-4 space-y-3 text-sm text-slate-300">
-                            {afterVerificationSteps.map((step) => (
+                            {activeAfterVerificationSteps.map((step) => (
                                 <div
                                     key={step}
                                     className="rounded-[24px] border border-slate-800/90 bg-slate-950/78 px-5 py-4 shadow-[0_16px_36px_rgba(2,6,23,0.18)]"
@@ -566,7 +638,9 @@ export default function OnboardingStep4() {
                         </div>
 
                         <div className="mt-5 rounded-[24px] border border-cyan-400/20 bg-cyan-400/10 px-5 py-4 text-sm text-cyan-100">
-                            Verification exists to protect access governance by ensuring reviewers are working from a confirmed identity, a confirmed organization, and a clearly scoped access method.
+                            {isIndividualPath
+                                ? 'Verification exists to protect access governance by ensuring reviewers are working from a confirmed identity, clear participant accountability, and a controlled hardware-key access method.'
+                                : 'Verification exists to protect access governance by ensuring reviewers are working from a confirmed identity, a confirmed organization, and a clearly scoped access method.'}
                         </div>
                     </div>
                 </div>
@@ -581,8 +655,12 @@ export default function OnboardingStep4() {
                 showDefaultHelperPanel={false}
                 helperPanel={helperPanel}
                 headerTitle="Verification & Evidence Packet"
-                headerSubtitle="Complete identity checks, organization evidence, and access-identity setup so reviewers can validate this request as a protected-access packet."
-                pageEyebrow="Participant onboarding · Verification packet"
+                headerSubtitle={
+                    isIndividualPath
+                        ? 'Complete identity checks, accountability evidence, and hardware-key setup so reviewers can validate this request as a protected-access packet.'
+                        : 'Complete identity checks, organization evidence, and access-identity setup so reviewers can validate this request as a protected-access packet.'
+                }
+                pageEyebrow={`Participant onboarding · ${isIndividualPath ? 'Individual verification packet' : 'Verification packet'}`}
                 progressVariant="connector"
             >
                 <div className="space-y-8 lg:space-y-10">
@@ -596,7 +674,10 @@ export default function OnboardingStep4() {
                                     Build the reviewer verification packet
                                 </h2>
                                 <p className="mt-4 text-sm leading-7 text-slate-300">
-                                    {participantOnboardingVerificationSummary} This packet protects access governance by verifying the person, the organization, and the identity controls behind the request before protected access review begins.
+                                    {participantOnboardingVerificationSummary}{' '}
+                                    {isIndividualPath
+                                        ? 'This packet protects access governance by verifying the person, the accountability evidence, and the hardware-key controls behind the request before protected access review begins.'
+                                        : 'This packet protects access governance by verifying the person, the organization, and the identity controls behind the request before protected access review begins.'}
                                 </p>
                             </div>
 
@@ -611,7 +692,7 @@ export default function OnboardingStep4() {
                         </div>
 
                         <div className="mt-8 grid gap-4 lg:grid-cols-3">
-                            {topReviewCards.map((card) => (
+                            {reviewCards.map((card) => (
                                 <div key={card.title} className="rounded-[24px] border border-white/10 bg-white/[0.03] p-5 shadow-[0_18px_40px_rgba(2,6,23,0.16)]">
                                     <div className="text-sm font-semibold text-white">{card.title}</div>
                                     <p className="mt-3 text-sm leading-7 text-slate-400">{card.description}</p>
@@ -625,9 +706,15 @@ export default function OnboardingStep4() {
                             <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
                                 Zone 2 · identity verification
                             </div>
-                            <h3 className="mt-2 text-xl font-semibold text-white">Verify identity and corporate domain control</h3>
+                            <h3 className="mt-2 text-xl font-semibold text-white">
+                                {isIndividualPath
+                                    ? 'Verify identity and issue the Node ID'
+                                    : 'Verify identity and corporate domain control'}
+                            </h3>
                             <p className="mt-4 text-sm leading-7 text-slate-400">
-                                These checks confirm the person submitting the request and the corporate domain behind the organization identity.
+                                {isIndividualPath
+                                    ? 'These checks confirm the person submitting the request and issue the permanent Node ID that will be used with the hardware-key sign-in path.'
+                                    : 'These checks confirm the person submitting the request and the corporate domain behind the organization identity.'}
                             </p>
                         </div>
 
@@ -637,7 +724,9 @@ export default function OnboardingStep4() {
                                     <div>
                                         <div className="text-base font-semibold text-white">LinkedIn / profile verification</div>
                                         <p className="mt-2 text-sm leading-6 text-slate-400">
-                                            Confirms the public professional profile tied to the person submitting the request.
+                                            {isIndividualPath
+                                                ? 'Confirms the public professional profile tied to the individual participant submitting the request.'
+                                                : 'Confirms the public professional profile tied to the person submitting the request.'}
                                         </p>
                                     </div>
                                     <StatusChip label={linkedInStatus.label} tone={linkedInStatus.tone} />
@@ -649,7 +738,11 @@ export default function OnboardingStep4() {
                                     </div>
                                     <ul className="mt-3 space-y-2 text-sm text-slate-300">
                                         <li>• The profile identifies a real professional tied to the request.</li>
-                                        <li>• Public affiliation aligns with the organization and role stated earlier.</li>
+                                        <li>
+                                            • {isIndividualPath
+                                                ? 'Public identity signals align with the role and use case stated earlier.'
+                                                : 'Public affiliation aligns with the organization and role stated earlier.'}
+                                        </li>
                                         <li>• The identity signal is strong enough to support protected access review.</li>
                                     </ul>
                                 </div>
@@ -671,7 +764,9 @@ export default function OnboardingStep4() {
                                     )}
 
                                     <p className="text-xs leading-6 text-slate-500">
-                                        Use the profile that best represents the professional identity tied to this organization request.
+                                        {isIndividualPath
+                                            ? 'Use the profile that best represents the individual identity tied to this request.'
+                                            : 'Use the profile that best represents the professional identity tied to this organization request.'}
                                     </p>
                                 </div>
                             </article>
@@ -679,204 +774,318 @@ export default function OnboardingStep4() {
                             <article className="rounded-[24px] border border-slate-800 bg-slate-950/75 p-5">
                                 <div className="flex flex-wrap items-start justify-between gap-3">
                                     <div>
-                                        <div className="text-base font-semibold text-white">Corporate domain / DNS verification</div>
+                                        <div className="text-base font-semibold text-white">
+                                            {isIndividualPath ? 'Individual identity verification' : 'Corporate domain / DNS verification'}
+                                        </div>
                                         <p className="mt-2 text-sm leading-6 text-slate-400">
-                                            Prove control of the corporate domain associated with the submitted work email for this request.
+                                            {isIndividualPath
+                                                ? 'Run a mock identity check against your submitted profile and request details. Successful verification issues your Node ID.'
+                                                : 'Prove control of the corporate domain associated with the submitted work email for this request.'}
                                         </p>
                                     </div>
                                     <StatusChip label={dnsStatus.label} tone={dnsStatus.tone} />
                                 </div>
 
-                                <div className="mt-4 grid gap-3 md:grid-cols-2">
-                                    <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
-                                        <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                                            Submitted work email
-                                        </div>
-                                        <p className="mt-2 break-all text-sm text-slate-200">
-                                            {submittedWorkEmail || 'No work email found from Step 1.'}
-                                        </p>
-                                    </div>
-                                    <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
-                                        <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                                            Expected domain
-                                        </div>
-                                        <p className="mt-2 text-sm text-slate-200">
-                                            {expectedDomain || 'Not derived from Step 1 yet.'}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <div className="mt-4 rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
-                                    <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                                        DNS / TXT setup
-                                    </div>
-                                    <ul className="mt-3 space-y-2 text-sm text-slate-300">
-                                        {dnsSetupSteps.map((step, index) => (
-                                            <li key={step}>
-                                                <span className="font-semibold text-cyan-300">[{index + 1}]</span> {step}
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-
-                                <div className="mt-5 space-y-4">
-                                    {domainVerificationStep === 1 && (
-                                        <div>
-                                            <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
-                                                Enter corporate domain
-                                            </label>
-                                            <input
-                                                type="text"
-                                                value={corporateDomain}
-                                                onChange={(event) => {
-                                                    setCorporateDomain(event.target.value)
-                                                    setIsDomainVerified(false)
-                                                    setNodeId('')
-                                                    setIsNodeIdSaved(false)
-                                                    setNodeIdCopyStatus('idle')
-                                                }}
-                                                placeholder="yourcompany.com"
-                                                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-slate-200 placeholder:text-slate-500 focus:border-blue-500 focus:outline-none"
-                                            />
-                                            <p className="mt-2 text-xs text-slate-500">
-                                                This should match the organization domain behind the request, not a personal mailbox provider.
-                                            </p>
-                                            {MOCK_AUTH && (
-                                                <div className="mt-3 rounded-2xl border border-cyan-400/20 bg-cyan-400/10 px-4 py-3 text-sm text-cyan-100">
-                                                    Mock mode accepts any non-empty demo domain here.
+                                {isIndividualPath ? (
+                                    <div className="mt-4 space-y-4">
+                                        <div className="grid gap-3 md:grid-cols-2">
+                                            <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
+                                                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                                                    Submitted email
                                                 </div>
-                                            )}
-                                            {!MOCK_AUTH && normalizedCorporateDomain.length > 0 && !domainMatchesWorkEmail && (
-                                                <div className="mt-3 rounded-2xl border border-amber-400/35 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
-                                                    The corporate domain must exactly match the submitted work email domain:
-                                                    {' '}
-                                                    <span className="font-semibold">{expectedDomain || 'no domain on file'}</span>.
+                                                <p className="mt-2 break-all text-sm text-slate-200">
+                                                    {submittedWorkEmail || 'No email found from Step 1.'}
+                                                </p>
+                                            </div>
+                                            <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
+                                                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                                                    Join path
                                                 </div>
-                                            )}
+                                                <p className="mt-2 text-sm text-slate-200">Individual participant</p>
+                                            </div>
                                         </div>
-                                    )}
 
-                                    {domainVerificationStep >= 2 && corporateDomain && domainAccepted && (
                                         <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
                                             <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                                                DNS verification token
+                                                Mock verification check
                                             </div>
-                                            <p className="mt-2 text-sm text-slate-300">
-                                                {isDomainVerified
-                                                    ? <>Keep a copy of the TXT record used to verify <span className="font-semibold text-white">{corporateDomain}</span>:</>
-                                                    : <>Add the following TXT record to the DNS zone for <span className="font-semibold text-white">{corporateDomain}</span>:</>}
-                                            </p>
-                                            <div className="mt-3 rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 font-mono text-sm text-emerald-300">
-                                                {dnsVerificationToken}
-                                            </div>
-                                            <p className="mt-3 text-xs leading-6 text-slate-500">
-                                                {isDomainVerified
-                                                    ? 'Verification succeeded, but this token remains important for sign-in setup and any future reference in this onboarding flow.'
-                                                    : 'Ask your DNS administrator to add the record at the root or correct verification location for the domain. Propagation can take time before the check succeeds.'}
-                                            </p>
+                                            <ul className="mt-3 space-y-2 text-sm text-slate-300">
+                                                <li>• LinkedIn or public profile proof is already attached to the packet.</li>
+                                                <li>• The submitted identity details are internally consistent for review.</li>
+                                                <li>• A successful check issues the permanent Node ID for this participant.</li>
+                                            </ul>
                                         </div>
-                                    )}
 
-                                    {domainVerificationStep === 3 && (
-                                        <div>
-                                            {isDNSVerifying ? (
-                                                <div className="inline-flex items-center gap-2 rounded-xl border border-amber-400/35 bg-amber-500/10 px-4 py-3 text-sm font-medium text-amber-100">
-                                                    <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24">
-                                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                                                    </svg>
-                                                    <span>Checking TXT record…</span>
+                                        {isDNSVerifying ? (
+                                            <div className="inline-flex items-center gap-2 rounded-xl border border-amber-400/35 bg-amber-500/10 px-4 py-3 text-sm font-medium text-amber-100">
+                                                <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24">
+                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                                </svg>
+                                                <span>Verifying identity…</span>
+                                            </div>
+                                        ) : isDomainVerified ? (
+                                            <div className="space-y-4">
+                                                <div className="rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
+                                                    <div className="font-semibold text-emerald-50">Identity Verified ✅</div>
+                                                    <p className="mt-2 text-sm text-emerald-100">
+                                                        This identity proof is now ready for credential setup and reviewer review.
+                                                    </p>
                                                 </div>
-                                            ) : isDomainVerified ? (
-                                                <div className="space-y-4">
-                                                    <div className="rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
-                                                        <div className="font-semibold text-emerald-50">Domain Verified ✅</div>
-                                                        <p className="mt-2 text-sm text-emerald-100">
-                                                            This domain proof is now ready for sign-in setup and reviewer review.
+                                                {nodeId && !isNodeIdSaved ? (
+                                                    <div className="rounded-2xl border border-amber-400/45 bg-amber-500/10 px-4 py-4">
+                                                        <div className="text-lg font-semibold text-amber-100">⚠️ Your Node ID</div>
+                                                        <p className="mt-2 whitespace-pre-line text-sm leading-6 text-amber-100">
+                                                            {'This is your permanent\nlogin credential.\nStore it securely —\nit cannot be recovered if lost\nand will not be shown again.'}
+                                                        </p>
+                                                        <div className="mt-4 rounded-xl border border-amber-300/20 bg-slate-950/80 px-4 py-4 font-mono text-xl text-amber-100">
+                                                            {nodeId}
+                                                        </div>
+                                                        <div className="mt-4 flex flex-col gap-3">
+                                                            <button
+                                                                type="button"
+                                                                onClick={handleCopyNodeId}
+                                                                className="w-full rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
+                                                            >
+                                                                {nodeIdCopyStatus === 'copied' ? 'Copied ✓' : 'Copy Node ID'}
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={handleNodeIdSaved}
+                                                                className="rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-700 sm:self-start"
+                                                            >
+                                                                I have saved my Node ID
+                                                            </button>
+                                                        </div>
+                                                        {nodeIdCopyStatus === 'failed' && (
+                                                            <p className="mt-3 text-xs text-amber-100/80">
+                                                                Clipboard access is unavailable here. Copy the Node ID manually.
+                                                            </p>
+                                                        )}
+                                                        <p className="mt-4 whitespace-pre-line text-xs leading-6 text-amber-100/80">
+                                                            {
+                                                                'Your Node ID is unique to you\nand tied to your verified\nindividual identity.\nIt is used alongside your\nhardware key\nas your primary login credential.'
+                                                            }
                                                         </p>
                                                     </div>
-                                                    {nodeId && !isNodeIdSaved ? (
-                                                        <div className="rounded-2xl border border-amber-400/45 bg-amber-500/10 px-4 py-4">
-                                                            <div className="text-lg font-semibold text-amber-100">⚠️ Your Node ID</div>
-                                                            <p className="mt-2 whitespace-pre-line text-sm leading-6 text-amber-100">
-                                                                {'This is your permanent\nlogin credential.\nStore it securely —\nit cannot be recovered if lost\nand will not be shown again.'}
-                                                            </p>
-                                                            <div className="mt-4 rounded-xl border border-amber-300/20 bg-slate-950/80 px-4 py-4 font-mono text-xl text-amber-100">
-                                                                {nodeId}
-                                                            </div>
-                                                            <div className="mt-4 flex flex-col gap-3">
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={handleCopyNodeId}
-                                                                    className="w-full rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
-                                                                >
-                                                                    {nodeIdCopyStatus === 'copied' ? 'Copied ✓' : 'Copy Node ID'}
-                                                                </button>
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={handleNodeIdSaved}
-                                                                    className="rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-700 sm:self-start"
-                                                                >
-                                                                    I have saved my Node ID
-                                                                </button>
-                                                            </div>
-                                                            {nodeIdCopyStatus === 'failed' && (
-                                                                <p className="mt-3 text-xs text-amber-100/80">
-                                                                    Clipboard access is unavailable here. Copy the Node ID manually.
-                                                                </p>
-                                                            )}
-                                                            <p className="mt-4 whitespace-pre-line text-xs leading-6 text-amber-100/80">
-                                                                {
-                                                                    'Your Node ID is unique to you\nand tied to your verified\ncorporate domain.\nIt is used alongside your\nselected authentication method\nas your primary login credential.'
-                                                                }
-                                                            </p>
-                                                        </div>
-                                                    ) : (
-                                                        <div className="rounded-2xl border border-emerald-400/25 bg-emerald-500/10 px-4 py-3 text-xs leading-6 text-emerald-100">
-                                                            <p className="whitespace-pre-line">
-                                                                {'Node ID saved.\nYou will need this\nto log in to Redoubt.'}
-                                                            </p>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            ) : null}
-                                        </div>
-                                    )}
-
-                                    <div className="flex flex-wrap gap-3">
-                                        {domainVerificationStep === 1 && corporateDomain && (
-                                            <button
-                                                type="button"
-                                                onClick={() => setDomainVerificationStep(2)}
-                                                disabled={!domainReady}
-                                                className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-                                            >
-                                                Continue to DNS setup
-                                            </button>
+                                                ) : (
+                                                    <div className="rounded-2xl border border-emerald-400/25 bg-emerald-500/10 px-4 py-3 text-xs leading-6 text-emerald-100">
+                                                        <p className="whitespace-pre-line">
+                                                            {'Node ID saved.\nYou will need this\nto log in to Redoubt.'}
+                                                        </p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ) : (
+                                            <div className="rounded-2xl border border-cyan-400/20 bg-cyan-400/10 px-4 py-3 text-sm text-cyan-100">
+                                                Run the mock identity check after profile verification is complete. In this frontend-only flow, no backend verification service is called.
+                                            </div>
                                         )}
 
-                                        {domainVerificationStep === 2 && (
-                                            <button
-                                                type="button"
-                                                onClick={() => setDomainVerificationStep(3)}
-                                                className="rounded-xl border border-slate-700 px-4 py-2.5 text-sm font-semibold text-slate-200 transition-colors hover:border-blue-500"
-                                            >
-                                                I added the TXT record
-                                            </button>
-                                        )}
-
-                                        {domainVerificationStep >= 2 && !isDomainVerified && (
+                                        {!isDomainVerified && (
                                             <button
                                                 type="button"
                                                 onClick={handleDNSVerification}
-                                                disabled={isDNSVerifying || !domainReady}
+                                                disabled={isDNSVerifying || !isLinkedInConnected}
                                                 className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
                                             >
-                                                {isDNSVerifying ? 'Verifying…' : 'Verify domain'}
+                                                {isDNSVerifying ? 'Verifying…' : 'Verify identity'}
                                             </button>
                                         )}
                                     </div>
-                                </div>
+                                ) : (
+                                    <div className="mt-4 space-y-4">
+                                        <div className="grid gap-3 md:grid-cols-2">
+                                            <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
+                                                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                                                    Submitted work email
+                                                </div>
+                                                <p className="mt-2 break-all text-sm text-slate-200">
+                                                    {submittedWorkEmail || 'No work email found from Step 1.'}
+                                                </p>
+                                            </div>
+                                            <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
+                                                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                                                    Expected domain
+                                                </div>
+                                                <p className="mt-2 text-sm text-slate-200">
+                                                    {expectedDomain || 'Not derived from Step 1 yet.'}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
+                                            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                                                DNS / TXT setup
+                                            </div>
+                                            <ul className="mt-3 space-y-2 text-sm text-slate-300">
+                                                {dnsSetupSteps.map((step, index) => (
+                                                    <li key={step}>
+                                                        <span className="font-semibold text-cyan-300">[{index + 1}]</span> {step}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+
+                                        <div className="space-y-4">
+                                            {domainVerificationStep === 1 && (
+                                                <div>
+                                                    <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                                                        Enter corporate domain
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        value={corporateDomain}
+                                                        onChange={(event) => {
+                                                            setCorporateDomain(event.target.value)
+                                                            setIsDomainVerified(false)
+                                                            setNodeId('')
+                                                            setIsNodeIdSaved(false)
+                                                            setNodeIdCopyStatus('idle')
+                                                        }}
+                                                        placeholder="yourcompany.com"
+                                                        className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-slate-200 placeholder:text-slate-500 focus:border-blue-500 focus:outline-none"
+                                                    />
+                                                    <p className="mt-2 text-xs text-slate-500">
+                                                        This should match the organization domain behind the request, not a personal mailbox provider.
+                                                    </p>
+                                                    {MOCK_AUTH && (
+                                                        <div className="mt-3 rounded-2xl border border-cyan-400/20 bg-cyan-400/10 px-4 py-3 text-sm text-cyan-100">
+                                                            Mock mode accepts any non-empty demo domain here.
+                                                        </div>
+                                                    )}
+                                                    {!MOCK_AUTH && normalizedCorporateDomain.length > 0 && !domainMatchesWorkEmail && (
+                                                        <div className="mt-3 rounded-2xl border border-amber-400/35 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+                                                            The corporate domain must exactly match the submitted work email domain:{' '}
+                                                            <span className="font-semibold">{expectedDomain || 'no domain on file'}</span>.
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+
+                                            {domainVerificationStep >= 2 && corporateDomain && domainAccepted && (
+                                                <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
+                                                    <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                                                        DNS verification token
+                                                    </div>
+                                                    <p className="mt-2 text-sm text-slate-300">
+                                                        {isDomainVerified
+                                                            ? <>TXT record used to verify <span className="font-semibold text-white">{corporateDomain}</span>:</>
+                                                            : <>Add the following TXT record to the DNS zone for <span className="font-semibold text-white">{corporateDomain}</span>:</>}
+                                                    </p>
+                                                    <div className="mt-3 rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 font-mono text-sm text-emerald-300">
+                                                        {dnsVerificationToken}
+                                                    </div>
+                                                    <p className="mt-3 text-xs leading-6 text-slate-500">
+                                                        {isDomainVerified
+                                                            ? 'Verification succeeded. The TXT record remains visible here as part of the mock review packet reference.'
+                                                            : 'Ask your DNS administrator to add the record at the root or correct verification location for the domain. Propagation can take time before the check succeeds.'}
+                                                    </p>
+                                                </div>
+                                            )}
+
+                                            {domainVerificationStep === 3 && (
+                                                <div>
+                                                    {isDNSVerifying ? (
+                                                        <div className="inline-flex items-center gap-2 rounded-xl border border-amber-400/35 bg-amber-500/10 px-4 py-3 text-sm font-medium text-amber-100">
+                                                            <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24">
+                                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                                            </svg>
+                                                            <span>Checking TXT record…</span>
+                                                        </div>
+                                                    ) : isDomainVerified ? (
+                                                        <div className="space-y-4">
+                                                            <div className="rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
+                                                                <div className="font-semibold text-emerald-50">Domain Verified ✅</div>
+                                                                <p className="mt-2 text-sm text-emerald-100">
+                                                                    This domain proof is now ready for sign-in setup and reviewer review.
+                                                                </p>
+                                                            </div>
+                                                            {nodeId && !isNodeIdSaved ? (
+                                                                <div className="rounded-2xl border border-amber-400/45 bg-amber-500/10 px-4 py-4">
+                                                                    <div className="text-lg font-semibold text-amber-100">⚠️ Your Node ID</div>
+                                                                    <p className="mt-2 whitespace-pre-line text-sm leading-6 text-amber-100">
+                                                                        {'This is your permanent\nlogin credential.\nStore it securely —\nit cannot be recovered if lost\nand will not be shown again.'}
+                                                                    </p>
+                                                                    <div className="mt-4 rounded-xl border border-amber-300/20 bg-slate-950/80 px-4 py-4 font-mono text-xl text-amber-100">
+                                                                        {nodeId}
+                                                                    </div>
+                                                                    <div className="mt-4 flex flex-col gap-3">
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={handleCopyNodeId}
+                                                                            className="w-full rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
+                                                                        >
+                                                                            {nodeIdCopyStatus === 'copied' ? 'Copied ✓' : 'Copy Node ID'}
+                                                                        </button>
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={handleNodeIdSaved}
+                                                                            className="rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-700 sm:self-start"
+                                                                        >
+                                                                            I have saved my Node ID
+                                                                        </button>
+                                                                    </div>
+                                                                    {nodeIdCopyStatus === 'failed' && (
+                                                                        <p className="mt-3 text-xs text-amber-100/80">
+                                                                            Clipboard access is unavailable here. Copy the Node ID manually.
+                                                                        </p>
+                                                                    )}
+                                                                    <p className="mt-4 whitespace-pre-line text-xs leading-6 text-amber-100/80">
+                                                                        {
+                                                                            'Your Node ID is unique to you\nand tied to your verified\ncorporate domain.\nIt is used alongside your\nselected authentication method\nas your primary login credential.'
+                                                                        }
+                                                                    </p>
+                                                                </div>
+                                                            ) : (
+                                                                <div className="rounded-2xl border border-emerald-400/25 bg-emerald-500/10 px-4 py-3 text-xs leading-6 text-emerald-100">
+                                                                    <p className="whitespace-pre-line">
+                                                                        {'Node ID saved.\nYou will need this\nto log in to Redoubt.'}
+                                                                    </p>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    ) : null}
+                                                </div>
+                                            )}
+
+                                            <div className="flex flex-wrap gap-3">
+                                                {domainVerificationStep === 1 && corporateDomain && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setDomainVerificationStep(2)}
+                                                        disabled={!domainReady}
+                                                        className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                                    >
+                                                        Continue to DNS setup
+                                                    </button>
+                                                )}
+
+                                                {domainVerificationStep === 2 && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setDomainVerificationStep(3)}
+                                                        className="rounded-xl border border-slate-700 px-4 py-2.5 text-sm font-semibold text-slate-200 transition-colors hover:border-blue-500"
+                                                    >
+                                                        I added the TXT record
+                                                    </button>
+                                                )}
+
+                                                {domainVerificationStep >= 2 && !isDomainVerified && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleDNSVerification}
+                                                        disabled={isDNSVerifying || !domainReady}
+                                                        className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                                    >
+                                                        {isDNSVerifying ? 'Verifying…' : 'Verify domain'}
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                             </article>
                         </div>
                     </section>
@@ -884,11 +1093,17 @@ export default function OnboardingStep4() {
                     <section className="rounded-[34px] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.78)_0%,rgba(2,6,23,0.7)_100%)] p-7 shadow-[0_28px_72px_rgba(2,6,23,0.24)] backdrop-blur-sm sm:p-8 lg:p-10">
                         <div className="mb-5">
                             <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
-                                Zone 3 · organization evidence
+                                Zone 3 · evidence and access route
                             </div>
-                            <h3 className="mt-2 text-xl font-semibold text-white">Add affiliation evidence, authorization evidence, and the declared authentication method</h3>
+                            <h3 className="mt-2 text-xl font-semibold text-white">
+                                {isIndividualPath
+                                    ? 'Add identity evidence, accountability evidence, and confirm the hardware-key route'
+                                    : 'Add affiliation evidence, authorization evidence, and the declared authentication method'}
+                            </h3>
                             <p className="mt-4 text-sm leading-7 text-slate-400">
-                                This zone turns your verification inputs into a review packet. Upload clear evidence, identify an approving authority, and declare how access should be authenticated if approval is granted.
+                                {isIndividualPath
+                                    ? 'This zone turns your verification inputs into a review packet. Upload clear evidence, confirm accountability for the request, and keep the hardware-key route ready for approval.'
+                                    : 'This zone turns your verification inputs into a review packet. Upload clear evidence, identify an approving authority, and declare how access should be authenticated if approval is granted.'}
                             </p>
                         </div>
 
@@ -896,9 +1111,13 @@ export default function OnboardingStep4() {
                             <article className="rounded-[24px] border border-slate-800 bg-slate-950/75 p-5">
                                 <div className="flex flex-wrap items-start justify-between gap-3">
                                     <div>
-                                        <div className="text-base font-semibold text-white">Affiliation evidence</div>
+                                        <div className="text-base font-semibold text-white">
+                                            {isIndividualPath ? 'Identity / affiliation evidence' : 'Affiliation evidence'}
+                                        </div>
                                         <p className="mt-2 text-sm leading-6 text-slate-400">
-                                            Upload a document showing that you are affiliated with the organization named in this application.
+                                            {isIndividualPath
+                                                ? 'Upload a document showing that the submitted identity is real and tied to the public affiliation or role named in this application.'
+                                                : 'Upload a document showing that you are affiliated with the organization named in this application.'}
                                         </p>
                                     </div>
                                     <StatusChip label={affiliationStatus.label} tone={affiliationStatus.tone} />
@@ -910,7 +1129,7 @@ export default function OnboardingStep4() {
                                             Accepted examples
                                         </div>
                                         <ul className="mt-3 space-y-2 text-sm text-slate-300">
-                                            {affiliationExamples.map((example) => (
+                                            {activeAffiliationExamples.map((example) => (
                                                 <li key={example}>• {example}</li>
                                             ))}
                                         </ul>
@@ -920,7 +1139,7 @@ export default function OnboardingStep4() {
                                             Reviewers check
                                         </div>
                                         <ul className="mt-3 space-y-2 text-sm text-slate-300">
-                                            {affiliationChecks.map((check) => (
+                                            {activeAffiliationChecks.map((check) => (
                                                 <li key={check}>• {check}</li>
                                             ))}
                                         </ul>
@@ -942,7 +1161,9 @@ export default function OnboardingStep4() {
                                             : 'border-slate-600 bg-slate-900 hover:border-blue-500/70'
                                     )}
                                 >
-                                    <span className="text-sm font-medium text-slate-200">Drag and drop affiliation evidence</span>
+                                    <span className="text-sm font-medium text-slate-200">
+                                        {isIndividualPath ? 'Drag and drop identity evidence' : 'Drag and drop affiliation evidence'}
+                                    </span>
                                     <span className="mt-2 text-xs text-slate-400">PDF, JPG, or PNG up to 5MB</span>
                                 </label>
 
@@ -969,9 +1190,13 @@ export default function OnboardingStep4() {
                             <article className="rounded-[24px] border border-slate-800 bg-slate-950/75 p-5">
                                 <div className="flex flex-wrap items-start justify-between gap-3">
                                     <div>
-                                        <div className="text-base font-semibold text-white">Authorization evidence</div>
+                                        <div className="text-base font-semibold text-white">
+                                            {isIndividualPath ? 'Accountability evidence' : 'Authorization evidence'}
+                                        </div>
                                         <p className="mt-2 text-sm leading-6 text-slate-400">
-                                            Upload the approval document that authorizes this access request or confirms it is covered by the right oversight.
+                                            {isIndividualPath
+                                                ? 'Upload the document that scopes the intended use, confirms accountability, or shows the request is covered by the right sponsor or oversight path.'
+                                                : 'Upload the approval document that authorizes this access request or confirms it is covered by the right oversight.'}
                                         </p>
                                     </div>
                                     <StatusChip label={authorizationStatus.label} tone={authorizationStatus.tone} />
@@ -983,7 +1208,7 @@ export default function OnboardingStep4() {
                                             Accepted examples
                                         </div>
                                         <ul className="mt-3 space-y-2 text-sm text-slate-300">
-                                            {authorizationExamples.map((example) => (
+                                            {activeAuthorizationExamples.map((example) => (
                                                 <li key={example}>• {example}</li>
                                             ))}
                                         </ul>
@@ -993,7 +1218,7 @@ export default function OnboardingStep4() {
                                             Reviewers check
                                         </div>
                                         <ul className="mt-3 space-y-2 text-sm text-slate-300">
-                                            {authorizationChecks.map((check) => (
+                                            {activeAuthorizationChecks.map((check) => (
                                                 <li key={check}>• {check}</li>
                                             ))}
                                         </ul>
@@ -1005,7 +1230,9 @@ export default function OnboardingStep4() {
                                         Who can upload this
                                     </div>
                                     <p className="mt-2 leading-6">
-                                        An authorized representative, program owner, legal contact, compliance lead, or delegated approver inside the organization.
+                                        {isIndividualPath
+                                            ? 'The participant, a project sponsor, a fellowship lead, or another accountable approving contact associated with the request.'
+                                            : 'An authorized representative, program owner, legal contact, compliance lead, or delegated approver inside the organization.'}
                                     </p>
                                 </div>
 
@@ -1024,7 +1251,9 @@ export default function OnboardingStep4() {
                                             : 'border-slate-600 bg-slate-900 hover:border-blue-500/70'
                                     )}
                                 >
-                                    <span className="text-sm font-medium text-slate-200">Drag and drop authorization evidence</span>
+                                    <span className="text-sm font-medium text-slate-200">
+                                        {isIndividualPath ? 'Drag and drop accountability evidence' : 'Drag and drop authorization evidence'}
+                                    </span>
                                     <span className="mt-2 text-xs text-slate-400">PDF, JPG, or PNG up to 5MB</span>
                                 </label>
 
@@ -1050,7 +1279,9 @@ export default function OnboardingStep4() {
                         </div>
 
                         <div className="mt-5 rounded-[24px] border border-cyan-400/20 bg-cyan-400/10 px-4 py-3 text-sm text-cyan-100">
-                            Privacy note: only upload evidence needed to prove affiliation or authority for this request. Reviewers use these files for application verification, not broader document retention.
+                            Privacy note: only upload evidence needed to prove
+                            {isIndividualPath ? ' identity or accountability' : ' affiliation or authority'} for this request.
+                            Reviewers use these files for application verification, not broader document retention.
                         </div>
 
                         <article className="mt-5 rounded-[24px] border border-slate-800 bg-slate-950/75 p-5">
@@ -1058,7 +1289,9 @@ export default function OnboardingStep4() {
                                 <div>
                                     <div className="text-base font-semibold text-white">Expected authentication method after approval</div>
                                     <p className="mt-2 text-sm leading-6 text-slate-400">
-                                        Choose the authentication route this identity will use after approval. DNS verification still proves organization control, and the selected method determines which credential is used at sign-in.
+                                        {isIndividualPath
+                                            ? 'Individual participants use the hardware-key route only. The Node ID issued above becomes the primary login credential used alongside the selected key.'
+                                            : 'Choose the authentication route this identity will use after approval. DNS verification still proves organization control, and the selected method determines which credential is used at sign-in.'}
                                     </p>
                                 </div>
                                 <StatusChip label={authenticationStatus.label} tone={authenticationStatus.tone} />
@@ -1066,14 +1299,23 @@ export default function OnboardingStep4() {
 
                             <div className="mt-4 grid gap-3 md:grid-cols-2">
                                 <div className="rounded-2xl border border-slate-800 bg-slate-900/70 px-4 py-3 text-sm text-slate-300">
-                                    Submitted work email: <span className="font-semibold text-slate-100">{submittedWorkEmail || 'Not captured yet'}</span>
+                                    {isIndividualPath ? 'Submitted email' : 'Submitted work email'}:{' '}
+                                    <span className="font-semibold text-slate-100">{submittedWorkEmail || 'Not captured yet'}</span>
                                 </div>
                                 <div className="rounded-2xl border border-slate-800 bg-slate-900/70 px-4 py-3 text-sm text-slate-300">
-                                    Expected domain: <span className="font-semibold text-slate-100">{expectedDomain || 'Not derived yet'}</span>
+                                    {isIndividualPath
+                                        ? <>Required route: <span className="font-semibold text-slate-100">Hardware key only</span></>
+                                        : <>Expected domain: <span className="font-semibold text-slate-100">{expectedDomain || 'Not derived yet'}</span></>}
                                 </div>
                             </div>
 
-                            <div className="mt-5 grid gap-4 xl:grid-cols-2 xl:items-stretch">
+                            <div
+                                className={cx(
+                                    'mt-5 grid gap-4 xl:items-stretch',
+                                    isOrganizationPath ? 'xl:grid-cols-2' : 'grid-cols-1'
+                                )}
+                            >
+                                {isOrganizationPath && (
                                 <label
                                     className={cx(
                                         'flex h-full min-h-[22rem] cursor-pointer flex-col rounded-2xl border p-4 transition-colors',
@@ -1137,6 +1379,7 @@ export default function OnboardingStep4() {
                                         </div>
                                     )}
                                 </label>
+                                )}
 
                                 <label
                                     className={cx(
@@ -1163,7 +1406,9 @@ export default function OnboardingStep4() {
                                             <div>
                                                 <h4 className="text-sm font-semibold text-white">Hardware key (YubiKey / WebAuthn)</h4>
                                                 <p className="mt-1 text-sm text-slate-400">
-                                                    Declare a hardware-key-based login path for the strongest post-approval identity signal.
+                                                    {isIndividualPath
+                                                        ? 'Individual onboarding uses a hardware-key-based login path only for the strongest post-approval identity signal.'
+                                                        : 'Declare a hardware-key-based login path for the strongest post-approval identity signal.'}
                                                 </p>
                                             </div>
                                         </div>
@@ -1179,6 +1424,11 @@ export default function OnboardingStep4() {
 
                                     {authenticationMethod === 'hardware_key' && (
                                         <div className="mt-5 flex-1 space-y-5 rounded-2xl border border-emerald-500/30 bg-slate-900/70 p-5">
+                                            {isIndividualPath && (
+                                                <div className="rounded-xl border border-emerald-400/25 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
+                                                    This route is fixed for the Individual path. SSO is not available for individual onboarding in this mock flow.
+                                                </div>
+                                            )}
                                             <div className="grid items-start gap-5 md:grid-cols-2">
                                                 <div className="flex h-full flex-col">
                                                     <label
@@ -1236,21 +1486,27 @@ export default function OnboardingStep4() {
 
                             <div className="mt-4 grid gap-3 md:grid-cols-2">
                                 <div className="rounded-2xl border border-amber-400/25 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
-                                    {MOCK_AUTH
-                                        ? 'Mock mode accepts any non-empty demo domain here. In a live flow the DNS-verified domain would need to match the submitted work email domain.'
-                                        : 'Personal email providers are not accepted. The DNS-verified corporate domain must exactly match the submitted work email domain.'}
+                                    {isIndividualPath
+                                        ? 'Mock mode keeps this route frontend-only. The issued Node ID and your selected hardware key become the credentials shown for this demo.'
+                                        : MOCK_AUTH
+                                            ? 'Mock mode accepts any non-empty demo domain here. In a live flow the DNS-verified domain would need to match the submitted work email domain.'
+                                            : 'Personal email providers are not accepted. The DNS-verified corporate domain must exactly match the submitted work email domain.'}
                                 </div>
                                 <div className="rounded-2xl border border-slate-800 bg-slate-900/70 px-4 py-3 text-sm text-slate-300">
-                                    After approval, the selected method becomes the live sign-in route for the participant environment.
+                                    {isIndividualPath
+                                        ? 'After approval, the hardware key becomes the live sign-in route for the participant environment.'
+                                        : 'After approval, the selected method becomes the live sign-in route for the participant environment.'}
                                 </div>
                             </div>
                         </article>
 
                         {showError && !stepReady && (
                             <div className="mt-5 rounded-2xl border border-amber-400/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
-                                {MOCK_AUTH
-                                    ? 'Complete LinkedIn verification, domain verification, both evidence uploads, and the declared authentication method before continuing.'
-                                    : 'Complete LinkedIn verification, domain verification with an exact email-domain match, both evidence uploads, and the declared authentication method before continuing.'}
+                                {isIndividualPath
+                                    ? 'Complete LinkedIn verification, individual identity verification, both evidence uploads, and the hardware-key route before continuing.'
+                                    : MOCK_AUTH
+                                        ? 'Complete LinkedIn verification, domain verification, both evidence uploads, and the declared authentication method before continuing.'
+                                        : 'Complete LinkedIn verification, domain verification with an exact email-domain match, both evidence uploads, and the declared authentication method before continuing.'}
                             </div>
                         )}
                     </section>

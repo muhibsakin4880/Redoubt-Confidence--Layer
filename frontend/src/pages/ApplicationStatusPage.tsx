@@ -7,7 +7,7 @@ import {
     participantOnboardingPolicyPath,
     participantOnboardingReviewStatus
 } from '../onboarding/constants'
-import { isStep4Complete, readOnboardingSnapshot } from '../onboarding/flow'
+import { isIndividualParticipant, isStep4Complete, readOnboardingSnapshot } from '../onboarding/flow'
 import { emptySubmissionMeta, readSubmissionMeta } from '../onboarding/storage'
 
 const MOCK_AUTH = (import.meta.env.VITE_MOCK_AUTH ?? 'true') === 'true'
@@ -20,7 +20,7 @@ type TimelineStep = {
     status: TimelineStatus
 }
 
-const timelineSteps: TimelineStep[] = [
+const baseTimelineSteps: TimelineStep[] = [
     {
         title: 'Application received',
         description: 'We have logged your submission and assigned a reference ID.',
@@ -41,7 +41,8 @@ const timelineSteps: TimelineStep[] = [
 export default function ApplicationStatusPage() {
     const [submissionMeta] = useState(() => readSubmissionMeta(emptySubmissionMeta))
     const [snapshot] = useState(() => readOnboardingSnapshot())
-    const verificationReady = isStep4Complete(snapshot.verification, snapshot.step1.officialWorkEmail)
+    const verificationReady = isStep4Complete(snapshot.step1, snapshot.verification)
+    const isIndividualPath = isIndividualParticipant(snapshot.step1)
 
     return (
         <div className="bg-slate-900 min-h-screen text-white">
@@ -93,7 +94,16 @@ export default function ApplicationStatusPage() {
                     <div className="border-t border-slate-800/80 pt-6">
                         <h2 className="text-lg font-semibold text-white mb-4">Status timeline</h2>
                         <ul className="space-y-6">
-                            {timelineSteps.map((step, index) => {
+                            {(isIndividualPath
+                                ? baseTimelineSteps.map((step) =>
+                                    step.title === 'Verification and compliance review'
+                                        ? {
+                                            ...step,
+                                            description: 'We are reviewing your individual identity, stated use case, and supporting accountability evidence.'
+                                        }
+                                        : step
+                                )
+                                : baseTimelineSteps).map((step, index) => {
                                 const isComplete = step.status === 'complete'
                                 const isActive = step.status === 'active'
                                 const indicatorClasses = isComplete
@@ -132,7 +142,7 @@ export default function ApplicationStatusPage() {
                                                      )}
                                                 </div>
                                             </div>
-                                            {index < timelineSteps.length - 1 && (
+                                            {index < baseTimelineSteps.length - 1 && (
                                                 <div className={`w-px flex-1 mt-2 ${lineClasses}`} />
                                             )}
                                         </div>
@@ -174,7 +184,7 @@ export default function ApplicationStatusPage() {
                                 </div>
                             </div>
                             <div className="rounded-lg border border-slate-700 bg-slate-950/50 px-4 py-3">
-                                <div className="text-slate-400">Domain verification</div>
+                                <div className="text-slate-400">{isIndividualPath ? 'Identity verification' : 'Domain verification'}</div>
                                 <div className={`mt-1 font-semibold ${snapshot.verification.domainVerified ? 'text-emerald-300' : 'text-amber-300'}`}>
                                     {snapshot.verification.domainVerified ? 'Complete' : 'Pending'}
                                 </div>
@@ -189,6 +199,12 @@ export default function ApplicationStatusPage() {
                                 <div className="text-slate-400">Authorization evidence</div>
                                 <div className={`mt-1 font-semibold ${snapshot.verification.authorizationFileName ? 'text-emerald-300' : 'text-amber-300'}`}>
                                     {snapshot.verification.authorizationFileName || 'Pending upload'}
+                                </div>
+                            </div>
+                            <div className="rounded-lg border border-slate-700 bg-slate-950/50 px-4 py-3">
+                                <div className="text-slate-400">Node ID</div>
+                                <div className={`mt-1 font-semibold ${snapshot.verification.nodeId ? 'text-emerald-300' : 'text-amber-300'}`}>
+                                    {snapshot.verification.nodeId || 'Pending issuance'}
                                 </div>
                             </div>
                         </div>

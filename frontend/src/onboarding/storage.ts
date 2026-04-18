@@ -18,7 +18,9 @@ export const onboardingStorageKeys = {
 } as const
 
 export const emptyStep1FormState: Step1FormState = {
+    participantType: null,
     organizationName: '',
+    organizationWebsite: '',
     officialWorkEmail: '',
     inviteCode: '',
     roleInOrganization: '',
@@ -88,6 +90,11 @@ export const writeOnboardingValue = <T,>(key: string, value: T) => {
 type StoredVerificationSnapshot = Partial<VerificationSnapshot> & {
     verificationKey?: string
 }
+
+export const readStep1Snapshot = (): Step1FormState => ({
+    ...emptyStep1FormState,
+    ...readOnboardingValue<Partial<Step1FormState>>(onboardingStorageKeys.step1, {})
+})
 
 export const readVerificationSnapshot = (): VerificationSnapshot => {
     const stored = readOnboardingValue<StoredVerificationSnapshot>(onboardingStorageKeys.verification, {})

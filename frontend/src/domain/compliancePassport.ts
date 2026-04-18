@@ -1,5 +1,5 @@
 import { onboardingStorageKeys, readOnboardingValue } from '../onboarding/storage'
-import { hasAcceptedCorporateDomain } from '../onboarding/flow'
+import { isIndividualParticipant, isStep4Complete } from '../onboarding/flow'
 import type {
     ComplianceCommitment,
     LegalAcknowledgment,
@@ -56,7 +56,9 @@ export type CompliancePassportRequestPrefill = {
 }
 
 const defaultStep1: Step1FormState = {
+    participantType: 'organization',
     organizationName: 'Northbridge Research Labs',
+    organizationWebsite: 'https://northbridge.ai',
     officialWorkEmail: 'avery.underwood@northbridge.ai',
     inviteCode: 'REDO-2026',
     roleInOrganization: 'Senior Data Scientist',
@@ -183,7 +185,7 @@ export const buildCompliancePassport = (): CompliancePassport => {
     const sections: CompliancePassportSection[] = [
         {
             key: 'identity',
-            label: 'Organization identity',
+            label: isIndividualParticipant(organization) ? 'Participant identity' : 'Organization identity',
             complete: Boolean(organization.organizationName && organization.officialWorkEmail && organization.country),
             detail: `${organization.organizationName} · ${organization.officialWorkEmail}`
         },
@@ -205,22 +207,19 @@ export const buildCompliancePassport = (): CompliancePassport => {
                 legalAcknowledgment.authorizedRepresentative &&
                 legalAcknowledgment.governancePolicyAccepted &&
                 legalAcknowledgment.nonRedistributionAcknowledged,
-            detail: 'Representative authority, governance, and non-redistribution recorded'
+            detail: isIndividualParticipant(organization)
+                ? 'Participant accountability, governance, and non-redistribution recorded'
+                : 'Representative authority, governance, and non-redistribution recorded'
         },
         {
             key: 'verification',
             label: 'Verification evidence',
-            complete:
-                verification.domainVerified &&
-                verification.linkedInConnected &&
-                Boolean(verification.affiliationFileName) &&
-                Boolean(verification.authorizationFileName) &&
-                Boolean(verification.authenticationMethod) &&
-                hasAcceptedCorporateDomain(organization.officialWorkEmail, verification.corporateDomain) &&
-                (verification.authenticationMethod !== 'sso' || verification.ssoDomain.trim().length > 0),
+            complete: isStep4Complete(organization, verification),
             detail: verification.linkedInConnected && verification.domainVerified
                 ? `${verification.affiliationFileName ?? 'Affiliation file'} · ${verification.authorizationFileName ?? 'Authorization file'}`
-                : 'LinkedIn, DNS, document verification, and auth setup still required'
+                : isIndividualParticipant(organization)
+                    ? 'LinkedIn, identity verification, document verification, and hardware-key setup still required'
+                    : 'LinkedIn, DNS, document verification, and auth setup still required'
         },
         {
             key: 'commitments',

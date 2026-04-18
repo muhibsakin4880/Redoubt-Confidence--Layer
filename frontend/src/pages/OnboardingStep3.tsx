@@ -13,6 +13,7 @@ import {
     emptyLegalAcknowledgment,
     onboardingStorageKeys,
     readOnboardingValue,
+    readStep1Snapshot,
     writeOnboardingValue
 } from '../onboarding/storage'
 import type { LegalAcknowledgment } from '../onboarding/types'
@@ -70,6 +71,8 @@ function cx(...classes: Array<string | false | null | undefined>) {
 
 export default function OnboardingStep3() {
     const navigate = useNavigate()
+    const step1Snapshot = readStep1Snapshot()
+    const isIndividualPath = step1Snapshot.participantType === 'individual'
     const [participationIntent, setParticipationIntent] = useState<string[]>(() =>
         readOnboardingValue(onboardingStorageKeys.participationIntent, [])
     )
@@ -126,8 +129,16 @@ export default function OnboardingStep3() {
                 showDefaultHelperPanel={false}
                 canvasWidth="full"
                 headerTitle="Participation Intent & Governance"
-                headerSubtitle="Clarify how your organization intends to participate, then confirm the governance obligations required before protected access review can proceed."
-                pageEyebrow="Participant onboarding · Governance review"
+                headerSubtitle={
+                    isIndividualPath
+                        ? 'Clarify how you intend to participate, then confirm the governance obligations required before protected access review can proceed.'
+                        : 'Clarify how your organization intends to participate, then confirm the governance obligations required before protected access review can proceed.'
+                }
+                pageEyebrow={
+                    isIndividualPath
+                        ? 'Participant onboarding · Individual governance review'
+                        : 'Participant onboarding · Governance review'
+                }
                 progressVariant="connector"
             >
                 <div className="space-y-8 lg:space-y-10">
@@ -140,7 +151,9 @@ export default function OnboardingStep3() {
                                 Define the participation mode behind the request
                             </h2>
                             <p className="mt-4 max-w-[54rem] text-sm leading-7 text-slate-300">
-                                This step does two things: it tells reviewers how your team plans to participate, and it confirms the governance obligations required before Redoubt can evaluate protected access.
+                                {isIndividualPath
+                                    ? 'This step does two things: it tells reviewers how you plan to participate, and it confirms the governance obligations required before Redoubt can evaluate protected access.'
+                                    : 'This step does two things: it tells reviewers how your team plans to participate, and it confirms the governance obligations required before Redoubt can evaluate protected access.'}
                             </p>
                         </div>
 
@@ -150,7 +163,9 @@ export default function OnboardingStep3() {
                                     Participation focus
                                 </div>
                                 <p className="mt-3 text-sm leading-7 text-slate-300">
-                                    Explain whether your organization is accessing, contributing, collaborating, or participating in research.
+                                    {isIndividualPath
+                                        ? 'Explain whether you are accessing, contributing, collaborating, or participating in research.'
+                                        : 'Explain whether your organization is accessing, contributing, collaborating, or participating in research.'}
                                 </p>
                             </div>
                             <div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-5 shadow-[0_18px_40px_rgba(2,6,23,0.16)]">
@@ -166,7 +181,9 @@ export default function OnboardingStep3() {
                                     Why it matters
                                 </div>
                                 <p className="mt-3 text-sm leading-7 text-slate-300">
-                                    Protected-access review depends on a purpose-bounded request backed by organizational authority.
+                                    {isIndividualPath
+                                        ? 'Protected-access review depends on a purpose-bounded request backed by a clearly accountable credential holder.'
+                                        : 'Protected-access review depends on a purpose-bounded request backed by organizational authority.'}
                                 </p>
                             </div>
                         </div>
@@ -179,7 +196,9 @@ export default function OnboardingStep3() {
                             </div>
                             <h3 className="mt-3 text-[1.45rem] font-semibold text-white">How your team plans to participate</h3>
                             <p className="mt-4 text-sm leading-7 text-slate-400">
-                                Select the participation modes that best reflect the request. These selections help reviewers understand the expected relationship between your team and the platform.
+                                {isIndividualPath
+                                    ? 'Select the participation modes that best reflect the request. These selections help reviewers understand the expected relationship between you and the platform.'
+                                    : 'Select the participation modes that best reflect the request. These selections help reviewers understand the expected relationship between your team and the platform.'}
                             </p>
                         </div>
 
@@ -252,8 +271,9 @@ export default function OnboardingStep3() {
                                     Required before protected access review
                                 </h2>
                                 <p className="mt-4 text-sm leading-7 text-slate-200">
-                                    Redoubt requires explicit organizational acknowledgments before reviewers can assess
-                                    requests for controlled access, collaboration, or protected evaluation workflows.
+                                    {isIndividualPath
+                                        ? 'Redoubt requires explicit participant acknowledgments before reviewers can assess requests for controlled access, collaboration, or protected evaluation workflows by an individual participant.'
+                                        : 'Redoubt requires explicit organizational acknowledgments before reviewers can assess requests for controlled access, collaboration, or protected evaluation workflows.'}
                                 </p>
                             </section>
 
@@ -275,8 +295,9 @@ export default function OnboardingStep3() {
                                         Who should agree
                                     </div>
                                     <p className="mt-2 text-sm text-slate-300">
-                                        A representative who can speak for the organization, accept policy scope, and
-                                        confirm the request purpose.
+                                        {isIndividualPath
+                                            ? 'The participant who will hold the credential, accept policy scope, and confirm the request purpose.'
+                                            : 'A representative who can speak for the organization, accept policy scope, and confirm the request purpose.'}
                                     </p>
                                 </div>
                             </section>
@@ -310,9 +331,11 @@ export default function OnboardingStep3() {
                                             onChange={(event) => handleLegalChange('authorizedRepresentative', event.target.checked)}
                                         />
                                         <div>
-                                            <div className="text-sm font-semibold text-white">Authorized representative</div>
+                                        <div className="text-sm font-semibold text-white">Authorized representative</div>
                                             <p className="mt-2 text-sm leading-6 text-slate-300">
-                                                I confirm that I am authorised to represent my organisation for controlled access requests on Redoubt.
+                                                {isIndividualPath
+                                                    ? 'I confirm that I am the accountable individual who will hold and use this Redoubt credential for the stated purpose.'
+                                                    : 'I confirm that I am authorised to represent my organisation for controlled access requests on Redoubt.'}
                                             </p>
                                         </div>
                                     </div>
@@ -395,7 +418,9 @@ export default function OnboardingStep3() {
                                     </div>
 
                                     <div className="mt-5 rounded-[24px] border border-cyan-400/20 bg-cyan-400/10 px-5 py-4 text-sm text-cyan-100">
-                                        Governance acknowledgments are required because later verification and protected-access review rely on a confirmed organizational authority and purpose-bounded request.
+                                        {isIndividualPath
+                                            ? 'Governance acknowledgments are required because later verification and protected-access review rely on a confirmed individual owner and purpose-bounded request.'
+                                            : 'Governance acknowledgments are required because later verification and protected-access review rely on a confirmed organizational authority and purpose-bounded request.'}
                                     </div>
                                 </div>
                             </div>
