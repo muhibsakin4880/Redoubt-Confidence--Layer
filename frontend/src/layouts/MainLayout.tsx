@@ -7,23 +7,26 @@ export default function MainLayout() {
     const location = useLocation()
     const isLandingPage = location.pathname === '/'
     const isProtectedEvaluationRoute = location.pathname === '/protected-evaluation'
+    const isDedicatedOnboardingRoute = location.pathname.startsWith(participantOnboardingPaths.entry)
     const isParticipantOnboardingRoute =
-        location.pathname.startsWith(participantOnboardingPaths.entry) ||
+        isDedicatedOnboardingRoute ||
         location.pathname === participantOnboardingPaths.applicationStatus
     const headerVariant: PublicHeaderVariant = isParticipantOnboardingRoute
         ? 'onboarding'
         : isProtectedEvaluationRoute
             ? 'protectedEvaluation'
             : 'default'
-    const mainOffsetClassName = isLandingPage ? '' : publicHeaderOffsetClassName[headerVariant]
+    const mainOffsetClassName = isLandingPage || isDedicatedOnboardingRoute
+        ? ''
+        : publicHeaderOffsetClassName[headerVariant]
 
     return (
         <div className="flex flex-col min-h-screen">
-            {!isLandingPage && <Header variant={headerVariant} />}
+            {!isLandingPage && !isDedicatedOnboardingRoute && <Header variant={headerVariant} />}
             <main className={`flex-1 ${mainOffsetClassName}`}>
                 <Outlet />
             </main>
-            <Footer />
+            {!isDedicatedOnboardingRoute && <Footer />}
         </div>
     )
 }

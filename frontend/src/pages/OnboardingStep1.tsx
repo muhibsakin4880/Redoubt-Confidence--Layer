@@ -218,6 +218,57 @@ export default function OnboardingStep1() {
 
     const stepReady = useMemo(() => isStep1Complete(state), [state])
 
+    const helperPanel = (
+        <div className="space-y-4">
+            <section className="rounded-[24px] border border-cyan-400/20 bg-[linear-gradient(180deg,rgba(8,47,73,0.92)_0%,rgba(15,23,42,0.96)_100%)] p-5 shadow-[0_24px_58px_rgba(8,47,73,0.2)]">
+                <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-cyan-100/80">
+                    Intake summary
+                </div>
+                <h2 className="mt-3 text-xl font-semibold text-white">
+                    {isIndividualPath ? 'Individual credential holder' : isOrganizationPath ? 'Organization-backed request' : 'Choose a join path'}
+                </h2>
+                <p className="mt-3 text-sm leading-6 text-slate-200">
+                    {isIndividualPath
+                        ? 'This path anchors the request to a real accountable participant and the identity that will later hold the Node ID and hardware-key sign-in route.'
+                        : isOrganizationPath
+                            ? 'This path anchors the request to a verified organization and the representative behind the application package.'
+                            : 'Start by choosing how the request should be represented, then complete the identity record used by later governance and verification steps.'}
+                </p>
+
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+                        <div className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Invite code</div>
+                        <div className="mt-2 text-sm font-semibold text-white">Optional</div>
+                        <p className="mt-2 text-sm leading-6 text-slate-300">
+                            Keep it blank if you do not have one. The request can still continue.
+                        </p>
+                    </div>
+                    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+                        <div className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Typical review</div>
+                        <div className="mt-2 text-sm font-semibold text-white">{participantOnboardingEstimatedReviewTime}</div>
+                        <p className="mt-2 text-sm leading-6 text-slate-300">
+                            Clean identity details help later review move faster.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <section className="rounded-[24px] border border-white/10 bg-slate-950/78 p-5 shadow-[0_18px_40px_rgba(2,6,23,0.2)]">
+                <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+                    What reviewers check first
+                </div>
+                <div className="mt-4 space-y-3">
+                    {reviewChecks.map((check) => (
+                        <div key={check.title} className="rounded-2xl border border-slate-800 bg-slate-900/75 p-4">
+                            <div className="text-sm font-semibold text-white">{check.title}</div>
+                            <p className="mt-2 text-sm leading-6 text-slate-400">{check.description}</p>
+                        </div>
+                    ))}
+                </div>
+            </section>
+        </div>
+    )
+
     const handleNext = () => {
         if (!stepReady) {
             setShowError(true)
@@ -232,54 +283,42 @@ export default function OnboardingStep1() {
             <OnboardingPageLayout
                 activeStep={1}
                 showDefaultHelperPanel={false}
+                helperPanel={helperPanel}
                 canvasWidth="full"
                 headerTitle={copy.headerTitle}
                 headerSubtitle={copy.headerSubtitle}
                 pageEyebrow={copy.pageEyebrow}
                 progressVariant="connector"
+                headerActions={
+                    <button
+                        type="button"
+                        onClick={fillMockData}
+                        className="rounded-xl border border-slate-600 px-4 py-2 text-sm font-medium text-slate-200 transition-colors hover:border-blue-500 hover:text-white"
+                    >
+                        Use mock data
+                    </button>
+                }
             >
-                <div className="space-y-8 lg:space-y-10">
-                    <section className="rounded-[34px] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.86)_0%,rgba(2,6,23,0.74)_100%)] p-7 shadow-[0_26px_68px_rgba(2,6,23,0.22)] backdrop-blur-sm sm:p-8 lg:p-10">
-                        <div className="flex flex-wrap items-start justify-between gap-4">
-                            <div className="max-w-3xl">
-                                <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
-                                    Step 1 intake
-                                </div>
-                                <h2 className="mt-3 text-[1.9rem] font-semibold leading-tight text-white sm:text-[2.15rem]">
-                                    {copy.introTitle}
-                                </h2>
-                                <p className="mt-4 text-sm leading-7 text-slate-300">
-                                    {copy.introBody}
-                                </p>
+                <div className="space-y-6">
+                    <section className="rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.84)_0%,rgba(2,6,23,0.76)_100%)] p-6 shadow-[0_24px_60px_rgba(2,6,23,0.22)] backdrop-blur-sm sm:p-7 lg:p-8">
+                        <div className="max-w-3xl">
+                            <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+                                Join path
                             </div>
-
-                            <button
-                                type="button"
-                                onClick={fillMockData}
-                                className="rounded-xl border border-slate-600 px-4 py-2 text-sm font-medium text-slate-200 transition-colors hover:border-blue-500 hover:text-white"
-                            >
-                                Use mock data
-                            </button>
+                            <h2 className="mt-3 text-[1.6rem] font-semibold leading-tight text-white sm:text-[1.85rem]">
+                                {copy.introTitle}
+                            </h2>
+                            <p className="mt-3 text-sm leading-7 text-slate-300">
+                                {copy.introBody}
+                            </p>
                         </div>
 
-                        <div className="mt-7 flex flex-wrap gap-3">
-                            <div className="rounded-full border border-slate-700 bg-slate-950/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-300">
-                                {isIndividualPath ? 'Individual credential holder' : 'Organization-backed request'}
-                            </div>
-                            <div className="rounded-full border border-cyan-400/25 bg-cyan-400/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-cyan-100">
-                                Invite code optional
-                            </div>
-                            <div className="rounded-full border border-amber-400/25 bg-amber-400/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-amber-100">
-                                Typical review: {participantOnboardingEstimatedReviewTime}
-                            </div>
-                        </div>
-
-                        <div className="mt-8 grid gap-4 lg:grid-cols-2">
+                        <div className="mt-6 grid gap-4 lg:grid-cols-2">
                             <button
                                 type="button"
                                 onClick={() => handleChange('participantType', 'individual')}
                                 className={cx(
-                                    'rounded-[28px] border p-5 text-left transition-all duration-300',
+                                    'rounded-[24px] border p-5 text-left transition-all duration-300',
                                     isIndividualPath
                                         ? 'border-blue-400/60 bg-[linear-gradient(180deg,rgba(37,99,235,0.18)_0%,rgba(15,23,42,0.92)_100%)] shadow-[0_22px_48px_rgba(37,99,235,0.16)]'
                                         : 'border-white/10 bg-white/[0.03] shadow-[0_18px_40px_rgba(2,6,23,0.18)] hover:border-blue-500/35 hover:bg-white/[0.05]'
@@ -310,7 +349,7 @@ export default function OnboardingStep1() {
                                 type="button"
                                 onClick={() => handleChange('participantType', 'organization')}
                                 className={cx(
-                                    'rounded-[28px] border p-5 text-left transition-all duration-300',
+                                    'rounded-[24px] border p-5 text-left transition-all duration-300',
                                     isOrganizationPath
                                         ? 'border-blue-400/60 bg-[linear-gradient(180deg,rgba(37,99,235,0.18)_0%,rgba(15,23,42,0.92)_100%)] shadow-[0_22px_48px_rgba(37,99,235,0.16)]'
                                         : 'border-white/10 bg-white/[0.03] shadow-[0_18px_40px_rgba(2,6,23,0.18)] hover:border-blue-500/35 hover:bg-white/[0.05]'
@@ -343,12 +382,32 @@ export default function OnboardingStep1() {
                                 Choose how you are joining Redoubt before continuing with identity intake.
                             </div>
                         )}
+
+                        {state.participantType && (
+                            <div className="mt-6 rounded-[20px] border border-cyan-400/20 bg-cyan-400/10 px-4 py-3 text-sm text-cyan-100">
+                                {isIndividualPath
+                                    ? 'This stage captures your path choice, identity, and professional context first. Verification depth increases later in the flow.'
+                                    : 'This stage captures the organization, representative, and contact record first. Verification depth increases later in the flow.'}
+                            </div>
+                        )}
                     </section>
 
                     {state.participantType && (
-                        <section className="rounded-[34px] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.8)_0%,rgba(2,6,23,0.72)_100%)] p-7 shadow-[0_28px_72px_rgba(2,6,23,0.24)] backdrop-blur-sm sm:p-8 lg:p-10">
-                        <div className="grid gap-8 xl:grid-cols-2">
-                            <article className="rounded-[30px] border border-white/10 bg-white/[0.03] p-6 shadow-[0_22px_50px_rgba(2,6,23,0.18)] backdrop-blur-sm">
+                        <section className="rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.8)_0%,rgba(2,6,23,0.72)_100%)] p-6 shadow-[0_24px_64px_rgba(2,6,23,0.22)] backdrop-blur-sm sm:p-7 lg:p-8">
+                        <div className="mb-6 max-w-3xl">
+                            <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+                                Identity intake
+                            </div>
+                            <h3 className="mt-3 text-[1.45rem] font-semibold text-white">
+                                Complete the record reviewers will see
+                            </h3>
+                            <p className="mt-3 text-sm leading-7 text-slate-400">
+                                Capture the organization or professional identity, then add the primary contact details Redoubt should use for later review and verification.
+                            </p>
+                        </div>
+
+                        <div className="grid gap-6 xl:grid-cols-2">
+                            <article className="rounded-[26px] border border-white/10 bg-white/[0.03] p-6 shadow-[0_20px_46px_rgba(2,6,23,0.18)] backdrop-blur-sm">
                                 <div className="mb-5">
                                     <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
                                         {copy.profileSectionEyebrow}
@@ -405,7 +464,7 @@ export default function OnboardingStep1() {
                                 </div>
                             </article>
 
-                            <article className="rounded-[30px] border border-white/10 bg-white/[0.03] p-6 shadow-[0_22px_50px_rgba(2,6,23,0.18)] backdrop-blur-sm">
+                            <article className="rounded-[26px] border border-white/10 bg-white/[0.03] p-6 shadow-[0_20px_46px_rgba(2,6,23,0.18)] backdrop-blur-sm">
                                 <div className="mb-5">
                                     <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
                                         {copy.identitySectionEyebrow}
@@ -468,94 +527,11 @@ export default function OnboardingStep1() {
                                     ? 'To continue, choose the individual path, complete the professional identity fields, and provide a valid email. Invite codes remain optional, but if you enter one it should match the issued code format.'
                                     : 'To continue, choose the organization path, complete the organization identity fields, and provide a valid corporate email. Invite codes remain optional, but if you enter one it should match the issued code format.'}
                             </div>
-                        )}
-                        </section>
+                                )}
+                    </section>
                     )}
 
-                    <section className="rounded-[34px] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.74)_0%,rgba(2,6,23,0.66)_100%)] p-7 shadow-[0_24px_64px_rgba(2,6,23,0.2)] backdrop-blur-sm sm:p-8 lg:p-10">
-                        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
-                            <div className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(280px,0.9fr)]">
-                                <section className="rounded-[30px] border border-cyan-400/20 bg-[linear-gradient(180deg,rgba(8,47,73,0.9)_0%,rgba(15,23,42,0.92)_100%)] p-6 shadow-[0_24px_58px_rgba(8,47,73,0.18)] backdrop-blur-sm sm:p-7">
-                                    <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-cyan-100/80">
-                                        Identity Review
-                                    </div>
-                                    <h3 className="mt-4 text-[1.2rem] font-semibold leading-8 text-white">
-                                        Why this first step matters
-                                    </h3>
-                                    <p className="mt-4 text-sm leading-7 text-slate-200">
-                                        {isIndividualPath
-                                            ? 'Redoubt starts by establishing the individual identity behind the request so later verification, credentialing, and reviewer routing all begin from a trusted account record.'
-                                            : 'Redoubt starts by establishing the corporate identity behind the request so later governance, verification, and reviewer routing all begin from a trusted organization record.'}
-                                    </p>
-                                </section>
-
-                                <section className="overflow-hidden rounded-[30px] border border-white/10 bg-white/[0.04] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                                    <div className="border-b border-white/10 px-5 py-5">
-                                        <div className="text-[11px] uppercase tracking-[0.18em] text-slate-400">
-                                            Typical approval timing
-                                        </div>
-                                        <div className="mt-2 text-lg font-semibold text-white">
-                                            {participantOnboardingEstimatedReviewTime}
-                                        </div>
-                                        <p className="mt-2 text-sm text-slate-300">
-                                            Review may move faster when identity details are consistent and easy to verify.
-                                        </p>
-                                    </div>
-                                    <div className="px-5 py-5">
-                                        <div className="text-[11px] uppercase tracking-[0.18em] text-slate-400">
-                                            Invite code
-                                        </div>
-                                        <div className="mt-2 text-lg font-semibold text-white">Optional</div>
-                                        <p className="mt-2 text-sm text-slate-300">
-                                            You can continue without a code. If you have one, it helps route the request
-                                            more quickly.
-                                        </p>
-                                    </div>
-                                </section>
-                            </div>
-
-                            <section className="overflow-hidden rounded-[30px] border border-white/10 bg-slate-900/78 shadow-[0_24px_60px_rgba(2,6,23,0.22)] backdrop-blur-sm">
-                                <div className="border-b border-white/10 px-6 py-6">
-                                    <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
-                                        What Gets Checked
-                                    </div>
-                                </div>
-
-                                <div className="grid gap-4 px-6 py-6">
-                                    {reviewChecks.map((check) => (
-                                        <div
-                                            key={check.title}
-                                            className="rounded-[24px] border border-slate-800/90 bg-slate-950/78 p-5 shadow-[0_18px_40px_rgba(2,6,23,0.18)]"
-                                        >
-                                            <div className="text-sm font-semibold text-white">{check.title}</div>
-                                            <p className="mt-2 text-sm leading-6 text-slate-400">{check.description}</p>
-                                        </div>
-                                    ))}
-                                </div>
-                            </section>
-                        </div>
-
-                        <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.55fr)]">
-                            <section className="rounded-[30px] border border-white/10 bg-slate-900/70 p-6 shadow-[0_20px_48px_rgba(2,6,23,0.18)] backdrop-blur-sm sm:p-7">
-                                <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
-                                    Invite Code Guidance
-                                </div>
-                                <p className="mt-4 text-sm leading-7 text-slate-300">
-                                    {isIndividualPath
-                                        ? 'If you received an invite code from Redoubt or a partner program, enter it exactly as issued. If not, leave the field blank and continue.'
-                                        : 'If your organization received an invite code, enter it exactly as issued. If not, leave the field blank and continue. The current review flow still accepts the request without one.'}
-                                </p>
-                            </section>
-
-                            <div className="rounded-[30px] border border-cyan-400/20 bg-cyan-400/10 px-6 py-5 text-sm text-cyan-100 shadow-[0_18px_44px_rgba(8,47,73,0.14)] sm:px-7 sm:py-6">
-                                {isIndividualPath
-                                    ? 'This step records your path choice, identity, and professional context first. Verification depth increases in later stages, not here.'
-                                    : 'This step records your path choice, identity, and organization context first. Verification depth increases in later stages, not here.'}
-                            </div>
-                        </div>
-                    </section>
-
-                    <section className="rounded-[30px] border border-white/10 bg-slate-900/68 px-6 py-5 shadow-[0_20px_48px_rgba(2,6,23,0.18)] backdrop-blur-sm">
+                    <section className="rounded-[24px] border border-white/10 bg-slate-950/72 px-5 py-4 shadow-[0_18px_44px_rgba(2,6,23,0.18)] backdrop-blur-sm sm:px-6">
                         <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
                             <div>
                                 <div className="text-sm font-semibold text-white">Next step</div>

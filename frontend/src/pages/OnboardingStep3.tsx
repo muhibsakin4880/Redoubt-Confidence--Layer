@@ -115,6 +115,58 @@ export default function OnboardingStep3() {
 
     const stepReady = isStep3Complete(participationIntent, legalAcknowledgment)
     const completedAcknowledgments = Object.values(legalAcknowledgment).filter(Boolean).length
+    const helperPanel = (
+        <div className="space-y-4">
+            <section className="rounded-[24px] border border-amber-400/20 bg-[linear-gradient(180deg,rgba(120,53,15,0.2)_0%,rgba(15,23,42,0.96)_100%)] p-5 shadow-[0_24px_58px_rgba(120,53,15,0.16)]">
+                <div className="flex items-start justify-between gap-3">
+                    <div>
+                        <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-amber-100/80">
+                            Governance status
+                        </div>
+                        <h2 className="mt-3 text-xl font-semibold text-white">
+                            {completedAcknowledgments === 3 ? 'Acknowledgments complete' : 'Confirm the accountable party'}
+                        </h2>
+                    </div>
+                    <span className="inline-flex rounded-full border border-amber-400/25 bg-amber-500/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-100">
+                        {completedAcknowledgments}/3 complete
+                    </span>
+                </div>
+
+                <div className="mt-4 space-y-3">
+                    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+                        <div className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Current participation intent</div>
+                        <p className="mt-2 text-sm leading-6 text-slate-200">
+                            {participationIntent.length > 0 ? participationIntent.join(', ') : 'No participation mode selected yet.'}
+                        </p>
+                    </div>
+                    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+                        <div className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Trust Center reference</div>
+                        <p className="mt-2 text-sm leading-6 text-slate-300">
+                            Keep the policy scope aligned with the
+                            {' '}
+                            <Link to={participantOnboardingPolicyPath} className="text-blue-300 underline underline-offset-2">
+                                {participantOnboardingPolicyLabel}
+                            </Link>
+                            {' '}
+                            while confirming the request purpose.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            {governanceExplainers.map((item) => (
+                <details
+                    key={item.title}
+                    className="rounded-[24px] border border-white/10 bg-slate-950/78 p-5 shadow-[0_18px_40px_rgba(2,6,23,0.18)]"
+                >
+                    <summary className="cursor-pointer list-none text-sm font-semibold text-white">
+                        {item.title}
+                    </summary>
+                    <p className="mt-3 text-sm leading-6 text-slate-400">{item.content}</p>
+                </details>
+            ))}
+        </div>
+    )
 
     const handleNext = () => {
         if (stepReady) {
@@ -127,6 +179,7 @@ export default function OnboardingStep3() {
             <OnboardingPageLayout
                 activeStep={3}
                 showDefaultHelperPanel={false}
+                helperPanel={helperPanel}
                 canvasWidth="full"
                 headerTitle="Participation Intent & Governance"
                 headerSubtitle={
@@ -140,51 +193,29 @@ export default function OnboardingStep3() {
                         : 'Participant onboarding · Governance review'
                 }
                 progressVariant="connector"
+                headerActions={
+                    <button
+                        type="button"
+                        onClick={fillMockData}
+                        className="rounded-xl border border-slate-600 px-4 py-2 text-sm font-medium text-slate-200 transition-colors hover:border-blue-500 hover:text-white"
+                    >
+                        Use mock data
+                    </button>
+                }
             >
-                <div className="space-y-8 lg:space-y-10">
-                    <section className="rounded-[34px] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.86)_0%,rgba(2,6,23,0.74)_100%)] p-7 shadow-[0_26px_68px_rgba(2,6,23,0.22)] backdrop-blur-sm sm:p-8 lg:p-10">
-                        <div className="max-w-3xl">
-                            <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
-                                Step framing
-                            </div>
-                            <h2 className="mt-3 text-[1.9rem] font-semibold leading-tight text-white sm:text-[2.15rem]">
-                                Define the participation mode behind the request
-                            </h2>
-                            <p className="mt-4 max-w-[54rem] text-sm leading-7 text-slate-300">
-                                {isIndividualPath
-                                    ? 'This step does two things: it tells reviewers how you plan to participate, and it confirms the governance obligations required before Redoubt can evaluate protected access.'
-                                    : 'This step does two things: it tells reviewers how your team plans to participate, and it confirms the governance obligations required before Redoubt can evaluate protected access.'}
-                            </p>
-                        </div>
-
-                        <div className="mt-8 grid gap-4 lg:grid-cols-3">
-                            <div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-5 shadow-[0_18px_40px_rgba(2,6,23,0.16)]">
-                                <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">
-                                    Participation focus
+                <div className="space-y-6">
+                    <section className="rounded-[24px] border border-white/10 bg-slate-950/72 px-5 py-4 shadow-[0_18px_44px_rgba(2,6,23,0.18)] backdrop-blur-sm sm:px-6">
+                        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                            <div className="max-w-3xl">
+                                <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+                                    Governance framing
                                 </div>
-                                <p className="mt-3 text-sm leading-7 text-slate-300">
-                                    {isIndividualPath
-                                        ? 'Explain whether you are accessing, contributing, collaborating, or participating in research.'
-                                        : 'Explain whether your organization is accessing, contributing, collaborating, or participating in research.'}
+                                <p className="mt-2 text-sm leading-7 text-slate-300">
+                                    Select the participation mode that matches the request, then confirm the authority and policy scope required before verification can proceed.
                                 </p>
                             </div>
-                            <div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-5 shadow-[0_18px_40px_rgba(2,6,23,0.16)]">
-                                <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">
-                                    Governance focus
-                                </div>
-                                <p className="mt-3 text-sm leading-7 text-slate-300">
-                                    Confirm authority and policy scope before the request can move into verification review.
-                                </p>
-                            </div>
-                            <div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-5 shadow-[0_18px_40px_rgba(2,6,23,0.16)]">
-                                <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">
-                                    Why it matters
-                                </div>
-                                <p className="mt-3 text-sm leading-7 text-slate-300">
-                                    {isIndividualPath
-                                        ? 'Protected-access review depends on a purpose-bounded request backed by a clearly accountable credential holder.'
-                                        : 'Protected-access review depends on a purpose-bounded request backed by organizational authority.'}
-                                </p>
+                            <div className="rounded-full border border-amber-400/20 bg-amber-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-amber-100">
+                                Purpose-bounded request
                             </div>
                         </div>
                     </section>
@@ -262,59 +293,34 @@ export default function OnboardingStep3() {
                     </section>
 
                     <section className="rounded-[34px] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.78)_0%,rgba(2,6,23,0.7)_100%)] p-7 shadow-[0_26px_68px_rgba(2,6,23,0.22)] backdrop-blur-sm sm:p-8 lg:p-10">
-                        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(320px,0.95fr)]">
-                            <section className="rounded-[32px] border border-amber-400/20 bg-[linear-gradient(180deg,rgba(120,53,15,0.22)_0%,rgba(15,23,42,0.96)_100%)] p-6 shadow-[0_28px_70px_rgba(120,53,15,0.16)] backdrop-blur-sm sm:p-7">
-                                <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-amber-100/80">
-                                    Governance Review
-                                </div>
-                                <h2 className="mt-4 text-[1.35rem] font-semibold leading-8 text-white">
-                                    Required before protected access review
-                                </h2>
-                                <p className="mt-4 text-sm leading-7 text-slate-200">
-                                    {isIndividualPath
-                                        ? 'Redoubt requires explicit participant acknowledgments before reviewers can assess requests for controlled access, collaboration, or protected evaluation workflows by an individual participant.'
-                                        : 'Redoubt requires explicit organizational acknowledgments before reviewers can assess requests for controlled access, collaboration, or protected evaluation workflows.'}
-                                </p>
-                            </section>
-
-                            <section className="overflow-hidden rounded-[30px] border border-white/10 bg-white/[0.04] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-                                <div className="border-b border-white/10 px-5 py-5">
-                                    <div className="text-[11px] uppercase tracking-[0.18em] text-slate-400">
-                                        Acknowledgment status
+                        <section className="overflow-hidden rounded-[30px] border border-white/10 bg-slate-900/80 shadow-[0_24px_60px_rgba(2,6,23,0.22)] backdrop-blur-sm">
+                            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 px-6 py-6">
+                                <div>
+                                    <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+                                        Governance acknowledgments
                                     </div>
-                                    <div className="mt-2 text-lg font-semibold text-white">
-                                        {completedAcknowledgments}/3 complete
-                                    </div>
-                                    <p className="mt-2 text-sm text-slate-300">
-                                        All governance confirmations are required before the request can move to
-                                        verification review.
+                                    <p className="mt-3 text-sm leading-7 text-slate-400">
+                                        These confirmations are concise review gates, not a full legal agreement. They verify authority, policy scope, and purpose limitation.
                                     </p>
                                 </div>
-                                <div className="px-5 py-5">
-                                    <div className="text-[11px] uppercase tracking-[0.18em] text-slate-400">
-                                        Who should agree
-                                    </div>
-                                    <p className="mt-2 text-sm text-slate-300">
-                                        {isIndividualPath
-                                            ? 'The participant who will hold the credential, accept policy scope, and confirm the request purpose.'
-                                            : 'A representative who can speak for the organization, accept policy scope, and confirm the request purpose.'}
-                                    </p>
-                                </div>
-                            </section>
-                        </div>
-
-                        <section className="mt-6 overflow-hidden rounded-[30px] border border-white/10 bg-slate-900/80 shadow-[0_24px_60px_rgba(2,6,23,0.22)] backdrop-blur-sm">
-                            <div className="border-b border-white/10 px-6 py-6">
-                                <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
-                                    Legal and governance acknowledgments
-                                </div>
-                                <p className="mt-3 text-sm leading-7 text-slate-400">
-                                    These are concise review gates, not a full legal document. They confirm authority,
-                                    policy understanding, and purpose limitation.
-                                </p>
+                                <span className="inline-flex rounded-full border border-amber-400/25 bg-amber-500/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-100">
+                                    {completedAcknowledgments}/3 complete
+                                </span>
                             </div>
 
                             <div className="space-y-4 px-6 py-6">
+                                <div className="rounded-[24px] border border-cyan-400/20 bg-cyan-400/10 px-5 py-4 text-sm text-cyan-100">
+                                    {isIndividualPath
+                                        ? 'Protected-access review depends on a confirmed participant owner and a purpose-bounded request.'
+                                        : 'Protected-access review depends on a confirmed organizational authority and a purpose-bounded request.'}
+                                </div>
+
+                                <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+                                    Required acknowledgments
+                                </div>
+                            </div>
+
+                            <div className="space-y-4 px-6 pb-6">
                                 <label
                                     className={cx(
                                         'block cursor-pointer rounded-[24px] border p-5 transition-all duration-200 shadow-[0_18px_40px_rgba(2,6,23,0.18)]',
@@ -397,45 +403,12 @@ export default function OnboardingStep3() {
                                         </div>
                                     </div>
                                 </label>
-
-                                <div className="border-t border-white/10 pt-6">
-                                    <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
-                                        Compact Explainers
-                                    </div>
-
-                                    <div className="mt-4 grid gap-4 xl:grid-cols-3">
-                                        {governanceExplainers.map((item) => (
-                                            <details
-                                                key={item.title}
-                                                className="rounded-[24px] border border-slate-800/90 bg-slate-950/78 px-5 py-4 text-sm text-slate-300 shadow-[0_16px_36px_rgba(2,6,23,0.18)]"
-                                            >
-                                                <summary className="cursor-pointer list-none font-semibold text-white">
-                                                    {item.title}
-                                                </summary>
-                                                <p className="mt-3 leading-6 text-slate-400">{item.content}</p>
-                                            </details>
-                                        ))}
-                                    </div>
-
-                                    <div className="mt-5 rounded-[24px] border border-cyan-400/20 bg-cyan-400/10 px-5 py-4 text-sm text-cyan-100">
-                                        {isIndividualPath
-                                            ? 'Governance acknowledgments are required because later verification and protected-access review rely on a confirmed individual owner and purpose-bounded request.'
-                                            : 'Governance acknowledgments are required because later verification and protected-access review rely on a confirmed organizational authority and purpose-bounded request.'}
-                                    </div>
-                                </div>
                             </div>
                         </section>
                     </section>
 
-                    <section className="rounded-[30px] border border-white/10 bg-slate-900/68 px-6 py-5 shadow-[0_20px_48px_rgba(2,6,23,0.18)] backdrop-blur-sm">
+                    <section className="rounded-[24px] border border-white/10 bg-slate-950/72 px-5 py-4 shadow-[0_18px_44px_rgba(2,6,23,0.18)] backdrop-blur-sm sm:px-6">
                         <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center">
-                        <button
-                            type="button"
-                            onClick={fillMockData}
-                            className="rounded-xl border border-slate-600 px-4 py-2 text-sm font-medium text-slate-300 transition-colors hover:border-blue-500 hover:text-white"
-                        >
-                            Use mock data
-                        </button>
                         <button
                             type="button"
                             onClick={handleBack}

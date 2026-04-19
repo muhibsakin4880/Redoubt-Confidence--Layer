@@ -529,19 +529,19 @@ export default function OnboardingStep4() {
     }
 
     const helperPanel = (
-        <div className="sticky top-6 space-y-6">
-            <section className="rounded-[32px] border border-cyan-400/20 bg-[linear-gradient(180deg,rgba(8,47,73,0.92)_0%,rgba(15,23,42,0.96)_100%)] p-6 shadow-[0_28px_70px_rgba(8,47,73,0.22)] backdrop-blur-sm">
+        <div className="space-y-4">
+            <section className="rounded-[24px] border border-cyan-400/20 bg-[linear-gradient(180deg,rgba(8,47,73,0.92)_0%,rgba(15,23,42,0.96)_100%)] p-5 shadow-[0_24px_60px_rgba(8,47,73,0.2)] backdrop-blur-sm">
                 <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-cyan-100/80">
                     Verification Packet
                 </div>
-                <h2 className="mt-4 text-[1.35rem] font-semibold leading-8 text-white">Current packet status</h2>
-                <p className="mt-4 text-sm leading-7 text-slate-200">
+                <h2 className="mt-3 text-xl font-semibold text-white">Current packet status</h2>
+                <p className="mt-3 text-sm leading-6 text-slate-200">
                     {isIndividualPath
                         ? 'Reviewers use this packet to confirm identity, participant accountability, and the declared post-approval authentication method before protected access is approved.'
                         : 'Reviewers use this packet to confirm identity, organization authority, and the declared post-approval authentication method before protected access is approved.'}
                 </p>
 
-                <div className="mt-6 overflow-hidden rounded-[26px] border border-white/10 bg-white/[0.04] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                <div className="mt-4 overflow-hidden rounded-[22px] border border-white/10 bg-white/[0.04] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                     <div className="border-b border-white/10 px-5 py-5">
                         <div className="text-[11px] uppercase tracking-[0.18em] text-slate-400">
                             Packet completion
@@ -576,75 +576,6 @@ export default function OnboardingStep4() {
                     ))}
                 </div>
             </section>
-
-            <section className="overflow-hidden rounded-[30px] border border-white/10 bg-slate-900/78 shadow-[0_24px_60px_rgba(2,6,23,0.22)] backdrop-blur-sm">
-                <div className="border-b border-white/10 px-6 py-6">
-                    <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
-                        Accepted evidence examples
-                    </div>
-                </div>
-
-                <div className="space-y-6 px-6 py-6 text-sm text-slate-300">
-                    <div className="rounded-[24px] border border-slate-800/90 bg-slate-950/78 p-5 shadow-[0_18px_40px_rgba(2,6,23,0.18)]">
-                        <div className="font-semibold text-white">
-                            {isIndividualPath ? 'Identity / affiliation evidence' : 'Affiliation evidence'}
-                        </div>
-                        <ul className="mt-3 space-y-2 text-slate-400">
-                            {activeAffiliationExamples.map((example) => (
-                                <li key={example}>• {example}</li>
-                            ))}
-                        </ul>
-                    </div>
-
-                    <div className="rounded-[24px] border border-slate-800/90 bg-slate-950/78 p-5 shadow-[0_18px_40px_rgba(2,6,23,0.18)]">
-                        <div className="font-semibold text-white">
-                            {isIndividualPath ? 'Accountability evidence' : 'Authorization evidence'}
-                        </div>
-                        <ul className="mt-3 space-y-2 text-slate-400">
-                            {activeAuthorizationExamples.map((example) => (
-                                <li key={example}>• {example}</li>
-                            ))}
-                        </ul>
-                    </div>
-                    <div className="border-t border-white/10 pt-6">
-                        <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
-                            What reviewers look for
-                        </div>
-                        <div className="mt-4 space-y-3 text-sm text-slate-300">
-                            {[...activeAffiliationChecks, ...activeAuthorizationChecks, ...helperPanelNotes].map((note) => (
-                                <div
-                                    key={note}
-                                    className="rounded-[24px] border border-slate-800/90 bg-slate-950/78 px-5 py-4 shadow-[0_16px_36px_rgba(2,6,23,0.18)]"
-                                >
-                                    {note}
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="border-t border-white/10 pt-6">
-                        <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
-                            What happens after verification succeeds
-                        </div>
-                        <div className="mt-4 space-y-3 text-sm text-slate-300">
-                            {activeAfterVerificationSteps.map((step) => (
-                                <div
-                                    key={step}
-                                    className="rounded-[24px] border border-slate-800/90 bg-slate-950/78 px-5 py-4 shadow-[0_16px_36px_rgba(2,6,23,0.18)]"
-                                >
-                                    {step}
-                                </div>
-                            ))}
-                        </div>
-
-                        <div className="mt-5 rounded-[24px] border border-cyan-400/20 bg-cyan-400/10 px-5 py-4 text-sm text-cyan-100">
-                            {isIndividualPath
-                                ? 'Verification exists to protect access governance by ensuring reviewers are working from a confirmed identity, clear participant accountability, and a controlled hardware-key access method.'
-                                : 'Verification exists to protect access governance by ensuring reviewers are working from a confirmed identity, a confirmed organization, and a clearly scoped access method.'}
-                        </div>
-                    </div>
-                </div>
-            </section>
         </div>
     )
 
@@ -662,40 +593,40 @@ export default function OnboardingStep4() {
                 }
                 pageEyebrow={`Participant onboarding · ${isIndividualPath ? 'Individual verification packet' : 'Verification packet'}`}
                 progressVariant="connector"
+                headerActions={
+                    <button
+                        type="button"
+                        onClick={fillMockData}
+                        className="rounded-xl border border-slate-600 px-4 py-2 text-sm font-medium text-slate-200 transition-colors hover:border-blue-500 hover:text-white"
+                    >
+                        Use mock data
+                    </button>
+                }
             >
-                <div className="space-y-8 lg:space-y-10">
-                    <section className="rounded-[34px] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.86)_0%,rgba(2,6,23,0.74)_100%)] p-7 shadow-[0_26px_68px_rgba(2,6,23,0.22)] backdrop-blur-sm sm:p-8 lg:p-10">
-                        <div className="flex flex-wrap items-start justify-between gap-4">
+                <div className="space-y-6">
+                    <section className="rounded-[24px] border border-white/10 bg-slate-950/72 px-5 py-4 shadow-[0_18px_44px_rgba(2,6,23,0.18)] backdrop-blur-sm sm:px-6">
+                        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                             <div className="max-w-3xl">
                                 <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
-                                    Zone 1 · why verification exists
+                                    Verification packet
                                 </div>
-                                <h2 className="mt-3 text-[1.9rem] font-semibold leading-tight text-white sm:text-[2.15rem]">
-                                    Build the reviewer verification packet
-                                </h2>
-                                <p className="mt-4 text-sm leading-7 text-slate-300">
+                                <p className="mt-2 text-sm leading-7 text-slate-300">
                                     {participantOnboardingVerificationSummary}{' '}
                                     {isIndividualPath
-                                        ? 'This packet protects access governance by verifying the person, the accountability evidence, and the hardware-key controls behind the request before protected access review begins.'
-                                        : 'This packet protects access governance by verifying the person, the organization, and the identity controls behind the request before protected access review begins.'}
+                                        ? 'Complete identity checks, accountability evidence, and the hardware-key route so reviewers can work from one clean protected-access packet.'
+                                        : 'Complete identity checks, evidence uploads, and the authentication route so reviewers can work from one clean protected-access packet.'}
                                 </p>
                             </div>
-
-                            <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                                <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">
-                                    Expected turnaround
-                                </div>
-                                <div className="mt-2 text-lg font-semibold text-white">
-                                    {participantOnboardingEstimatedReviewTime}
-                                </div>
+                            <div className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-cyan-100">
+                                Typical review: {participantOnboardingEstimatedReviewTime}
                             </div>
                         </div>
 
-                        <div className="mt-8 grid gap-4 lg:grid-cols-3">
+                        <div className="mt-4 grid gap-3 lg:grid-cols-3">
                             {reviewCards.map((card) => (
-                                <div key={card.title} className="rounded-[24px] border border-white/10 bg-white/[0.03] p-5 shadow-[0_18px_40px_rgba(2,6,23,0.16)]">
+                                <div key={card.title} className="rounded-[20px] border border-white/10 bg-white/[0.03] p-4">
                                     <div className="text-sm font-semibold text-white">{card.title}</div>
-                                    <p className="mt-3 text-sm leading-7 text-slate-400">{card.description}</p>
+                                    <p className="mt-2 text-sm leading-6 text-slate-400">{card.description}</p>
                                 </div>
                             ))}
                         </div>
@@ -1123,27 +1054,27 @@ export default function OnboardingStep4() {
                                     <StatusChip label={affiliationStatus.label} tone={affiliationStatus.tone} />
                                 </div>
 
-                                <div className="mt-4 grid gap-4 md:grid-cols-2">
-                                    <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
-                                        <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                                <div className="mt-4 grid gap-3 md:grid-cols-2">
+                                    <details className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
+                                        <summary className="cursor-pointer list-none text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
                                             Accepted examples
-                                        </div>
+                                        </summary>
                                         <ul className="mt-3 space-y-2 text-sm text-slate-300">
                                             {activeAffiliationExamples.map((example) => (
                                                 <li key={example}>• {example}</li>
                                             ))}
                                         </ul>
-                                    </div>
-                                    <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
-                                        <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                                    </details>
+                                    <details className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
+                                        <summary className="cursor-pointer list-none text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
                                             Reviewers check
-                                        </div>
+                                        </summary>
                                         <ul className="mt-3 space-y-2 text-sm text-slate-300">
                                             {activeAffiliationChecks.map((check) => (
                                                 <li key={check}>• {check}</li>
                                             ))}
                                         </ul>
-                                    </div>
+                                    </details>
                                 </div>
 
                                 <label
@@ -1202,27 +1133,27 @@ export default function OnboardingStep4() {
                                     <StatusChip label={authorizationStatus.label} tone={authorizationStatus.tone} />
                                 </div>
 
-                                <div className="mt-4 grid gap-4 md:grid-cols-2">
-                                    <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
-                                        <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                                <div className="mt-4 grid gap-3 md:grid-cols-2">
+                                    <details className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
+                                        <summary className="cursor-pointer list-none text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
                                             Accepted examples
-                                        </div>
+                                        </summary>
                                         <ul className="mt-3 space-y-2 text-sm text-slate-300">
                                             {activeAuthorizationExamples.map((example) => (
                                                 <li key={example}>• {example}</li>
                                             ))}
                                         </ul>
-                                    </div>
-                                    <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
-                                        <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                                    </details>
+                                    <details className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
+                                        <summary className="cursor-pointer list-none text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
                                             Reviewers check
-                                        </div>
+                                        </summary>
                                         <ul className="mt-3 space-y-2 text-sm text-slate-300">
                                             {activeAuthorizationChecks.map((check) => (
                                                 <li key={check}>• {check}</li>
                                             ))}
                                         </ul>
-                                    </div>
+                                    </details>
                                 </div>
 
                                 <div className="mt-4 rounded-2xl border border-slate-800 bg-slate-900/70 p-4 text-sm text-slate-300">
@@ -1282,6 +1213,39 @@ export default function OnboardingStep4() {
                             Privacy note: only upload evidence needed to prove
                             {isIndividualPath ? ' identity or accountability' : ' affiliation or authority'} for this request.
                             Reviewers use these files for application verification, not broader document retention.
+                        </div>
+
+                        <div className="mt-4 grid gap-3 lg:grid-cols-2">
+                            <details className="rounded-[22px] border border-slate-800 bg-slate-900/70 p-4">
+                                <summary className="cursor-pointer list-none text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                                    What reviewers look for
+                                </summary>
+                                <div className="mt-3 space-y-2 text-sm text-slate-300">
+                                    {[...activeAffiliationChecks, ...activeAuthorizationChecks, ...helperPanelNotes].map((note) => (
+                                        <div key={note} className="rounded-2xl border border-slate-800 bg-slate-950/75 px-4 py-3">
+                                            {note}
+                                        </div>
+                                    ))}
+                                </div>
+                            </details>
+
+                            <details className="rounded-[22px] border border-slate-800 bg-slate-900/70 p-4">
+                                <summary className="cursor-pointer list-none text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                                    What happens after verification succeeds
+                                </summary>
+                                <div className="mt-3 space-y-2 text-sm text-slate-300">
+                                    {activeAfterVerificationSteps.map((step) => (
+                                        <div key={step} className="rounded-2xl border border-slate-800 bg-slate-950/75 px-4 py-3">
+                                            {step}
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="mt-3 rounded-2xl border border-cyan-400/20 bg-cyan-400/10 px-4 py-3 text-sm text-cyan-100">
+                                    {isIndividualPath
+                                        ? 'Verification protects access governance by ensuring reviewers are working from a confirmed identity, clear participant accountability, and a controlled hardware-key access method.'
+                                        : 'Verification protects access governance by ensuring reviewers are working from a confirmed identity, a confirmed organization, and a clearly scoped access method.'}
+                                </div>
+                            </details>
                         </div>
 
                         <article className="mt-5 rounded-[24px] border border-slate-800 bg-slate-950/75 p-5">
@@ -1511,15 +1475,8 @@ export default function OnboardingStep4() {
                         )}
                     </section>
 
-                    <section className="rounded-[30px] border border-white/10 bg-slate-900/68 px-6 py-5 shadow-[0_20px_48px_rgba(2,6,23,0.18)] backdrop-blur-sm">
+                    <section className="rounded-[24px] border border-white/10 bg-slate-950/72 px-5 py-4 shadow-[0_18px_44px_rgba(2,6,23,0.18)] backdrop-blur-sm sm:px-6">
                         <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center">
-                        <button
-                            type="button"
-                            onClick={fillMockData}
-                            className="rounded-xl border border-slate-600 px-4 py-2 text-sm font-medium text-slate-300 transition-colors hover:border-blue-500 hover:text-white"
-                        >
-                            Use mock data
-                        </button>
                         <button
                             type="button"
                             onClick={handleBack}

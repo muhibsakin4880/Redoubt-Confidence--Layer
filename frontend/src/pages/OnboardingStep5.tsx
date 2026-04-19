@@ -206,6 +206,17 @@ export default function OnboardingStep5() {
         readOnboardingValue(onboardingStorageKeys.compliance, emptyComplianceCommitment)
     )
 
+    const fillMockData = () => {
+        const mockCommitments: ComplianceCommitment = {
+            responsibleDataUsage: true,
+            noUnauthorizedSharing: true,
+            platformCompliancePolicies: true
+        }
+
+        setState(mockCommitments)
+        writeOnboardingValue(onboardingStorageKeys.compliance, mockCommitments)
+    }
+
     const handleChange = (field: keyof ComplianceCommitment, value: boolean) => {
         const next = { ...state, [field]: value }
         setState(next)
@@ -300,7 +311,7 @@ export default function OnboardingStep5() {
     }
 
     const helperPanel = (
-        <div className="sticky top-8 flex flex-col gap-5 lg:pl-3 xl:h-full xl:min-h-full xl:gap-0">
+        <div className="flex flex-col gap-4">
             <section className="overflow-hidden rounded-[34px] border border-cyan-400/20 bg-[linear-gradient(180deg,rgba(8,47,73,0.94)_0%,rgba(15,23,42,0.96)_100%)] shadow-[0_28px_68px_rgba(8,47,73,0.22)] backdrop-blur-sm">
                 <div className="px-6 py-6 sm:px-7 sm:py-7">
                     <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-cyan-100/80">
@@ -399,7 +410,7 @@ export default function OnboardingStep5() {
                 </div>
             </section>
 
-            <section className="rounded-[32px] border border-white/10 bg-slate-900/82 p-6 shadow-[0_24px_56px_rgba(2,6,23,0.24)] backdrop-blur-sm sm:p-7 xl:mt-auto">
+            <section className="rounded-[32px] border border-white/10 bg-slate-900/82 p-6 shadow-[0_24px_56px_rgba(2,6,23,0.24)] backdrop-blur-sm sm:p-7">
                 <div className="flex items-start justify-between gap-3">
                     <div>
                         <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
@@ -475,63 +486,43 @@ export default function OnboardingStep5() {
                 headerSubtitle="Review the complete onboarding packet, confirm the final commitments, and submit the application with a clear view of what reviewers will assess next."
                 pageEyebrow="Participant onboarding · Final review"
                 progressVariant="connector"
+                headerActions={
+                    <button
+                        type="button"
+                        onClick={fillMockData}
+                        className="rounded-xl border border-slate-600 px-4 py-2 text-sm font-medium text-slate-200 transition-colors hover:border-blue-500 hover:text-white"
+                    >
+                        Use mock data
+                    </button>
+                }
             >
-                <form id={submissionFormId} onSubmit={handleSubmit} className="space-y-10 lg:space-y-12">
-                    <section className="rounded-[34px] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.86)_0%,rgba(2,6,23,0.74)_100%)] p-7 shadow-[0_26px_68px_rgba(2,6,23,0.22)] backdrop-blur-sm sm:p-8 lg:p-10">
-                        <div className="flex flex-wrap items-start justify-between gap-4">
+                <form id={submissionFormId} onSubmit={handleSubmit} className="space-y-6">
+                    <section className="rounded-[24px] border border-white/10 bg-slate-950/72 px-5 py-4 shadow-[0_18px_44px_rgba(2,6,23,0.18)] backdrop-blur-sm sm:px-6">
+                        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                             <div className="max-w-3xl">
                                 <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
-                                    Submission packet
+                                    Submission review
                                 </div>
-                                <h2 className="mt-3 text-[1.9rem] font-semibold leading-tight text-white sm:text-[2.15rem]">
-                                    Final reviewer snapshot before manual review
-                                </h2>
-                                <p className="mt-4 text-sm leading-7 text-slate-300">
-                                    This is the final confidence check before your onboarding package enters manual trust
-                                    and compliance review. Use the editable sections below to verify that identity,
-                                    use-case context, governance inputs, and verification evidence still reflect the
-                                    request you want reviewed.
+                                <p className="mt-2 text-sm leading-7 text-slate-300">
+                                    Review the saved step summaries below, use the edit actions to fix any gaps, and confirm the final commitments before submitting the application package.
                                 </p>
                             </div>
-
                             <StatusChip
                                 label={allClear ? 'Submission ready' : 'Review required'}
                                 tone={allClear ? 'success' : 'warning'}
                             />
                         </div>
 
-                        <div className="mt-8 grid gap-4 lg:grid-cols-3">
-                            <div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-5 shadow-[0_18px_40px_rgba(2,6,23,0.16)]">
-                                <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">
-                                    Review lane
-                                </div>
-                                <div className="mt-2 text-lg font-semibold text-white">Trust and compliance</div>
-                                <p className="mt-3 text-sm leading-7 text-slate-400">
-                                    This final step packages the request for the reviewer team that approves protected access.
-                                </p>
-                            </div>
-
-                            <div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-5 shadow-[0_18px_40px_rgba(2,6,23,0.16)]">
-                                <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">
-                                    Review timing
-                                </div>
-                                <div className="mt-2 text-lg font-semibold text-white">
-                                    {participantOnboardingEstimatedReviewTime}
-                                </div>
-                                <p className="mt-3 text-sm leading-7 text-slate-400">
-                                    Typical turnaround once the packet is submitted without missing reviewer signals.
-                                </p>
-                            </div>
-
-                            <div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-5 shadow-[0_18px_40px_rgba(2,6,23,0.16)]">
-                                <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">
-                                    Decision contact
-                                </div>
-                                <div className="mt-2 break-all text-lg font-semibold text-white">{contactEmail}</div>
-                                <p className="mt-3 text-sm leading-7 text-slate-400">
-                                    Clarifications, approvals, and next-step instructions are sent here.
-                                </p>
-                            </div>
+                        <div className="mt-4 flex flex-wrap gap-2">
+                            <span className="inline-flex rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-200">
+                                Trust and compliance
+                            </span>
+                            <span className="inline-flex rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-300">
+                                Typical review: {participantOnboardingEstimatedReviewTime}
+                            </span>
+                            <span className="inline-flex rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-300">
+                                Contact: {contactEmail}
+                            </span>
                         </div>
                     </section>
 
@@ -925,17 +916,17 @@ export default function OnboardingStep5() {
                         </div>
                     </ReviewSection>
 
-                    <section className={reviewSectionClassName}>
-                        <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+                    <details className="rounded-[24px] border border-white/10 bg-slate-950/72 p-5 shadow-[0_18px_44px_rgba(2,6,23,0.18)] backdrop-blur-sm">
+                        <summary className="cursor-pointer list-none text-sm font-semibold text-white">
                             What happens after submit
-                        </div>
+                        </summary>
 
-                        <div className="mt-6 grid gap-4 xl:grid-cols-[minmax(0,1.05fr)_minmax(280px,0.85fr)_minmax(0,1.1fr)]">
+                        <div className="mt-5 grid gap-4 xl:grid-cols-[minmax(0,1.05fr)_minmax(280px,0.85fr)_minmax(0,1.1fr)]">
                             <div className="space-y-4">
                                 {participantOnboardingNextSteps.map((step) => (
                                     <div
                                         key={step}
-                                        className="rounded-[24px] border border-slate-800/90 bg-slate-950/78 px-5 py-4 text-sm text-slate-300 shadow-[0_16px_36px_rgba(2,6,23,0.18)]"
+                                        className="rounded-[20px] border border-slate-800/90 bg-slate-900/75 px-4 py-3 text-sm text-slate-300"
                                     >
                                         {step}
                                     </div>
@@ -943,7 +934,7 @@ export default function OnboardingStep5() {
                             </div>
 
                             <div className="space-y-4">
-                                <div className="rounded-[24px] border border-slate-800/90 bg-slate-950/78 p-5 shadow-[0_16px_36px_rgba(2,6,23,0.18)]">
+                                <div className="rounded-[20px] border border-slate-800/90 bg-slate-900/75 p-4">
                                     <div className="text-sm font-semibold text-white">Review team and timing</div>
                                     <p className="mt-2 text-sm leading-6 text-slate-300">
                                         The Redoubt trust and compliance team reviews the application package. Typical turnaround is{' '}
@@ -951,7 +942,7 @@ export default function OnboardingStep5() {
                                     </p>
                                 </div>
 
-                                <div className="rounded-[24px] border border-cyan-400/20 bg-cyan-400/10 px-5 py-4 text-sm text-cyan-100">
+                                <div className="rounded-[20px] border border-cyan-400/20 bg-cyan-400/10 px-4 py-3 text-sm text-cyan-100">
                                     A reference ID is issued immediately after submit and shown on the confirmation screen and follow-up communication.
                                 </div>
                             </div>
@@ -960,7 +951,7 @@ export default function OnboardingStep5() {
                                 {possibleOutcomes.map((outcome) => (
                                     <div
                                         key={outcome.title}
-                                        className="rounded-[24px] border border-slate-800/90 bg-slate-950/78 p-5 shadow-[0_16px_36px_rgba(2,6,23,0.18)]"
+                                        className="rounded-[20px] border border-slate-800/90 bg-slate-900/75 p-4"
                                     >
                                         <div className="text-sm font-semibold text-white">{outcome.title}</div>
                                         <p className="mt-2 text-sm leading-6 text-slate-400">{outcome.description}</p>
@@ -968,7 +959,7 @@ export default function OnboardingStep5() {
                                 ))}
                             </div>
                         </div>
-                    </section>
+                    </details>
                 </form>
             </OnboardingPageLayout>
         </OnboardingStepGuard>

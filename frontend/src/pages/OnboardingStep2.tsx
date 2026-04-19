@@ -308,19 +308,19 @@ export default function OnboardingStep2() {
     }
 
     const helperPanel = (
-        <div className="space-y-6">
-            <section className="rounded-[32px] border border-cyan-400/20 bg-[linear-gradient(180deg,rgba(8,47,73,0.92)_0%,rgba(15,23,42,0.96)_100%)] p-6 shadow-[0_28px_68px_rgba(8,47,73,0.22)] backdrop-blur-sm">
+        <div className="space-y-4">
+            <section className="rounded-[24px] border border-cyan-400/20 bg-[linear-gradient(180deg,rgba(8,47,73,0.92)_0%,rgba(15,23,42,0.96)_100%)] p-5 shadow-[0_24px_58px_rgba(8,47,73,0.2)] backdrop-blur-sm">
                 <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-cyan-100/80">
                     Reviewer Snapshot
                 </div>
-                <h2 className="mt-4 text-[1.35rem] font-semibold leading-8 text-white">How this request currently reads</h2>
-                <p className="mt-4 text-sm leading-7 text-slate-200">
+                <h2 className="mt-3 text-xl font-semibold text-white">How this request currently reads</h2>
+                <p className="mt-3 text-sm leading-6 text-slate-200">
                     Reviewers use the structured fields first to understand scope, then the summary to confirm intent
                     and operating context.
                 </p>
 
-                <div className="mt-6 space-y-4">
-                    <div className="rounded-[26px] border border-white/10 bg-white/[0.04] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                <div className="mt-4 space-y-3">
+                    <div className="rounded-[20px] border border-white/10 bg-white/[0.04] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                         <div className="flex items-center justify-between gap-3">
                             <span className="text-[11px] uppercase tracking-[0.18em] text-slate-400">
                                 Structured coverage
@@ -334,7 +334,7 @@ export default function OnboardingStep2() {
                         </p>
                     </div>
 
-                    <div className="rounded-[26px] border border-white/10 bg-white/[0.04] p-5 text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                    <div className="rounded-[20px] border border-white/10 bg-white/[0.04] p-4 text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                         <div className="grid gap-3">
                             <div>
                                 <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">Primary goal</div>
@@ -367,7 +367,7 @@ export default function OnboardingStep2() {
                         </div>
                     </div>
 
-                    <div className="rounded-[26px] border border-white/10 bg-white/[0.04] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                    <div className="rounded-[20px] border border-white/10 bg-white/[0.04] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                         <div className="flex items-center justify-between gap-3">
                             <span className="text-[11px] uppercase tracking-[0.18em] text-slate-400">
                                 Narrative summary
@@ -383,61 +383,54 @@ export default function OnboardingStep2() {
                 </div>
             </section>
 
-            <section className="overflow-hidden rounded-[30px] border border-white/10 bg-slate-900/78 shadow-[0_24px_60px_rgba(2,6,23,0.22)] backdrop-blur-sm">
-                <div className="border-b border-white/10 px-6 py-6">
-                    <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
-                        What Good Summaries Include
-                    </div>
-                    <div className="mt-4 space-y-3 text-sm text-slate-300">
-                        {summaryChecklist.map((item) => (
-                            <div key={item} className="flex gap-3">
-                                <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-cyan-300" />
-                                <span>{item}</span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                <div className="space-y-6 px-6 py-6">
-                    <div>
-                        <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
-                            Example Summaries
+            <details className="rounded-[24px] border border-white/10 bg-slate-950/78 p-5 shadow-[0_18px_40px_rgba(2,6,23,0.18)]">
+                <summary className="cursor-pointer list-none text-sm font-semibold text-white">
+                    What good summaries include
+                </summary>
+                <div className="mt-4 space-y-3 text-sm text-slate-300">
+                    {summaryChecklist.map((item) => (
+                        <div key={item} className="flex gap-3">
+                            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-cyan-300" />
+                            <span>{item}</span>
                         </div>
-                        <div className="mt-4 space-y-4">
+                    ))}
+                </div>
+            </details>
+
+            <details className="rounded-[24px] border border-white/10 bg-slate-950/78 p-5 shadow-[0_18px_40px_rgba(2,6,23,0.18)]">
+                <summary className="cursor-pointer list-none text-sm font-semibold text-white">
+                    Example summaries
+                </summary>
+                <div className="mt-4 space-y-3">
                     {strongSummaryExamples.map((example) => (
                         <div
                             key={example}
-                            className="rounded-[24px] border border-slate-800/90 bg-slate-950/78 p-5 text-sm leading-7 text-slate-300 shadow-[0_18px_40px_rgba(2,6,23,0.18)]"
+                            className="rounded-[20px] border border-slate-800/90 bg-slate-900/75 p-4 text-sm leading-6 text-slate-300"
                         >
                             {example}
                         </div>
                     ))}
-                    <div className="rounded-[24px] border border-rose-400/20 bg-rose-500/10 p-5 text-sm leading-7 text-rose-100">
+                    <div className="rounded-[20px] border border-rose-400/20 bg-rose-500/10 p-4 text-sm leading-6 text-rose-100">
                         <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-rose-200/80">
                             Weak example
                         </div>
                         <p className="mt-2">{weakSummaryExample}</p>
                     </div>
-                        </div>
-                    </div>
-
-                    <div className="border-t border-white/10 pt-6">
-                        <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
-                            What Reviewers Look For
-                        </div>
-                        <div className="mt-4 space-y-3 text-sm text-slate-300">
-                            {reviewerSignals.map((signal) => (
-                                <div
-                                    key={signal}
-                                    className="rounded-[24px] border border-slate-800/90 bg-slate-950/78 px-5 py-4 shadow-[0_16px_36px_rgba(2,6,23,0.18)]"
-                                >
-                                    {signal}
-                                </div>
-                            ))}
-                        </div>
-                    </div>
                 </div>
-            </section>
+            </details>
+
+            <details className="rounded-[24px] border border-white/10 bg-slate-950/78 p-5 shadow-[0_18px_40px_rgba(2,6,23,0.18)]">
+                <summary className="cursor-pointer list-none text-sm font-semibold text-white">
+                    Reviewer signals
+                </summary>
+                <div className="mt-4 space-y-3 text-sm text-slate-300">
+                    {reviewerSignals.map((signal) => (
+                        <div key={signal} className="rounded-[20px] border border-slate-800/90 bg-slate-900/75 px-4 py-3">
+                            {signal}
+                        </div>
+                    ))}
+                </div>
+            </details>
         </div>
     )
 
@@ -451,47 +444,29 @@ export default function OnboardingStep2() {
                 headerSubtitle="Describe the request in a way reviewers can quickly understand: what the team wants to do, who will use the access, and what evaluation context Redoubt needs to support."
                 pageEyebrow="Participant onboarding · Use case review"
                 progressVariant="connector"
+                headerActions={
+                    <button
+                        type="button"
+                        onClick={fillMockData}
+                        className="rounded-xl border border-slate-600 px-4 py-2 text-sm font-medium text-slate-200 transition-colors hover:border-blue-500 hover:text-white"
+                    >
+                        Use mock data
+                    </button>
+                }
             >
-                <div className="space-y-8 lg:space-y-10">
-                    <section className="rounded-[34px] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.86)_0%,rgba(2,6,23,0.74)_100%)] p-7 shadow-[0_26px_68px_rgba(2,6,23,0.22)] backdrop-blur-sm sm:p-8 lg:p-10">
-                        <div className="max-w-3xl">
-                            <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
-                                Step framing
-                            </div>
-                            <h2 className="mt-3 text-[1.9rem] font-semibold leading-tight text-white sm:text-[2.15rem]">
-                                Frame the request before governance review
-                            </h2>
-                            <p className="mt-4 text-sm leading-7 text-slate-300">
-                                This step should make the participation intent legible to a reviewer. Capture the
-                                core goal, requested workflow, expected sensitivity, and the operating context that
-                                explains why access is being requested.
-                            </p>
-                        </div>
-
-                        <div className="mt-8 grid gap-4 lg:grid-cols-3">
-                            <div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-5 shadow-[0_18px_40px_rgba(2,6,23,0.16)]">
-                                <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">
-                                    Reviewer priority
+                <div className="space-y-6">
+                    <section className="rounded-[24px] border border-white/10 bg-slate-950/72 px-5 py-4 shadow-[0_18px_44px_rgba(2,6,23,0.18)] backdrop-blur-sm sm:px-6">
+                        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                            <div className="max-w-3xl">
+                                <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+                                    Reviewer framing
                                 </div>
-                                <p className="mt-3 text-sm leading-7 text-slate-300">
-                                    Understand the operational goal and whether the request fits a governed access lane.
+                                <p className="mt-2 text-sm leading-7 text-slate-300">
+                                    Capture the operational goal, requested workflow, sensitivity, audience, and a concise summary that a human reviewer can triage quickly.
                                 </p>
                             </div>
-                            <div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-5 shadow-[0_18px_40px_rgba(2,6,23,0.16)]">
-                                <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">
-                                    What helps most
-                                </div>
-                                <p className="mt-3 text-sm leading-7 text-slate-300">
-                                    Clear structure plus a concise narrative summary that explains the real workflow.
-                                </p>
-                            </div>
-                            <div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-5 shadow-[0_18px_40px_rgba(2,6,23,0.16)]">
-                                <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">
-                                    This is not yet
-                                </div>
-                                <p className="mt-3 text-sm leading-7 text-slate-300">
-                                    A full legal or compliance review. This step is about access intent and reviewer clarity.
-                                </p>
+                            <div className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-cyan-100">
+                                Structured context first
                             </div>
                         </div>
                     </section>
@@ -631,15 +606,8 @@ export default function OnboardingStep2() {
                         </article>
                     </section>
 
-                    <section className="rounded-[30px] border border-white/10 bg-slate-900/68 px-6 py-5 shadow-[0_20px_48px_rgba(2,6,23,0.18)] backdrop-blur-sm">
+                    <section className="rounded-[24px] border border-white/10 bg-slate-950/72 px-5 py-4 shadow-[0_18px_44px_rgba(2,6,23,0.18)] backdrop-blur-sm sm:px-6">
                         <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center">
-                        <button
-                            type="button"
-                            onClick={fillMockData}
-                            className="rounded-xl border border-slate-600 px-4 py-2 text-sm font-medium text-slate-300 transition-colors hover:border-blue-500 hover:text-white"
-                        >
-                            Use mock data
-                        </button>
                         <button
                             type="button"
                             onClick={handleBack}
