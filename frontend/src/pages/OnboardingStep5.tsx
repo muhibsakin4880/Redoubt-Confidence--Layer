@@ -4,12 +4,12 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import {
     participantOnboardingEstimatedReviewTime,
-    participantOnboardingNextSteps,
     participantOnboardingPaths,
     participantOnboardingPostSubmitPath,
     participantOnboardingReviewStatus,
     participantOnboardingVerificationSummary
 } from '../onboarding/constants'
+import { getSubmissionNextSteps } from '../onboarding/content'
 import OnboardingPageLayout from '../onboarding/components/OnboardingPageLayout'
 import OnboardingStepGuard from '../onboarding/components/OnboardingStepGuard'
 import {
@@ -104,21 +104,18 @@ const possibleOutcomes = [
     }
 ] as const
 
-const commitmentItems = [
+const commitmentFields: ReadonlyArray<{ field: keyof ComplianceCommitment; title: string }> = [
     {
         field: 'responsibleDataUsage',
-        title: 'Responsible data usage',
-        description: 'I will use approved data and environments only for the reviewed use case and within authorized scope.'
+        title: 'Responsible data usage'
     },
     {
         field: 'noUnauthorizedSharing',
-        title: 'No unauthorized sharing',
-        description: 'I will not redistribute data, credentials, or outputs outside the approved reviewers, systems, or organization boundaries.'
+        title: 'No unauthorized sharing'
     },
     {
         field: 'platformCompliancePolicies',
-        title: 'Platform and compliance policy alignment',
-        description: 'I will follow Redoubt platform controls, reviewer conditions, and my organization’s applicable compliance obligations.'
+        title: 'Platform and compliance policy alignment'
     }
 ] as const
 
@@ -231,6 +228,7 @@ export default function OnboardingStep5() {
     const allClear = step1Ready && step2Ready && step3Ready && step4Ready && step5Ready
     const commitmentCount = Object.values(state).filter(Boolean).length
     const isIndividualPath = isIndividualParticipant(step1Data)
+    const submissionNextSteps = getSubmissionNextSteps(step1Data.participantType)
     const contactEmail = step1Data.officialWorkEmail.trim() || 'your contact email'
     const expectedDomain = getEmailDomain(step1Data.officialWorkEmail)
     const domainMatchesWorkEmail = doesCorporateDomainMatchEmail(
@@ -249,16 +247,56 @@ export default function OnboardingStep5() {
         reviewSnapshot.participationIntent.length > 0
             ? reviewSnapshot.participationIntent.join(', ')
             : 'No participation mode selected.'
-    const identitySectionTitle = isIndividualPath ? 'Participant identity' : 'Organization and participant identity'
+    const commitmentItems = [
+        {
+            ...commitmentFields[0],
+            description: 'I will use approved data and environments only for the reviewed use case and within authorized scope.'
+        },
+        {
+            ...commitmentFields[1],
+            description: isIndividualPath
+                ? 'I will not redistribute data, credentials, or outputs outside the approved reviewers, systems, or permitted workflow boundaries.'
+                : 'I will not redistribute data, credentials, or outputs outside the approved reviewers, systems, or organization boundaries.'
+        },
+        {
+            ...commitmentFields[2],
+            description: isIndividualPath
+                ? 'I will follow Redoubt platform controls, reviewer conditions, and any compliance obligations attached to this request.'
+                : 'I will follow Redoubt platform controls, reviewer conditions, and my organization’s applicable compliance obligations.'
+        }
+    ] as const
+    const identitySectionTitle = isIndividualPath
+        ? 'Participant identity and professional context'
+        : 'Organization and participant identity'
     const identitySectionDescription = isIndividualPath
-        ? 'Reviewers use this information to anchor the application to a clearly accountable individual participant.'
+        ? 'Reviewers use this information to anchor the application to a clearly accountable individual participant and their professional context.'
         : 'Reviewers use this information to anchor the application to a legitimate organization and a clearly accountable representative.'
+    const identityReviewDetails = isIndividualPath
+        ? [
+            { label: 'Full name', value: step1Data.fullName || 'Not provided' },
+            { label: 'Affiliation or public identity', value: step1Data.organizationName || 'Not provided' },
+            { label: 'Portfolio or website', value: step1Data.organizationWebsite?.trim() || 'Not provided' },
+            { label: 'Participant role', value: step1Data.roleInOrganization || 'Not provided' },
+            { label: 'Contact email', value: step1Data.officialWorkEmail || 'Not provided' },
+            { label: 'Industry or domain', value: step1Data.industryDomain || 'Not provided' },
+            { label: 'Primary operating region', value: step1Data.primaryOperatingRegion || 'Not provided' },
+            { label: 'Country', value: step1Data.country || 'Not provided' }
+        ]
+        : [
+            { label: 'Primary contact name', value: step1Data.primaryContactName || 'Not provided' },
+            { label: 'Organization', value: step1Data.organizationName || 'Not provided' },
+            { label: 'Organization website', value: step1Data.organizationWebsite?.trim() || 'Not provided' },
+            { label: 'Representative role / team', value: step1Data.roleInOrganization || 'Not provided' },
+            { label: 'Official work email', value: step1Data.officialWorkEmail || 'Not provided' },
+            { label: 'Industry or domain', value: step1Data.industryDomain || 'Not provided' },
+            { label: 'Country', value: step1Data.country || 'Not provided' }
+        ]
 
     const readinessItems = [
         {
             label: isIndividualPath ? 'Participant identity record' : 'Organization and identity record',
             description: isIndividualPath
-                ? 'Participant details, contact email, and identity context are ready for reviewer use.'
+                ? 'Name, contact email, professional context, and region details are ready for reviewer use.'
                 : 'Representative details, corporate email, and organization context are ready for reviewer use.',
             complete: step1Ready,
             path: participantOnboardingPaths.step1
@@ -556,34 +594,13 @@ export default function OnboardingStep5() {
                                 </div>
 
                                 <div className="mt-6 grid gap-x-5 gap-y-6 sm:grid-cols-2">
-                                    <ReviewDetail
-                                        label={isIndividualPath ? 'Joining as' : 'Organization'}
-                                        value={step1Data.organizationName || 'Not provided'}
-                                    />
-                                    <ReviewDetail
-                                        label={isIndividualPath ? 'Portfolio or website' : 'Organization website'}
-                                        value={step1Data.organizationWebsite?.trim() || 'Not provided'}
-                                    />
-                                    <ReviewDetail
-                                        label={isIndividualPath ? 'Participant role' : 'Representative role / team'}
-                                        value={step1Data.roleInOrganization || 'Not provided'}
-                                    />
-                                    <ReviewDetail
-                                        label={isIndividualPath ? 'Contact email' : 'Official work email'}
-                                        value={step1Data.officialWorkEmail || 'Not provided'}
-                                    />
-                                    <ReviewDetail
-                                        label="Industry or domain"
-                                        value={step1Data.industryDomain || 'Not provided'}
-                                    />
-                                    <ReviewDetail
-                                        label={isIndividualPath ? 'Primary operating region' : 'Country'}
-                                        value={
-                                            isIndividualPath
-                                                ? step1Data.primaryOperatingRegion || 'Not provided'
-                                                : step1Data.country || 'Not provided'
-                                        }
-                                    />
+                                    {identityReviewDetails.map((detail) => (
+                                        <ReviewDetail
+                                            key={detail.label}
+                                            label={detail.label}
+                                            value={detail.value}
+                                        />
+                                    ))}
                                 </div>
 
                                 <div className="mt-6 rounded-[22px] border border-slate-800 bg-slate-900/70 px-4 py-3 text-sm text-slate-300">
@@ -768,7 +785,9 @@ export default function OnboardingStep5() {
                                     />
                                 </div>
                                 <p className="mt-3 text-sm leading-6 text-slate-400">
-                                    Confirms the professional identity tied to the submitting representative.
+                                    {isIndividualPath
+                                        ? 'Confirms the public professional identity tied to the accountable participant.'
+                                        : 'Confirms the professional identity tied to the submitting representative.'}
                                 </p>
                             </div>
 
@@ -927,7 +946,7 @@ export default function OnboardingStep5() {
 
                         <div className="mt-5 grid gap-4 xl:grid-cols-[minmax(0,1.05fr)_minmax(280px,0.85fr)_minmax(0,1.1fr)]">
                             <div className="space-y-4">
-                                {participantOnboardingNextSteps.map((step) => (
+                                {submissionNextSteps.map((step) => (
                                     <div
                                         key={step}
                                         className="rounded-[20px] border border-slate-800/90 bg-slate-900/75 px-4 py-3 text-sm text-slate-300"

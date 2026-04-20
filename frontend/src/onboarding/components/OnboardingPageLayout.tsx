@@ -9,6 +9,8 @@ import {
     participantOnboardingSubtitle,
     participantOnboardingTitle
 } from '../constants'
+import { getOnboardingShellStepMeta, type OnboardingShellStepMeta } from '../content'
+import { readStep1Snapshot } from '../storage'
 import OnboardingProgress, { type OnboardingProgressStepMeta } from './OnboardingProgress'
 
 type OnboardingPageLayoutProps = {
@@ -24,81 +26,6 @@ type OnboardingPageLayoutProps = {
     pageEyebrow?: string
     progressVariant?: 'grid' | 'connector'
 }
-
-type OnboardingShellStepMeta = OnboardingProgressStepMeta & {
-    description: string
-    helperBody: string
-    helperPoints: readonly string[]
-}
-
-const onboardingStepMeta: readonly OnboardingShellStepMeta[] = [
-    {
-        subtitle: 'Identity',
-        emphasis: 'lightweight',
-        description: 'Confirm your organization, role, and verified business identity before deeper review begins.',
-        helperBody: 'This step anchors the request to a real person or organization before later verification and governance review.',
-        helperPoints: [
-            'Use the contact details that should receive any reviewer follow-up.',
-            'Invite codes are optional, but can help route the request faster.',
-            'Later steps inherit the identity record captured here.'
-        ]
-    },
-    {
-        subtitle: 'Use Case',
-        emphasis: 'standard',
-        description: 'Capture operational context so reviewers understand how the platform will be used in practice.',
-        helperBody: 'Reviewers use this step to understand why access is being requested and who will use it.',
-        helperPoints: [
-            'Lead with the real operational goal, not a generic interest statement.',
-            'Structured selections make triage faster than narrative alone.',
-            'Keep the summary concise but specific enough for manual review.'
-        ]
-    },
-    {
-        subtitle: 'Governance',
-        emphasis: 'standard',
-        description: 'Establish governance posture, participation intent, and the boundaries that apply to this request.',
-        helperBody: 'This step confirms the relationship to the platform and the governance obligations behind the request.',
-        helperPoints: [
-            'Participation mode should match the use case captured earlier.',
-            'Governance confirmations should be completed by the accountable party.',
-            'Purpose limitation matters before verification can move forward.'
-        ]
-    },
-    {
-        subtitle: 'Verification',
-        emphasis: 'trust-critical',
-        description: 'Provide trust evidence, organizational proof points, and authentication controls used before access approval.',
-        helperBody: 'Verification is where the request becomes an evidence-backed packet for protected-access review.',
-        helperPoints: [
-            'Identity proof, evidence files, and authentication setup should reinforce each other.',
-            'Incomplete packets usually delay reviewer handoff.',
-            'Only upload documents directly relevant to this request.'
-        ]
-    },
-    {
-        subtitle: 'Review',
-        emphasis: 'trust-critical',
-        description: 'Validate the full submission package and confirm final commitments before it moves to manual review.',
-        helperBody: 'The final step should read like a clean review packet rather than another long-form onboarding screen.',
-        helperPoints: [
-            'Confirm the summary still reflects the intended request.',
-            'Use the edit actions to fix gaps before submitting.',
-            'Final commitments lock the package that reviewers receive.'
-        ]
-    },
-    {
-        subtitle: 'Submitted',
-        emphasis: 'standard',
-        description: 'Your onboarding package has been staged for review and the next actions are now operational rather than form-driven.',
-        helperBody: 'After submission, the flow should focus on status, timing, and next steps rather than more form scaffolding.',
-        helperPoints: [
-            'The review team now works from the preserved submission package.',
-            'Status and timing should stay easy to scan.',
-            'Trust Center access remains available for policy reference.'
-        ]
-    }
-] as const
 
 const canvasWidthClassName: Record<NonNullable<OnboardingPageLayoutProps['canvasWidth']>, string> = {
     compact: 'max-w-[840px]',
@@ -136,6 +63,8 @@ export default function OnboardingPageLayout({
     pageEyebrow,
     progressVariant = 'grid'
 }: OnboardingPageLayoutProps) {
+    const participantType = readStep1Snapshot().participantType
+    const onboardingStepMeta = getOnboardingShellStepMeta(participantType)
     const showingSubmissionStage =
         typeof activeStep === 'number' && activeStep > participantOnboardingActiveStepTitles.length
     const visibleSteps = showingSubmissionStage ? participantOnboardingStepTitles : participantOnboardingActiveStepTitles

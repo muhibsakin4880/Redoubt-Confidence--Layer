@@ -2,15 +2,16 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { participantOnboardingEstimatedReviewTime, participantOnboardingPaths } from '../onboarding/constants'
+import { sanitizeParticipationIntent } from '../onboarding/content'
 import OnboardingPageLayout from '../onboarding/components/OnboardingPageLayout'
 import OnboardingStepGuard from '../onboarding/components/OnboardingStepGuard'
 import { isStep1Complete } from '../onboarding/flow'
 import {
     emptyComplianceCommitment,
     emptyLegalAcknowledgment,
-    emptyStep1FormState,
     emptyVerificationSnapshot,
     onboardingStorageKeys,
+    readOnboardingValue,
     readStep1Snapshot,
     writeOnboardingValue
 } from '../onboarding/storage'
@@ -181,6 +182,13 @@ export default function OnboardingStep1() {
         } as const
 
     const resetBranchDependentState = (participantType: ParticipantType | null) => {
+        const storedParticipationIntent = readOnboardingValue<string[]>(onboardingStorageKeys.participationIntent, [])
+        const sanitizedParticipationIntent = sanitizeParticipationIntent(participantType, storedParticipationIntent)
+
+        if (sanitizedParticipationIntent.length !== storedParticipationIntent.length) {
+            writeOnboardingValue(onboardingStorageKeys.participationIntent, sanitizedParticipationIntent)
+        }
+
         writeOnboardingValue(onboardingStorageKeys.legalAcknowledgment, emptyLegalAcknowledgment)
         writeOnboardingValue(onboardingStorageKeys.verification, {
             ...emptyVerificationSnapshot,

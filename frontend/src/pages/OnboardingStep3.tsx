@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
 import {
@@ -6,6 +6,11 @@ import {
     participantOnboardingPolicyLabel,
     participantOnboardingPolicyPath
 } from '../onboarding/constants'
+import {
+    getGovernanceExplainers,
+    getParticipationOptions,
+    sanitizeParticipationIntent
+} from '../onboarding/content'
 import OnboardingPageLayout from '../onboarding/components/OnboardingPageLayout'
 import OnboardingStepGuard from '../onboarding/components/OnboardingStepGuard'
 import { isStep3Complete } from '../onboarding/flow'
@@ -18,53 +23,6 @@ import {
 } from '../onboarding/storage'
 import type { LegalAcknowledgment } from '../onboarding/types'
 
-type ParticipationOption = {
-    description: string
-    detail: string
-    title: string
-}
-
-const participationOptions: readonly ParticipationOption[] = [
-    {
-        title: 'Access datasets',
-        description: 'Request governed access to evaluate or work with protected datasets.',
-        detail: 'Best for teams that need controlled data access within a defined operational purpose.'
-    },
-    {
-        title: 'Contribute datasets',
-        description: 'Participate as a contributor or data-sharing organization.',
-        detail: 'Used when your organization intends to provide governed data assets under later contributor review.'
-    },
-    {
-        title: 'Collaborate',
-        description: 'Work jointly with another team, program, or approved research partner.',
-        detail: 'Useful when the request supports a coordinated multi-party workflow or joint evaluation.'
-    },
-    {
-        title: 'Research participation',
-        description: 'Use Redoubt as part of a structured research or validation program.',
-        detail: 'Appropriate for research leads, analysts, and validation teams operating in a governed setting.'
-    }
-] as const
-
-const governanceExplainers = [
-    {
-        title: 'Who should complete this step',
-        content:
-            'This step should be completed by a person who can accurately represent the requesting organization and accept governance obligations for the intended access request.'
-    },
-    {
-        title: 'What non-redistribution means',
-        content:
-            'Approved access is limited to the specific use case and review scope described in this application. It does not allow onward sharing, resale, or repurposing without explicit written approval.'
-    },
-    {
-        title: 'If you are not authorized',
-        content:
-            'Stop here and route the request to the right approver, legal contact, program owner, or authorized representative inside your organization before continuing.'
-    }
-] as const
-
 function cx(...classes: Array<string | false | null | undefined>) {
     return classes.filter(Boolean).join(' ')
 }
@@ -72,13 +30,26 @@ function cx(...classes: Array<string | false | null | undefined>) {
 export default function OnboardingStep3() {
     const navigate = useNavigate()
     const step1Snapshot = readStep1Snapshot()
-    const isIndividualPath = step1Snapshot.participantType === 'individual'
+    const participantType = step1Snapshot.participantType
+    const isIndividualPath = participantType === 'individual'
+    const participationOptions = getParticipationOptions(participantType)
+    const governanceExplainers = getGovernanceExplainers(participantType)
     const [participationIntent, setParticipationIntent] = useState<string[]>(() =>
-        readOnboardingValue(onboardingStorageKeys.participationIntent, [])
+        sanitizeParticipationIntent(participantType, readOnboardingValue(onboardingStorageKeys.participationIntent, []))
     )
     const [legalAcknowledgment, setLegalAcknowledgment] = useState<LegalAcknowledgment>(() =>
         readOnboardingValue(onboardingStorageKeys.legalAcknowledgment, emptyLegalAcknowledgment)
     )
+
+    useEffect(() => {
+        const storedParticipationIntent = readOnboardingValue(onboardingStorageKeys.participationIntent, [])
+        const sanitizedParticipationIntent = sanitizeParticipationIntent(participantType, storedParticipationIntent)
+
+        if (sanitizedParticipationIntent.length !== storedParticipationIntent.length) {
+            setParticipationIntent(sanitizedParticipationIntent)
+            writeOnboardingValue(onboardingStorageKeys.participationIntent, sanitizedParticipationIntent)
+        }
+    }, [participantType])
 
     const toggleValue = (value: string) => {
         setParticipationIntent((prev) => {
@@ -100,7 +71,9 @@ export default function OnboardingStep3() {
     }
 
     const fillMockData = () => {
-        const mockParticipation = ['Access datasets', 'Collaborate']
+        const mockParticipation = isIndividualPath
+            ? ['Access datasets', 'Research participation']
+            : ['Access datasets', 'Collaborate']
         const mockLegal: LegalAcknowledgment = {
             authorizedRepresentative: true,
             governancePolicyAccepted: true,
@@ -211,7 +184,9 @@ export default function OnboardingStep3() {
                                     Governance framing
                                 </div>
                                 <p className="mt-2 text-sm leading-7 text-slate-300">
-                                    Select the participation mode that matches the request, then confirm the authority and policy scope required before verification can proceed.
+                                    {isIndividualPath
+                                        ? 'Select the participation mode that matches the request, then confirm that you are the accountable participant and understand the policy scope before verification can proceed.'
+                                        : 'Select the participation mode that matches the request, then confirm the authority and policy scope required before verification can proceed.'}
                                 </p>
                             </div>
                             <div className="rounded-full border border-amber-400/20 bg-amber-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-amber-100">
@@ -225,7 +200,9 @@ export default function OnboardingStep3() {
                             <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
                                 Left zone · participation mode
                             </div>
-                            <h3 className="mt-3 text-[1.45rem] font-semibold text-white">How your team plans to participate</h3>
+                            <h3 className="mt-3 text-[1.45rem] font-semibold text-white">
+                                {isIndividualPath ? 'How you plan to participate' : 'How your team plans to participate'}
+                            </h3>
                             <p className="mt-4 text-sm leading-7 text-slate-400">
                                 {isIndividualPath
                                     ? 'Select the participation modes that best reflect the request. These selections help reviewers understand the expected relationship between you and the platform.'
@@ -337,7 +314,9 @@ export default function OnboardingStep3() {
                                             onChange={(event) => handleLegalChange('authorizedRepresentative', event.target.checked)}
                                         />
                                         <div>
-                                        <div className="text-sm font-semibold text-white">Authorized representative</div>
+                                        <div className="text-sm font-semibold text-white">
+                                            {isIndividualPath ? 'Accountable participant' : 'Authorized representative'}
+                                        </div>
                                             <p className="mt-2 text-sm leading-6 text-slate-300">
                                                 {isIndividualPath
                                                     ? 'I confirm that I am the accountable individual who will hold and use this Redoubt credential for the stated purpose.'

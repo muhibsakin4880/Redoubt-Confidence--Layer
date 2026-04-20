@@ -2,11 +2,11 @@ import { Link, Navigate } from 'react-router-dom'
 
 import {
     participantOnboardingEstimatedReviewTime,
-    participantOnboardingNextSteps,
     participantOnboardingPaths,
     participantOnboardingPolicyPath,
     participantOnboardingReviewStatus
 } from '../onboarding/constants'
+import { getSubmissionNextSteps } from '../onboarding/content'
 import OnboardingPageLayout from '../onboarding/components/OnboardingPageLayout'
 import { getFirstIncompleteOnboardingPath, isIndividualParticipant, isStep4Complete, readOnboardingSnapshot } from '../onboarding/flow'
 import {
@@ -49,6 +49,7 @@ export default function OnboardingConfirmation() {
     const snapshot = readOnboardingSnapshot()
     const verificationReady = isStep4Complete(snapshot.step1, snapshot.verification)
     const isIndividualPath = isIndividualParticipant(snapshot.step1)
+    const nextSteps = getSubmissionNextSteps(snapshot.step1.participantType)
     const authMethod = snapshot.verification.authenticationMethod
         ? authenticationMethodLabels[snapshot.verification.authenticationMethod]
         : 'Not selected'
@@ -122,7 +123,7 @@ export default function OnboardingConfirmation() {
                             What happens next
                         </div>
                         <div className="mt-4 grid gap-3 md:grid-cols-3">
-                        {participantOnboardingNextSteps.map((step, index) => (
+                        {nextSteps.map((step, index) => (
                             <div
                                 key={step}
                                 className="rounded-[20px] border border-slate-700 bg-slate-900/60 px-4 py-4 text-sm text-slate-300"

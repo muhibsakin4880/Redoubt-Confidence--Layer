@@ -668,7 +668,11 @@ export default function OnboardingStep4() {
                                         Reviewers validate
                                     </div>
                                     <ul className="mt-3 space-y-2 text-sm text-slate-300">
-                                        <li>• The profile identifies a real professional tied to the request.</li>
+                                        <li>
+                                            • {isIndividualPath
+                                                ? 'The profile identifies a real individual participant tied to the request.'
+                                                : 'The profile identifies a real professional tied to the request.'}
+                                        </li>
                                         <li>
                                             • {isIndividualPath
                                                 ? 'Public identity signals align with the role and use case stated earlier.'
@@ -681,7 +685,9 @@ export default function OnboardingStep4() {
                                 <div className="mt-5 space-y-4">
                                     {isLinkedInConnected ? (
                                         <div className="rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
-                                            LinkedIn verification succeeded. This identity proof is now included in your reviewer packet.
+                                            {isIndividualPath
+                                                ? 'Profile verification succeeded. This individual identity proof is now included in your reviewer packet.'
+                                                : 'LinkedIn verification succeeded. This identity proof is now included in your reviewer packet.'}
                                         </div>
                                     ) : (
                                         <button

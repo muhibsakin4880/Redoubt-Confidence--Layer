@@ -149,13 +149,13 @@ const evaluationContextOptions: readonly Option[] = [
 ]
 
 const strongSummaryExamples = [
-    'Our research team wants to benchmark privacy-reviewed healthcare datasets for model validation before requesting a controlled evaluation workspace for a limited pilot.',
-    'We are assessing whether Redoubt can support a governed analytics workflow for a two-person compliance team reviewing sensitive operational records.',
-    'Our program needs a protected model-validation workflow so security and research leads can evaluate candidate datasets before approving internal rollout.'
+    'I want to benchmark privacy-reviewed healthcare datasets for a controlled model-validation workflow before requesting a limited governed pilot.',
+    'A two-person compliance team wants to assess whether Redoubt can support a governed analytics review of sensitive operational records.',
+    'Our program needs a protected validation workflow so researchers and security leads can evaluate candidate datasets before approving internal rollout.'
 ] as const
 
 const weakSummaryExample =
-    'We want access to look around and see if this might be useful for our team.'
+    'I want access to look around and see whether this might be useful.'
 
 const reviewerSignals = [
     'A clear operational goal, not just a generic interest statement.',
@@ -165,9 +165,9 @@ const reviewerSignals = [
 ] as const
 
 const summaryChecklist = [
-    'What the team is trying to accomplish.',
+    'What the requester is trying to accomplish.',
     'What kind of workflow or evaluation will be run.',
-    'Who will use the access and at what scale.',
+    'Whether access is for one accountable participant, a small team, or a broader program.',
     'Why the request belongs in a governed environment.'
 ] as const
 
@@ -441,7 +441,7 @@ export default function OnboardingStep2() {
                 showDefaultHelperPanel={false}
                 helperPanel={helperPanel}
                 headerTitle="Intended Platform Usage"
-                headerSubtitle="Describe the request in a way reviewers can quickly understand: what the team wants to do, who will use the access, and what evaluation context Redoubt needs to support."
+                headerSubtitle="Describe the request in a way reviewers can quickly understand: what the requester wants to do, who will use the access, and what evaluation context Redoubt needs to support."
                 pageEyebrow="Participant onboarding · Use case review"
                 progressVariant="connector"
                 headerActions={
@@ -535,7 +535,7 @@ export default function OnboardingStep2() {
                                     </div>
                                     <h3 className="mt-2 text-lg font-semibold text-white">Who will use the access</h3>
                                     <p className="mt-3 text-sm leading-7 text-slate-400">
-                                        Clarify whether the request is for an individual, a small team, or a larger program.
+                                        Clarify whether access is for one accountable participant, a small team, or a larger program.
                                     </p>
                                 </div>
 
@@ -579,7 +579,7 @@ export default function OnboardingStep2() {
                             </div>
 
                             <p className="mt-4 text-sm leading-7 text-slate-400">
-                                Summarize the real workflow, evaluation, or decision your team wants to run on Redoubt.
+                                Summarize the real workflow, evaluation, or decision this request needs to run on Redoubt.
                                 Keep it concise but specific enough for a human reviewer to triage quickly.
                             </p>
 
@@ -587,7 +587,7 @@ export default function OnboardingStep2() {
                                 id="use-case-summary"
                                 value={useCaseSummary}
                                 onChange={(event) => handleUseCaseSummaryChange(event.target.value)}
-                                placeholder="Example: Our security and research leads want to evaluate privacy-reviewed healthcare datasets for a controlled model-validation workflow before approving a small pilot."
+                                placeholder="Example: I want to evaluate privacy-reviewed healthcare datasets for a controlled model-validation workflow before requesting a limited governed pilot."
                                 rows={6}
                                 maxLength={MAX_USE_CASE_SUMMARY_LENGTH}
                                 className="mt-4 w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:border-blue-500 focus:outline-none"
