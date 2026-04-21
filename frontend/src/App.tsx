@@ -54,6 +54,7 @@ import ProtectedEvaluationPage from './pages/ProtectedEvaluationPage'
 import TrustCenterPage from './pages/TrustCenterPage'
 import ResearcherAccessPage from './pages/ResearcherAccessPage'
 import DealRoutePlaceholderPage from './pages/DealRoutePlaceholderPage'
+import DealDossierPage from './pages/DealDossierPage'
 
 import { useAuth } from './contexts/AuthContext'
 import { participantOnboardingPaths } from './onboarding/constants'
@@ -258,7 +259,7 @@ function App() {
                     <Route path="demo/compliance-locker" element={<ComplianceLockerPage />} />
                     <Route path="demo/data-classification" element={<DataClassificationPage />} />
                     <Route path="demo/deals" element={<Navigate to={`/demo/deals/${DEFAULT_DEAL_ID}`} replace />} />
-                    <Route path="demo/deals/:dealId" element={<DealRoutePlaceholderPage surface="dossier" demo />} />
+                    <Route path="demo/deals/:dealId" element={<DealDossierPage demo />} />
                     <Route path="demo/deals/:dealId/provider-packet" element={<DealRoutePlaceholderPage surface="provider-packet" demo />} />
                     <Route path="demo/deals/:dealId/output-review" element={<DealRoutePlaceholderPage surface="output-review" demo />} />
                     <Route path="login" element={!isAuthenticated ? <LoginPage /> : <Navigate to={getDashboardPath()} replace />} />
@@ -300,7 +301,7 @@ function App() {
                     <Route path="provider/datasets/:id" element={<ContributionDetailPage />} />
                     <Route path="researcher-access" element={<ResearcherAccessPage />} />
                     <Route path="deals" element={<Navigate to={`/deals/${DEFAULT_DEAL_ID}`} replace />} />
-                    <Route path="deals/:dealId" element={<DealRoutePlaceholderPage surface="dossier" />} />
+                    <Route path="deals/:dealId" element={<DealDossierPage />} />
                     <Route path="deals/:dealId/provider-packet" element={<DealRoutePlaceholderPage surface="provider-packet" />} />
                     <Route path="deals/:dealId/output-review" element={<DealRoutePlaceholderPage surface="output-review" />} />
                     <Route path="deals/:dealId/approval" element={<DealRoutePlaceholderPage surface="approval" />} />
