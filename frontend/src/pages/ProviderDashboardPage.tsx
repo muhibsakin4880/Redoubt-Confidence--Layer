@@ -15,6 +15,7 @@ import {
     statusStyles as contributionStatusStyles,
     uploadedDatasets
 } from '../data/contributionStatusData'
+import { buildDealPath, getSeededDealRouteRecordByRequestId } from '../data/dealDossierData'
 
 type ScreeningTone = 'emerald' | 'amber' | 'cyan'
 
@@ -243,6 +244,12 @@ export default function ProviderDashboardPage() {
             tone: 'amber'
         }
     ]
+    const leadProviderPacketPath = providerReviewRequests
+        .map(request => getSeededDealRouteRecordByRequestId(request.id))
+        .find((record): record is NonNullable<ReturnType<typeof getSeededDealRouteRecordByRequestId>> => Boolean(record))
+    const providerPacketQuickLink = leadProviderPacketPath
+        ? buildDealPath(leadProviderPacketPath.dealId, 'provider-packet')
+        : null
 
     return (
         <div className="min-h-screen bg-slate-900 text-white">
@@ -269,6 +276,14 @@ export default function ProviderDashboardPage() {
                                     >
                                         Upload New Dataset
                                     </Link>
+                                    {providerPacketQuickLink ? (
+                                        <Link
+                                            to={providerPacketQuickLink}
+                                            className="rounded-lg border border-emerald-500/35 bg-emerald-500/10 px-4 py-2 text-sm font-medium text-emerald-100 transition-colors hover:bg-emerald-500/20"
+                                        >
+                                            Open provider packet
+                                        </Link>
+                                    ) : null}
                                     <button className="rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-200 transition-colors hover:border-blue-500 hover:text-white">
                                         Configure delivery
                                     </button>
@@ -579,6 +594,10 @@ function ProviderRequestCard({ request }: { request: DatasetRequest }) {
     const complianceFields = buildRequestComplianceFields(request)
     const screeningItems = buildBuyerScreeningItems(request)
     const requestFlags = getRequestFlags(request)
+    const seededDealRoute = getSeededDealRouteRecordByRequestId(request.id)
+    const providerPacketPath = seededDealRoute
+        ? buildDealPath(seededDealRoute.dealId, 'provider-packet')
+        : null
 
     return (
         <article className="flex h-full flex-col rounded-[24px] border border-white/10 bg-slate-950/72 p-5 shadow-[0_18px_48px_rgba(2,8,20,0.24)]">
@@ -660,6 +679,14 @@ function ProviderRequestCard({ request }: { request: DatasetRequest }) {
                 >
                     Open review detail
                 </Link>
+                {providerPacketPath ? (
+                    <Link
+                        to={providerPacketPath}
+                        className="rounded-lg border border-emerald-500/35 bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-100 transition-colors hover:bg-emerald-500/20"
+                    >
+                        Open provider packet
+                    </Link>
+                ) : null}
                 <button className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-emerald-700">
                     Approve access
                 </button>

@@ -21,6 +21,11 @@ import PortfolioAlertBoard from '../components/PortfolioAlertBoard'
 import RemediationQueuePanel from '../components/RemediationQueuePanel'
 import ReadinessCertificationPanel from '../components/ReadinessCertificationPanel'
 import {
+    buildDealPath,
+    buildDemoDealPath,
+    getSeededDealRouteRecordByDatasetId
+} from '../data/dealDossierData'
+import {
     buildCompliancePassport,
     buildRequestPrefillFromPassport,
     passportStatusMeta
@@ -172,8 +177,19 @@ export default function DatasetDetailPage() {
     const { id } = useParams()
     const location = useLocation()
     const navigate = useNavigate()
+    const isDemoRoute = location.pathname.startsWith('/demo/')
     const routeDataset = getDatasetDetailById(id)
     const dataset = routeDataset ?? Object.values(DATASET_DETAILS)[0]
+    const seededDealRoute = useMemo(
+        () => getSeededDealRouteRecordByDatasetId(dataset.id),
+        [dataset.id]
+    )
+    const providerPacketPath = useMemo(() => {
+        if (!seededDealRoute) return null
+        return isDemoRoute
+            ? buildDemoDealPath(seededDealRoute.dealId, 'provider-packet')
+            : buildDealPath(seededDealRoute.dealId, 'provider-packet')
+    }, [isDemoRoute, seededDealRoute])
     const accessPackage = getAccessPackageForDataset(dataset.id)
     const compliancePassport = useMemo(() => buildCompliancePassport(), [location.key])
     const passportStatus = useMemo(() => passportStatusMeta(compliancePassport.status), [compliancePassport.status])
@@ -538,6 +554,14 @@ export default function DatasetDetailPage() {
                                 <p className="text-xs text-slate-500">
                                     Demo review cue: {dataset.trustProfile.ownershipAndLicense.value}
                                 </p>
+                                {providerPacketPath ? (
+                                    <Link
+                                        to={providerPacketPath}
+                                        className="inline-flex items-center rounded-lg border border-cyan-400/25 bg-cyan-500/10 px-3 py-2 text-xs font-semibold text-cyan-100 transition-colors hover:bg-cyan-500/20"
+                                    >
+                                        Open provider rights packet
+                                    </Link>
+                                ) : null}
                             </div>
 
                             <section className="mt-8 rounded-2xl border border-slate-700 bg-slate-900/70 p-5 shadow-[0_12px_35px_rgba(0,0,0,0.18)]">

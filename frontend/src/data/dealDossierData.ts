@@ -98,6 +98,12 @@ export const DEFAULT_DEAL_ID = SEEDED_DEAL_ROUTES[0].dealId
 export const getSeededDealRouteRecordById = (dealId?: string | null) =>
     SEEDED_DEAL_ROUTES.find(record => record.dealId === dealId) ?? null
 
+export const getSeededDealRouteRecordByDatasetId = (datasetId?: string | null) =>
+    SEEDED_DEAL_ROUTES.find(record => record.datasetId === datasetId) ?? null
+
+export const getSeededDealRouteRecordByRequestId = (requestId?: string | null) =>
+    SEEDED_DEAL_ROUTES.find(record => record.requestId === requestId) ?? null
+
 export const buildDealPath = (dealId: string, surface: DealSurfaceKey = 'dossier') => {
     const routeSegment = DEAL_SURFACE_META[surface].routeSegment
     return routeSegment ? `/deals/${dealId}/${routeSegment}` : `/deals/${dealId}`
