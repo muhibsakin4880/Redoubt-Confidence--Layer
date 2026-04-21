@@ -53,9 +53,11 @@ import PilotWalkthroughPage from './pages/PilotWalkthroughPage'
 import ProtectedEvaluationPage from './pages/ProtectedEvaluationPage'
 import TrustCenterPage from './pages/TrustCenterPage'
 import ResearcherAccessPage from './pages/ResearcherAccessPage'
+import DealRoutePlaceholderPage from './pages/DealRoutePlaceholderPage'
 
 import { useAuth } from './contexts/AuthContext'
 import { participantOnboardingPaths } from './onboarding/constants'
+import { DEFAULT_DEAL_ID } from './data/dealDossierData'
 
 const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage'))
 const AIInterrogationLogsPage = lazy(() => import('./pages/admin/AIInterrogationLogsPage'))
@@ -255,6 +257,10 @@ function App() {
                     <Route path="demo/security-ops" element={<SecurityOperationsPage />} />
                     <Route path="demo/compliance-locker" element={<ComplianceLockerPage />} />
                     <Route path="demo/data-classification" element={<DataClassificationPage />} />
+                    <Route path="demo/deals" element={<Navigate to={`/demo/deals/${DEFAULT_DEAL_ID}`} replace />} />
+                    <Route path="demo/deals/:dealId" element={<DealRoutePlaceholderPage surface="dossier" demo />} />
+                    <Route path="demo/deals/:dealId/provider-packet" element={<DealRoutePlaceholderPage surface="provider-packet" demo />} />
+                    <Route path="demo/deals/:dealId/output-review" element={<DealRoutePlaceholderPage surface="output-review" demo />} />
                     <Route path="login" element={!isAuthenticated ? <LoginPage /> : <Navigate to={getDashboardPath()} replace />} />
                     <Route path="application-status" element={<ApplicationStatusPage />} />
                     <Route path={participantOnboardingPaths.entry.slice(1)} element={RequireOnboardingAccess(<OnboardingEntryPage />)} />
@@ -293,6 +299,14 @@ function App() {
                     <Route path="provider/datasets/:id/status" element={<ContributionStatusDetailsPage />} />
                     <Route path="provider/datasets/:id" element={<ContributionDetailPage />} />
                     <Route path="researcher-access" element={<ResearcherAccessPage />} />
+                    <Route path="deals" element={<Navigate to={`/deals/${DEFAULT_DEAL_ID}`} replace />} />
+                    <Route path="deals/:dealId" element={<DealRoutePlaceholderPage surface="dossier" />} />
+                    <Route path="deals/:dealId/provider-packet" element={<DealRoutePlaceholderPage surface="provider-packet" />} />
+                    <Route path="deals/:dealId/output-review" element={<DealRoutePlaceholderPage surface="output-review" />} />
+                    <Route path="deals/:dealId/approval" element={<DealRoutePlaceholderPage surface="approval" />} />
+                    <Route path="deals/:dealId/negotiation" element={<DealRoutePlaceholderPage surface="negotiation" />} />
+                    <Route path="deals/:dealId/residency-memo" element={<DealRoutePlaceholderPage surface="residency-memo" />} />
+                    <Route path="deals/:dealId/go-live" element={<DealRoutePlaceholderPage surface="go-live" />} />
                     <Route path="datasets" element={<DatasetsPage />} />
                     <Route path="datasets/:id" element={<DatasetDetailPage />} />
                     <Route path="datasets/:id/rights-quote" element={<RightsQuoteBuilderPage />} />

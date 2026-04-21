@@ -24,6 +24,7 @@ const navGroups: NavGroup[] = [
         title: 'BUYER WORKFLOW',
         items: [
             { label: 'Datasets', to: '/datasets' },
+            { label: 'Evaluation Dossier', to: '/deals' },
             { label: 'Access Requests', to: '/access-requests' },
             { label: 'Escrow Center', to: '/escrow-center' },
             { label: 'Compliance Passport', to: '/compliance-passport' },
