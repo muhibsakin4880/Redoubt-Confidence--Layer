@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useLocation, useParams } from 'react-router-dom'
 import {
     buildRequestBasisFields,
     buildRequestComplianceFields,
@@ -22,6 +22,10 @@ import {
     dashboardSpacingTokens,
     dashboardTypographyTokens
 } from '../dashboardTokens'
+import {
+    buildDealPath,
+    getSeededDealRouteRecordByRequestId
+} from '../data/dealDossierData'
 
 const pageClass = `relative min-h-screen ${dashboardColorTokens['surface-page']} ${dashboardColorTokens['text-primary']}`
 const shellClass = `relative mx-auto max-w-[1680px] ${dashboardSpacingTokens['page-padding']}`
@@ -45,6 +49,7 @@ const text = {
 } as const
 
 export default function AccessRequestDetailPage() {
+    const location = useLocation()
     const { requestId } = useParams()
     const request = datasetRequests.find(item => item.id === requestId)
 
@@ -79,6 +84,15 @@ export default function AccessRequestDetailPage() {
     const complianceFields = buildRequestComplianceFields(request)
     const reviewerFields = buildRequestReviewerFields(request)
     const trustSignals = getDatasetTrustRiskLabels(request.trustProfile)
+    const isDemo = location.pathname.startsWith('/demo/')
+    const seededDeal = getSeededDealRouteRecordByRequestId(request.id)
+    const connectedDealLinks =
+        !isDemo && seededDeal
+            ? [
+                { label: 'Open evaluation dossier', to: buildDealPath(seededDeal.dealId, 'dossier') },
+                { label: 'Open negotiation history', to: buildDealPath(seededDeal.dealId, 'negotiation') }
+            ]
+            : []
     const summaryCards = [
         { label: 'Review state', value: providerReviewStatus, detail: 'Provider + reviewer queue posture' },
         {
@@ -184,6 +198,27 @@ export default function AccessRequestDetailPage() {
                         </div>
 
                         <aside className="space-y-5">
+                            {connectedDealLinks.length > 0 ? (
+                                <DetailPanel
+                                    eyebrow="Connected deal"
+                                    title="Connected deal surfaces"
+                                    description="This request now maps into the shared deal object, so clarification history and scope changes stay visible beyond the request queue."
+                                    quiet
+                                >
+                                    <div className="space-y-3">
+                                        {connectedDealLinks.map(link => (
+                                            <Link
+                                                key={link.to}
+                                                to={link.to}
+                                                className={`${secondaryButtonClass} w-full justify-start`}
+                                            >
+                                                {link.label}
+                                            </Link>
+                                        ))}
+                                    </div>
+                                </DetailPanel>
+                            ) : null}
+
                             <DetailPanel
                                 eyebrow="Trust review"
                                 title="Trust review signals"

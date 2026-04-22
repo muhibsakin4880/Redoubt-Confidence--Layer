@@ -58,6 +58,7 @@ import DealDossierPage from './pages/DealDossierPage'
 import ProviderRightsPacketPage from './pages/ProviderRightsPacketPage'
 import CleanRoomOutputReviewPage from './pages/CleanRoomOutputReviewPage'
 import DealApprovalPage from './pages/DealApprovalPage'
+import DealNegotiationPage from './pages/DealNegotiationPage'
 import ProviderInstitutionReviewPage from './pages/ProviderInstitutionReviewPage'
 
 import { useAuth } from './contexts/AuthContext'
@@ -311,7 +312,7 @@ function App() {
                     <Route path="deals/:dealId/provider-packet" element={<ProviderRightsPacketPage />} />
                     <Route path="deals/:dealId/output-review" element={<CleanRoomOutputReviewPage />} />
                     <Route path="deals/:dealId/approval" element={<DealApprovalPage />} />
-                    <Route path="deals/:dealId/negotiation" element={<DealRoutePlaceholderPage surface="negotiation" />} />
+                    <Route path="deals/:dealId/negotiation" element={<DealNegotiationPage />} />
                     <Route path="deals/:dealId/residency-memo" element={<DealRoutePlaceholderPage surface="residency-memo" />} />
                     <Route path="deals/:dealId/go-live" element={<DealRoutePlaceholderPage surface="go-live" />} />
                     <Route path="datasets" element={<DatasetsPage />} />

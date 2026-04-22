@@ -33,7 +33,8 @@ export default function DealRelationshipRail({
     const reservedSurfaces = [
         { label: 'Provider packet', to: context.routeTargets['provider-packet'], status: 'Live', tone: 'cyan' as const, demoReady: true },
         { label: 'Output review', to: context.routeTargets['output-review'], status: 'Live', tone: 'emerald' as const, demoReady: true },
-        { label: 'Approval', to: context.routeTargets.approval, status: 'Live', tone: 'amber' as const, demoReady: false }
+        { label: 'Approval', to: context.routeTargets.approval, status: 'Live', tone: 'amber' as const, demoReady: false },
+        { label: 'Negotiation', to: context.routeTargets.negotiation, status: 'Live', tone: 'cyan' as const, demoReady: false }
     ]
 
     return (
