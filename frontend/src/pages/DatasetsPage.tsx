@@ -8,7 +8,7 @@ import {
     type DiscoveryReviewStateMeta
 } from '../data/discoveryReviewData'
 import {
-    DATASET_DISCOVERY_SUMMARIES,
+    loadDatasetDiscoverySummaries,
     type AccessType,
     type DatasetDiscoverySummary,
     type VerificationStatus
@@ -137,8 +137,6 @@ const STORAGE_DATASET_SHORTLIST = 'Redoubt:datasets:shortlist'
 const STORAGE_DATASET_COMPARE = 'Redoubt:datasets:compare'
 const MAX_COMPARE_ITEMS = 3
 
-const DATASETS: Dataset[] = DATASET_DISCOVERY_SUMMARIES
-
 const defaultFilters: FilterState = {
     searchTerm: '',
     domain: 'All',
@@ -172,9 +170,6 @@ const sortOptions: Array<{ value: SortOption; label: string }> = [
     { value: 'most-recent', label: 'Most recent' }
 ]
 
-const domains = ['All', ...new Set(DATASETS.map(dataset => dataset.domain))]
-const dataTypes = ['All', ...new Set(DATASETS.map(dataset => dataset.dataType))]
-const geographies = ['All', ...new Set(DATASETS.map(dataset => dataset.geography))]
 const verificationStates: FilterState['verificationStatus'][] = ['All', 'Attested', 'Under Review']
 const freshnessBuckets = ['All', 'Real-time / <1h', 'Daily', 'Weekly']
 const minConfidenceOptions = [0, 85, 90, 95]
@@ -321,8 +316,13 @@ const discoveryText = {
     metaStrong: 'text-[13px] font-medium leading-5 text-slate-300'
 } as const
 
-const getDatasetDossierPath = (datasetId: number, demo: boolean) => {
-    const dealRoute = getDealRouteRecordByDatasetId(String(datasetId))
+const getDatasetRouteId = (dataset: Dataset) => dataset.detailId ?? String(dataset.id)
+
+const getDatasetDetailPath = (dataset: Dataset, demo: boolean) =>
+    `${demo ? '/demo' : ''}/datasets/${getDatasetRouteId(dataset)}`
+
+const getDatasetDossierPath = (dataset: Dataset, demo: boolean) => {
+    const dealRoute = getDealRouteRecordByDatasetId(getDatasetRouteId(dataset))
     if (!dealRoute) return null
 
     return demo
@@ -332,6 +332,7 @@ const getDatasetDossierPath = (datasetId: number, demo: boolean) => {
 
 export default function DatasetsPage() {
     const location = useLocation()
+    const datasets = useMemo(() => loadDatasetDiscoverySummaries(), [location.key])
     const [filters, setFilters] = useState<FilterState>(defaultFilters)
     const [sortOption, setSortOption] = useState<SortOption>('best-match')
     const [shortlistIds, setShortlistIds] = useState<number[]>(() => parseStoredIdList(STORAGE_DATASET_SHORTLIST))
@@ -350,6 +351,9 @@ export default function DatasetsPage() {
     const hasBuyerGeoProfile = buyerOrgCountry.length > 0
     const geoPolicyNoteTone: SignalTone = hasBuyerGeoProfile ? 'scheduled' : 'monitoring'
     const demo = location.pathname.startsWith('/demo/')
+    const domains = useMemo(() => ['All', ...new Set(datasets.map(dataset => dataset.domain))], [datasets])
+    const dataTypes = useMemo(() => ['All', ...new Set(datasets.map(dataset => dataset.dataType))], [datasets])
+    const geographies = useMemo(() => ['All', ...new Set(datasets.map(dataset => dataset.geography))], [datasets])
 
     useEffect(() => {
         if (typeof window === 'undefined') return
@@ -372,7 +376,7 @@ export default function DatasetsPage() {
     const filteredDatasets = useMemo(() => {
         const searchTerm = filters.searchTerm.trim().toLowerCase()
 
-        const datasets = DATASETS.filter(dataset => {
+        const results = datasets.filter(dataset => {
             const regulatedProfile = getRegulatedDiscoveryProfile(dataset)
             const searchableText = [
                 dataset.title,
@@ -410,11 +414,11 @@ export default function DatasetsPage() {
             )
         })
 
-        return datasets.sort((left, right) => sortDatasetResults(left, right, sortOption))
-    }, [filters, sortOption])
+        return results.sort((left, right) => sortDatasetResults(left, right, sortOption))
+    }, [datasets, filters, sortOption])
 
     const shortlistDatasets = shortlistIds
-        .map(id => DATASETS.find(dataset => dataset.id === id))
+        .map(id => datasets.find(dataset => dataset.id === id))
         .filter((dataset): dataset is Dataset => Boolean(dataset))
 
     const trackedReviewDatasets: TrackedReviewDataset[] = shortlistDatasets.map(dataset => {
@@ -424,12 +428,12 @@ export default function DatasetsPage() {
             dataset,
             reviewState,
             reviewMeta: DISCOVERY_REVIEW_STATE_META[reviewState],
-            reviewAction: buildDiscoveryReviewAction(dataset.id, reviewState)
+            reviewAction: buildDiscoveryReviewAction(getDatasetRouteId(dataset), reviewState)
         }
     })
 
     const compareDatasets = compareIds
-        .map(id => DATASETS.find(dataset => dataset.id === id))
+        .map(id => datasets.find(dataset => dataset.id === id))
         .filter((dataset): dataset is Dataset => Boolean(dataset))
 
     const reviewCounts = buildDiscoveryReviewCounts(shortlistIds, reviewStateMap)
@@ -438,10 +442,10 @@ export default function DatasetsPage() {
     const firstShortlistedDataset = shortlistDatasets[0] ?? null
     const compareLimitReached = compareIds.length >= MAX_COMPARE_ITEMS
     const activeFilters = buildActiveFilters(filters)
-    const attestedCount = DATASETS.filter(dataset => dataset.verificationStatus === 'Attested').length
-    const highConfidenceCount = DATASETS.filter(dataset => dataset.confidenceScore >= 92).length
-    const domainCoverageCount = new Set(DATASETS.map(dataset => dataset.domain)).size
-    const restrictedCount = DATASETS.filter(dataset => dataset.accessType === 'Restricted').length
+    const attestedCount = datasets.filter(dataset => dataset.verificationStatus === 'Attested').length
+    const highConfidenceCount = datasets.filter(dataset => dataset.confidenceScore >= 92).length
+    const domainCoverageCount = new Set(datasets.map(dataset => dataset.domain)).size
+    const restrictedCount = datasets.filter(dataset => dataset.accessType === 'Restricted').length
 
     const updateFilter = <Key extends keyof FilterState>(key: Key, value: FilterState[Key]) => {
         setFilters(current => ({
@@ -739,7 +743,7 @@ export default function DatasetsPage() {
                                 </div>
 
                                 <div className="flex flex-col gap-1 text-left 2xl:items-end 2xl:text-right">
-                                    <div className={discoveryText.metaStrong}>Showing {filteredDatasets.length} of {DATASETS.length} datasets</div>
+                                    <div className={discoveryText.metaStrong}>Showing {filteredDatasets.length} of {datasets.length} datasets</div>
                                     <div className={discoveryText.meta}>Sorted by {sortOptions.find(option => option.value === sortOption)?.label}</div>
                                 </div>
                             </div>
@@ -758,7 +762,8 @@ export default function DatasetsPage() {
                                             key={dataset.id}
                                             dataset={dataset}
                                             buyerOrgCountry={buyerOrgCountry}
-                                            dossierPath={getDatasetDossierPath(dataset.id, demo)}
+                                            dossierPath={getDatasetDossierPath(dataset, demo)}
+                                            detailPath={getDatasetDetailPath(dataset, demo)}
                                             prefersReducedMotion={prefersReducedMotion}
                                             shortlisted={shortlistIds.includes(dataset.id)}
                                             reviewState={reviewState}
@@ -798,9 +803,9 @@ export default function DatasetsPage() {
                                 <div className="space-y-4">
                                     {trackedReviewDatasets.map(item => {
                                         const { dataset, reviewState, reviewMeta, reviewAction } = item
-                                        const geoAccessSignal = getDatasetGeoAccessSignal(dataset.id, buyerOrgCountry)
+                                        const geoAccessSignal = getDatasetGeoAccessSignal(getDatasetRouteId(dataset), buyerOrgCountry)
                                         const trustRiskLabels = getDatasetTrustRiskLabels(dataset.trustProfile)
-                                        const dossierPath = getDatasetDossierPath(dataset.id, demo)
+                                        const dossierPath = getDatasetDossierPath(dataset, demo)
 
                                         return (
                                             <div key={dataset.id} className={`${subCardSurfaceClass} px-5 py-5`}>
@@ -876,7 +881,7 @@ export default function DatasetsPage() {
                                                             Open Evaluation Dossier
                                                         </Link>
                                                     ) : null}
-                                                    <Link to={`/datasets/${dataset.id}`} className={secondaryButtonClass}>
+                                                    <Link to={getDatasetDetailPath(dataset, demo)} className={secondaryButtonClass}>
                                                         Open detail
                                                     </Link>
                                                     <Link to={reviewAction.to} className={secondaryButtonClass}>
@@ -1007,8 +1012,8 @@ export default function DatasetsPage() {
                                         reviewStateMap
                                     )
                                     const reviewMeta = reviewState ? DISCOVERY_REVIEW_STATE_META[reviewState] : null
-                                    const reviewAction = reviewState ? buildDiscoveryReviewAction(dataset.id, reviewState) : null
-                                    const dossierPath = getDatasetDossierPath(dataset.id, demo)
+                                    const reviewAction = reviewState ? buildDiscoveryReviewAction(getDatasetRouteId(dataset), reviewState) : null
+                                    const dossierPath = getDatasetDossierPath(dataset, demo)
 
                                     return (
                                         <div key={dataset.id} className={`${subCardSurfaceClass} px-5 py-4`}>
@@ -1135,6 +1140,7 @@ function DatasetDecisionCard({
     dataset,
     buyerOrgCountry,
     dossierPath,
+    detailPath,
     prefersReducedMotion,
     shortlisted,
     reviewState,
@@ -1146,6 +1152,7 @@ function DatasetDecisionCard({
     dataset: Dataset
     buyerOrgCountry: string
     dossierPath: string | null
+    detailPath: string
     prefersReducedMotion: boolean
     shortlisted: boolean
     reviewState: DiscoveryReviewState | null
@@ -1158,7 +1165,7 @@ function DatasetDecisionCard({
     const compareDisabled = compareLimitReached && !compared
     const confidenceTone = dataset.confidenceScore >= 95 ? 'healthy' : dataset.confidenceScore >= 90 ? 'scheduled' : 'monitoring'
     const providerTone = dataset.providerTrustScore >= 95 ? 'healthy' : dataset.providerTrustScore >= 90 ? 'scheduled' : 'monitoring'
-    const geoAccessSignal = getDatasetGeoAccessSignal(dataset.id, buyerOrgCountry)
+    const geoAccessSignal = getDatasetGeoAccessSignal(getDatasetRouteId(dataset), buyerOrgCountry)
     const regulatedProfile = getRegulatedDiscoveryProfile(dataset)
     const reviewMeta = reviewState ? DISCOVERY_REVIEW_STATE_META[reviewState] : null
     const frontBadges = [
@@ -1301,7 +1308,7 @@ function DatasetDecisionCard({
                                 </Link>
                             ) : null}
                             <Link
-                                to={`/datasets/${dataset.id}`}
+                                to={detailPath}
                                 className={`${secondaryButtonClass} min-w-[122px]`}
                                 aria-label={`View details for ${dataset.title}`}
                                 tabIndex={frontTabIndex}
@@ -1682,7 +1689,7 @@ function DatasetCatalogRow({
                         >
                             <CompareIcon className="h-4 w-4" />
                         </ActionIconButton>
-                        <ActionIconButton label={`View details for ${dataset.title}`} to={`/datasets/${dataset.id}`}>
+                        <ActionIconButton label={`View details for ${dataset.title}`} to={`/datasets/${getDatasetRouteId(dataset)}`}>
                             <ArrowTopRightIcon className="h-4 w-4" />
                         </ActionIconButton>
                     </div>
@@ -1853,7 +1860,7 @@ function CompareTable({
         { label: 'Verification', getValue: (dataset: Dataset) => dataset.verificationStatus },
         { label: 'Access path', getValue: (dataset: Dataset) => dataset.accessType },
         { label: 'Coverage geography', getValue: (dataset: Dataset) => dataset.geography },
-        { label: 'Geo policy', getValue: (dataset: Dataset) => getDatasetGeoAccessSignal(dataset.id, buyerOrgCountry).label },
+        { label: 'Geo policy', getValue: (dataset: Dataset) => getDatasetGeoAccessSignal(getDatasetRouteId(dataset), buyerOrgCountry).label },
         {
             label: 'Internal review',
             getValue: (dataset: Dataset) => {

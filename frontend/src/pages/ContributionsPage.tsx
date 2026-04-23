@@ -4,11 +4,31 @@ import { useAuth } from '../contexts/AuthContext'
 import {
     feedbackStyles,
     getContributionStatusPath,
+    loadContributionRecords,
     pipelineStateStyles,
     statusStyles,
     uploadedDatasets,
     validationStages
 } from '../data/contributionStatusData'
+import { buildDealPath } from '../data/dealDossierData'
+import { PROVIDER_INSTITUTION_REVIEW_SEED } from '../data/providerInstitutionData'
+import { buildCompliancePassport } from '../domain/compliancePassport'
+import {
+    buildProviderContributionId,
+    buildProviderDatasetId,
+    buildProviderDealId,
+    saveProviderDatasetSubmission,
+    type ProviderDatasetSchemaReviewSnapshot,
+    type ProviderDatasetSubmissionRecord
+} from '../domain/providerDatasetSubmission'
+import { saveProviderPacketDraft } from '../domain/providerRightsPacket'
+import {
+    buildRightsQuote,
+    loadRightsQuotes,
+    saveRightsQuote,
+    type RightsQuoteForm
+} from '../domain/rightsQuoteBuilder'
+import type { DatasetAccessPackage } from '../data/datasetAccessPackageData'
 
 type AdvancedRightsConditions = {
     redistributionRights: string
@@ -44,6 +64,10 @@ type UploadDraftMetadata = {
     domain: string
     description: string
     price: string
+    publishingAuthority: string
+    institutionType: string
+    buyerViewSummary: string
+    defaultPackageFraming: string
 }
 
 type UploadDraftFile = {
@@ -307,7 +331,12 @@ const createInitialUploadDraft = (): UploadDraft => ({
         name: 'City Sensor Aggregates 2026-Q1',
         domain: 'Mobility & Infrastructure',
         description: 'Aggregated sensor flow, occupancy, and throughput metrics by 5-minute intervals.',
-        price: '299'
+        price: '299',
+        publishingAuthority: PROVIDER_INSTITUTION_REVIEW_SEED.publishingLead.name,
+        institutionType: PROVIDER_INSTITUTION_REVIEW_SEED.institutionType,
+        buyerViewSummary:
+            'Provider-submitted mobility package for governed evaluation. Buyer access remains tied to Redoubt review, provider packet confirmation, and the configured access-package controls.',
+        defaultPackageFraming: 'Governed evaluation and planning analytics only'
     },
     file: {
         name: 'city_sensors_q1.parquet',
@@ -342,11 +371,69 @@ const createDefaultUploadGovernanceSummary = (): UploadDraftGovernanceSummary =>
         'Platform-enforced residency and sovereignty controls narrow buyer access to GCC-approved organizations even when the provider-selected package geography is broader.'
 })
 
+const quoteDeliveryModeByUploadValue: Record<string, RightsQuoteForm['deliveryMode']> = {
+    metadata_only: 'metadata_only',
+    secure_clean_room: 'clean_room',
+    aggregated_export: 'aggregated_export',
+    encrypted_download: 'encrypted_download',
+    full_raw_access: 'encrypted_download'
+}
+
+const quoteFieldPackByUploadValue: Record<string, RightsQuoteForm['fieldPack']> = {
+    core_fields: 'core',
+    analytics_pack: 'analytics',
+    full_schema: 'full_schema',
+    sensitive_review_pack: 'sensitive_review'
+}
+
+const quoteUsageRightByUploadValue: Record<string, RightsQuoteForm['usageRight']> = {
+    research_use: 'research',
+    internal_ai_training: 'internal_ai',
+    commercial_analytics: 'commercial_analytics',
+    customer_facing_output: 'customer_facing'
+}
+
+const quoteExclusivityByUploadValue: Record<string, RightsQuoteForm['exclusivity']> = {
+    non_exclusive: 'none',
+    vertical_exclusive: 'sector_vertical',
+    regional_exclusive: 'regional',
+    full_exclusive: 'full'
+}
+
+const buildVolumePricingLabel = (terms: PrivacyAccessTerms) => {
+    if (!terms.advanced.volumeBasedPricing) return 'Disabled'
+    if (!terms.advanced.volumePricingAdjustment.trim()) return 'Enabled'
+
+    return `${terms.advanced.volumePricingAdjustment} / ${
+        terms.advanced.volumePricingUnit === 'tb' ? 'TB' : 'million records'
+    }`
+}
+
+const toRightsQuoteForm = (terms: PrivacyAccessTerms): RightsQuoteForm => ({
+    deliveryMode: quoteDeliveryModeByUploadValue[terms.deliveryMode] ?? 'clean_room',
+    fieldPack: quoteFieldPackByUploadValue[terms.fieldAccess] ?? 'analytics',
+    usageRight: quoteUsageRightByUploadValue[terms.usageRights] ?? 'research',
+    duration: terms.term as RightsQuoteForm['duration'],
+    geography: terms.geography as RightsQuoteForm['geography'],
+    exclusivity: quoteExclusivityByUploadValue[terms.exclusivity] ?? 'none',
+    support: 'standard',
+    seatBand: 'team',
+    validationWindowHours: terms.fieldAccess === 'sensitive_review_pack' ? 72 : 48,
+    redistributionRights: terms.advanced.redistributionRights as RightsQuoteForm['redistributionRights'],
+    auditLoggingRequirement: terms.advanced.auditLoggingRequirement as RightsQuoteForm['auditLoggingRequirement'],
+    attributionRequirement: terms.advanced.attributionRequirement as RightsQuoteForm['attributionRequirement'],
+    volumeBasedPricing: terms.advanced.volumeBasedPricing,
+    volumePricingAdjustment: Number.parseFloat(terms.advanced.volumePricingAdjustment) || 0,
+    volumePricingUnit: terms.advanced.volumePricingUnit
+})
+
 export default function ContributionsPage() {
     const { providerAccount } = useAuth()
     const navigate = useNavigate()
     const [activeStep, setActiveStep] = useState(0)
-    const [selectedDatasetId, setSelectedDatasetId] = useState(uploadedDatasets[0]?.id ?? '')
+    const [submissionVersion, setSubmissionVersion] = useState(0)
+    const providerDatasets = useMemo(() => loadContributionRecords(), [submissionVersion])
+    const [selectedDatasetId, setSelectedDatasetId] = useState(() => loadContributionRecords()[0]?.id ?? uploadedDatasets[0]?.id ?? '')
     const [isUploadViewOpen, setIsUploadViewOpen] = useState(true)
     const [uploadDraft, setUploadDraft] = useState<UploadDraft>(() => createInitialUploadDraft())
     const [interrogationAcknowledged, setInterrogationAcknowledged] = useState(false)
@@ -358,6 +445,7 @@ export default function ContributionsPage() {
     const [tierReviewComment, setTierReviewComment] = useState('')
     const [showTierReviewSuccess, setShowTierReviewSuccess] = useState(false)
     const [showMockSubmissionNotice, setShowMockSubmissionNotice] = useState(false)
+    const [submittedRecord, setSubmittedRecord] = useState<ProviderDatasetSubmissionRecord | null>(null)
     const uploadGovernanceSummary = useMemo(() => createDefaultUploadGovernanceSummary(), [])
 
     const toggleFieldExpansion = (field: string) => {
@@ -397,24 +485,24 @@ export default function ContributionsPage() {
     }, [schemaSearchQuery])
 
     const selectedDataset = useMemo(
-        () => uploadedDatasets.find(dataset => dataset.id === selectedDatasetId) ?? uploadedDatasets[0],
-        [selectedDatasetId]
+        () => providerDatasets.find(dataset => dataset.id === selectedDatasetId) ?? providerDatasets[0],
+        [providerDatasets, selectedDatasetId]
     )
 
     const summary = useMemo(() => {
-        const approved = uploadedDatasets.filter(dataset => dataset.status === 'Approved').length
-        const processing = uploadedDatasets.filter(dataset => dataset.status === 'Processing').length
-        const needsFixes = uploadedDatasets.filter(dataset => dataset.status === 'Needs fixes').length
-        const totalAccessEvents = uploadedDatasets.reduce((acc, dataset) => acc + dataset.performance.accessEvents, 0)
+        const approved = providerDatasets.filter(dataset => dataset.status === 'Approved').length
+        const processing = providerDatasets.filter(dataset => dataset.status === 'Processing').length
+        const needsFixes = providerDatasets.filter(dataset => dataset.status === 'Needs fixes').length
+        const totalAccessEvents = providerDatasets.reduce((acc, dataset) => acc + dataset.performance.accessEvents, 0)
 
         return {
-            uploaded: uploadedDatasets.length,
+            uploaded: providerDatasets.length,
             approved,
             processing,
             needsFixes,
             totalAccessEvents
         }
-    }, [])
+    }, [providerDatasets])
 
     const personalDataFields = schemaFieldData.filter(field => field.piiStatus !== 'safe')
     const restrictedFields = schemaFieldData.filter(field => field.piiStatus === 'flagged')
@@ -621,7 +709,12 @@ export default function ContributionsPage() {
             }`
             : 'Enabled'
         : 'Disabled'
-    const isMetadataComplete = Object.values(uploadDraft.metadata).every(value => value.trim().length > 0)
+    const isMetadataComplete = [
+        uploadDraft.metadata.name,
+        uploadDraft.metadata.domain,
+        uploadDraft.metadata.description,
+        uploadDraft.metadata.price
+    ].every(value => value.trim().length > 0)
     const areRightsComplete = [
         privacyAccessTerms.accessMethod,
         privacyAccessTerms.deliveryMode,
@@ -683,6 +776,118 @@ export default function ContributionsPage() {
         ['Revocation rights', privacyAccessTerms.security.revocationRights ? 'Provider can revoke access at any time' : 'Revocation override disabled']
     ]
 
+    const buildAccessPackageSnapshot = (datasetId: string): DatasetAccessPackage => ({
+        id: `submitted-access-${datasetId}`,
+        accessMethod: {
+            label: selectedAccessMethodLabel,
+            buyerSummary: selectedAccessMethodOption.summary,
+            providerSummary: selectedAccessMethodOption.detail
+        },
+        deliveryDetail: {
+            label: selectedDeliveryModeLabel,
+            buyerSummary: deliveryModeOptions.find(option => option.value === privacyAccessTerms.deliveryMode)?.detail,
+            providerSummary: deliveryModeOptions.find(option => option.value === privacyAccessTerms.deliveryMode)?.detail
+        },
+        fieldAccess: { label: selectedFieldAccessLabel },
+        usageRights: { label: selectedUsageRightsLabel },
+        term: { label: selectedTermLabel },
+        geography: { label: selectedGeographyLabel },
+        exclusivity: { label: selectedExclusivityLabel },
+        security: {
+            encryption: encryptionSummary,
+            masking: maskingSummary,
+            watermarking: privacyAccessTerms.security.watermarkingEnabled
+                ? 'Invisible watermarking enabled on approved extracts'
+                : 'Watermarking disabled',
+            revocation: privacyAccessTerms.security.revocationRights
+                ? 'Provider can revoke access at any time'
+                : 'Revocation override disabled'
+        },
+        advancedRights: {
+            auditLogging: selectedAuditLoggingLabel,
+            attribution: selectedAttributionLabel,
+            redistribution: selectedRedistributionLabel,
+            volumePricing: buildVolumePricingLabel(privacyAccessTerms)
+        }
+    })
+
+    const buildSchemaReviewSnapshot = (): ProviderDatasetSchemaReviewSnapshot => ({
+        totalFields: schemaFieldData.length,
+        classification: uploadDraft.review.classification,
+        confidenceScore: uploadDraft.review.confidenceScore,
+        confidenceLabel: uploadDraft.review.confidenceLabel,
+        reviewTimeline: uploadDraft.review.reviewTimeline,
+        summary: uploadDraft.review.summary,
+        packagingPosture: providerPackagingLane,
+        preferredOperatingRegion,
+        personalDataFields: personalDataFields.map(field => field.field),
+        restrictedFields: restrictedFields.map(field => field.field),
+        localOnlyFields: localOnlyFields.map(field => field.field),
+        transferSensitiveFields: transferSensitiveFields.map(field => field.field),
+        fieldSummaries: schemaFieldData.map(field => ({
+            field: field.field,
+            type: field.type,
+            piiStatus: field.piiStatus,
+            residency: field.residency,
+            nullRate: field.nullRate,
+            aiDescription: field.aiDescription
+        })),
+        reviewFactors: uploadDraft.review.breakdown
+    })
+
+    const buildProviderSubmissionRecord = (): ProviderDatasetSubmissionRecord => {
+        const now = new Date().toISOString()
+        const datasetId = buildProviderDatasetId(uploadDraft.submission.id)
+        const dealId = buildProviderDealId(datasetId)
+        const providerPacketId = `PKT-${dealId}`
+        const reviewId = `APP-${datasetId.toUpperCase()}`
+        const evidencePackId = `EVP-${datasetId.toUpperCase()}`
+
+        return {
+            id: buildProviderContributionId(uploadDraft.submission.id),
+            datasetId,
+            dealId,
+            providerPacketId,
+            reviewId,
+            evidencePackId,
+            status: 'Processing',
+            submissionId: uploadDraft.submission.id,
+            createdAt: now,
+            updatedAt: now,
+            metadata: {
+                title: uploadDraft.metadata.name,
+                domain: uploadDraft.metadata.domain,
+                description: uploadDraft.metadata.description,
+                priceUsd: uploadDraft.metadata.price
+            },
+            fileIntegrity: {
+                fileName: uploadDraft.file.name,
+                sizeLabel: uploadDraft.file.sizeLabel,
+                format: uploadDraft.file.format,
+                checksumStatus: uploadDraft.file.checksumStatus,
+                uploadStatus: uploadDraft.file.uploadStatus
+            },
+            schemaReview: buildSchemaReviewSnapshot(),
+            accessPackageSnapshot: buildAccessPackageSnapshot(datasetId),
+            providerPublishing: {
+                publishingAuthority: uploadDraft.metadata.publishingAuthority || PROVIDER_INSTITUTION_REVIEW_SEED.publishingLead.name,
+                institutionType: uploadDraft.metadata.institutionType || PROVIDER_INSTITUTION_REVIEW_SEED.institutionType,
+                buyerViewSummary: uploadDraft.metadata.buyerViewSummary,
+                defaultPackageFraming: uploadDraft.metadata.defaultPackageFraming
+            },
+            dossierBinding: {
+                dealId,
+                providerPacketId,
+                reviewId,
+                evidencePackId,
+                readinessStatus: 'Dossier-ready draft',
+                readinessDetail:
+                    'Upload metadata, schema-review posture, access package terms, provider packet draft, and evidence references are bound to the generated deal route.',
+                updatedAt: now
+            }
+        }
+    }
+
     const updateUploadMetadata = (field: keyof UploadDraftMetadata, value: string) => {
         setShowMockSubmissionNotice(false)
         setUploadDraft(prev => ({
@@ -716,6 +921,7 @@ export default function ContributionsPage() {
         setShowTierReviewModal(false)
         setShowTierReviewSuccess(false)
         setShowMockSubmissionNotice(false)
+        setSubmittedRecord(null)
         setTierReviewComment('')
         setIsUploadViewOpen(true)
     }
@@ -725,9 +931,45 @@ export default function ContributionsPage() {
         navigate('/provider/dashboard')
     }
 
-    const handleMockSubmission = () => {
+    const handleFinalizeSubmission = () => {
         if (!isSubmissionReady) return
+        const record = buildProviderSubmissionRecord()
+        const savedRecord = saveProviderDatasetSubmission(record)
+        const submittedPassport = buildCompliancePassport()
+        const submittedDataset = {
+            id: savedRecord.datasetId,
+            title: savedRecord.metadata.title,
+            description: savedRecord.metadata.description,
+            category: savedRecord.metadata.domain,
+            size: savedRecord.fileIntegrity.sizeLabel,
+            confidenceScore: savedRecord.schemaReview.confidenceScore,
+            preview: {
+                structureQuality: savedRecord.schemaReview.confidenceScore
+            }
+        }
+
+        if (loadRightsQuotes(savedRecord.datasetId).length === 0) {
+            saveRightsQuote(
+                buildRightsQuote(
+                    submittedDataset as Parameters<typeof buildRightsQuote>[0],
+                    toRightsQuoteForm(privacyAccessTerms),
+                    submittedPassport
+                )
+            )
+        }
+
+        saveProviderPacketDraft(savedRecord.dealId, {
+            publishingAuthorityConfirmed: true,
+            useBoundariesConfirmed: true,
+            residencyRestrictionsConfirmed: localOnlyFields.length === 0,
+            workingNote: `${savedRecord.schemaReview.packagingPosture}. Evidence ${savedRecord.evidencePackId} generated from provider upload finalization.`,
+            updatedBy: savedRecord.providerPublishing.publishingAuthority
+        })
+
+        setSubmittedRecord(savedRecord)
+        setSelectedDatasetId(savedRecord.id)
         setShowMockSubmissionNotice(true)
+        setSubmissionVersion(current => current + 1)
     }
 
     const stepPreview = [
@@ -775,6 +1017,42 @@ export default function ContributionsPage() {
                             <span className="text-slate-400 text-sm">USD per access</span>
                         </div>
                         <div className="text-slate-500 text-xs mt-1">Participant and dataset onboarding are free. Standard buyers pay for protected evaluation, selected lighthouse pilots may be fee-waived, and Redoubt applies provider settlement fees only after a successful engagement: 15% at launch, then 12% after volume ramps, then 10% for large repeat providers.</div>
+                    </div>
+                    <div className="bg-slate-900/70 border border-slate-700 rounded-lg p-3">
+                        <div className="text-slate-400 text-xs mb-1">Publishing authority</div>
+                        <input
+                            type="text"
+                            value={uploadDraft.metadata.publishingAuthority}
+                            onChange={(e) => updateUploadMetadata('publishingAuthority', e.target.value)}
+                            className="w-full bg-slate-950/80 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-cyan-500/50"
+                        />
+                    </div>
+                    <div className="bg-slate-900/70 border border-slate-700 rounded-lg p-3">
+                        <div className="text-slate-400 text-xs mb-1">Institution type</div>
+                        <input
+                            type="text"
+                            value={uploadDraft.metadata.institutionType}
+                            onChange={(e) => updateUploadMetadata('institutionType', e.target.value)}
+                            className="w-full bg-slate-950/80 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-cyan-500/50"
+                        />
+                    </div>
+                    <div className="bg-slate-900/70 border border-slate-700 rounded-lg p-3 sm:col-span-2">
+                        <div className="text-slate-400 text-xs mb-1">Buyer-view summary</div>
+                        <textarea
+                            value={uploadDraft.metadata.buyerViewSummary}
+                            onChange={(e) => updateUploadMetadata('buyerViewSummary', e.target.value)}
+                            className="min-h-20 w-full resize-none bg-slate-950/80 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-cyan-500/50"
+                        />
+                    </div>
+                    <div className="bg-slate-900/70 border border-slate-700 rounded-lg p-3 sm:col-span-2">
+                        <div className="text-slate-400 text-xs mb-1">Default rights packaging</div>
+                        <input
+                            type="text"
+                            value={uploadDraft.metadata.defaultPackageFraming}
+                            onChange={(e) => updateUploadMetadata('defaultPackageFraming', e.target.value)}
+                            className="w-full bg-slate-950/80 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-cyan-500/50"
+                        />
+                        <div className="mt-1 text-xs text-slate-500">These optional fields become provider packet and dossier context after finalization.</div>
                     </div>
                 </div>
             )
@@ -1903,7 +2181,7 @@ export default function ContributionsPage() {
                                     <div>
                                         <div className="text-[11px] uppercase tracking-[0.16em] text-slate-400">Dataset package</div>
                                         <h4 className="mt-2 text-lg font-semibold text-slate-50">Final metadata and payload review</h4>
-                                        <p className="mt-1 text-sm text-slate-400">This mock submission screen now reflects the working values from the earlier upload steps.</p>
+                                        <p className="mt-1 text-sm text-slate-400">This confirmation screen now reflects the working values from the earlier upload steps and prepares the generated deal handoff.</p>
                                     </div>
                                     <div className="flex flex-wrap gap-2">
                                         <button
@@ -1943,6 +2221,22 @@ export default function ContributionsPage() {
                                     <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3 sm:col-span-2">
                                         <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">Description</div>
                                         <div className="mt-1 text-slate-200">{uploadDraft.metadata.description}</div>
+                                    </div>
+                                    <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3">
+                                        <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">Publishing authority</div>
+                                        <div className="mt-1 font-medium text-slate-100">{uploadDraft.metadata.publishingAuthority || 'Not provided'}</div>
+                                    </div>
+                                    <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3">
+                                        <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">Institution type</div>
+                                        <div className="mt-1 font-medium text-slate-100">{uploadDraft.metadata.institutionType || 'Not provided'}</div>
+                                    </div>
+                                    <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3 sm:col-span-2">
+                                        <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">Buyer-view summary</div>
+                                        <div className="mt-1 text-slate-200">{uploadDraft.metadata.buyerViewSummary || 'Not provided'}</div>
+                                    </div>
+                                    <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3 sm:col-span-2">
+                                        <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">Default package framing</div>
+                                        <div className="mt-1 text-slate-200">{uploadDraft.metadata.defaultPackageFraming || 'Not provided'}</div>
                                     </div>
                                     <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3">
                                         <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">File size</div>
@@ -2112,18 +2406,42 @@ export default function ContributionsPage() {
                                 <div className="mt-5 space-y-3">
                                     <div className={`text-xs ${isSubmissionReady ? 'text-emerald-300' : 'text-slate-400'}`}>
                                         {isSubmissionReady
-                                            ? 'All frontend review requirements are complete. The button is enabled, but no backend submission is triggered.'
-                                            : `Finish ${incompleteSubmissionLabels.join(', ')} to enable the mock submission button.`}
+                                            ? 'All frontend review requirements are complete. Finalizing will save the dossier-ready submission in local demo storage.'
+                                            : `Finish ${incompleteSubmissionLabels.join(', ')} to enable finalization.`}
                                     </div>
                                     {showMockSubmissionNotice && (
                                         <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-200">
-                                            <div>Mock submission captured locally. No backend request was sent.</div>
-                                            <Link
-                                                to={getContributionStatusPath(selectedDatasetId)}
-                                                className="mt-2 inline-flex font-semibold text-emerald-100 underline underline-offset-2 transition-colors hover:text-white"
-                                            >
-                                                Open example dataset status page
-                                            </Link>
+                                            <div>
+                                                Provider submission captured locally and bound to the generated deal spine.
+                                            </div>
+                                            {submittedRecord ? (
+                                                <div className="mt-3 flex flex-wrap gap-3">
+                                                    <Link
+                                                        to={buildDealPath(submittedRecord.dealId, 'dossier')}
+                                                        className="inline-flex font-semibold text-emerald-100 underline underline-offset-2 transition-colors hover:text-white"
+                                                    >
+                                                        Open Evaluation Dossier
+                                                    </Link>
+                                                    <Link
+                                                        to={buildDealPath(submittedRecord.dealId, 'provider-packet')}
+                                                        className="inline-flex font-semibold text-emerald-100 underline underline-offset-2 transition-colors hover:text-white"
+                                                    >
+                                                        Open provider packet
+                                                    </Link>
+                                                    <Link
+                                                        to={getContributionStatusPath(submittedRecord.id)}
+                                                        className="inline-flex font-semibold text-emerald-100 underline underline-offset-2 transition-colors hover:text-white"
+                                                    >
+                                                        Open dataset status
+                                                    </Link>
+                                                    <Link
+                                                        to={`/datasets/${submittedRecord.datasetId}`}
+                                                        className="inline-flex font-semibold text-emerald-100 underline underline-offset-2 transition-colors hover:text-white"
+                                                    >
+                                                        Open dataset detail
+                                                    </Link>
+                                                </div>
+                                            ) : null}
                                         </div>
                                     )}
                                 </div>
@@ -2235,7 +2553,7 @@ export default function ContributionsPage() {
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-800">
-                                        {uploadedDatasets.map(dataset => (
+                                        {providerDatasets.map(dataset => (
                                             <tr
                                                 key={dataset.id}
                                                 onClick={() => setSelectedDatasetId(dataset.id)}
@@ -2470,7 +2788,7 @@ export default function ContributionsPage() {
                                 {activeStep === uploadSteps.length - 1 && (
                                     <button
                                         type="button"
-                                        onClick={handleMockSubmission}
+                                        onClick={handleFinalizeSubmission}
                                         disabled={!isSubmissionReady}
                                         className="px-3 py-2 rounded-lg bg-blue-600 text-xs font-semibold text-white transition-colors hover:bg-blue-500 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400"
                                     >

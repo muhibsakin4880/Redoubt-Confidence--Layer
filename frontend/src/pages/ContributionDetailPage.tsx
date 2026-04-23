@@ -1,5 +1,6 @@
 import { Link, useParams } from 'react-router-dom'
 import { getAccessPackageForContribution } from '../data/datasetAccessPackageData'
+import { buildDealPath, getDealRouteRecordByDatasetId } from '../data/dealDossierData'
 import { getContributionRecordById, statusStyles } from '../data/contributionStatusData'
 
 type SummaryItem = {
@@ -35,6 +36,7 @@ export default function ContributionDetailPage() {
     }
 
     const accessPackage = getAccessPackageForContribution(dataset.id)
+    const dealRoute = getDealRouteRecordByDatasetId(dataset.datasetId)
 
     const submissionTerms: SummaryItem[] = [
         { label: 'Access method', value: accessPackage.accessMethod.label },
@@ -92,6 +94,22 @@ export default function ContributionDetailPage() {
                     >
                         Open Dataset Status
                     </Link>
+                    {dealRoute ? (
+                        <>
+                            <Link
+                                to={buildDealPath(dealRoute.dealId, 'dossier')}
+                                className="inline-flex items-center justify-center rounded-lg border border-emerald-500/35 bg-emerald-500/10 px-4 py-2 text-sm font-semibold text-emerald-100 transition-colors hover:bg-emerald-500/20"
+                            >
+                                Open Evaluation Dossier
+                            </Link>
+                            <Link
+                                to={buildDealPath(dealRoute.dealId, 'provider-packet')}
+                                className="inline-flex items-center justify-center rounded-lg border border-slate-600 bg-slate-900/70 px-4 py-2 text-sm font-semibold text-slate-100 transition-colors hover:border-cyan-400"
+                            >
+                                Open provider packet
+                            </Link>
+                        </>
+                    ) : null}
                 </div>
             </div>
 

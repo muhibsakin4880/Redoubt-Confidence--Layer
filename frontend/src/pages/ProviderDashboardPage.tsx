@@ -12,8 +12,8 @@ import {
 } from '../data/workspaceData'
 import {
     getContributionStatusPath,
+    loadContributionRecords,
     statusStyles as contributionStatusStyles,
-    uploadedDatasets
 } from '../data/contributionStatusData'
 import {
     buildDealPath,
@@ -209,10 +209,11 @@ const getDealRouteForRequest = (request: DatasetRequest) => {
 }
 
 export default function ProviderDashboardPage() {
-    const totalDatasets = uploadedDatasets.length
-    const processingDatasetCount = uploadedDatasets.filter(dataset => dataset.status === 'Processing').length
-    const needsFixesDatasetCount = uploadedDatasets.filter(dataset => dataset.status === 'Needs fixes').length
-    const approvedDatasetCount = uploadedDatasets.filter(dataset => dataset.status === 'Approved').length
+    const providerDatasets = loadContributionRecords()
+    const totalDatasets = providerDatasets.length
+    const processingDatasetCount = providerDatasets.filter(dataset => dataset.status === 'Processing').length
+    const needsFixesDatasetCount = providerDatasets.filter(dataset => dataset.status === 'Needs fixes').length
+    const approvedDatasetCount = providerDatasets.filter(dataset => dataset.status === 'Approved').length
     const providerReviewRequests = datasetRequests.filter(request => request.status === 'REVIEW_IN_PROGRESS')
     const actionedReviewCount = datasetRequests.length - providerReviewRequests.length
     const activeRequests = providerReviewRequests.length
@@ -373,7 +374,10 @@ export default function ProviderDashboardPage() {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-white/5">
-                                    {uploadedDatasets.map(dataset => (
+                                    {providerDatasets.map(dataset => {
+                                        const datasetDealRoute = getDealRouteRecordByDatasetId(dataset.datasetId)
+
+                                        return (
                                         <tr key={dataset.id} className="transition-colors hover:bg-white/[0.03]">
                                             <td className="py-5 pr-4 pl-6 align-top lg:pl-7">
                                                 <Link
@@ -408,18 +412,29 @@ export default function ProviderDashboardPage() {
                                             <td className="px-4 py-5 align-top text-slate-200">{dataset.performance.totalRequests}</td>
                                             <td className="px-4 py-5 align-top text-slate-300">{dataset.uploadedAt}</td>
                                             <td className="py-5 pl-4 pr-6 text-right align-top lg:pr-7">
-                                                <Link
-                                                    to={`/provider/datasets/${dataset.id}`}
-                                                    className="inline-flex items-center gap-2 rounded-lg border border-slate-700 px-3 py-2 text-xs font-semibold text-slate-200 transition-colors hover:border-blue-500 hover:text-white"
-                                                >
-                                                    Manage dataset
-                                                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                                    </svg>
-                                                </Link>
+                                                <div className="flex flex-col items-end gap-2">
+                                                    <Link
+                                                        to={`/provider/datasets/${dataset.id}`}
+                                                        className="inline-flex items-center gap-2 rounded-lg border border-slate-700 px-3 py-2 text-xs font-semibold text-slate-200 transition-colors hover:border-blue-500 hover:text-white"
+                                                    >
+                                                        Manage dataset
+                                                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                                        </svg>
+                                                    </Link>
+                                                    {datasetDealRoute ? (
+                                                        <Link
+                                                            to={buildDealPath(datasetDealRoute.dealId, 'dossier')}
+                                                            className="inline-flex items-center gap-2 rounded-lg border border-emerald-500/35 bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-100 transition-colors hover:bg-emerald-500/20"
+                                                        >
+                                                            Open dossier
+                                                        </Link>
+                                                    ) : null}
+                                                </div>
                                             </td>
                                         </tr>
-                                    ))}
+                                        )
+                                    })}
                                 </tbody>
                             </table>
                         </div>

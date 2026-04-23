@@ -1,4 +1,8 @@
 import { DATASET_ACCESS_PACKAGE_IDS_BY_DATASET_ID } from './datasetCatalogData'
+import {
+    getProviderDatasetSubmissionByContributionId,
+    getProviderDatasetSubmissionByDatasetId
+} from '../domain/providerDatasetSubmission'
 
 export type AccessPackageFacet = {
     label: string
@@ -280,10 +284,16 @@ const CONTRIBUTION_ACCESS_PACKAGE_BY_ID: Record<string, string> = {
 const DEFAULT_ACCESS_PACKAGE = ACCESS_PACKAGES['platform-clean-room-standard']
 
 export function getAccessPackageForDataset(datasetId: string) {
+    const submittedPackage = getProviderDatasetSubmissionByDatasetId(datasetId)?.accessPackageSnapshot
+    if (submittedPackage) return submittedPackage
+
     return ACCESS_PACKAGES[DATASET_ACCESS_PACKAGE_IDS_BY_DATASET_ID[datasetId] ?? DEFAULT_ACCESS_PACKAGE.id] ?? DEFAULT_ACCESS_PACKAGE
 }
 
 export function getAccessPackageForContribution(contributionId?: string) {
     if (!contributionId) return DEFAULT_ACCESS_PACKAGE
+    const submittedPackage = getProviderDatasetSubmissionByContributionId(contributionId)?.accessPackageSnapshot
+    if (submittedPackage) return submittedPackage
+
     return ACCESS_PACKAGES[CONTRIBUTION_ACCESS_PACKAGE_BY_ID[contributionId] ?? DEFAULT_ACCESS_PACKAGE.id] ?? DEFAULT_ACCESS_PACKAGE
 }

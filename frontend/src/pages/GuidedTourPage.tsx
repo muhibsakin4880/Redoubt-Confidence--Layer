@@ -601,6 +601,18 @@ function buildTourSteps(prefix: string): Record<TourMode, GuidedStep[]> {
             metricValue: 'Shortlist candidate datasets'
         },
         {
+            id: 'buyer-dossier',
+            title: 'Review the Evaluation Dossier',
+            description: 'Open the deal workspace that binds dataset identity, provider packet, rights posture, approval state, evidence, and settlement readiness.',
+            whyNow: 'The dossier is now the native operating surface between discovery and access request work, so buyers should inspect it before committing to deeper review.',
+            to: joinPath(prefix, '/deals'),
+            ctaLabel: 'Open Evaluation Dossier',
+            group: 'Buyer workflow',
+            priority: 'core',
+            metricLabel: 'Deal spine',
+            metricValue: 'Dataset, packet, rights, evidence, and readiness'
+        },
+        {
             id: 'buyer-access',
             title: 'Prepare an access request with clear purpose',
             description: 'Open the request queue and submit the rationale, intended usage, and reviewer context needed for fast approval.',

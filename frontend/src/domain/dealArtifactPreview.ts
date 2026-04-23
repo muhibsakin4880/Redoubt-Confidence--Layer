@@ -21,6 +21,11 @@ import {
     outcomeStageMeta,
     paymentMethodMeta
 } from './escrowCheckout'
+import {
+    getProviderDatasetSubmissionByDatasetId,
+    getProviderDossierBindingByDealId,
+    type ProviderDatasetSubmissionRecord
+} from './providerDatasetSubmission'
 
 export type DealArtifactPreviewTone = 'slate' | 'cyan' | 'amber' | 'emerald' | 'rose'
 
@@ -146,7 +151,10 @@ const toneFromEvaluationState = (context: DealRouteContext): DealArtifactPreview
 const inferContractState = (context: DealRouteContext): ContractLifecycleState =>
     context.checkoutRecord?.lifecycleState ?? context.request?.status ?? 'REQUEST_SUBMITTED'
 
-const resolveReviewId = (context: DealRouteContext) => REVIEW_ID_BY_DEAL_ID[context.seed.dealId] ?? null
+const resolveReviewId = (context: DealRouteContext) =>
+    REVIEW_ID_BY_DEAL_ID[context.seed.dealId] ??
+    getProviderDossierBindingByDealId(context.seed.dealId)?.reviewId ??
+    null
 
 const buildEvidenceAuditEvent = (
     reviewId: string,
@@ -339,8 +347,26 @@ const buildDuaArtifact = (context: DealRouteContext): DealArtifactPreview => {
 
 const buildEvidencePackArtifact = (
     reviewId: string | null,
-    evidencePack: EvidencePack | null
+    evidencePack: EvidencePack | null,
+    providerSubmission: ProviderDatasetSubmissionRecord | null
 ): DealArtifactPreview => {
+    if (!evidencePack && providerSubmission) {
+        return {
+            id: providerSubmission.evidencePackId,
+            artifactLabel: 'Evidence pack preview',
+            title: 'Provider submission evidence pack',
+            status: providerSubmission.dossierBinding.readinessStatus,
+            tone: 'cyan',
+            summary: providerSubmission.dossierBinding.readinessDetail,
+            highlights: [
+                `${providerSubmission.fileIntegrity.fileName} · ${providerSubmission.fileIntegrity.checksumStatus}`,
+                `${providerSubmission.schemaReview.restrictedFields.length} restricted field(s) and ${providerSubmission.schemaReview.localOnlyFields.length} local-only field(s) from schema review`,
+                `${providerSubmission.accessPackageSnapshot.deliveryDetail.label} · ${providerSubmission.accessPackageSnapshot.usageRights.label}`
+            ],
+            note: `Bound to review ${providerSubmission.reviewId}`
+        }
+    }
+
     if (!evidencePack) {
         return {
             id: `${reviewId ?? 'seed'}-evidence-pack`,
@@ -493,6 +519,9 @@ export const buildDealDossierProofBundle = (
     context: DealRouteContext
 ): DealDossierProofBundle => {
     const reviewId = resolveReviewId(context)
+    const providerSubmission = context.dataset
+        ? getProviderDatasetSubmissionByDatasetId(context.dataset.id)
+        : null
     const evidencePack = reviewId ? evidencePacks.find(item => item.reviewId === reviewId) ?? null : null
     const blockers = reviewId ? approvalBlockers.filter(item => item.reviewId === reviewId) : []
     const matchedEvidenceEvents = reviewId
@@ -530,7 +559,7 @@ export const buildDealDossierProofBundle = (
         settlementState: buildSettlementState(context),
         artifactPreviews: [
             buildDuaArtifact(context),
-            buildEvidencePackArtifact(reviewId, evidencePack),
+            buildEvidencePackArtifact(reviewId, evidencePack, providerSubmission),
             buildApprovalMemoArtifact(context, reviewId, blockers),
             buildDisputeArtifact(context, incidentRecord)
         ]

@@ -40,6 +40,7 @@ import {
     loadProviderPacketDraft,
     type ProviderRightsPacket
 } from '../domain/providerRightsPacket'
+import { getProviderDossierBindingByDealId } from '../domain/providerDatasetSubmission'
 
 type DealDossierPageProps = {
     demo?: boolean
@@ -127,6 +128,7 @@ export default function DealDossierPage({
         context,
         loadProviderPacketDraft(context.seed.dealId)
     )
+    const providerBinding = getProviderDossierBindingByDealId(context.seed.dealId)
     const approvalArtifact = getApprovalArtifactByDealId(context.seed.dealId)
     const reviewRecord = approvalArtifact?.reviewRecord ?? null
     const blockers = buildBlockerBoardItems(context, proofBundle, reviewRecord, demo)
@@ -382,6 +384,8 @@ export default function DealDossierPage({
                                     detail={
                                         proofBundle.evidencePack
                                             ? `${proofBundle.evidencePack.id} evidence pack linked`
+                                            : providerBinding
+                                              ? `${providerBinding.evidencePackId} evidence pack linked`
                                             : 'No evidence pack linked'
                                     }
                                 />
@@ -408,7 +412,7 @@ export default function DealDossierPage({
                                     />
                                     <CompactMetric
                                         label="Evidence pack"
-                                        value={proofBundle.evidencePack?.id ?? 'Not attached'}
+                                        value={proofBundle.evidencePack?.id ?? providerBinding?.evidencePackId ?? 'Not attached'}
                                     />
                                     <CompactMetric label="Owner" value={ownerLabel} />
                                     <CompactMetric label="Deadline" value={deadlineLabel} />
@@ -860,6 +864,7 @@ export default function DealDossierPage({
                                                     label="Evidence pack"
                                                     value={
                                                         proofBundle.evidencePack?.id ??
+                                                        providerBinding?.evidencePackId ??
                                                         'Not attached'
                                                     }
                                                 />

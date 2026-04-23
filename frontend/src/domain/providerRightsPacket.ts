@@ -1,5 +1,9 @@
 import { getAccessPackageForDataset } from '../data/datasetAccessPackageData'
 import {
+    getProviderDatasetSubmissionByDatasetId,
+    getProviderDossierBindingByDealId
+} from './providerDatasetSubmission'
+import {
     getMinimumTrustClarificationState,
     getDatasetTrustSummaryRows,
     trustSignalStateLabel,
@@ -360,6 +364,9 @@ export const buildProviderRightsPacket = (
         ]
     }
     const proofBundle = buildDealDossierProofBundle(context)
+    const providerSubmission = context.dataset ? getProviderDatasetSubmissionByDatasetId(context.dataset.id) : null
+    const providerBinding = getProviderDossierBindingByDealId(context.seed.dealId)
+    const submittedReviewId = providerBinding?.reviewId ?? providerSubmission?.reviewId ?? null
     const accessPackage = context.dataset ? getAccessPackageForDataset(context.dataset.id) : null
     const trustClarificationState = context.dataset
         ? getMinimumTrustClarificationState(context.dataset.trustProfile)
@@ -446,23 +453,29 @@ export const buildProviderRightsPacket = (
             : [])
     ]
 
+    const packetId = providerSubmission?.providerPacketId ?? `PKT-${context.seed.dealId}`
+    const reviewId = proofBundle.reviewId ?? submittedReviewId
+    const authorityOwner = providerSubmission?.providerPublishing.publishingAuthority ?? seed.authorityOwner
+    const authorityRole = providerSubmission ? 'Provider publishing authority' : seed.authorityRole
+    const publishingInstrument = providerSubmission ? `Submission ${providerSubmission.submissionId}` : seed.publishingInstrument
+
     return {
-        id: `PKT-${context.seed.dealId}`,
+        id: packetId,
         dealId: context.seed.dealId,
-        reviewId: proofBundle.reviewId,
-        providerInstitution: seed.institutionName,
-        providerType: seed.institutionType,
-        buyerViewSummary: seed.buyerViewSummary,
+        reviewId,
+        providerInstitution: providerSubmission?.providerPublishing.publishingAuthority ?? seed.institutionName,
+        providerType: providerSubmission?.providerPublishing.institutionType ?? seed.institutionType,
+        buyerViewSummary: providerSubmission?.providerPublishing.buyerViewSummary ?? seed.buyerViewSummary,
         overallStatus: packetDisposition.label,
         overallTone: packetDisposition.tone,
         publishingAuthority: {
             status: draft.publishingAuthorityConfirmed ? 'Attested for buyer view' : 'Pending provider attestation',
             tone: publishingTone,
-            owner: seed.authorityOwner,
-            role: seed.authorityRole,
-            instrument: seed.publishingInstrument,
+            owner: authorityOwner,
+            role: authorityRole,
+            instrument: publishingInstrument,
             scope: publishingScope,
-            summary: `${seed.authorityOwner}, ${seed.authorityRole.toLowerCase()}, is the named authority for this packet and the current publication scope is limited to the rights schedule summarized below.`
+            summary: `${authorityOwner}, ${authorityRole.toLowerCase()}, is the named authority for this packet and the current publication scope is limited to the rights schedule summarized below.`
         },
         provenance: {
             confidenceScore,
@@ -474,6 +487,13 @@ export const buildProviderRightsPacket = (
                     : `Packet remains credible but still carries ${trustSignalStateLabel(trustClarificationState).toLowerCase()} on part of the trust surface.`,
             sourceClasses: seed.sourceClasses,
             controlNotes: [
+                ...(providerSubmission
+                    ? [
+                        providerSubmission.schemaReview.packagingPosture,
+                        `${providerSubmission.schemaReview.restrictedFields.length} restricted field(s), ${providerSubmission.schemaReview.localOnlyFields.length} local-only field(s), and ${providerSubmission.schemaReview.transferSensitiveFields.length} transfer-sensitive field(s) carried from schema review.`,
+                        `${providerSubmission.fileIntegrity.fileName} · ${providerSubmission.fileIntegrity.checksumStatus}`
+                    ]
+                    : []),
                 ...seed.sourceBasis,
                 ...(context.dataset?.providerNotes.slice(0, 2) ?? [])
             ],
@@ -519,8 +539,8 @@ export const buildProviderRightsPacket = (
         unresolvedExceptions,
         caveats,
         references: [
-            { label: 'Review id', value: proofBundle.reviewId ?? 'Not linked' },
-            { label: 'Evidence pack', value: proofBundle.evidencePack?.id ?? 'Pending packet' },
+            { label: 'Review id', value: reviewId ?? 'Not linked' },
+            { label: 'Evidence pack', value: proofBundle.evidencePack?.id ?? providerSubmission?.evidencePackId ?? 'Pending packet' },
             { label: 'Access package', value: accessPackage?.id ?? 'Pending access package' },
             { label: 'Deal object', value: context.seed.dealId },
             { label: 'Last provider draft', value: formatSavedAt(draft.updatedAt) }

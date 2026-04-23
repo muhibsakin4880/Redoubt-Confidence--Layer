@@ -1,5 +1,5 @@
 export type { DatasetDetail } from './datasetCatalogData'
-export { DATASET_DETAILS, getDatasetDetailById } from './datasetCatalogData'
+export { DATASET_DETAILS, getAllDatasetDetails, getDatasetDetailById } from './datasetCatalogData'
 
 export type RequestStatus = import('./datasetCatalogData').DatasetDetail['access']['status']
 

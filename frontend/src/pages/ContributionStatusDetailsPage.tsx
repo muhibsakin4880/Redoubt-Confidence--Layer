@@ -1,8 +1,10 @@
 import type { ReactNode } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { getAccessPackageForContribution } from '../data/datasetAccessPackageData'
+import { buildDealPath, getDealRouteRecordByDatasetId } from '../data/dealDossierData'
 import {
     getContributionRecordById,
+    isProviderSubmittedContribution,
     pipelineStateStyles,
     statusStyles,
     validationStages,
@@ -77,7 +79,8 @@ export default function ContributionStatusDetailsPage() {
     }
 
     const statusMeta = getContributionStatusMeta(contribution.status)
-    const accessPackage = contribution.status === 'Approved' || contribution.status === 'Restricted'
+    const dealRoute = getDealRouteRecordByDatasetId(contribution.datasetId)
+    const accessPackage = contribution.status === 'Approved' || contribution.status === 'Restricted' || isProviderSubmittedContribution(contribution.id)
         ? getAccessPackageForContribution(contribution.id)
         : null
 
@@ -132,10 +135,20 @@ export default function ContributionStatusDetailsPage() {
                                     <Link to="/provider/institution-review" className={secondaryActionButtonClass}>
                                         Institution review
                                     </Link>
-                                    {contribution.statusPage.secondaryAction ? (
+                                    {contribution.statusPage.secondaryAction && !dealRoute ? (
                                         <Link to={contribution.statusPage.secondaryAction.to} className={secondaryActionButtonClass}>
                                             {contribution.statusPage.secondaryAction.label}
                                         </Link>
+                                    ) : null}
+                                    {dealRoute ? (
+                                        <>
+                                            <Link to={buildDealPath(dealRoute.dealId, 'dossier')} className={secondaryActionButtonClass}>
+                                                Open Evaluation Dossier
+                                            </Link>
+                                            <Link to={buildDealPath(dealRoute.dealId, 'provider-packet')} className={secondaryActionButtonClass}>
+                                                Open provider packet
+                                            </Link>
+                                        </>
                                     ) : null}
                                 </div>
                             </div>

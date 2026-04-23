@@ -1,3 +1,9 @@
+import {
+    getProviderDatasetSubmissionByContributionId,
+    loadProviderDatasetSubmissions,
+    type ProviderDatasetSubmissionRecord
+} from '../domain/providerDatasetSubmission'
+
 export type ContributionStatus = 'Processing' | 'Needs fixes' | 'Approved' | 'Restricted' | 'Rejected'
 export type PipelineState = 'complete' | 'current' | 'pending' | 'blocked'
 export type FeedbackType = 'Missing values' | 'Schema inconsistency' | 'Data freshness warning' | 'Format issue'
@@ -599,7 +605,146 @@ export function getContributionStatusPath(contributionId: string) {
     return `/provider/datasets/${contributionId}/status`
 }
 
+const formatSubmissionUpdatedAt = (value: string) => {
+    const parsed = Date.parse(value)
+    if (Number.isNaN(parsed)) return 'Updated just now'
+
+    return `Updated ${new Intl.DateTimeFormat('en-US', {
+        month: 'short',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+        timeZone: 'UTC'
+    }).format(new Date(parsed)).replace(',', ' ·')} UTC`
+}
+
+const buildContributionFromProviderSubmission = (
+    submission: ProviderDatasetSubmissionRecord
+): ContributionRecord => ({
+    id: submission.id,
+    title: submission.metadata.title,
+    submissionId: submission.submissionId,
+    datasetId: submission.datasetId,
+    uploadedAt: new Date(submission.createdAt).toLocaleDateString('en-US', {
+        month: 'short',
+        day: '2-digit',
+        year: 'numeric',
+        timeZone: 'UTC'
+    }),
+    records: 'Provider-submitted package',
+    size: submission.fileIntegrity.sizeLabel,
+    status: submission.status,
+    accessActivity: `${submission.dealId} dossier created · ${submission.providerPacketId} packet draft`,
+    performance: {
+        totalRequests: 0,
+        approvedRequests: 0,
+        accessEvents: 0,
+        avgReliability: submission.schemaReview.confidenceScore
+    },
+    validationPipeline: ['complete', 'complete', 'current', 'pending', 'pending'],
+    feedback: submission.schemaReview.restrictedFields.length > 0
+        ? [
+            {
+                type: 'Schema inconsistency',
+                detail: `${submission.schemaReview.restrictedFields.length} restricted field(s) require controlled packaging before buyer release.`,
+                severity: 'warning'
+            }
+        ]
+        : [],
+    statusPage: {
+        heroSummary:
+            'Provider submission captured. Redoubt created the generated deal object, provider packet draft, review id, and evidence binding for dossier review.',
+        operationalPosture:
+            `${submission.metadata.title} is ready for validation and buyer-facing dossier inspection without exposing raw data.`,
+        ownerLabel: 'Provider publishing operations',
+        lastUpdated: formatSubmissionUpdatedAt(submission.updatedAt),
+        nextAction: 'Review the generated Evaluation Dossier and confirm the provider packet before widening buyer access.',
+        actionConsole: [
+            {
+                label: 'Current state',
+                value: submission.dossierBinding.readinessStatus,
+                detail: submission.dossierBinding.readinessDetail,
+                tone: 'progress'
+            },
+            {
+                label: 'Dossier binding',
+                value: submission.dealId,
+                detail: `Review ${submission.reviewId} and evidence pack ${submission.evidencePackId} are attached.`,
+                tone: 'healthy'
+            },
+            {
+                label: 'Access package',
+                value: submission.accessPackageSnapshot.deliveryDetail.label,
+                detail: `${submission.accessPackageSnapshot.usageRights.label} · ${submission.accessPackageSnapshot.geography.label}`,
+                tone: 'neutral'
+            }
+        ],
+        checklistTitle: 'Generated dossier handoff',
+        checklist: [
+            {
+                title: 'Dataset metadata captured',
+                detail: 'Title, domain, description, provider publishing metadata, and buyer summary are now attached to the generated dataset record.',
+                tone: 'healthy'
+            },
+            {
+                title: 'Schema signals carried forward',
+                detail: `${submission.schemaReview.totalFields} fields reviewed with ${submission.schemaReview.restrictedFields.length} restricted and ${submission.schemaReview.localOnlyFields.length} local-only signal(s).`,
+                tone: submission.schemaReview.restrictedFields.length > 0 ? 'attention' : 'healthy'
+            },
+            {
+                title: 'Rights package mapped',
+                detail: `${submission.accessPackageSnapshot.accessMethod.label}, ${submission.accessPackageSnapshot.deliveryDetail.label}, and ${submission.accessPackageSnapshot.advancedRights.auditLogging} audit logging are saved into the provider packet path.`,
+                tone: 'progress'
+            }
+        ],
+        modules: [
+            {
+                eyebrow: 'Generated objects',
+                title: 'Deal, review, and evidence ids',
+                description: 'The upload finalization step now binds the provider submission to the existing deal spine.',
+                tone: 'progress',
+                items: [
+                    { label: 'Deal id', value: submission.dealId },
+                    { label: 'Provider packet', value: submission.providerPacketId },
+                    { label: 'Evidence pack', value: submission.evidencePackId }
+                ]
+            },
+            {
+                eyebrow: 'Schema posture',
+                title: submission.schemaReview.packagingPosture,
+                description: 'The schema-review signals from Step 3 remain attached after upload finalization.',
+                tone: submission.schemaReview.restrictedFields.length > 0 ? 'attention' : 'healthy',
+                items: [
+                    { label: 'Restricted fields', value: `${submission.schemaReview.restrictedFields.length}` },
+                    { label: 'Local-only fields', value: `${submission.schemaReview.localOnlyFields.length}` },
+                    { label: 'Transfer-sensitive fields', value: `${submission.schemaReview.transferSensitiveFields.length}` }
+                ]
+            }
+        ],
+        emptyFindingsLabel: 'No blocking findings are attached beyond the generated schema-review posture.',
+        secondaryAction: {
+            label: 'Open evaluation dossier',
+            to: `/deals/${submission.dealId}`
+        }
+    }
+})
+
+export function loadContributionRecords() {
+    const submitted = loadProviderDatasetSubmissions().map(buildContributionFromProviderSubmission)
+    const submittedIds = new Set(submitted.map(record => record.id))
+
+    return [
+        ...submitted,
+        ...uploadedDatasets.filter(record => !submittedIds.has(record.id))
+    ]
+}
+
 export function getContributionRecordById(contributionId?: string) {
     if (!contributionId) return undefined
-    return uploadedDatasets.find(dataset => dataset.id === contributionId)
+    return loadContributionRecords().find(dataset => dataset.id === contributionId)
+}
+
+export function isProviderSubmittedContribution(contributionId?: string | null) {
+    return Boolean(getProviderDatasetSubmissionByContributionId(contributionId))
 }

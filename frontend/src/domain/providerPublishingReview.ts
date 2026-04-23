@@ -8,7 +8,7 @@ import {
 } from '../data/providerInstitutionData'
 import {
     getContributionStatusPath,
-    uploadedDatasets,
+    loadContributionRecords,
     type ContributionRecord
 } from '../data/contributionStatusData'
 
@@ -216,7 +216,7 @@ const getChecklistState = (
 export function buildProviderPublishingReview(
     providerAccount: ProviderAccountState
 ): ProviderPublishingReview {
-    const submissions = uploadedDatasets.map(dataset => {
+    const submissions = loadContributionRecords().map(dataset => {
         const seed = PROVIDER_INSTITUTION_REVIEW_SEED.submissionSeeds[dataset.id]
 
         return {

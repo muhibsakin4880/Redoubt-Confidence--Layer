@@ -3,6 +3,12 @@ import {
     DATASET_TRUST_PROFILE_LIBRARY,
     type DatasetTrustProfile
 } from '../domain/datasetTrustProfile'
+import {
+    buildDatasetDetailFromProviderSubmission,
+    buildDatasetDiscoverySummaryFromProviderSubmission,
+    getProviderDatasetSubmissionByDatasetId,
+    loadProviderDatasetSubmissions
+} from '../domain/providerDatasetSubmission'
 
 export type VerificationStatus = 'Attested' | 'Under Review'
 export type AccessType = 'Restricted' | 'Approved access required'
@@ -56,6 +62,7 @@ export type DatasetDetail = {
 
 export type DatasetDiscoverySummary = {
     id: number
+    detailId?: string
     title: string
     timeRange: string
     description: string
@@ -1191,7 +1198,20 @@ export const getDatasetCatalogRecordById = (id?: string | number) => {
 
 export const getDatasetDetailById = (id?: string | number): DatasetDetail | null => {
     if (id === undefined || id === null) return null
-    return DATASET_DETAILS[String(id)] ?? null
+    const providerSubmission = getProviderDatasetSubmissionByDatasetId(id)
+    return DATASET_DETAILS[String(id)] ?? (
+        providerSubmission ? buildDatasetDetailFromProviderSubmission(providerSubmission) : null
+    )
 }
 
 export const getDatasetQualityPreviewById = (id?: string | number) => getDatasetCatalogRecordById(id)?.qualityPreview ?? null
+
+export const getAllDatasetDetails = (): DatasetDetail[] => [
+    ...Object.values(DATASET_DETAILS),
+    ...loadProviderDatasetSubmissions().map(buildDatasetDetailFromProviderSubmission)
+]
+
+export const loadDatasetDiscoverySummaries = (): DatasetDiscoverySummary[] => [
+    ...DATASET_DISCOVERY_SUMMARIES,
+    ...loadProviderDatasetSubmissions().map(buildDatasetDiscoverySummaryFromProviderSubmission)
+]

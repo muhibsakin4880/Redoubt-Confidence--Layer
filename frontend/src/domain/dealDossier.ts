@@ -1,5 +1,5 @@
 import {
-    DATASET_DETAILS,
+    getAllDatasetDetails,
     getDatasetDetailById,
     type DatasetDetail
 } from '../data/datasetDetailData'
@@ -86,7 +86,7 @@ const buildDerivedSeed = (dataset: DatasetDetail): SeededDealRouteRecord => ({
 const loadDerivedSeeds = () => {
     const seededDatasetIds = new Set(SEEDED_DEAL_ROUTES.map(record => record.datasetId))
 
-    return Object.values(DATASET_DETAILS)
+    return getAllDatasetDetails()
         .filter(dataset => !seededDatasetIds.has(dataset.id))
         .map(buildDerivedSeed)
 }
