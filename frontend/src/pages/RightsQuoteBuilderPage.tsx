@@ -1,11 +1,13 @@
 import { useMemo, useState, type ReactNode } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { ResponsibilityNotice } from '../components/trust/TrustLayer'
 import DatasetUnavailableState from '../components/DatasetUnavailableState'
 import DealProgressTracker from '../components/DealProgressTracker'
+import DealConflictBanner from '../components/deals/DealConflictBanner'
 import { DATASET_DETAILS, getDatasetDetailById } from '../data/datasetDetailData'
 import { buildCompliancePassport, passportStatusMeta } from '../domain/compliancePassport'
 import { buildDealProgressModel } from '../domain/dealProgress'
+import { getDealPolicyConflictModelByDatasetId } from '../domain/dealPolicyConflict'
 import { loadEscrowCheckoutByQuoteId } from '../domain/escrowCheckout'
 import {
     buildRightsQuote,
@@ -321,9 +323,11 @@ const AdvancedConditionsDrawer = ({
 
 export default function RightsQuoteBuilderPage() {
     const { id } = useParams()
+    const location = useLocation()
     const navigate = useNavigate()
     const routeDataset = getDatasetDetailById(id)
     const dataset = routeDataset ?? Object.values(DATASET_DETAILS)[0]
+    const isDemo = location.pathname.startsWith('/demo/')
     const passport = useMemo(() => buildCompliancePassport(), [])
     const [form, setForm] = useState<RightsQuoteForm>(() => getDefaultRightsQuoteForm(passport))
     const [notice, setNotice] = useState<string | null>(null)
@@ -359,6 +363,17 @@ export default function RightsQuoteBuilderPage() {
                 checkoutRecord: persistedCheckout
             }),
         [passport, persistedCheckout, quote]
+    )
+    const conflictModel = useMemo(
+        () =>
+            getDealPolicyConflictModelByDatasetId({
+                datasetId: dataset.id,
+                surface: 'quote',
+                form,
+                quote,
+                demo: isDemo
+            }),
+        [dataset.id, form, isDemo, quote]
     )
     const deliveryModeLabel = useMemo(() => getOptionLabel(deliveryModeOptions, form.deliveryMode), [form.deliveryMode])
     const geographyLabel = useMemo(() => getOptionLabel(geographyOptions, form.geography), [form.geography])
@@ -514,6 +529,10 @@ export default function RightsQuoteBuilderPage() {
 
                 <div className="mt-8">
                     <DealProgressTracker model={dealProgress} compact />
+                </div>
+
+                <div className="mt-6">
+                    <DealConflictBanner model={conflictModel} />
                 </div>
 
                 <section className="mt-6 grid gap-6 xl:grid-cols-[1.25fr_0.75fr]">
@@ -824,6 +843,12 @@ export default function RightsQuoteBuilderPage() {
                                     Proceed To Protected Evaluation
                                 </button>
                             </div>
+
+                            {conflictModel?.blockingCount ? (
+                                <div className="mt-4 rounded-2xl border border-rose-500/20 bg-rose-500/8 px-4 py-3 text-xs leading-5 text-rose-100">
+                                    One or more policy lanes are currently blocked. Use the reroute or escalation paths above before treating this package as approvable.
+                                </div>
+                            ) : null}
                         </section>
 
                         <section className="rounded-3xl border border-white/10 bg-[#0a1526]/92 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.3)] backdrop-blur-xl">

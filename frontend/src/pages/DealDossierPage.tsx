@@ -1,6 +1,7 @@
 import { Link, useParams } from 'react-router-dom'
 import DealProgressTracker from '../components/DealProgressTracker'
 import DealArtifactPreviewGrid from '../components/deals/DealArtifactPreviewGrid'
+import DealConflictBanner from '../components/deals/DealConflictBanner'
 import DealRelationshipRail from '../components/deals/DealRelationshipRail'
 import { SEEDED_DEAL_ROUTES } from '../data/dealDossierData'
 import {
@@ -15,6 +16,7 @@ import {
     buildDealDossierProofBundle,
     type DealArtifactPreviewTone
 } from '../domain/dealArtifactPreview'
+import { buildDealPolicyConflictModel } from '../domain/dealPolicyConflict'
 import { getDealRouteContextById } from '../domain/dealDossier'
 
 type DealDossierPageProps = {
@@ -84,6 +86,12 @@ export default function DealDossierPage({
     const blockers = context.lifecycleRecord?.blockers ?? []
     const signals = context.lifecycleRecord?.signals ?? []
     const proofBundle = buildDealDossierProofBundle(context)
+    const conflictModel = buildDealPolicyConflictModel({
+        context,
+        surface: 'dossier',
+        quote: context.quote,
+        demo
+    })
     const auditEvents = [...proofBundle.auditTimeline].reverse().slice(0, 7)
     const releaseChecklist = context.lifecycleRecord?.releaseReadiness.checklist ?? []
     const datasetLinks = [
@@ -159,6 +167,10 @@ export default function DealDossierPage({
 
                 <div className="mt-8">
                     <DealProgressTracker model={context.dealProgress} compact />
+                </div>
+
+                <div className="mt-6">
+                    <DealConflictBanner model={conflictModel} />
                 </div>
 
                 <section className="mt-8 grid gap-6 xl:grid-cols-[1.3fr_0.7fr]">

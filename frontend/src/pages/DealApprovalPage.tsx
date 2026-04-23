@@ -1,12 +1,14 @@
 import { Link, useParams } from 'react-router-dom'
 import AdminLayout from '../components/admin/AdminLayout'
 import DealArtifactPreviewGrid from '../components/deals/DealArtifactPreviewGrid'
+import DealConflictBanner from '../components/deals/DealConflictBanner'
 import SignoffTimeline from '../components/deals/SignoffTimeline'
 import {
     getApprovalArtifactByDealId,
     getApprovalArtifactByReviewId,
     type ApprovalArtifactModel
 } from '../domain/approvalArtifact'
+import { buildDealPolicyConflictModel } from '../domain/dealPolicyConflict'
 
 type DealApprovalPageProps = {
     adminView?: boolean
@@ -102,13 +104,22 @@ function ApprovalContent({
     const connectedLinks = adminView
         ? [
             { label: 'Back to application review', to: `/admin/application-review/${model.reviewId}` },
+            { label: 'Open provider packet', to: model.context.routeTargets['provider-packet'] },
             { label: 'Open admin audit trail', to: '/admin/audit-trail' }
         ]
         : [
             { label: 'Back to evaluation dossier', to: model.context.routeTargets.dossier },
             { label: 'Open provider packet', to: model.context.routeTargets['provider-packet'] },
+            { label: 'Open negotiation history', to: model.context.routeTargets.negotiation },
             { label: 'Open output review', to: model.context.routeTargets['output-review'] }
         ]
+    const conflictModel = buildDealPolicyConflictModel({
+        context: model.context,
+        surface: 'approval',
+        quote: model.context.quote,
+        adminView,
+        reviewId: model.reviewId
+    })
 
     return (
         <>
@@ -201,6 +212,10 @@ function ApprovalContent({
                         ))}
                     </div>
                 </article>
+            </section>
+
+            <section className="mt-8">
+                <DealConflictBanner model={conflictModel} />
             </section>
 
             <section className="mt-8 grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
