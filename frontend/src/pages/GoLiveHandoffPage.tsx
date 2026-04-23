@@ -1,10 +1,11 @@
 import { Link, useParams } from 'react-router-dom'
 import DealArtifactPreviewGrid from '../components/deals/DealArtifactPreviewGrid'
 import DealRelationshipRail from '../components/deals/DealRelationshipRail'
-import { SEEDED_DEAL_ROUTES } from '../data/dealDossierData'
+import DealRouteSuggestionLinks from '../components/deals/DealRouteSuggestionLinks'
 import { getDealRouteContextById } from '../domain/dealDossier'
 import { buildGoLiveHandoff } from '../domain/deploymentDecisionMemo'
 import type { DealArtifactPreviewTone } from '../domain/dealArtifactPreview'
+import DealRoutePlaceholderPage from './DealRoutePlaceholderPage'
 
 const panelClass =
     'rounded-3xl border border-white/10 bg-[#0a1526]/88 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.28)] backdrop-blur-xl'
@@ -12,7 +13,12 @@ const panelClass =
 export default function GoLiveHandoffPage() {
     const { dealId } = useParams<{ dealId: string }>()
     const context = getDealRouteContextById(dealId)
-    const model = context ? buildGoLiveHandoff(context) : null
+    const isPlaceholder = context?.surfaceAvailability['go-live'] === 'placeholder'
+    const model = context && !isPlaceholder ? buildGoLiveHandoff(context) : null
+
+    if (context && isPlaceholder) {
+        return <DealRoutePlaceholderPage surface="go-live" />
+    }
 
     if (!context || !model) {
         return (
@@ -25,20 +31,10 @@ export default function GoLiveHandoffPage() {
                         </div>
                         <h1 className="mt-4 text-4xl font-bold tracking-tight text-white">Unknown deal id</h1>
                         <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-400">
-                            The go-live route is wired, but this seed id does not exist in the current workspace.
+                            The go-live route is wired, but this deal id does not exist in the current workspace.
                         </p>
 
-                        <div className="mt-6 flex flex-wrap gap-3">
-                            {SEEDED_DEAL_ROUTES.map(record => (
-                                <Link
-                                    key={record.dealId}
-                                    to={`/deals/${record.dealId}/go-live`}
-                                    className="rounded-xl border border-cyan-400/35 bg-cyan-500/10 px-4 py-3 text-sm font-semibold text-cyan-100 hover:bg-cyan-500/20"
-                                >
-                                    {record.dealId} · {record.label}
-                                </Link>
-                            ))}
-                        </div>
+                        <DealRouteSuggestionLinks surface="go-live" />
                     </section>
                 </div>
             </div>

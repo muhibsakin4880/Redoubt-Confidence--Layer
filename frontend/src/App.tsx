@@ -53,6 +53,7 @@ import PilotWalkthroughPage from './pages/PilotWalkthroughPage'
 import ProtectedEvaluationPage from './pages/ProtectedEvaluationPage'
 import TrustCenterPage from './pages/TrustCenterPage'
 import ResearcherAccessPage from './pages/ResearcherAccessPage'
+import DealIndexPage from './pages/DealIndexPage'
 import DealDossierPage from './pages/DealDossierPage'
 import ProviderRightsPacketPage from './pages/ProviderRightsPacketPage'
 import CleanRoomOutputReviewPage from './pages/CleanRoomOutputReviewPage'
@@ -64,7 +65,6 @@ import GoLiveHandoffPage from './pages/GoLiveHandoffPage'
 
 import { useAuth } from './contexts/AuthContext'
 import { participantOnboardingPaths } from './onboarding/constants'
-import { DEFAULT_DEAL_ID } from './data/dealDossierData'
 
 const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage'))
 const AIInterrogationLogsPage = lazy(() => import('./pages/admin/AIInterrogationLogsPage'))
@@ -264,7 +264,7 @@ function App() {
                     <Route path="demo/security-ops" element={<SecurityOperationsPage />} />
                     <Route path="demo/compliance-locker" element={<ComplianceLockerPage />} />
                     <Route path="demo/data-classification" element={<DataClassificationPage />} />
-                    <Route path="demo/deals" element={<Navigate to={`/demo/deals/${DEFAULT_DEAL_ID}`} replace />} />
+                    <Route path="demo/deals" element={<DealIndexPage demo />} />
                     <Route path="demo/deals/:dealId" element={<DealDossierPage demo />} />
                     <Route path="demo/deals/:dealId/provider-packet" element={<ProviderRightsPacketPage demo />} />
                     <Route path="demo/deals/:dealId/output-review" element={<CleanRoomOutputReviewPage demo />} />
@@ -308,7 +308,7 @@ function App() {
                     <Route path="provider/datasets/:id/status" element={<ContributionStatusDetailsPage />} />
                     <Route path="provider/datasets/:id" element={<ContributionDetailPage />} />
                     <Route path="researcher-access" element={<ResearcherAccessPage />} />
-                    <Route path="deals" element={<Navigate to={`/deals/${DEFAULT_DEAL_ID}`} replace />} />
+                    <Route path="deals" element={<DealIndexPage />} />
                     <Route path="deals/:dealId" element={<DealDossierPage />} />
                     <Route path="deals/:dealId/provider-packet" element={<ProviderRightsPacketPage />} />
                     <Route path="deals/:dealId/output-review" element={<CleanRoomOutputReviewPage />} />

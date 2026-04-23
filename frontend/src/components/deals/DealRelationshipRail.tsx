@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import type { DealSurfaceKey } from '../../data/dealDossierData'
 import type { DealRouteContext } from '../../domain/dealDossier'
 
 type DealRelationshipRailProps = {
@@ -24,20 +25,27 @@ export default function DealRelationshipRail({
     const coreIds = [
         { label: 'Deal id', value: context.seed.dealId, tone: 'cyan' },
         { label: 'Dataset id', value: context.seed.datasetId, tone: 'slate' },
-        { label: 'Request id', value: context.seed.requestId, tone: 'slate' },
+        { label: 'Request id', value: context.seed.requestId ?? 'Not linked', tone: context.seed.requestId ? 'slate' : 'amber' },
         { label: 'Passport id', value: context.passportId, tone: 'emerald' },
         { label: 'Quote id', value: context.quoteId ?? 'Pending', tone: context.quoteId ? 'cyan' : 'amber' },
         { label: 'Checkout id', value: context.checkoutId ?? 'Pending', tone: context.checkoutId ? 'emerald' : 'amber' }
     ] as const
 
     const reservedSurfaces = [
-        { label: 'Provider packet', to: context.routeTargets['provider-packet'], status: 'Live', tone: 'cyan' as const, demoReady: true },
-        { label: 'Output review', to: context.routeTargets['output-review'], status: 'Live', tone: 'emerald' as const, demoReady: true },
-        { label: 'Approval', to: context.routeTargets.approval, status: 'Live', tone: 'amber' as const, demoReady: false },
-        { label: 'Negotiation', to: context.routeTargets.negotiation, status: 'Live', tone: 'cyan' as const, demoReady: false },
-        { label: 'Residency memo', to: context.routeTargets['residency-memo'], status: 'Live', tone: 'amber' as const, demoReady: false },
-        { label: 'Go-live handoff', to: context.routeTargets['go-live'], status: 'Live', tone: 'emerald' as const, demoReady: false }
-    ]
+        { surface: 'provider-packet', label: 'Provider packet', to: context.routeTargets['provider-packet'], status: 'Live', tone: 'cyan' as const, demoReady: true },
+        { surface: 'output-review', label: 'Output review', to: context.routeTargets['output-review'], status: 'Live', tone: 'emerald' as const, demoReady: true },
+        { surface: 'approval', label: 'Approval', to: context.routeTargets.approval, status: 'Live', tone: 'amber' as const, demoReady: false },
+        { surface: 'negotiation', label: 'Negotiation', to: context.routeTargets.negotiation, status: 'Live', tone: 'cyan' as const, demoReady: false },
+        { surface: 'residency-memo', label: 'Residency memo', to: context.routeTargets['residency-memo'], status: 'Live', tone: 'amber' as const, demoReady: false },
+        { surface: 'go-live', label: 'Go-live handoff', to: context.routeTargets['go-live'], status: 'Live', tone: 'emerald' as const, demoReady: false }
+    ] satisfies Array<{
+        surface: DealSurfaceKey
+        label: string
+        to: string
+        status: string
+        tone: 'cyan' | 'emerald' | 'amber'
+        demoReady: boolean
+    }>
 
     return (
         <div className="space-y-5">
@@ -87,7 +95,7 @@ export default function DealRelationshipRail({
                 <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">Deal-specific surfaces</div>
                 <h2 className="mt-2 text-lg font-semibold text-white">Deal-specific routes</h2>
                 <p className="mt-2 text-sm text-slate-400">
-                    The deal id now resolves the dedicated proof and operating surfaces that follow this shell.
+                    The deal id resolves available proof surfaces now and shows controlled placeholders for surfaces that are not configured yet.
                 </p>
 
                 <div className="mt-5 space-y-3">
@@ -103,6 +111,19 @@ export default function DealRelationshipRail({
                                 </div>
                                 <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-300">
                                     Workspace only
+                                </span>
+                            </div>
+                        ) : context.surfaceAvailability[item.surface] === 'placeholder' ? (
+                            <div
+                                key={`${context.seed.dealId}-${item.to}`}
+                                className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-slate-950/40 px-4 py-3"
+                            >
+                                <div>
+                                    <div className="text-sm font-semibold text-white">{item.label}</div>
+                                    <div className="mt-1 text-xs text-slate-400">Placeholder until deal artifacts are configured</div>
+                                </div>
+                                <span className="rounded-full border border-amber-400/30 bg-amber-500/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-amber-100">
+                                    Placeholder
                                 </span>
                             </div>
                         ) : (

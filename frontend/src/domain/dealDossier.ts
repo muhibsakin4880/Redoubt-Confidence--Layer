@@ -1,13 +1,19 @@
 import {
+    DATASET_DETAILS,
     getDatasetDetailById,
     type DatasetDetail
 } from '../data/datasetDetailData'
 import {
+    DERIVED_SURFACE_AVAILABILITY,
+    SEEDED_SURFACE_AVAILABILITY,
     SEEDED_DEAL_ROUTES,
     buildDealPath,
     buildDemoDealPath,
+    buildDerivedDealId,
+    getDatasetIdFromDerivedDealId,
     getSeededDealRouteRecordById,
     type DealSurfaceKey,
+    type DealSurfaceAvailabilityMap,
     type DemoDealSurfaceKey,
     type SeededDealRouteRecord
 } from '../data/dealDossierData'
@@ -25,6 +31,8 @@ import {
 
 export type DealRouteContext = {
     seed: SeededDealRouteRecord
+    routeKind: 'seeded' | 'derived'
+    surfaceAvailability: DealSurfaceAvailabilityMap
     dataset: DatasetDetail | null
     request: DatasetRequest | null
     lifecycleRecord: SharedDealLifecycleRecord | null
@@ -67,13 +75,54 @@ const buildDemoTargets = (dealId: string): Record<DemoDealSurfaceKey, string> =>
     'output-review': buildDemoDealPath(dealId, 'output-review')
 })
 
+const buildDerivedSeed = (dataset: DatasetDetail): SeededDealRouteRecord => ({
+    dealId: buildDerivedDealId(dataset.id),
+    label: `${dataset.title} evaluation`,
+    summary: dataset.description,
+    datasetId: dataset.id,
+    requestId: null
+})
+
+const loadDerivedSeeds = () => {
+    const seededDatasetIds = new Set(SEEDED_DEAL_ROUTES.map(record => record.datasetId))
+
+    return Object.values(DATASET_DETAILS)
+        .filter(dataset => !seededDatasetIds.has(dataset.id))
+        .map(buildDerivedSeed)
+}
+
+const resolveDealSeedById = (dealId?: string | null) => {
+    const seeded = getSeededDealRouteRecordById(dealId)
+    if (seeded) {
+        return {
+            seed: seeded,
+            routeKind: 'seeded' as const,
+            surfaceAvailability: SEEDED_SURFACE_AVAILABILITY
+        }
+    }
+
+    const datasetId = getDatasetIdFromDerivedDealId(dealId)
+    const dataset = datasetId ? getDatasetDetailById(datasetId) : null
+    if (!dataset) return null
+
+    return {
+        seed: buildDerivedSeed(dataset),
+        routeKind: 'derived' as const,
+        surfaceAvailability: DERIVED_SURFACE_AVAILABILITY
+    }
+}
+
 const toDealRouteContext = (
     seed: SeededDealRouteRecord,
-    records: SharedDealLifecycleRecord[]
+    records: SharedDealLifecycleRecord[],
+    routeKind: DealRouteContext['routeKind'],
+    surfaceAvailability: DealSurfaceAvailabilityMap
 ): DealRouteContext => {
     const lifecycleRecord = findLifecycleRecord(seed, records)
     const dataset = getDatasetDetailById(seed.datasetId)
-    const request = datasetRequests.find(item => item.id === seed.requestId) ?? null
+    const request = seed.requestId
+        ? datasetRequests.find(item => item.id === seed.requestId) ?? null
+        : datasetRequests.find(item => item.name === dataset?.title) ?? null
     const passport = lifecycleRecord?.source.passport ?? passportFallback()
     const quote = lifecycleRecord?.source.quote ?? null
     const checkoutRecord = lifecycleRecord?.source.checkoutRecord ?? null
@@ -81,6 +130,8 @@ const toDealRouteContext = (
 
     return {
         seed,
+        routeKind,
+        surfaceAvailability,
         dataset,
         request,
         lifecycleRecord,
@@ -92,10 +143,12 @@ const toDealRouteContext = (
             quote,
             checkoutRecord
         }),
-        currentStageLabel: stageMeta?.label ?? 'Seeded route ready',
+        currentStageLabel: stageMeta?.label ?? (routeKind === 'seeded' ? 'Seeded route ready' : 'Dossier ready'),
         currentStageDetail:
             stageMeta?.detail ??
-            'This reserved deal route resolves from seeded dataset and request mappings even before the full dossier UI is implemented.',
+            (routeKind === 'seeded'
+                ? 'This reserved deal route resolves from seeded dataset and request mappings even before the full dossier UI is implemented.'
+                : 'This dossier is generated from the dataset record and will attach request, rights, approval, and checkout artifacts as they become available.'),
         passportId: lifecycleRecord?.passportId ?? passport.passportId,
         quoteId: lifecycleRecord?.quoteId ?? quote?.id ?? null,
         checkoutId: lifecycleRecord?.checkoutId ?? checkoutRecord?.id ?? null,
@@ -106,12 +159,24 @@ const toDealRouteContext = (
 
 export const loadDealRouteContexts = () => {
     const records = loadSharedDealLifecycleRecords()
-    return SEEDED_DEAL_ROUTES.map(seed => toDealRouteContext(seed, records))
+    return [
+        ...SEEDED_DEAL_ROUTES.map(seed =>
+            toDealRouteContext(seed, records, 'seeded', SEEDED_SURFACE_AVAILABILITY)
+        ),
+        ...loadDerivedSeeds().map(seed =>
+            toDealRouteContext(seed, records, 'derived', DERIVED_SURFACE_AVAILABILITY)
+        )
+    ]
 }
 
 export const getDealRouteContextById = (dealId?: string | null) => {
-    const seed = getSeededDealRouteRecordById(dealId)
-    if (!seed) return null
+    const resolved = resolveDealSeedById(dealId)
+    if (!resolved) return null
 
-    return toDealRouteContext(seed, loadSharedDealLifecycleRecords())
+    return toDealRouteContext(
+        resolved.seed,
+        loadSharedDealLifecycleRecords(),
+        resolved.routeKind,
+        resolved.surfaceAvailability
+    )
 }

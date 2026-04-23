@@ -1,10 +1,10 @@
 import { Link, useParams } from 'react-router-dom'
 import {
     DEAL_SURFACE_META,
-    SEEDED_DEAL_ROUTES,
     type DealSurfaceKey
 } from '../data/dealDossierData'
 import { getDealRouteContextById } from '../domain/dealDossier'
+import DealRouteSuggestionLinks from '../components/deals/DealRouteSuggestionLinks'
 
 type DealRoutePlaceholderPageProps = {
     surface: DealSurfaceKey
@@ -33,20 +33,10 @@ export default function DealRoutePlaceholderPage({
                         </div>
                         <h1 className="mt-4 text-4xl font-bold tracking-tight text-white">Unknown deal id</h1>
                         <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-400">
-                            The deal route family is wired, but this seed id does not exist in the current demo workspace.
+                            The deal route family is wired, but this deal id does not exist in the current workspace.
                         </p>
 
-                        <div className="mt-6 flex flex-wrap gap-3">
-                            {SEEDED_DEAL_ROUTES.map(record => (
-                                <Link
-                                    key={record.dealId}
-                                    to={demo ? `/demo/deals/${record.dealId}` : `/deals/${record.dealId}`}
-                                    className="rounded-xl border border-cyan-400/35 bg-cyan-500/10 px-4 py-3 text-sm font-semibold text-cyan-100 hover:bg-cyan-500/20"
-                                >
-                                    {record.dealId} · {record.label}
-                                </Link>
-                            ))}
-                        </div>
+                        <DealRouteSuggestionLinks surface={surface} demo={demo} />
                     </section>
                 </div>
             </div>
@@ -86,7 +76,9 @@ export default function DealRoutePlaceholderPage({
                     <article className={panelClass}>
                         <div className="flex items-center justify-between gap-3">
                             <div>
-                                <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">Seeded deal route</div>
+                                <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">
+                                    {context.routeKind === 'seeded' ? 'Seeded deal route' : 'Generated dataset deal'}
+                                </div>
                                 <h2 className="mt-2 text-2xl font-semibold text-white">{context.seed.label}</h2>
                             </div>
                             <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-300">
@@ -98,7 +90,11 @@ export default function DealRoutePlaceholderPage({
 
                         <div className="mt-6 grid gap-3 md:grid-cols-2">
                             <ValueCard label="Dataset" value={context.dataset?.title ?? 'Seeded later'} detail={`datasetId ${context.seed.datasetId}`} />
-                            <ValueCard label="Access request" value={context.request?.requestNumber ?? context.seed.requestId} detail={context.request?.name ?? 'Mapped request seed'} />
+                            <ValueCard
+                                label="Access request"
+                                value={context.request?.requestNumber ?? context.seed.requestId ?? 'Not linked'}
+                                detail={context.request?.name ?? (context.routeKind === 'seeded' ? 'Mapped request seed' : 'Attach a request to deepen this dossier')}
+                            />
                             <ValueCard label="Current stage" value={context.currentStageLabel} detail={context.currentStageDetail} />
                             <ValueCard
                                 label="Resolved object ids"
@@ -114,10 +110,18 @@ export default function DealRoutePlaceholderPage({
 
                     <aside className={`${panelClass} border-cyan-500/20 bg-cyan-500/8`}>
                         <div className="text-[11px] uppercase tracking-[0.14em] text-cyan-100/70">Why this exists now</div>
-                        <h2 className="mt-2 text-xl font-semibold text-white">Deal-centric route family is reserved</h2>
+                        <h2 className="mt-2 text-xl font-semibold text-white">
+                            {context.surfaceAvailability[surface] === 'placeholder'
+                                ? 'Surface placeholder is ready'
+                                : 'Deal-centric route family is reserved'}
+                        </h2>
                         <div className="mt-4 space-y-3 text-sm text-slate-200">
-                            <p>This step seeds stable deal ids and wires the full route spine before the real dossier and proof surfaces land.</p>
-                            <p>The page is intentionally lightweight so the next steps can focus on trust-heavy UI without revisiting routing or id composition.</p>
+                            <p>
+                                {context.surfaceAvailability[surface] === 'placeholder'
+                                    ? 'This generated dataset deal can open the Evaluation Dossier now, while this deeper proof surface waits for a configured review, negotiation, or release artifact.'
+                                    : 'This route keeps stable deal ids and wires the full route spine before the deeper proof surfaces land.'}
+                            </p>
+                            <p>The page is intentionally lightweight so operators can return to the dossier without hitting a broken route.</p>
                         </div>
                     </aside>
                 </section>
@@ -135,20 +139,31 @@ export default function DealRoutePlaceholderPage({
                         </div>
 
                         <div className="mt-5 grid gap-3">
-                            {(Object.entries(context.routeTargets) as Array<[DealSurfaceKey, string]>).map(([key, href]) => (
-                                <Link
-                                    key={key}
-                                    to={href}
-                                    className={`rounded-2xl border px-4 py-4 text-left transition-colors ${
-                                        key === surface
-                                            ? 'border-cyan-400/50 bg-cyan-500/12'
-                                            : 'border-white/10 bg-slate-950/40 hover:border-slate-500/50'
-                                    }`}
-                                >
-                                    <div className="text-sm font-semibold text-white">{DEAL_SURFACE_META[key].label}</div>
-                                    <div className="mt-1 text-xs text-slate-400">{href}</div>
-                                </Link>
-                            ))}
+                            {(Object.entries(context.routeTargets) as Array<[DealSurfaceKey, string]>).map(([key, href]) => {
+                                const isPlaceholder = context.surfaceAvailability[key] === 'placeholder'
+
+                                return (
+                                    <Link
+                                        key={key}
+                                        to={href}
+                                        className={`rounded-2xl border px-4 py-4 text-left transition-colors ${
+                                            key === surface
+                                                ? 'border-cyan-400/50 bg-cyan-500/12'
+                                                : 'border-white/10 bg-slate-950/40 hover:border-slate-500/50'
+                                        }`}
+                                    >
+                                        <div className="flex items-center justify-between gap-3">
+                                            <div className="text-sm font-semibold text-white">{DEAL_SURFACE_META[key].label}</div>
+                                            {isPlaceholder ? (
+                                                <span className="rounded-full border border-amber-400/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-amber-100">
+                                                    Placeholder
+                                                </span>
+                                            ) : null}
+                                        </div>
+                                        <div className="mt-1 text-xs text-slate-400">{href}</div>
+                                    </Link>
+                                )
+                            })}
                         </div>
                     </article>
 

@@ -15,7 +15,12 @@ import {
     statusStyles as contributionStatusStyles,
     uploadedDatasets
 } from '../data/contributionStatusData'
-import { buildDealPath, getSeededDealRouteRecordByRequestId } from '../data/dealDossierData'
+import {
+    buildDealPath,
+    getDealRouteRecordByDatasetId,
+    getDealRouteRecordByRequestId
+} from '../data/dealDossierData'
+import { DATASET_DETAILS } from '../data/datasetDetailData'
 
 type ScreeningTone = 'emerald' | 'amber' | 'cyan'
 
@@ -195,6 +200,14 @@ const getRequestFlags = (request: DatasetRequest): RequestFlag[] => {
     ]
 }
 
+const getDealRouteForRequest = (request: DatasetRequest) => {
+    const mappedDealRoute = getDealRouteRecordByRequestId(request.id)
+    if (mappedDealRoute) return mappedDealRoute
+
+    const dataset = Object.values(DATASET_DETAILS).find(item => item.title === request.name)
+    return getDealRouteRecordByDatasetId(dataset?.id)
+}
+
 export default function ProviderDashboardPage() {
     const totalDatasets = uploadedDatasets.length
     const processingDatasetCount = uploadedDatasets.filter(dataset => dataset.status === 'Processing').length
@@ -245,8 +258,8 @@ export default function ProviderDashboardPage() {
         }
     ]
     const leadProviderPacketPath = providerReviewRequests
-        .map(request => getSeededDealRouteRecordByRequestId(request.id))
-        .find((record): record is NonNullable<ReturnType<typeof getSeededDealRouteRecordByRequestId>> => Boolean(record))
+        .map(getDealRouteForRequest)
+        .find((record): record is NonNullable<ReturnType<typeof getDealRouteForRequest>> => Boolean(record))
     const providerPacketQuickLink = leadProviderPacketPath
         ? buildDealPath(leadProviderPacketPath.dealId, 'provider-packet')
         : null
@@ -600,9 +613,9 @@ function ProviderRequestCard({ request }: { request: DatasetRequest }) {
     const complianceFields = buildRequestComplianceFields(request)
     const screeningItems = buildBuyerScreeningItems(request)
     const requestFlags = getRequestFlags(request)
-    const seededDealRoute = getSeededDealRouteRecordByRequestId(request.id)
-    const providerPacketPath = seededDealRoute
-        ? buildDealPath(seededDealRoute.dealId, 'provider-packet')
+    const dealRoute = getDealRouteForRequest(request)
+    const providerPacketPath = dealRoute
+        ? buildDealPath(dealRoute.dealId, 'provider-packet')
         : null
 
     return (

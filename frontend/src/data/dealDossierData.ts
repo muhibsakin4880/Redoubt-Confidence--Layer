@@ -1,3 +1,5 @@
+import { getDatasetDetailById } from './datasetDetailData'
+
 export type DealSurfaceKey =
     | 'dossier'
     | 'provider-packet'
@@ -8,6 +10,8 @@ export type DealSurfaceKey =
     | 'go-live'
 
 export type DemoDealSurfaceKey = Extract<DealSurfaceKey, 'dossier' | 'provider-packet' | 'output-review'>
+export type DealSurfaceAvailability = 'available' | 'placeholder'
+export type DealSurfaceAvailabilityMap = Record<DealSurfaceKey, DealSurfaceAvailability>
 
 export type DealSurfaceMeta = {
     label: string
@@ -21,7 +25,7 @@ export type SeededDealRouteRecord = {
     label: string
     summary: string
     datasetId: string
-    requestId: string
+    requestId: string | null
 }
 
 export const DEAL_SURFACE_META: Record<DealSurfaceKey, DealSurfaceMeta> = {
@@ -95,6 +99,35 @@ export const SEEDED_DEAL_ROUTES: SeededDealRouteRecord[] = [
 
 export const DEFAULT_DEAL_ID = SEEDED_DEAL_ROUTES[0].dealId
 
+export const SEEDED_SURFACE_AVAILABILITY: DealSurfaceAvailabilityMap = {
+    dossier: 'available',
+    'provider-packet': 'available',
+    'output-review': 'available',
+    approval: 'available',
+    negotiation: 'available',
+    'residency-memo': 'available',
+    'go-live': 'available'
+}
+
+export const DERIVED_SURFACE_AVAILABILITY: DealSurfaceAvailabilityMap = {
+    dossier: 'available',
+    'provider-packet': 'available',
+    'output-review': 'available',
+    approval: 'placeholder',
+    negotiation: 'placeholder',
+    'residency-memo': 'placeholder',
+    'go-live': 'placeholder'
+}
+
+const DERIVED_DEAL_ID_PREFIX = 'DL-DS-'
+
+export const buildDerivedDealId = (datasetId: string) => `${DERIVED_DEAL_ID_PREFIX}${datasetId}`
+
+export const getDatasetIdFromDerivedDealId = (dealId?: string | null) => {
+    if (!dealId?.startsWith(DERIVED_DEAL_ID_PREFIX)) return null
+    return dealId.slice(DERIVED_DEAL_ID_PREFIX.length) || null
+}
+
 export const getSeededDealRouteRecordById = (dealId?: string | null) =>
     SEEDED_DEAL_ROUTES.find(record => record.dealId === dealId) ?? null
 
@@ -102,7 +135,31 @@ export const getSeededDealRouteRecordByDatasetId = (datasetId?: string | null) =
     SEEDED_DEAL_ROUTES.find(record => record.datasetId === datasetId) ?? null
 
 export const getSeededDealRouteRecordByRequestId = (requestId?: string | null) =>
-    SEEDED_DEAL_ROUTES.find(record => record.requestId === requestId) ?? null
+    requestId
+        ? SEEDED_DEAL_ROUTES.find(record => record.requestId === requestId) ?? null
+        : null
+
+export const getDealRouteRecordByDatasetId = (datasetId?: string | null) => {
+    if (!datasetId) return null
+    const seeded = getSeededDealRouteRecordByDatasetId(datasetId)
+    if (seeded) return seeded
+
+    const dataset = getDatasetDetailById(datasetId)
+    if (!dataset) return null
+
+    return {
+        dealId: buildDerivedDealId(datasetId),
+        label: `${dataset.title} evaluation`,
+        summary: dataset.description,
+        datasetId,
+        requestId: null
+    }
+}
+
+export const getDealRouteRecordByRequestId = (requestId?: string | null) =>
+    requestId
+        ? SEEDED_DEAL_ROUTES.find(record => record.requestId === requestId) ?? null
+        : null
 
 export const buildDealPath = (dealId: string, surface: DealSurfaceKey = 'dossier') => {
     const routeSegment = DEAL_SURFACE_META[surface].routeSegment

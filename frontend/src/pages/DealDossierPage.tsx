@@ -11,7 +11,8 @@ import DealReadinessStrip, {
     type DealReadinessItem
 } from '../components/deals/DealReadinessStrip'
 import DealRelationshipRail from '../components/deals/DealRelationshipRail'
-import { SEEDED_DEAL_ROUTES } from '../data/dealDossierData'
+import DealRouteSuggestionLinks from '../components/deals/DealRouteSuggestionLinks'
+import DealSwitcher from '../components/deals/DealSwitcher'
 import {
     buildRequestBasisFields,
     getProviderReviewStatus,
@@ -108,20 +109,10 @@ export default function DealDossierPage({
                             Unknown deal id
                         </h1>
                         <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-400">
-                            This deal id is not available in the current seeded workspace.
+                            This deal id is not available in the current workspace.
                         </p>
 
-                        <div className="mt-6 flex flex-wrap gap-3">
-                            {SEEDED_DEAL_ROUTES.map(record => (
-                                <Link
-                                    key={record.dealId}
-                                    to={demo ? `/demo/deals/${record.dealId}` : `/deals/${record.dealId}`}
-                                    className="rounded-xl border border-cyan-400/35 bg-cyan-500/10 px-4 py-3 text-sm font-semibold text-cyan-100 hover:bg-cyan-500/20"
-                                >
-                                    {record.dealId} · {record.label}
-                                </Link>
-                            ))}
-                        </div>
+                        <DealRouteSuggestionLinks demo={demo} />
                     </section>
                 </div>
             </div>
@@ -179,12 +170,18 @@ export default function DealDossierPage({
             context.dataset?.lastUpdated
     )
     const stageTone = approvalArtifact?.overallTone ?? proofBundle.evaluationState.tone
+    const datasetTitle = context.dataset?.title ?? context.seed.label
+    const dealTypeLabel = context.routeKind === 'derived' ? 'Generated dataset deal' : 'Configured deal'
+    const canOpenApproval = !demo && context.surfaceAvailability.approval === 'available'
+    const canOpenNegotiation = !demo && context.surfaceAvailability.negotiation === 'available'
+    const canOpenResidencyMemo = !demo && context.surfaceAvailability['residency-memo'] === 'available'
+    const canOpenGoLive = !demo && context.surfaceAvailability['go-live'] === 'available'
 
     const primaryActions = [
         {
             label: 'Review approval artifact',
-            to: !demo ? context.routeTargets.approval : undefined,
-            disabled: demo
+            to: canOpenApproval ? context.routeTargets.approval : undefined,
+            disabled: !canOpenApproval
         },
         {
             label: 'Open provider packet',
@@ -204,8 +201,8 @@ export default function DealDossierPage({
     const secondaryActions = [
         {
             label: 'View negotiation history',
-            to: !demo ? context.routeTargets.negotiation : undefined,
-            disabled: demo
+            to: canOpenNegotiation ? context.routeTargets.negotiation : undefined,
+            disabled: !canOpenNegotiation
         },
         {
             label: 'Open output review',
@@ -254,19 +251,19 @@ export default function DealDossierPage({
                 ? context.demoTargets['output-review']
                 : context.routeTargets['output-review']
         },
-        !demo
+        canOpenApproval
             ? { label: 'Approval artifact', to: context.routeTargets.approval }
             : null,
-        !demo
+        canOpenNegotiation
             ? { label: 'Negotiation history', to: context.routeTargets.negotiation }
             : null,
-        !demo
+        canOpenResidencyMemo
             ? {
                   label: 'Residency memo',
                   to: context.routeTargets['residency-memo']
               }
             : null,
-        !demo ? { label: 'Go-live handoff', to: context.routeTargets['go-live'] } : null
+        canOpenGoLive ? { label: 'Go-live handoff', to: context.routeTargets['go-live'] } : null
     ].filter((item): item is { label: string; to: string } => Boolean(item))
 
     return (
@@ -285,36 +282,58 @@ export default function DealDossierPage({
                 </div>
 
                 <section className={`${surfacePanelClass} mt-5`}>
-                    <div className="flex flex-wrap items-center gap-2">
-                        <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-300">
-                            Evaluation Dossier
-                        </span>
-                        <span className="rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-[11px] font-semibold text-cyan-100">
-                            {context.seed.dealId}
-                        </span>
-                        <StatusPill tone={stageTone} label={context.currentStageLabel} />
-                        {approvalArtifact ? (
-                            <StatusPill
-                                tone={approvalArtifact.overallTone}
-                                label={approvalArtifact.overallStatus}
-                            />
-                        ) : null}
-                    </div>
-
-                    <div className="mt-5 grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_360px]">
-                        <div>
-                            <h1 className="text-4xl font-bold tracking-tight text-white sm:text-[2.75rem]">
-                                {context.seed.label}
+                    <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_360px]">
+                        <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                                <span className="rounded-full border border-cyan-300/45 bg-cyan-400/15 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-cyan-50 shadow-[0_0_22px_rgba(34,211,238,0.16)]">
+                                    Evaluation Dossier
+                                </span>
+                                <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-semibold text-slate-200">
+                                    {context.seed.dealId}
+                                </span>
+                                <StatusPill tone={stageTone} label={context.currentStageLabel} />
+                                {approvalArtifact ? (
+                                    <StatusPill
+                                        tone={approvalArtifact.overallTone}
+                                        label={approvalArtifact.overallStatus}
+                                    />
+                                ) : null}
+                            </div>
+                            <h1 className="mt-4 text-3xl font-semibold tracking-tight text-slate-100 sm:text-[2.35rem]">
+                                {datasetTitle}
                             </h1>
+                            <div className="mt-3 flex flex-wrap gap-2">
+                                <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-semibold text-slate-200">
+                                    Deal: {context.seed.label}
+                                </span>
+                                <span className="rounded-full border border-emerald-400/25 bg-emerald-500/10 px-3 py-1 text-[11px] font-semibold text-emerald-100">
+                                    {dealTypeLabel}
+                                </span>
+                            </div>
                             <p className="mt-3 max-w-4xl text-sm leading-6 text-slate-300">
                                 Operator workspace binding the dataset, request basis, approval packet, provider evidence, governed evaluation state, and settlement posture into one controlled deal surface.
                             </p>
 
-                            <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                            <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                                 <HeaderField
-                                    label="Dataset name"
-                                    value={context.dataset?.title ?? 'Pending dataset link'}
-                                    detail={`datasetId ${context.seed.datasetId}`}
+                                    label="Dataset title"
+                                    value={datasetTitle}
+                                    detail="Catalog dataset name"
+                                />
+                                <HeaderField
+                                    label="Dataset id"
+                                    value={context.seed.datasetId}
+                                    detail="Catalog dataset id"
+                                />
+                                <HeaderField
+                                    label="Deal id"
+                                    value={context.seed.dealId}
+                                    detail={context.seed.label}
+                                />
+                                <HeaderField
+                                    label="Deal type"
+                                    value={dealTypeLabel}
+                                    detail={context.routeKind === 'derived' ? 'Generated from dataset catalog' : 'Curated seeded route'}
                                 />
                                 <HeaderField
                                     label="Buyer org"
@@ -369,30 +388,33 @@ export default function DealDossierPage({
                             </div>
                         </div>
 
-                        <article className="rounded-2xl border border-cyan-500/20 bg-cyan-500/8 p-5">
-                            <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-cyan-100/70">
-                                Next required action
-                            </div>
-                            <div className="mt-3 text-lg font-semibold text-white">
-                                {nextRequiredAction}
-                            </div>
-                            <p className="mt-3 text-sm leading-6 text-cyan-100/80">
-                                {approvalArtifact?.summary ?? proofBundle.evaluationState.summary}
-                            </p>
+                        <div className="space-y-6">
+                            <DealSwitcher context={context} demo={demo} />
+                            <article className="rounded-2xl border border-cyan-500/20 bg-cyan-500/8 p-5">
+                                <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-cyan-100/70">
+                                    Next required action
+                                </div>
+                                <div className="mt-3 text-lg font-semibold text-white">
+                                    {nextRequiredAction}
+                                </div>
+                                <p className="mt-3 text-sm leading-6 text-cyan-100/80">
+                                    {approvalArtifact?.summary ?? proofBundle.evaluationState.summary}
+                                </p>
 
-                            <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                                <CompactMetric
-                                    label="Review id"
-                                    value={proofBundle.reviewId ?? 'Pending'}
-                                />
-                                <CompactMetric
-                                    label="Evidence pack"
-                                    value={proofBundle.evidencePack?.id ?? 'Not attached'}
-                                />
-                                <CompactMetric label="Owner" value={ownerLabel} />
-                                <CompactMetric label="Deadline" value={deadlineLabel} />
-                            </div>
-                        </article>
+                                <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                                    <CompactMetric
+                                        label="Review id"
+                                        value={proofBundle.reviewId ?? 'Pending'}
+                                    />
+                                    <CompactMetric
+                                        label="Evidence pack"
+                                        value={proofBundle.evidencePack?.id ?? 'Not attached'}
+                                    />
+                                    <CompactMetric label="Owner" value={ownerLabel} />
+                                    <CompactMetric label="Deadline" value={deadlineLabel} />
+                                </div>
+                            </article>
+                        </div>
                     </div>
 
                     <div className="mt-5 border-t border-white/8 pt-4">
@@ -1519,11 +1541,11 @@ function HeaderField({
     detail: string
 }) {
     return (
-        <div className="rounded-2xl border border-white/8 bg-slate-950/45 px-4 py-3">
+        <div className="rounded-2xl border border-white/8 bg-slate-950/35 px-3.5 py-3">
             <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
                 {label}
             </div>
-            <div className="mt-2 text-sm font-semibold leading-6 text-white">{value}</div>
+            <div className="mt-2 text-sm font-semibold leading-6 text-slate-100">{value}</div>
             <div className="mt-1 text-xs leading-5 text-slate-400">{detail}</div>
         </div>
     )
@@ -2107,10 +2129,12 @@ function getBlockerRouting(
     demo: boolean
 ): DealBlockerBoardItem['cta'] {
     if (/residency|privacy|export|region/.test(lower)) {
+        const available = !demo && context.surfaceAvailability['residency-memo'] === 'available'
+
         return {
             label: 'Open residency memo',
-            to: demo ? undefined : context.routeTargets['residency-memo'],
-            disabled: demo
+            to: available ? context.routeTargets['residency-memo'] : undefined,
+            disabled: !available
         }
     }
 
@@ -2145,8 +2169,10 @@ function getBlockerRouting(
 
     return {
         label: 'Review approval artifact',
-        to: demo ? undefined : context.routeTargets.approval,
-        disabled: demo
+        to: !demo && context.surfaceAvailability.approval === 'available'
+            ? context.routeTargets.approval
+            : undefined,
+        disabled: demo || context.surfaceAvailability.approval === 'placeholder'
     }
 }
 

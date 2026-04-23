@@ -23,8 +23,9 @@ import ReadinessCertificationPanel from '../components/ReadinessCertificationPan
 import {
     buildDealPath,
     buildDemoDealPath,
-    getSeededDealRouteRecordByDatasetId
+    getDealRouteRecordByDatasetId
 } from '../data/dealDossierData'
+import { getDealRouteContextById } from '../domain/dealDossier'
 import {
     buildCompliancePassport,
     buildRequestPrefillFromPassport,
@@ -180,16 +181,35 @@ export default function DatasetDetailPage() {
     const isDemoRoute = location.pathname.startsWith('/demo/')
     const routeDataset = getDatasetDetailById(id)
     const dataset = routeDataset ?? Object.values(DATASET_DETAILS)[0]
-    const seededDealRoute = useMemo(
-        () => getSeededDealRouteRecordByDatasetId(dataset.id),
+    const dealRoute = useMemo(
+        () => getDealRouteRecordByDatasetId(dataset.id),
         [dataset.id]
     )
-    const providerPacketPath = useMemo(() => {
-        if (!seededDealRoute) return null
+    const dossierPath = useMemo(() => {
+        if (!dealRoute) return null
         return isDemoRoute
-            ? buildDemoDealPath(seededDealRoute.dealId, 'provider-packet')
-            : buildDealPath(seededDealRoute.dealId, 'provider-packet')
-    }, [isDemoRoute, seededDealRoute])
+            ? buildDemoDealPath(dealRoute.dealId, 'dossier')
+            : buildDealPath(dealRoute.dealId, 'dossier')
+    }, [dealRoute, isDemoRoute])
+    const providerPacketPath = useMemo(() => {
+        if (!dealRoute) return null
+        return isDemoRoute
+            ? buildDemoDealPath(dealRoute.dealId, 'provider-packet')
+            : buildDealPath(dealRoute.dealId, 'provider-packet')
+    }, [dealRoute, isDemoRoute])
+    const dealContext = useMemo(
+        () => (dealRoute ? getDealRouteContextById(dealRoute.dealId) : null),
+        [dealRoute]
+    )
+    const dealSurfaceReadiness = useMemo(() => {
+        if (!dealContext) return { available: 0, placeholder: 0 }
+
+        const states = Object.values(dealContext.surfaceAvailability)
+        return {
+            available: states.filter(state => state === 'available').length,
+            placeholder: states.filter(state => state === 'placeholder').length
+        }
+    }, [dealContext])
     const accessPackage = getAccessPackageForDataset(dataset.id)
     const compliancePassport = useMemo(() => buildCompliancePassport(), [location.key])
     const passportStatus = useMemo(() => passportStatusMeta(compliancePassport.status), [compliancePassport.status])
@@ -540,29 +560,18 @@ export default function DatasetDetailPage() {
                                 </div>
                             </div>
 
-                            <div className="mt-4 bg-slate-900/70 border border-slate-700 rounded-lg p-4 space-y-2">
-                                <div className="flex items-center justify-between">
-                                    <span className="text-sm text-slate-300">Contributor review signal</span>
-                                    <span className="px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs font-semibold text-emerald-200">
-                                        {dataset.contributorTrust}
-                                    </span>
-                                </div>
-                                <div className="flex items-center gap-2 text-xs text-slate-400">
-                                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
-                                    {dataset.contributionHistory}
-                                </div>
-                                <p className="text-xs text-slate-500">
-                                    Demo review cue: {dataset.trustProfile.ownershipAndLicense.value}
-                                </p>
-                                {providerPacketPath ? (
-                                    <Link
-                                        to={providerPacketPath}
-                                        className="inline-flex items-center rounded-lg border border-cyan-400/25 bg-cyan-500/10 px-3 py-2 text-xs font-semibold text-cyan-100 transition-colors hover:bg-cyan-500/20"
-                                    >
-                                        Open provider rights packet
-                                    </Link>
-                                ) : null}
-                            </div>
+                            <DealDossierHeroStrip
+                                dealId={dealRoute?.dealId ?? 'Pending'}
+                                dealType={
+                                    dealContext?.routeKind === 'derived'
+                                        ? 'Generated dataset deal'
+                                        : 'Configured deal'
+                                }
+                                dossierPath={dossierPath}
+                                providerPacketPath={providerPacketPath}
+                                availableSurfaceCount={dealSurfaceReadiness.available}
+                                placeholderSurfaceCount={dealSurfaceReadiness.placeholder}
+                            />
 
                             <section className="mt-8 rounded-2xl border border-slate-700 bg-slate-900/70 p-5 shadow-[0_12px_35px_rgba(0,0,0,0.18)]">
                                 <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
@@ -1471,6 +1480,89 @@ function DecisionValue({ label, value }: { label: string; value: string }) {
         <div className="rounded-xl border border-white/8 bg-slate-950/45 px-4 py-3">
             <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">{label}</div>
             <div className="mt-2 text-sm font-semibold text-white">{value}</div>
+        </div>
+    )
+}
+
+function DealDossierHeroStrip({
+    dealId,
+    dealType,
+    dossierPath,
+    providerPacketPath,
+    availableSurfaceCount,
+    placeholderSurfaceCount
+}: {
+    dealId: string
+    dealType: string
+    dossierPath: string | null
+    providerPacketPath: string | null
+    availableSurfaceCount: number
+    placeholderSurfaceCount: number
+}) {
+    if (!dossierPath) return null
+
+    return (
+        <section className="mt-4 overflow-hidden rounded-2xl border border-cyan-400/25 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.16),transparent_34%),linear-gradient(135deg,rgba(8,17,31,0.96)_0%,rgba(15,23,42,0.88)_100%)] p-4 shadow-[0_18px_54px_rgba(2,8,20,0.26)]">
+            <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+                <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                        <span className="rounded-full border border-cyan-400/35 bg-cyan-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-cyan-100">
+                            Evaluation Dossier
+                        </span>
+                        <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-semibold text-slate-200">
+                            {dealId}
+                        </span>
+                        <span className="rounded-full border border-emerald-400/25 bg-emerald-500/10 px-3 py-1 text-[11px] font-semibold text-emerald-100">
+                            {dealType}
+                        </span>
+                    </div>
+                    <h2 className="mt-3 text-lg font-semibold text-white">
+                        This dataset has a dedicated deal operating surface
+                    </h2>
+                    <div className="mt-3 grid gap-3 md:grid-cols-3">
+                        <DealDossierHeroMetric label="Dossier route" value={dossierPath} />
+                        <DealDossierHeroMetric label="Available surfaces" value={`${availableSurfaceCount} configured`} />
+                        <DealDossierHeroMetric
+                            label="Pending surfaces"
+                            value={placeholderSurfaceCount > 0 ? `${placeholderSurfaceCount} placeholders` : 'None'}
+                        />
+                    </div>
+                </div>
+
+                <div className="flex shrink-0 flex-wrap gap-2 xl:flex-col">
+                    <Link
+                        to={dossierPath}
+                        className="inline-flex justify-center rounded-xl bg-cyan-400 px-4 py-3 text-sm font-semibold text-slate-950 transition-colors hover:bg-cyan-300"
+                    >
+                        Open evaluation dossier
+                    </Link>
+                    {providerPacketPath ? (
+                        <Link
+                            to={providerPacketPath}
+                            className="inline-flex justify-center rounded-xl border border-white/12 bg-white/5 px-4 py-3 text-sm font-semibold text-slate-100 transition-colors hover:border-cyan-400/40 hover:text-white"
+                        >
+                            Open provider rights packet
+                        </Link>
+                    ) : null}
+                </div>
+            </div>
+        </section>
+    )
+}
+
+function DealDossierHeroMetric({
+    label,
+    value
+}: {
+    label: string
+    value: string
+}) {
+    return (
+        <div className="min-w-0 rounded-xl border border-white/8 bg-slate-950/45 px-3 py-2.5">
+            <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+                {label}
+            </div>
+            <div className="mt-1 truncate text-xs font-semibold text-slate-100">{value}</div>
         </div>
     )
 }

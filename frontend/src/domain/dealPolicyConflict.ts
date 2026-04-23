@@ -1,4 +1,4 @@
-import { getSeededDealRouteRecordByDatasetId } from '../data/dealDossierData'
+import { getDealRouteRecordByDatasetId } from '../data/dealDossierData'
 import { buildDealDossierProofBundle, type DealArtifactPreviewTone } from './dealArtifactPreview'
 import { getDealRouteContextById, type DealRouteContext } from './dealDossier'
 import {
@@ -341,6 +341,100 @@ function buildMobilityConflicts({
     ]
 }
 
+function buildGenericConflicts({
+    context,
+    demo,
+    adminView,
+    reviewId,
+    quoteShape,
+    surface
+}: BuildDealPolicyConflictOptions & { quoteShape: RightsQuoteForm | null }) {
+    const isDemo = demo ?? false
+    const isAdminView = adminView ?? false
+    const currentReviewId = reviewId ?? null
+    const packet = buildProviderRightsPacket(context, loadProviderPacketDraft(context.seed.dealId))
+    const proofBundle = buildDealDossierProofBundle(context)
+    const draft = loadProviderPacketDraft(context.seed.dealId)
+    const requestedPortableMovement =
+        quoteShape?.geography === 'global' ||
+        quoteShape?.deliveryMode === 'aggregated_export' ||
+        quoteShape?.deliveryMode === 'encrypted_download'
+    const unresolvedPacketItems = [
+        ...packet.unresolvedExceptions.map(exception => exception.title),
+        !draft.publishingAuthorityConfirmed ? 'Publishing authority attestation pending' : null,
+        !draft.useBoundariesConfirmed ? 'Use-boundary confirmation pending' : null,
+        !draft.residencyRestrictionsConfirmed ? 'Residency restriction confirmation pending' : null
+    ].filter((item): item is string => Boolean(item))
+    const conflicts: DealPolicyConflict[] = []
+
+    if (requestedPortableMovement || !draft.residencyRestrictionsConfirmed) {
+        conflicts.push({
+            id: `${context.seed.dealId}-generic-residency-review`,
+            type: 'cross_border_review',
+            stateLabel: 'Residency review required',
+            severityLabel: requestedPortableMovement ? 'High priority' : 'Needs review',
+            tone: requestedPortableMovement ? 'rose' : 'amber',
+            title: 'Processing or export posture needs confirmation',
+            summary:
+                'This generated dataset deal can proceed through the dossier, but the requested geography, delivery path, or provider residency confirmation still needs explicit review before approval is treated as complete.',
+            triggers: [
+                `Current geography: ${labelGeography(quoteShape?.geography ?? 'single_region')}`,
+                `Current delivery path: ${labelDeliveryMode(quoteShape?.deliveryMode ?? 'clean_room')}`,
+                packet.geography.transferReview
+            ],
+            recommendedPath:
+                'Keep the evaluation inside governed workspace controls until provider residency and transfer boundaries are confirmed.',
+            actions: buildConflictActions(context, isDemo, isAdminView, currentReviewId, [
+                { label: 'Open provider packet', to: resolveWorkspaceOrDemoDealRoute(context, isDemo, 'provider-packet') },
+                { label: 'Refine rights package', to: buildDatasetPath(context, isDemo, 'rights-quote') },
+                { label: 'Open approval artifact', to: resolveApprovalAction(context, isDemo, isAdminView, currentReviewId) }
+            ])
+        })
+    }
+
+    if (surface !== 'quote' && unresolvedPacketItems.length > 0) {
+        conflicts.push({
+            id: `${context.seed.dealId}-generic-packet-readiness`,
+            type: 'provider_restriction_mismatch',
+            stateLabel: 'Packet readiness incomplete',
+            severityLabel: 'Needs review',
+            tone: packet.unresolvedExceptions.some(exception => exception.severity === 'High') ? 'rose' : 'amber',
+            title: 'Provider packet needs evidence before full signoff',
+            summary:
+                'The dossier is available for this dataset, but provider authority, use boundaries, or evidence exceptions still need to be resolved before the linked approval surfaces should be considered ready.',
+            triggers: unresolvedPacketItems.slice(0, 4),
+            recommendedPath:
+                'Attach or confirm the missing provider evidence, then revisit the approval packet once the generated deal has a complete review trail.',
+            actions: buildConflictActions(context, isDemo, isAdminView, currentReviewId, [
+                { label: 'Open provider packet', to: resolveWorkspaceOrDemoDealRoute(context, isDemo, 'provider-packet') },
+                { label: 'Open approval artifact', to: resolveApprovalAction(context, isDemo, isAdminView, currentReviewId) }
+            ])
+        })
+    }
+
+    if (proofBundle.approvalBlockers.length > 0) {
+        conflicts.push({
+            id: `${context.seed.dealId}-generic-approval-blockers`,
+            type: 'reroute_escalation',
+            stateLabel: 'Approval blockers open',
+            severityLabel: 'High priority',
+            tone: 'rose',
+            title: 'Approval blockers must clear before release',
+            summary:
+                'One or more review blockers are attached to the deal evidence bundle and should remain visible before any release or go-live decision.',
+            triggers: proofBundle.approvalBlockers.map(blocker => blocker.blocker).slice(0, 4),
+            recommendedPath:
+                'Resolve the named blockers in the approval packet before advancing evaluation, release, or production handoff.',
+            actions: buildConflictActions(context, isDemo, isAdminView, currentReviewId, [
+                { label: 'Open approval artifact', to: resolveApprovalAction(context, isDemo, isAdminView, currentReviewId) },
+                { label: 'Open provider packet', to: resolveWorkspaceOrDemoDealRoute(context, isDemo, 'provider-packet') }
+            ])
+        })
+    }
+
+    return conflicts
+}
+
 export function buildDealPolicyConflictModel({
     context,
     surface,
@@ -360,6 +454,8 @@ export function buildDealPolicyConflictModel({
         conflicts = buildReplayConflicts({ context, surface, form, quote, demo, adminView, reviewId, quoteShape })
     } else if (context.seed.dealId === 'DL-1003') {
         conflicts = buildMobilityConflicts({ context, surface, form, quote, demo, adminView, reviewId, quoteShape })
+    } else {
+        conflicts = buildGenericConflicts({ context, surface, form, quote, demo, adminView, reviewId, quoteShape })
     }
 
     if (conflicts.length === 0) return null
@@ -398,7 +494,7 @@ export function getDealPolicyConflictModelByDatasetId({
     quote?: RightsQuote | null
     demo?: boolean
 }) {
-    const seed = getSeededDealRouteRecordByDatasetId(datasetId)
+    const seed = getDealRouteRecordByDatasetId(datasetId)
     if (!seed) return null
 
     const context = getDealRouteContextById(seed.dealId)

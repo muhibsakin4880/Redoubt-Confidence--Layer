@@ -9,6 +9,7 @@ import {
     type ApprovalArtifactModel
 } from '../domain/approvalArtifact'
 import { buildDealPolicyConflictModel } from '../domain/dealPolicyConflict'
+import DealRoutePlaceholderPage from './DealRoutePlaceholderPage'
 
 type DealApprovalPageProps = {
     adminView?: boolean
@@ -73,6 +74,10 @@ export default function DealApprovalPage({
         )
     }
 
+    if (!adminView && model.context.surfaceAvailability.approval === 'placeholder') {
+        return <DealRoutePlaceholderPage surface="approval" />
+    }
+
     if (adminView) {
         return (
             <AdminLayout
@@ -101,14 +106,20 @@ function ApprovalContent({
     model: ApprovalArtifactModel
     adminView?: boolean
 }) {
+    const datasetTitle = model.context.dataset?.title ?? model.context.seed.label
+    const datasetDetailPath = `/datasets/${model.context.seed.datasetId}`
+    const dealTypeLabel = model.context.routeKind === 'derived' ? 'Generated dataset deal' : 'Configured deal'
+    const reviewIdLabel = model.reviewId ?? 'Not linked'
     const connectedLinks = adminView
         ? [
             { label: 'Back to application review', to: `/admin/application-review/${model.reviewId}` },
+            { label: 'Open dataset detail', to: datasetDetailPath },
             { label: 'Open provider packet', to: model.context.routeTargets['provider-packet'] },
             { label: 'Open admin audit trail', to: '/admin/audit-trail' }
         ]
         : [
             { label: 'Back to evaluation dossier', to: model.context.routeTargets.dossier },
+            { label: 'Open dataset detail', to: datasetDetailPath },
             { label: 'Open provider packet', to: model.context.routeTargets['provider-packet'] },
             { label: 'Open negotiation history', to: model.context.routeTargets.negotiation },
             { label: 'Open output review', to: model.context.routeTargets['output-review'] },
@@ -133,16 +144,23 @@ function ApprovalContent({
                     {connectedLinks[0].label}
                 </Link>
                 <span>/</span>
+                <span className="max-w-full truncate text-slate-200">{datasetTitle}</span>
+                <span>/</span>
                 <span className="text-slate-200">{model.artifactId}</span>
             </div>
 
-            <header className="mt-5 flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+            <header className="mt-5 flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                 <div>
-                    <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
-                        {adminView ? 'Admin review-linked artifact' : 'Deal-linked signoff object'}
+                    <div className="flex flex-wrap items-center gap-2">
+                        <span className="rounded-full border border-cyan-300/45 bg-cyan-400/15 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-cyan-50 shadow-[0_0_22px_rgba(34,211,238,0.16)]">
+                            Unified Approval &amp; Signoff
+                        </span>
+                        <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+                            {adminView ? 'Admin review-linked artifact' : 'Deal-linked signoff object'}
+                        </span>
                     </div>
-                    <h1 className="mt-4 text-4xl font-bold tracking-tight text-white sm:text-5xl">
-                        Unified Approval &amp; Signoff
+                    <h1 className="mt-4 max-w-5xl text-3xl font-semibold tracking-tight text-slate-100 sm:text-[2.35rem]">
+                        {datasetTitle}
                     </h1>
                     <p className="mt-2 max-w-3xl text-slate-400">
                         One shared artifact binding privacy, legal, governance, provider, and commercial signoff to the same deal, review id, and governed evaluation posture.
@@ -150,7 +168,10 @@ function ApprovalContent({
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2 xl:justify-end">
-                    <span className="rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1.5 text-xs font-semibold text-cyan-100">
+                    <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-slate-200">
+                        Dataset id {model.context.seed.datasetId}
+                    </span>
+                    <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-slate-200">
                         {model.dealId}
                     </span>
                     {model.reviewId ? (
@@ -163,6 +184,15 @@ function ApprovalContent({
                     </span>
                 </div>
             </header>
+
+            <section className="mt-4 grid gap-2 lg:grid-cols-[minmax(0,1.35fr)_repeat(5,minmax(0,1fr))]">
+                <IdentityField label="Dataset title" value={datasetTitle} />
+                <IdentityField label="Dataset id" value={model.context.seed.datasetId} />
+                <IdentityField label="Deal id" value={model.context.seed.dealId} />
+                <IdentityField label="Deal type" value={dealTypeLabel} />
+                <IdentityField label="Artifact id" value={model.artifactId} />
+                <IdentityField label="Review id" value={reviewIdLabel} />
+            </section>
 
             <section className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                 <MetricCard label="Organization" value={model.organizationName} detail="Primary organization bound to the current approval object" />
@@ -323,6 +353,29 @@ function MetricCard({
             <div className="mt-3 text-xl font-semibold text-cyan-100">{value}</div>
             <div className="mt-2 text-xs leading-5 text-slate-400">{detail}</div>
         </article>
+    )
+}
+
+function IdentityField({
+    label,
+    value,
+    emphasis = false
+}: {
+    label: string
+    value: string
+    emphasis?: boolean
+}) {
+    return (
+        <div
+            className={`min-w-0 rounded-2xl border px-3 py-2.5 ${
+                emphasis
+                    ? 'border-cyan-400/20 bg-cyan-500/8'
+                    : 'border-white/8 bg-slate-950/35'
+            }`}
+        >
+            <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">{label}</div>
+            <div className="mt-1.5 break-words text-sm font-semibold leading-6 text-slate-100">{value}</div>
+        </div>
     )
 }
 

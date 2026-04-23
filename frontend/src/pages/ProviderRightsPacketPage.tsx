@@ -1,7 +1,7 @@
 import { Link, useParams } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
 import DealRelationshipRail from '../components/deals/DealRelationshipRail'
-import { SEEDED_DEAL_ROUTES } from '../data/dealDossierData'
+import DealRouteSuggestionLinks from '../components/deals/DealRouteSuggestionLinks'
 import { getDealRouteContextById } from '../domain/dealDossier'
 import {
     buildProviderRightsPacket,
@@ -51,20 +51,10 @@ export default function ProviderRightsPacketPage({
                         </div>
                         <h1 className="mt-4 text-4xl font-bold tracking-tight text-white">Unknown deal id</h1>
                         <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-400">
-                            The provider-packet route is wired, but this seed id does not exist in the current demo workspace.
+                            The provider-packet route is wired, but this deal id does not exist in the current workspace.
                         </p>
 
-                        <div className="mt-6 flex flex-wrap gap-3">
-                            {SEEDED_DEAL_ROUTES.map(record => (
-                                <Link
-                                    key={record.dealId}
-                                    to={demo ? `/demo/deals/${record.dealId}/provider-packet` : `/deals/${record.dealId}/provider-packet`}
-                                    className="rounded-xl border border-cyan-400/35 bg-cyan-500/10 px-4 py-3 text-sm font-semibold text-cyan-100 hover:bg-cyan-500/20"
-                                >
-                                    {record.dealId} · {record.label}
-                                </Link>
-                            ))}
-                        </div>
+                        <DealRouteSuggestionLinks surface="provider-packet" demo={demo} />
                     </section>
                 </div>
             </div>
@@ -92,6 +82,8 @@ export default function ProviderRightsPacketPage({
     const pendingApprovals = packet.namedApprovers.filter(approver => approver.status !== 'Signed').length
     const datasetDetailPath = buildDatasetAwarePath(`/datasets/${context.seed.datasetId}`, demo)
     const dossierPath = demo ? context.demoTargets.dossier : context.routeTargets.dossier
+    const datasetTitle = context.dataset?.title ?? context.seed.label
+    const dealTypeLabel = context.routeKind === 'derived' ? 'Generated dataset deal' : 'Configured deal'
     const handleSaveDraft = () => {
         if (demo) return
         const nextDraft = saveProviderPacketDraft(context.seed.dealId, {
@@ -125,7 +117,7 @@ export default function ProviderRightsPacketPage({
                             Provider Rights & Provenance Packet
                         </h1>
                         <p className="mt-2 max-w-3xl text-slate-400">
-                            This shared packet answers the hard buyer question directly: why the provider can publish this dataset, what boundaries still apply, and which caveats remain open before protected evaluation broadens.
+                            This shared packet applies to {datasetTitle} and answers the hard buyer question directly: why the provider can publish this dataset, what boundaries still apply, and which caveats remain open before protected evaluation broadens.
                         </p>
                     </div>
                     <div className="flex flex-wrap items-center gap-2 xl:justify-end">
@@ -140,6 +132,34 @@ export default function ProviderRightsPacketPage({
                         ) : null}
                     </div>
                 </header>
+
+                <section className="mt-6 rounded-2xl border border-cyan-400/20 bg-cyan-500/8 p-5">
+                    <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+                        <div>
+                            <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-cyan-100/70">
+                                Dataset identity
+                            </div>
+                            <h2 className="mt-2 text-2xl font-semibold text-white">{datasetTitle}</h2>
+                            <div className="mt-3 flex flex-wrap gap-2">
+                                <span className="rounded-full border border-white/10 bg-slate-950/35 px-3 py-1 text-[11px] font-semibold text-slate-200">
+                                    Dataset id {context.seed.datasetId}
+                                </span>
+                                <span className="rounded-full border border-cyan-400/25 bg-cyan-500/10 px-3 py-1 text-[11px] font-semibold text-cyan-100">
+                                    Deal id {context.seed.dealId}
+                                </span>
+                                <span className="rounded-full border border-emerald-400/25 bg-emerald-500/10 px-3 py-1 text-[11px] font-semibold text-emerald-100">
+                                    {dealTypeLabel}
+                                </span>
+                            </div>
+                        </div>
+                        <Link
+                            to={datasetDetailPath}
+                            className="inline-flex justify-center rounded-xl border border-cyan-400/30 bg-cyan-500/10 px-4 py-3 text-sm font-semibold text-cyan-100 transition-colors hover:bg-cyan-500/20"
+                        >
+                            Open dataset detail
+                        </Link>
+                    </div>
+                </section>
 
                 <section className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                     <SummaryCard

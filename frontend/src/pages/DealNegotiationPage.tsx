@@ -1,8 +1,9 @@
 import { Link, useParams } from 'react-router-dom'
 import NegotiationThreadPanel from '../components/deals/NegotiationThreadPanel'
 import DealRelationshipRail from '../components/deals/DealRelationshipRail'
-import { SEEDED_DEAL_ROUTES } from '../data/dealDossierData'
+import DealRouteSuggestionLinks from '../components/deals/DealRouteSuggestionLinks'
 import { getDealRouteContextById } from '../domain/dealDossier'
+import DealRoutePlaceholderPage from './DealRoutePlaceholderPage'
 import {
     buildNegotiationThread,
     type NegotiationOpenItem,
@@ -29,24 +30,18 @@ export default function DealNegotiationPage() {
                         </div>
                         <h1 className="mt-4 text-4xl font-bold tracking-tight text-white">Unknown deal id</h1>
                         <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-400">
-                            The clarification and negotiation route is wired, but this seed id does not exist in the current workspace.
+                            The clarification and negotiation route is wired, but this deal id does not exist in the current workspace.
                         </p>
 
-                        <div className="mt-6 flex flex-wrap gap-3">
-                            {SEEDED_DEAL_ROUTES.map(record => (
-                                <Link
-                                    key={record.dealId}
-                                    to={`/deals/${record.dealId}/negotiation`}
-                                    className="rounded-xl border border-cyan-400/35 bg-cyan-500/10 px-4 py-3 text-sm font-semibold text-cyan-100 hover:bg-cyan-500/20"
-                                >
-                                    {record.dealId} · {record.label}
-                                </Link>
-                            ))}
-                        </div>
+                        <DealRouteSuggestionLinks surface="negotiation" />
                     </section>
                 </div>
             </div>
         )
+    }
+
+    if (context.surfaceAvailability.negotiation === 'placeholder') {
+        return <DealRoutePlaceholderPage surface="negotiation" />
     }
 
     const thread = buildNegotiationThread(context)

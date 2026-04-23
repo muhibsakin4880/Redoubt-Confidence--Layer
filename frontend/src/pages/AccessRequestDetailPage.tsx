@@ -24,8 +24,10 @@ import {
 } from '../dashboardTokens'
 import {
     buildDealPath,
-    getSeededDealRouteRecordByRequestId
+    getDealRouteRecordByDatasetId,
+    getDealRouteRecordByRequestId
 } from '../data/dealDossierData'
+import { DATASET_DETAILS } from '../data/datasetDetailData'
 
 const pageClass = `relative min-h-screen ${dashboardColorTokens['surface-page']} ${dashboardColorTokens['text-primary']}`
 const shellClass = `relative mx-auto max-w-[1680px] ${dashboardSpacingTokens['page-padding']}`
@@ -85,12 +87,15 @@ export default function AccessRequestDetailPage() {
     const reviewerFields = buildRequestReviewerFields(request)
     const trustSignals = getDatasetTrustRiskLabels(request.trustProfile)
     const isDemo = location.pathname.startsWith('/demo/')
-    const seededDeal = getSeededDealRouteRecordByRequestId(request.id)
+    const requestDataset = Object.values(DATASET_DETAILS).find(dataset => dataset.title === request.name) ?? null
+    const dealRoute =
+        getDealRouteRecordByRequestId(request.id) ??
+        (requestDataset ? getDealRouteRecordByDatasetId(requestDataset.id) : null)
     const connectedDealLinks =
-        !isDemo && seededDeal
+        !isDemo && dealRoute
             ? [
-                { label: 'Open evaluation dossier', to: buildDealPath(seededDeal.dealId, 'dossier') },
-                { label: 'Open negotiation history', to: buildDealPath(seededDeal.dealId, 'negotiation') }
+                { label: 'Open evaluation dossier', to: buildDealPath(dealRoute.dealId, 'dossier') },
+                { label: 'Open negotiation history', to: buildDealPath(dealRoute.dealId, 'negotiation') }
             ]
             : []
     const summaryCards = [

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router-dom'
 import DatasetUnavailableState from '../components/DatasetUnavailableState'
 import DealArtifactPreviewGrid from '../components/deals/DealArtifactPreviewGrid'
-import { getSeededDealRouteRecordByDatasetId } from '../data/dealDossierData'
+import { getDealRouteRecordByDatasetId } from '../data/dealDossierData'
 import { DATASET_DETAILS, getDatasetDetailById } from '../data/datasetDetailData'
 import DealProgressTracker from '../components/DealProgressTracker'
 import { buildCompliancePassport, passportStatusMeta } from '../domain/compliancePassport'
@@ -452,11 +452,11 @@ export default function EscrowCheckoutPage() {
     const isDemo = location.pathname.startsWith('/demo/')
     const routeDataset = getDatasetDetailById(id)
     const dataset = routeDataset ?? Object.values(DATASET_DETAILS)[0]
-    const seededDeal = getSeededDealRouteRecordByDatasetId(dataset.id)
-    const outputReviewPath = seededDeal
+    const dealRoute = getDealRouteRecordByDatasetId(dataset.id)
+    const outputReviewPath = dealRoute
         ? isDemo
-            ? `/demo/deals/${seededDeal.dealId}/output-review`
-            : `/deals/${seededDeal.dealId}/output-review`
+            ? `/demo/deals/${dealRoute.dealId}/output-review`
+            : `/deals/${dealRoute.dealId}/output-review`
         : null
     const passport = useMemo(() => buildCompliancePassport(), [])
     const passportStatus = passportStatusMeta(passport.status)
@@ -612,8 +612,8 @@ export default function EscrowCheckoutPage() {
         [config.accessMode, outcomeCredits.status]
     )
     const outputReviewContext = useMemo(
-        () => (seededDeal ? getDealRouteContextById(seededDeal.dealId) : null),
-        [recordVersion, seededDeal?.dealId, selectedQuote.id]
+        () => (dealRoute ? getDealRouteContextById(dealRoute.dealId) : null),
+        [recordVersion, dealRoute?.dealId, selectedQuote.id]
     )
     const outputReviewModel = useMemo(
         () => (outputReviewContext ? buildOutputReviewModel(outputReviewContext) : null),

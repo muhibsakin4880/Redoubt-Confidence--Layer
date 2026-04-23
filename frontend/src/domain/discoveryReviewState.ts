@@ -3,7 +3,7 @@ import {
     DISCOVERY_REVIEW_STATE_META,
     type DiscoveryReviewState
 } from '../data/discoveryReviewData'
-import { buildDealPath, getSeededDealRouteRecordByDatasetId } from '../data/dealDossierData'
+import { buildDealPath, getDealRouteRecordByDatasetId } from '../data/dealDossierData'
 
 export const STORAGE_DISCOVERY_REVIEW_STATE = 'Redoubt:datasets:internalReview'
 
@@ -85,9 +85,9 @@ export const buildDiscoveryReviewAction = (
     reviewState: DiscoveryReviewState
 ): DiscoveryReviewAction => {
     const normalizedDatasetId = String(datasetId)
-    const seededDeal = getSeededDealRouteRecordByDatasetId(normalizedDatasetId)
+    const dealRoute = getDealRouteRecordByDatasetId(normalizedDatasetId)
 
-    if (!seededDeal) {
+    if (!dealRoute) {
         return {
             label: 'Open dataset detail',
             to: `/datasets/${normalizedDatasetId}`
@@ -104,20 +104,20 @@ export const buildDiscoveryReviewAction = (
     if (reviewState === 'awaiting_provider_clarification') {
         return {
             label: 'Open clarification history',
-            to: buildDealPath(seededDeal.dealId, 'negotiation')
+            to: buildDealPath(dealRoute.dealId, 'negotiation')
         }
     }
 
     if (reviewState === 'needs_governance_input') {
         return {
             label: 'Open approval artifact',
-            to: buildDealPath(seededDeal.dealId, 'approval')
+            to: buildDealPath(dealRoute.dealId, 'approval')
         }
     }
 
     return {
         label: 'Open evaluation dossier',
-        to: buildDealPath(seededDeal.dealId, 'dossier')
+        to: buildDealPath(dealRoute.dealId, 'dossier')
     }
 }
 

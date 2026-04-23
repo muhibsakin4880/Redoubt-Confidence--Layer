@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import DealArtifactPreviewGrid from '../components/deals/DealArtifactPreviewGrid'
 import DealRelationshipRail from '../components/deals/DealRelationshipRail'
 import OutputReviewEventFeed from '../components/deals/OutputReviewEventFeed'
-import { SEEDED_DEAL_ROUTES } from '../data/dealDossierData'
+import DealRouteSuggestionLinks from '../components/deals/DealRouteSuggestionLinks'
 import { getDealRouteContextById } from '../domain/dealDossier'
 import {
     buildOutputReviewModel,
@@ -47,20 +47,10 @@ export default function CleanRoomOutputReviewPage({
                         </div>
                         <h1 className="mt-4 text-4xl font-bold tracking-tight text-white">Unknown deal id</h1>
                         <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-400">
-                            The output-review route is wired, but this seed id does not exist in the current demo workspace.
+                            The output-review route is wired, but this deal id does not exist in the current workspace.
                         </p>
 
-                        <div className="mt-6 flex flex-wrap gap-3">
-                            {SEEDED_DEAL_ROUTES.map(record => (
-                                <Link
-                                    key={record.dealId}
-                                    to={demo ? `/demo/deals/${record.dealId}/output-review` : `/deals/${record.dealId}/output-review`}
-                                    className="rounded-xl border border-cyan-400/35 bg-cyan-500/10 px-4 py-3 text-sm font-semibold text-cyan-100 hover:bg-cyan-500/20"
-                                >
-                                    {record.dealId} · {record.label}
-                                </Link>
-                            ))}
-                        </div>
+                        <DealRouteSuggestionLinks surface="output-review" demo={demo} />
                     </section>
                 </div>
             </div>

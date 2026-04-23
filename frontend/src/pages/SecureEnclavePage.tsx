@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useMemo } from 'react'
-import { getSeededDealRouteRecordByDatasetId } from '../data/dealDossierData'
+import { getDealRouteRecordByDatasetId } from '../data/dealDossierData'
 import { getDealRouteContextById } from '../domain/dealDossier'
 import { loadEscrowCheckouts } from '../domain/escrowCheckout'
 import { buildOutputReviewModel } from '../domain/outputReview'
@@ -29,13 +29,13 @@ const egressRules = [
 
 export default function SecureEnclavePage() {
     const latestCheckout = useMemo(() => loadEscrowCheckouts()[0] ?? null, [])
-    const seededDeal = useMemo(
-        () => (latestCheckout ? getSeededDealRouteRecordByDatasetId(latestCheckout.datasetId) : null),
+    const dealRoute = useMemo(
+        () => (latestCheckout ? getDealRouteRecordByDatasetId(latestCheckout.datasetId) : null),
         [latestCheckout]
     )
     const linkedContext = useMemo(
-        () => (seededDeal ? getDealRouteContextById(seededDeal.dealId) : null),
-        [seededDeal]
+        () => (dealRoute ? getDealRouteContextById(dealRoute.dealId) : null),
+        [dealRoute]
     )
     const linkedOutputReview = useMemo(
         () => (linkedContext ? buildOutputReviewModel(linkedContext) : null),
@@ -201,7 +201,7 @@ export default function SecureEnclavePage() {
                                 ) : null}
                             </div>
 
-                            {linkedOutputReview && seededDeal ? (
+                            {linkedOutputReview && dealRoute ? (
                                 <div className="mt-4 space-y-3">
                                     <div className="rounded-xl border border-white/10 bg-slate-950/55 px-4 py-3">
                                         <div className="text-xs uppercase tracking-[0.14em] text-slate-500">Reviewer owner</div>
@@ -213,7 +213,7 @@ export default function SecureEnclavePage() {
                                         <div className="mt-2 text-xs text-slate-300">{linkedOutputReview.watermark.auditPointer}</div>
                                     </div>
                                     <Link
-                                        to={linkedContext?.routeTargets['output-review'] ?? `/deals/${seededDeal.dealId}/output-review`}
+                                        to={linkedContext?.routeTargets['output-review'] ?? `/deals/${dealRoute.dealId}/output-review`}
                                         className="inline-flex w-full items-center justify-center rounded-xl bg-cyan-500 px-4 py-3 text-sm font-semibold text-slate-950 transition-colors hover:bg-cyan-400"
                                     >
                                         Open active output review
