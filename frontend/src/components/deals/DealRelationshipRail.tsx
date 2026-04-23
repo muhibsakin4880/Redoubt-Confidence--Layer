@@ -34,7 +34,9 @@ export default function DealRelationshipRail({
         { label: 'Provider packet', to: context.routeTargets['provider-packet'], status: 'Live', tone: 'cyan' as const, demoReady: true },
         { label: 'Output review', to: context.routeTargets['output-review'], status: 'Live', tone: 'emerald' as const, demoReady: true },
         { label: 'Approval', to: context.routeTargets.approval, status: 'Live', tone: 'amber' as const, demoReady: false },
-        { label: 'Negotiation', to: context.routeTargets.negotiation, status: 'Live', tone: 'cyan' as const, demoReady: false }
+        { label: 'Negotiation', to: context.routeTargets.negotiation, status: 'Live', tone: 'cyan' as const, demoReady: false },
+        { label: 'Residency memo', to: context.routeTargets['residency-memo'], status: 'Live', tone: 'amber' as const, demoReady: false },
+        { label: 'Go-live handoff', to: context.routeTargets['go-live'], status: 'Live', tone: 'emerald' as const, demoReady: false }
     ]
 
     return (
@@ -97,7 +99,7 @@ export default function DealRelationshipRail({
                             >
                                 <div>
                                     <div className="text-sm font-semibold text-white">{item.label}</div>
-                                    <div className="mt-1 text-xs text-slate-400">Workspace-only approval route</div>
+                                    <div className="mt-1 text-xs text-slate-400">Workspace-only deal route</div>
                                 </div>
                                 <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-300">
                                     Workspace only

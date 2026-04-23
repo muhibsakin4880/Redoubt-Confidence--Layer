@@ -53,13 +53,14 @@ import PilotWalkthroughPage from './pages/PilotWalkthroughPage'
 import ProtectedEvaluationPage from './pages/ProtectedEvaluationPage'
 import TrustCenterPage from './pages/TrustCenterPage'
 import ResearcherAccessPage from './pages/ResearcherAccessPage'
-import DealRoutePlaceholderPage from './pages/DealRoutePlaceholderPage'
 import DealDossierPage from './pages/DealDossierPage'
 import ProviderRightsPacketPage from './pages/ProviderRightsPacketPage'
 import CleanRoomOutputReviewPage from './pages/CleanRoomOutputReviewPage'
 import DealApprovalPage from './pages/DealApprovalPage'
 import DealNegotiationPage from './pages/DealNegotiationPage'
 import ProviderInstitutionReviewPage from './pages/ProviderInstitutionReviewPage'
+import ResidencyDecisionMemoPage from './pages/ResidencyDecisionMemoPage'
+import GoLiveHandoffPage from './pages/GoLiveHandoffPage'
 
 import { useAuth } from './contexts/AuthContext'
 import { participantOnboardingPaths } from './onboarding/constants'
@@ -313,8 +314,8 @@ function App() {
                     <Route path="deals/:dealId/output-review" element={<CleanRoomOutputReviewPage />} />
                     <Route path="deals/:dealId/approval" element={<DealApprovalPage />} />
                     <Route path="deals/:dealId/negotiation" element={<DealNegotiationPage />} />
-                    <Route path="deals/:dealId/residency-memo" element={<DealRoutePlaceholderPage surface="residency-memo" />} />
-                    <Route path="deals/:dealId/go-live" element={<DealRoutePlaceholderPage surface="go-live" />} />
+                    <Route path="deals/:dealId/residency-memo" element={<ResidencyDecisionMemoPage />} />
+                    <Route path="deals/:dealId/go-live" element={<GoLiveHandoffPage />} />
                     <Route path="datasets" element={<DatasetsPage />} />
                     <Route path="datasets/:id" element={<DatasetDetailPage />} />
                     <Route path="datasets/:id/rights-quote" element={<RightsQuoteBuilderPage />} />

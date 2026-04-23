@@ -111,7 +111,9 @@ function ApprovalContent({
             { label: 'Back to evaluation dossier', to: model.context.routeTargets.dossier },
             { label: 'Open provider packet', to: model.context.routeTargets['provider-packet'] },
             { label: 'Open negotiation history', to: model.context.routeTargets.negotiation },
-            { label: 'Open output review', to: model.context.routeTargets['output-review'] }
+            { label: 'Open output review', to: model.context.routeTargets['output-review'] },
+            { label: 'Open residency memo', to: model.context.routeTargets['residency-memo'] },
+            { label: 'Open go-live handoff', to: model.context.routeTargets['go-live'] }
         ]
     const conflictModel = buildDealPolicyConflictModel({
         context: model.context,

@@ -101,6 +101,8 @@ export default function DealDossierPage({
         { label: 'Open governed checkout', to: buildBuyerAwareRoute(`/datasets/${context.seed.datasetId}/escrow-checkout`, demo) },
         !demo ? { label: 'Open approval artifact', to: context.routeTargets.approval } : null,
         !demo ? { label: 'Open negotiation history', to: context.routeTargets.negotiation } : null,
+        !demo ? { label: 'Open residency memo', to: context.routeTargets['residency-memo'] } : null,
+        !demo ? { label: 'Open go-live handoff', to: context.routeTargets['go-live'] } : null,
         { label: 'Open output review', to: demo ? context.demoTargets['output-review'] : context.routeTargets['output-review'] }
     ].filter((item): item is { label: string; to: string } => Boolean(item))
 
