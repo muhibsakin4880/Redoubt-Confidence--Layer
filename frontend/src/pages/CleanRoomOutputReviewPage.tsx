@@ -61,29 +61,39 @@ export default function CleanRoomOutputReviewPage({
         model.events.find(event => event.state === selectedState) ?? model.events[0]
     const relatedDossierPath = demo ? context.demoTargets.dossier : context.routeTargets.dossier
     const environmentPath = demo ? '/demo/secure-enclave' : model.session.launchPath
+    const datasetTitle = context.dataset?.title ?? context.seed.label
+    const datasetDetailPath = buildBuyerAwareRoute(`/datasets/${context.seed.datasetId}`, demo)
+    const dealTypeLabel = context.routeKind === 'derived' ? 'Generated dataset deal' : 'Configured deal'
     const escrowPath = buildBuyerAwareRoute(`/datasets/${context.seed.datasetId}/escrow-checkout`, demo)
 
     return (
         <div className="min-h-screen bg-[#030814] text-white">
             <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_12%_18%,rgba(16,185,129,0.14),transparent_30%),radial-gradient(circle_at_84%_0%,rgba(34,211,238,0.12),transparent_28%),radial-gradient(circle_at_48%_85%,rgba(59,130,246,0.10),transparent_34%)]" />
             <div className="relative mx-auto max-w-7xl px-6 py-10 lg:px-10">
-                <div className="flex items-center gap-2 text-sm text-slate-400">
+                <div className="flex flex-wrap items-center gap-2 text-sm text-slate-400">
                     <Link to={demo ? '/demo/deals' : '/deals'} className="transition-colors hover:text-white">
                         Deals
                     </Link>
                     <span>/</span>
                     <span className="text-slate-200">{context.seed.dealId}</span>
                     <span>/</span>
+                    <span className="max-w-full truncate text-slate-200">{datasetTitle}</span>
+                    <span>/</span>
                     <span className="text-slate-200">Output review</span>
                 </div>
 
-                <header className="mt-5 flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+                <header className="mt-5 flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                     <div>
-                        <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
-                            {demo ? 'Public demo output lane' : 'Governed reviewer lane'}
+                        <div className="flex flex-wrap items-center gap-2">
+                            <span className="rounded-full border border-cyan-300/45 bg-cyan-400/15 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-cyan-50 shadow-[0_0_22px_rgba(34,211,238,0.16)]">
+                                Clean Room Output Review
+                            </span>
+                            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+                                {demo ? 'Public demo output lane' : 'Governed reviewer lane'}
+                            </span>
                         </div>
-                        <h1 className="mt-4 text-4xl font-bold tracking-tight text-white sm:text-5xl">
-                            Clean Room Output Review
+                        <h1 className="mt-4 max-w-5xl text-3xl font-semibold tracking-tight text-slate-100 sm:text-[2.35rem]">
+                            {datasetTitle}
                         </h1>
                         <p className="mt-2 max-w-3xl text-slate-400">
                             This is the operational surface between protected evaluation and any output movement: active sessions, blocked export, reviewer queue, extension requests, revocation, dispute freeze, and approved aggregate release all become visible against the same deal object.
@@ -91,8 +101,11 @@ export default function CleanRoomOutputReviewPage({
                     </div>
                     <div className="flex flex-wrap items-center gap-2 xl:justify-end">
                         <TonePill tone={model.currentStateTone} label={model.currentStateLabel} />
+                        <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-slate-200">
+                            Dataset id {context.seed.datasetId}
+                        </span>
                         {model.reviewId ? (
-                            <span className="rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1.5 text-xs font-semibold text-cyan-100">
+                            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-slate-200">
                                 {model.reviewId}
                             </span>
                         ) : null}
@@ -101,6 +114,15 @@ export default function CleanRoomOutputReviewPage({
                         </span>
                     </div>
                 </header>
+
+                <section className="mt-4 grid gap-2 lg:grid-cols-[minmax(0,1.35fr)_repeat(5,minmax(0,1fr))]">
+                    <IdentityField label="Dataset title" value={datasetTitle} />
+                    <IdentityField label="Dataset id" value={context.seed.datasetId} />
+                    <IdentityField label="Deal id" value={context.seed.dealId} />
+                    <IdentityField label="Deal type" value={dealTypeLabel} />
+                    <IdentityField label="Review id" value={model.reviewId ?? 'Not linked'} />
+                    <IdentityField label="Session id" value={model.session.sessionId} />
+                </section>
 
                 <section className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                     <SummaryCard
@@ -141,6 +163,12 @@ export default function CleanRoomOutputReviewPage({
                                     </p>
                                 </div>
                                 <div className="flex flex-wrap gap-3">
+                                    <Link
+                                        to={datasetDetailPath}
+                                        className="rounded-xl border border-slate-700 bg-slate-950/45 px-4 py-3 text-sm font-semibold text-slate-100 transition-colors hover:border-cyan-400/40 hover:text-cyan-100"
+                                    >
+                                        Open dataset detail
+                                    </Link>
                                     <Link
                                         to={relatedDossierPath}
                                         className="rounded-xl border border-slate-700 bg-slate-950/45 px-4 py-3 text-sm font-semibold text-slate-100 transition-colors hover:border-cyan-400/40 hover:text-cyan-100"
@@ -393,6 +421,21 @@ function SummaryCard({
             <div className={`mt-3 text-xl font-semibold ${getToneClass(tone)}`}>{value}</div>
             <div className="mt-2 text-xs leading-5 text-slate-400">{detail}</div>
         </article>
+    )
+}
+
+function IdentityField({
+    label,
+    value
+}: {
+    label: string
+    value: string
+}) {
+    return (
+        <div className="min-w-0 rounded-2xl border border-white/8 bg-slate-950/35 px-3 py-2.5">
+            <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">{label}</div>
+            <div className="mt-1.5 break-words text-sm font-semibold leading-6 text-slate-100">{value}</div>
+        </div>
     )
 }
 
