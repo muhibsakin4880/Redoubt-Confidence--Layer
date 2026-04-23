@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type CSSProperties, type ReactNode, type SVGProps } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { RiskLabelStrip } from '../components/trust/TrustLayer'
 import {
     DISCOVERY_REVIEW_STATE_META,
@@ -13,6 +13,11 @@ import {
     type DatasetDiscoverySummary,
     type VerificationStatus
 } from '../data/datasetCatalogData'
+import {
+    buildDealPath,
+    buildDemoDealPath,
+    getDealRouteRecordByDatasetId
+} from '../data/dealDossierData'
 import {
     dashboardColorTokens,
     dashboardComponentTokens
@@ -316,7 +321,17 @@ const discoveryText = {
     metaStrong: 'text-[13px] font-medium leading-5 text-slate-300'
 } as const
 
+const getDatasetDossierPath = (datasetId: number, demo: boolean) => {
+    const dealRoute = getDealRouteRecordByDatasetId(String(datasetId))
+    if (!dealRoute) return null
+
+    return demo
+        ? buildDemoDealPath(dealRoute.dealId, 'dossier')
+        : buildDealPath(dealRoute.dealId, 'dossier')
+}
+
 export default function DatasetsPage() {
+    const location = useLocation()
     const [filters, setFilters] = useState<FilterState>(defaultFilters)
     const [sortOption, setSortOption] = useState<SortOption>('best-match')
     const [shortlistIds, setShortlistIds] = useState<number[]>(() => parseStoredIdList(STORAGE_DATASET_SHORTLIST))
@@ -334,6 +349,7 @@ export default function DatasetsPage() {
     )
     const hasBuyerGeoProfile = buyerOrgCountry.length > 0
     const geoPolicyNoteTone: SignalTone = hasBuyerGeoProfile ? 'scheduled' : 'monitoring'
+    const demo = location.pathname.startsWith('/demo/')
 
     useEffect(() => {
         if (typeof window === 'undefined') return
@@ -742,6 +758,7 @@ export default function DatasetsPage() {
                                             key={dataset.id}
                                             dataset={dataset}
                                             buyerOrgCountry={buyerOrgCountry}
+                                            dossierPath={getDatasetDossierPath(dataset.id, demo)}
                                             prefersReducedMotion={prefersReducedMotion}
                                             shortlisted={shortlistIds.includes(dataset.id)}
                                             reviewState={reviewState}
@@ -783,6 +800,7 @@ export default function DatasetsPage() {
                                         const { dataset, reviewState, reviewMeta, reviewAction } = item
                                         const geoAccessSignal = getDatasetGeoAccessSignal(dataset.id, buyerOrgCountry)
                                         const trustRiskLabels = getDatasetTrustRiskLabels(dataset.trustProfile)
+                                        const dossierPath = getDatasetDossierPath(dataset.id, demo)
 
                                         return (
                                             <div key={dataset.id} className={`${subCardSurfaceClass} px-5 py-5`}>
@@ -853,7 +871,12 @@ export default function DatasetsPage() {
                                                 </div>
 
                                                 <div className="mt-5 flex flex-wrap gap-3">
-                                                    <Link to={`/datasets/${dataset.id}`} className={primaryButtonClass}>
+                                                    {dossierPath ? (
+                                                        <Link to={dossierPath} className={primaryButtonClass}>
+                                                            Open Evaluation Dossier
+                                                        </Link>
+                                                    ) : null}
+                                                    <Link to={`/datasets/${dataset.id}`} className={secondaryButtonClass}>
                                                         Open detail
                                                     </Link>
                                                     <Link to={reviewAction.to} className={secondaryButtonClass}>
@@ -985,6 +1008,7 @@ export default function DatasetsPage() {
                                     )
                                     const reviewMeta = reviewState ? DISCOVERY_REVIEW_STATE_META[reviewState] : null
                                     const reviewAction = reviewState ? buildDiscoveryReviewAction(dataset.id, reviewState) : null
+                                    const dossierPath = getDatasetDossierPath(dataset.id, demo)
 
                                     return (
                                         <div key={dataset.id} className={`${subCardSurfaceClass} px-5 py-4`}>
@@ -1007,6 +1031,14 @@ export default function DatasetsPage() {
                                                             className="mt-3 inline-flex text-sm font-semibold text-cyan-100 transition-colors hover:text-cyan-200"
                                                         >
                                                             {reviewAction.label}
+                                                        </Link>
+                                                    ) : null}
+                                                    {dossierPath ? (
+                                                        <Link
+                                                            to={dossierPath}
+                                                            className="mt-3 inline-flex text-sm font-semibold text-cyan-100 transition-colors hover:text-cyan-200"
+                                                        >
+                                                            Open Evaluation Dossier
                                                         </Link>
                                                     ) : null}
                                                 </div>
@@ -1102,6 +1134,7 @@ function FilterSelect({
 function DatasetDecisionCard({
     dataset,
     buyerOrgCountry,
+    dossierPath,
     prefersReducedMotion,
     shortlisted,
     reviewState,
@@ -1112,6 +1145,7 @@ function DatasetDecisionCard({
 }: {
     dataset: Dataset
     buyerOrgCountry: string
+    dossierPath: string | null
     prefersReducedMotion: boolean
     shortlisted: boolean
     reviewState: DiscoveryReviewState | null
@@ -1171,7 +1205,7 @@ function DatasetDecisionCard({
         <article
             aria-label={`Dataset card for ${dataset.title}`}
             data-card-flipped={isFlipped ? 'true' : 'false'}
-            className="relative min-w-0 h-[524px] sm:h-[508px] xl:h-[500px]"
+            className="relative h-[560px] min-w-0 sm:h-[532px] xl:h-[512px]"
             style={prefersReducedMotion ? undefined : { perspective: '1600px' }}
         >
             <div className="relative h-full w-full" style={cardStageStyle}>
@@ -1256,9 +1290,19 @@ function DatasetDecisionCard({
 
                     <div className="mt-auto pt-5">
                         <div className="flex flex-wrap gap-3">
+                            {dossierPath ? (
+                                <Link
+                                    to={dossierPath}
+                                    className={`${primaryButtonClass} min-w-[188px]`}
+                                    aria-label={`Open evaluation dossier for ${dataset.title}`}
+                                    tabIndex={frontTabIndex}
+                                >
+                                    Open Evaluation Dossier
+                                </Link>
+                            ) : null}
                             <Link
                                 to={`/datasets/${dataset.id}`}
-                                className={`${primaryButtonClass} min-w-[132px]`}
+                                className={`${secondaryButtonClass} min-w-[122px]`}
                                 aria-label={`View details for ${dataset.title}`}
                                 tabIndex={frontTabIndex}
                             >
