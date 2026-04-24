@@ -1,0 +1,223 @@
+- generic [ref=e3]:
+  - link "Skip to main content" [ref=e4] [cursor=pointer]:
+    - /url: "#app-main-content"
+  - complementary [ref=e5]:
+    - generic [ref=e6]:
+      - link "REDOUBT" [ref=e8] [cursor=pointer]:
+        - /url: /dashboard
+        - img [ref=e10]
+        - generic [ref=e27]: REDOUBT
+      - navigation [ref=e28]:
+        - generic [ref=e29]:
+          - paragraph [ref=e30]: OVERVIEW
+          - generic [ref=e31]:
+            - link "Dashboard" [ref=e32] [cursor=pointer]:
+              - /url: /dashboard
+            - link "Guided Tour" [ref=e33] [cursor=pointer]:
+              - /url: /guided-tour
+        - generic [ref=e34]:
+          - paragraph [ref=e35]: BUYER WORKFLOW
+          - generic [ref=e36]:
+            - link "Datasets" [ref=e37] [cursor=pointer]:
+              - /url: /datasets
+            - link "Evaluation Dossier" [ref=e38] [cursor=pointer]:
+              - /url: /deals
+            - link "Access Requests" [ref=e39] [cursor=pointer]:
+              - /url: /access-requests
+            - link "Escrow Center" [ref=e40] [cursor=pointer]:
+              - /url: /escrow-center
+            - link "Compliance Passport" [ref=e41] [cursor=pointer]:
+              - /url: /compliance-passport
+            - link "Researcher Access" [ref=e42] [cursor=pointer]:
+              - /url: /researcher-access
+            - link "Ephemeral Token" [ref=e43] [cursor=pointer]:
+              - /url: /ephemeral-token
+            - link "Rights Quote Builder" [ref=e44] [cursor=pointer]:
+              - /url: /datasets/1/rights-quote
+        - generic [ref=e45]:
+          - paragraph [ref=e46]: PROVIDER WORKFLOW
+          - generic [ref=e47]:
+            - link "Provider Dashboard" [ref=e48] [cursor=pointer]:
+              - /url: /provider/dashboard
+            - link "Institution Review" [ref=e49] [cursor=pointer]:
+              - /url: /provider/institution-review
+        - generic [ref=e50]:
+          - paragraph [ref=e51]: TRUST & CONSENT
+          - generic [ref=e52]:
+            - link "Trust Profile" [ref=e53] [cursor=pointer]:
+              - /url: /trust-profile
+            - link "Trust Score History" [ref=e54] [cursor=pointer]:
+              - /url: /trust-score-history
+            - link "Consent" [ref=e55] [cursor=pointer]:
+              - /url: /consent-tracker
+        - generic [ref=e56]:
+          - paragraph [ref=e57]: COMPLIANCE OPS
+          - generic [ref=e58]:
+            - link "Audit Trail" [ref=e59] [cursor=pointer]:
+              - /url: /audit-trail
+            - link "Compliance" [ref=e60] [cursor=pointer]:
+              - /url: /compliance-locker
+        - generic [ref=e61]:
+          - paragraph [ref=e62]: SECURITY
+          - generic [ref=e63]:
+            - link "Security" [ref=e64] [cursor=pointer]:
+              - /url: /security-ops
+            - link "Incident Response" [ref=e65] [cursor=pointer]:
+              - /url: /admin/incident-response
+        - generic [ref=e66]:
+          - paragraph [ref=e67]: INTEGRATIONS
+          - generic [ref=e68]:
+            - link "Pipelines" [ref=e69] [cursor=pointer]:
+              - /url: /pipelines
+            - link "Usage Analytics" [ref=e70] [cursor=pointer]:
+              - /url: /usage-analytics
+        - generic [ref=e71]:
+          - paragraph [ref=e72]: ACCOUNT
+          - generic [ref=e73]:
+            - link "Platform Status" [ref=e74] [cursor=pointer]:
+              - /url: /status
+            - link "Profile / Settings" [ref=e75] [cursor=pointer]:
+              - /url: /profile
+            - link "Deployment Model" [ref=e76] [cursor=pointer]:
+              - /url: /deployment-model
+  - generic [ref=e77]:
+    - banner [ref=e78]:
+      - generic [ref=e79]:
+        - link "Open participant dashboard" [ref=e81] [cursor=pointer]:
+          - /url: /dashboard
+          - generic [ref=e83]: Participant Console
+        - navigation "Participant console tools" [ref=e84]:
+          - button "Open notifications" [ref=e85] [cursor=pointer]:
+            - img [ref=e87]
+          - button "Open help and guidance" [ref=e89] [cursor=pointer]:
+            - img [ref=e90]
+          - link "Open profile settings" [ref=e93] [cursor=pointer]:
+            - /url: /profile
+            - generic [ref=e94]: RP
+            - generic [ref=e95]:
+              - generic [ref=e96]: Profile
+              - generic [ref=e97]: Settings
+    - main [ref=e98]:
+      - main [ref=e101]:
+        - generic [ref=e104]:
+          - generic [ref=e105]: BUYER WORKFLOW · TEMPORARY ACCESS
+          - heading "Ephemeral Token" [level=1] [ref=e106]
+          - paragraph [ref=e107]: Temporary, policy-bound access for secure dataset evaluation.
+          - paragraph [ref=e108]: Redoubt issues short-lived Ephemeral Tokens after escrow, workspace provisioning, and policy checks clear. Access is scoped to the approved evaluation workflow and can expire, freeze, or revoke automatically.
+        - generic [ref=e110]:
+          - generic [ref=e111]:
+            - generic [ref=e112]: No credential issued
+            - heading "No active Ephemeral Token" [level=2] [ref=e113]
+            - paragraph [ref=e114]: A short-lived evaluation token will appear here after escrow funding, workspace provisioning, and policy checks are complete.
+            - generic [ref=e115]:
+              - link "Browse Datasets" [ref=e116] [cursor=pointer]:
+                - /url: /datasets
+              - link "Open Escrow Center" [ref=e117] [cursor=pointer]:
+                - /url: /escrow-center
+          - generic [ref=e118]:
+            - generic [ref=e119]: Next steps
+            - generic [ref=e120]:
+              - generic [ref=e121]:
+                - generic [ref=e122]: "1"
+                - generic [ref=e123]: Browse datasets
+              - generic [ref=e124]:
+                - generic [ref=e125]: "2"
+                - generic [ref=e126]: Build rights quote
+              - generic [ref=e127]:
+                - generic [ref=e128]: "3"
+                - generic [ref=e129]: Complete escrow checkout
+              - generic [ref=e130]:
+                - generic [ref=e131]: "4"
+                - generic [ref=e132]: Wait for workspace provisioning
+              - generic [ref=e133]:
+                - generic [ref=e134]: "5"
+                - generic [ref=e135]: Token issued
+        - generic "Ephemeral Token education" [ref=e136]:
+          - generic [ref=e138]:
+            - generic [ref=e139]: Buyer access model
+            - heading "How Ephemeral Tokens Work" [level=2] [ref=e140]
+            - paragraph [ref=e141]: An Ephemeral Token is a short-lived access credential that allows a buyer or evaluator to work with a protected dataset inside a governed workspace. It does not provide permanent access, uncontrolled raw data access, or reusable secrets.
+            - generic [ref=e143]:
+              - generic [ref=e145]:
+                - generic [ref=e146]: "1"
+                - generic [ref=e147]:
+                  - generic [ref=e148]: Escrow is funded
+                  - paragraph [ref=e149]: The governed transaction starts only after escrow funding is captured.
+              - generic [ref=e151]:
+                - generic [ref=e152]: "2"
+                - generic [ref=e153]:
+                  - generic [ref=e154]: Workspace is provisioned
+                  - paragraph [ref=e155]: Redoubt prepares the secure workspace that will contain evaluation activity.
+              - generic [ref=e157]:
+                - generic [ref=e158]: "3"
+                - generic [ref=e159]:
+                  - generic [ref=e160]: Policy checks pass
+                  - paragraph [ref=e161]: Policy, DUA, and deal-state checks gate credential issue.
+              - generic [ref=e163]:
+                - generic [ref=e164]: "4"
+                - generic [ref=e165]:
+                  - generic [ref=e166]: Ephemeral Token is issued
+                  - paragraph [ref=e167]: A safe reference ID and scoped permissions attach to the workspace.
+              - generic [ref=e169]:
+                - generic [ref=e170]: "5"
+                - generic [ref=e171]:
+                  - generic [ref=e172]: Evaluation becomes active
+                  - paragraph [ref=e173]: The buyer evaluates protected data within the approved access boundary.
+              - generic [ref=e175]:
+                - generic [ref=e176]: "6"
+                - generic [ref=e177]:
+                  - generic [ref=e178]: Token expires, freezes, or revokes based on deal and policy state
+                  - paragraph [ref=e179]: Access ends automatically or is restricted when policy or deal state requires it.
+          - generic [ref=e181]:
+            - generic [ref=e182]: Control posture
+            - heading "Security Controls" [level=2] [ref=e183]
+            - paragraph [ref=e184]: Every token is constrained by time, policy, audit, egress, and deal-state controls before protected data evaluation can proceed.
+            - generic [ref=e186]:
+              - generic [ref=e187]:
+                - generic [ref=e188]: Time-boxed access
+                - paragraph [ref=e189]: Credential windows are short-lived and close automatically at expiry.
+              - generic [ref=e190]:
+                - generic [ref=e191]: Policy-bound scope
+                - paragraph [ref=e192]: Scopes follow the approved evaluation workflow, not broad account access.
+              - generic [ref=e193]:
+                - generic [ref=e194]: Audit logging
+                - paragraph [ref=e195]: Workspace activity and control events remain tied to the deal audit trail.
+              - generic [ref=e196]:
+                - generic [ref=e197]: Egress review
+                - paragraph [ref=e198]: Outputs are blocked or routed through review depending on the access mode.
+              - generic [ref=e199]:
+                - generic [ref=e200]: Raw export control
+                - paragraph [ref=e201]: Raw data export is blocked unless an explicitly approved encrypted download path applies.
+              - generic [ref=e202]:
+                - generic [ref=e203]: Auto-expiry
+                - paragraph [ref=e204]: Expired credentials cannot continue workspace access without renewed review.
+              - generic [ref=e205]:
+                - generic [ref=e206]: Freeze / revoke controls
+                - paragraph [ref=e207]: Disputes, outcome failures, or policy events can freeze or revoke access.
+              - generic [ref=e208]:
+                - generic [ref=e209]: No raw secret exposed
+                - paragraph [ref=e210]: The UI shows only safe token references for audit and support.
+          - generic [ref=e212]:
+            - generic [ref=e213]: Access mode reference
+            - heading "Access Modes" [level=2] [ref=e214]
+            - paragraph [ref=e215]: The token’s scope follows the selected access mode, so buyers can evaluate without receiving permanent or uncontrolled data access.
+            - generic [ref=e217]:
+              - article [ref=e218]:
+                - heading "Secure clean room" [level=3] [ref=e219]
+                - paragraph [ref=e220]: Analysis happens inside an isolated workspace with no raw export path.
+              - article [ref=e221]:
+                - heading "Aggregated export" [level=3] [ref=e222]
+                - paragraph [ref=e223]: Governed analysis is allowed, but only reviewed aggregate outputs can leave.
+              - article [ref=e224]:
+                - heading "Encrypted download" [level=3] [ref=e225]
+                - paragraph [ref=e226]: Time-boxed, watermarked, encrypted package access is allowed when explicitly approved.
+        - paragraph [ref=e230]: This page does not expose raw access secrets. The token reference is for audit and support only. Access is time-boxed, policy-bound, audit-logged, and revocable based on deal state and access controls.
+  - toolbar "Participant quick actions" [ref=e231]:
+    - button "Save" [ref=e233] [cursor=pointer]:
+      - img [ref=e234]
+    - button "Upload" [ref=e238] [cursor=pointer]:
+      - img [ref=e239]
+    - button "Chat" [ref=e242] [cursor=pointer]:
+      - img [ref=e243]
+    - button "Download" [ref=e246] [cursor=pointer]:
+      - img [ref=e247]

@@ -1,0 +1,85 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - navigation [ref=e6]:
+        - generic [ref=e7]:
+          - link "How it Works" [ref=e8] [cursor=pointer]:
+            - /url: /#how-it-works
+          - link "Security" [ref=e9] [cursor=pointer]:
+            - /url: /#security
+          - link "Solutions" [ref=e10] [cursor=pointer]:
+            - /url: /solutions
+          - link "Protected Evaluation" [ref=e11] [cursor=pointer]:
+            - /url: /protected-evaluation
+      - generic [ref=e12]:
+        - link "Sign In" [ref=e13] [cursor=pointer]:
+          - /url: /login
+        - button "Request Pilot Access" [ref=e14] [cursor=pointer]
+  - main [ref=e15]:
+    - generic [ref=e19]:
+      - generic [ref=e20]:
+        - generic [ref=e21]:
+          - heading "Secure Node Entry" [level=1] [ref=e22]
+          - paragraph [ref=e23]: Enter your corporate email or any mock credential to continue the frontend demo.
+        - generic [ref=e24]:
+          - generic [ref=e25]: Corporate Email
+          - textbox "you@yourcompany.com" [ref=e26]
+          - paragraph [ref=e27]: Mock mode accepts any non-empty value here.
+        - generic [ref=e28]:
+          - text: "Reference email on file for this demo session: demo@redoubt.local"
+          - generic [ref=e29]: Mock mode does not require this exact email match.
+        - button "Continue →" [disabled] [ref=e30]:
+          - generic [ref=e31]: Continue →
+      - generic [ref=e32]:
+        - paragraph [ref=e33]: Restricted Enclave. All authentication attempts, IP metadata, and device fingerprints are cryptographically logged.
+        - paragraph [ref=e34]: "Session ID: RDT-HKFNA75X"
+        - paragraph [ref=e35]: "Timestamp: 2026-04-24 14:23:52 UTC"
+      - link "System administrator? Open Admin Console" [ref=e37] [cursor=pointer]:
+        - /url: /admin
+  - contentinfo [ref=e38]:
+    - generic [ref=e40]:
+      - generic [ref=e41]:
+        - generic [ref=e42]:
+          - heading "Layered Defense for Data Confidence" [level=3] [ref=e43]
+          - paragraph [ref=e44]: Invite-led protected evaluation, review-ready controls, and production handoff for external datasets before broader rollout.
+        - generic [ref=e45]:
+          - heading "Public Pages" [level=4] [ref=e46]
+          - generic [ref=e47]:
+            - link "About" [ref=e48] [cursor=pointer]:
+              - /url: /about
+              - text: About
+            - link "Solutions" [ref=e49] [cursor=pointer]:
+              - /url: /solutions
+              - text: Solutions
+            - link "Trust Center" [ref=e50] [cursor=pointer]:
+              - /url: /trust-center
+              - text: Trust Center
+        - generic [ref=e51]:
+          - heading "Review Path" [level=4] [ref=e52]
+          - generic [ref=e53]:
+            - link "Pilot Walkthrough" [ref=e54] [cursor=pointer]:
+              - /url: /pilot-walkthrough
+              - text: Pilot Walkthrough
+            - link "Protected Evaluation" [ref=e55] [cursor=pointer]:
+              - /url: /protected-evaluation
+              - text: Protected Evaluation
+            - link "Sign In" [ref=e56] [cursor=pointer]:
+              - /url: /login
+              - text: Sign In
+      - generic [ref=e59]:
+        - paragraph [ref=e60]: Compliance Framework Support
+        - generic [ref=e61]:
+          - button "SOC 2 Type II" [ref=e62] [cursor=pointer]:
+            - text: SOC 2 Type II
+            - img [ref=e64]
+          - button "HIPAA" [ref=e66] [cursor=pointer]:
+            - text: HIPAA
+            - img [ref=e68]
+          - button "ISO 27001" [ref=e70] [cursor=pointer]:
+            - text: ISO 27001
+            - img [ref=e72]
+      - generic [ref=e74]:
+        - paragraph [ref=e76]: © 2026 Layered Defense for Data Confidence. All rights reserved.
+        - generic [ref=e77]:
+          - img [ref=e78]
+          - generic [ref=e83]: Redoubt
