@@ -30,7 +30,7 @@ export default function DatasetTrustCompliancePanel({
         >
             <div className="space-y-5">
                 <div
-                    className={`rounded-2xl border px-4 py-4 ${
+                    className={`rounded-md border px-4 py-4 ${
                         minimumTrustNeedsReview
                             ? 'border-amber-400/25 bg-amber-500/8 text-amber-100'
                             : 'border-cyan-400/20 bg-cyan-500/8 text-cyan-100'

@@ -1,14 +1,20 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
+import DealProgressTracker from '../components/DealProgressTracker'
 import DatasetUnavailableState from '../components/DatasetUnavailableState'
 import DatasetAccessPackagePanel from '../components/dataset-detail/DatasetAccessPackagePanel'
+import DatasetConfidencePanel from '../components/dataset-detail/DatasetConfidencePanel'
 import DatasetDecisionPanel from '../components/dataset-detail/DatasetDecisionPanel'
 import DatasetHeroPanel from '../components/dataset-detail/DatasetHeroPanel'
 import DatasetNotesGuidancePanel from '../components/dataset-detail/DatasetNotesGuidancePanel'
 import DatasetQualityPreviewPanel from '../components/dataset-detail/DatasetQualityPreviewPanel'
 import DatasetRequestStatusPanel from '../components/dataset-detail/DatasetRequestStatusPanel'
+import DatasetSchemaPreviewPanel from '../components/dataset-detail/DatasetSchemaPreviewPanel'
+import DatasetSecureAccessPanel from '../components/dataset-detail/DatasetSecureAccessPanel'
 import DatasetSecurityGovernancePanel from '../components/dataset-detail/DatasetSecurityGovernancePanel'
+import DatasetStickyHeader from '../components/dataset-detail/DatasetStickyHeader'
 import DatasetTrustCompliancePanel from '../components/dataset-detail/DatasetTrustCompliancePanel'
+import DatasetUaeOperatingPosturePanel from '../components/dataset-detail/DatasetUaeOperatingPosturePanel'
 import LifecycleGuidancePanel from '../components/LifecycleGuidancePanel'
 import SecurityAuditTimeline from '../components/SecurityAuditTimeline'
 import ContractHealthPanel from '../components/ContractHealthPanel'
@@ -174,6 +180,18 @@ function getUaeJurisdictionResidencyPanel(geographyLabel: string): UaeJurisdicti
     )
 }
 
+type DatasetDetailTab = 'overview' | 'schema' | 'governance' | 'access'
+
+const DATASET_DETAIL_TABS: ReadonlyArray<{
+    key: DatasetDetailTab
+    label: string
+}> = [
+    { key: 'overview', label: 'Overview & Quality' },
+    { key: 'schema', label: 'Schema Preview' },
+    { key: 'governance', label: 'Governance & Compliance' },
+    { key: 'access', label: 'Access & Delivery' }
+]
+
 export default function DatasetDetailPage() {
     const { id } = useParams()
     const location = useLocation()
@@ -264,6 +282,7 @@ export default function DatasetDetailPage() {
     const [escrowActive, setEscrowActive] = useState(false)
     const [requestPrefillNote, setRequestPrefillNote] = useState<string | null>(null)
     const [requestQuoteSummary, setRequestQuoteSummary] = useState<string | null>(null)
+    const [activeTab, setActiveTab] = useState<DatasetDetailTab>('overview')
 
     const openRequestModal = () => setShowRequestModal(true)
 
@@ -291,6 +310,7 @@ export default function DatasetDetailPage() {
         setShowRiskAssessment(false)
         setRequestPrefillNote(null)
         setRequestQuoteSummary(null)
+        setActiveTab('overview')
     }, [dataset])
 
     useEffect(() => {
@@ -423,6 +443,7 @@ export default function DatasetDetailPage() {
     const protectedSummary = latestSavedQuote
         ? `Terms ${latestSavedQuote.id} is ready for protected evaluation.`
         : 'Evaluation setup will generate passport-based starter terms if you have not saved any yet.'
+    const activeTabPanelId = `dataset-detail-tabpanel-${activeTab}`
 
     const handleSubmitRequest = () => {
         setRequestStatus('REVIEW_IN_PROGRESS')
@@ -549,89 +570,123 @@ export default function DatasetDetailPage() {
     }
 
     return (
-        <div className="bg-slate-900 text-white">
-            <div className="border-b border-slate-800 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-800">
-                <div className="container mx-auto px-4 py-10 md:py-14">
-                    <div className="mb-6 flex items-center gap-3 text-sm text-slate-400">
+        <div className="min-h-screen bg-slate-950 text-white">
+            <div className="border-b border-slate-800 bg-slate-950/70">
+                <div className="container mx-auto px-4 py-4">
+                    <div className="flex items-center gap-3 text-sm text-slate-400">
                         <Link to="/datasets" className="transition-colors hover:text-white">
                             Datasets
                         </Link>
                         <span className="text-slate-600">/</span>
                         <span className="text-white">{dataset.title}</span>
                     </div>
-
-                    <DatasetHeroPanel
-                        dataset={dataset}
-                        dealId={dealRoute?.dealId ?? 'Pending'}
-                        dealType={
-                            dealContext?.routeKind === 'derived'
-                                ? 'Generated dataset deal'
-                                : 'Configured deal'
-                        }
-                        dossierPath={dossierPath}
-                        providerPacketPath={providerPacketPath}
-                        availableSurfaceCount={dealSurfaceReadiness.available}
-                        placeholderSurfaceCount={dealSurfaceReadiness.placeholder}
-                    />
                 </div>
             </div>
 
-            <div className="container mx-auto px-4 pb-14">
-                <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-slate-700 bg-slate-900/60 px-4 py-3 text-sm text-slate-200 shadow-[0_10px_30px_rgba(0,0,0,0.22)] md:flex-row md:items-center md:justify-between">
-                    <div className="flex items-center gap-3">
-                        <svg className="h-4 w-4 text-cyan-200" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                            <path fillRule="evenodd" d="M10 2a4 4 0 00-4 4v2H5a2 2 0 00-2 2v5a3 3 0 003 3h8a3 3 0 003-3v-5a2 2 0 00-2-2h-1V6a4 4 0 00-4-4zm2 6V6a2 2 0 10-4 0v2h4z" clipRule="evenodd" />
-                        </svg>
-                        <div>
-                            <div className="font-semibold text-white">Audit visibility active</div>
-                            <div className="text-xs text-slate-400">Shown as review context in this demo and may still require reviewer confirmation.</div>
+            <DatasetStickyHeader dataset={dataset} />
+
+            <div className="container mx-auto px-4 pb-14 pt-4">
+                <div className="grid gap-6 xl:grid-cols-[minmax(0,7fr)_minmax(320px,3fr)] xl:items-start">
+                    <div className="min-w-0 space-y-4">
+                        <div className="overflow-x-auto rounded-md border border-slate-800 bg-slate-900/50">
+                            <div
+                                role="tablist"
+                                aria-label="Dataset detail sections"
+                                className="flex min-w-max items-center gap-2 px-2 py-2"
+                            >
+                                {DATASET_DETAIL_TABS.map(tab => {
+                                    const isActive = tab.key === activeTab
+
+                                    return (
+                                        <button
+                                            key={tab.key}
+                                            id={`dataset-detail-tab-${tab.key}`}
+                                            type="button"
+                                            role="tab"
+                                            aria-selected={isActive}
+                                            aria-controls={`dataset-detail-tabpanel-${tab.key}`}
+                                            onClick={() => setActiveTab(tab.key)}
+                                            className={`rounded-sm border px-3 py-2 text-sm font-semibold whitespace-nowrap transition-colors ${
+                                                isActive
+                                                    ? 'border-cyan-400/40 bg-cyan-500/12 text-cyan-100'
+                                                    : 'border-slate-800 bg-slate-950/60 text-slate-300 hover:border-slate-700 hover:text-white'
+                                            }`}
+                                        >
+                                            {tab.label}
+                                        </button>
+                                    )
+                                })}
+                            </div>
+                        </div>
+
+                        <div
+                            id={activeTabPanelId}
+                            role="tabpanel"
+                            aria-labelledby={`dataset-detail-tab-${activeTab}`}
+                            className="min-w-0"
+                        >
+                            {activeTab === 'overview' ? (
+                                <div className="space-y-4">
+                                    <DatasetHeroPanel
+                                        dataset={dataset}
+                                        dealId={dealRoute?.dealId ?? 'Pending'}
+                                        dealType={
+                                            dealContext?.routeKind === 'derived'
+                                                ? 'Generated dataset deal'
+                                                : 'Configured deal'
+                                        }
+                                        dossierPath={dossierPath}
+                                        providerPacketPath={providerPacketPath}
+                                        availableSurfaceCount={dealSurfaceReadiness.available}
+                                        placeholderSurfaceCount={dealSurfaceReadiness.placeholder}
+                                    />
+                                    <DatasetQualityPreviewPanel dataset={dataset} showSchemaPreview={false} />
+                                </div>
+                            ) : null}
+
+                            {activeTab === 'schema' ? (
+                                <DatasetSchemaPreviewPanel dataset={dataset} />
+                            ) : null}
+
+                            {activeTab === 'governance' ? (
+                                <div className="space-y-4">
+                                    <DatasetTrustCompliancePanel
+                                        trustRiskLabels={trustRiskLabels}
+                                        trustSummaryRows={trustSummaryRows}
+                                        minimumTrustNeedsReview={minimumTrustNeedsReview}
+                                        minimumTrustLabel={trustSignalStateLabel(minimumTrustState)}
+                                        trustSummaryBadgeClass={trustSummaryBadgeClass}
+                                    />
+                                    <DatasetSecurityGovernancePanel
+                                        securityGovernanceSummaryItems={securityGovernanceSummaryItems}
+                                        protectionSummaryItems={protectionSummaryItems}
+                                        buyerObligationItems={buyerObligationItems}
+                                    />
+                                    <DatasetUaeOperatingPosturePanel
+                                        uaeJurisdictionResidencyPanel={uaeJurisdictionResidencyPanel}
+                                        compatibilityBadges={UAE_COMPATIBILITY_BADGES}
+                                    />
+                                </div>
+                            ) : null}
+
+                            {activeTab === 'access' ? (
+                                <div className="space-y-4">
+                                    <DatasetAccessPackagePanel
+                                        accessPackageBuyerOverview={accessPackageBuyerOverview}
+                                        accessDeliverySummaryItems={accessDeliverySummaryItems}
+                                        accessPostureItems={accessPostureItems}
+                                    />
+                                    <DatasetNotesGuidancePanel
+                                        dataset={dataset}
+                                        requestStatus={requestStatus}
+                                    />
+                                </div>
+                            ) : null}
                         </div>
                     </div>
-                    <button
-                        onClick={() => setShowRiskAssessment(true)}
-                        className="self-start rounded-full border border-cyan-500/40 bg-cyan-500/10 px-3 py-1 text-xs font-semibold text-cyan-200 hover:bg-cyan-500/20 md:self-auto"
-                    >
-                        Risk Assessment
-                    </button>
-                </div>
 
-                <div className="grid gap-6 xl:grid-cols-[minmax(0,1.55fr)_minmax(320px,0.92fr)]">
-                    <div className="space-y-6">
-                        <DatasetDecisionPanel
-                            dataset={dataset}
-                            latestCheckoutLabel={latestCheckoutLabel}
-                            evaluationFeeLabel={formatUsd(evaluationFeeUsd)}
-                            escrowHoldLabel={formatUsd(recommendedQuote.escrowHoldUsd)}
-                            reviewWindowHours={validationWindowHours}
-                            protectedSummary={protectedSummary}
-                        />
-                        <DatasetQualityPreviewPanel dataset={dataset} />
-                        <DatasetTrustCompliancePanel
-                            trustRiskLabels={trustRiskLabels}
-                            trustSummaryRows={trustSummaryRows}
-                            minimumTrustNeedsReview={minimumTrustNeedsReview}
-                            minimumTrustLabel={trustSignalStateLabel(minimumTrustState)}
-                            trustSummaryBadgeClass={trustSummaryBadgeClass}
-                        />
-                        <DatasetAccessPackagePanel
-                            accessPackageBuyerOverview={accessPackageBuyerOverview}
-                            accessDeliverySummaryItems={accessDeliverySummaryItems}
-                            accessPostureItems={accessPostureItems}
-                            uaeJurisdictionResidencyPanel={uaeJurisdictionResidencyPanel}
-                            compatibilityBadges={UAE_COMPATIBILITY_BADGES}
-                        />
-                        <DatasetSecurityGovernancePanel
-                            securityGovernanceSummaryItems={securityGovernanceSummaryItems}
-                            protectionSummaryItems={protectionSummaryItems}
-                            buyerObligationItems={buyerObligationItems}
-                        />
-                        <DatasetNotesGuidancePanel
-                            dataset={dataset}
-                            requestStatus={requestStatus}
-                        />
-                    </div>
-
-                    <div className="space-y-6">
+                    <aside className="space-y-4 xl:sticky xl:top-24 xl:self-start">
+                        <DatasetConfidencePanel dataset={dataset} />
                         <DatasetRequestStatusPanel
                             datasetId={dataset.id}
                             requestStatus={requestStatus}
@@ -652,7 +707,18 @@ export default function DatasetDetailPage() {
                                 classes: passportStatus.classes
                             }}
                             latestSavedQuote={latestSavedQuote}
-                            dealProgress={dealProgress}
+                        />
+                        <DealProgressTracker model={dealProgress} compact variant="terminal" />
+                        <DatasetDecisionPanel
+                            dataset={dataset}
+                            latestCheckoutLabel={latestCheckoutLabel}
+                            evaluationFeeLabel={formatUsd(evaluationFeeUsd)}
+                            escrowHoldLabel={formatUsd(recommendedQuote.escrowHoldUsd)}
+                            reviewWindowHours={validationWindowHours}
+                            protectedSummary={protectedSummary}
+                            compact
+                        />
+                        <DatasetSecureAccessPanel
                             escrowWindow={escrowWindow}
                             onEscrowWindowChange={setEscrowWindow}
                             escrowActive={escrowActive}
@@ -661,7 +727,7 @@ export default function DatasetDetailPage() {
                             releasePaymentGuardrail={releasePaymentGuardrail}
                             disputeRefundGuardrail={disputeRefundGuardrail}
                         />
-                    </div>
+                    </aside>
                 </div>
             </div>
 
