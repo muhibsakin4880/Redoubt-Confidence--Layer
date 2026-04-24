@@ -26,6 +26,7 @@ export default function DatasetHeroPanel({
             eyebrow="Dataset profile"
             title={dataset.title}
             description={dataset.description}
+            titleVariant="hero"
         >
             <div className="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
                 <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">

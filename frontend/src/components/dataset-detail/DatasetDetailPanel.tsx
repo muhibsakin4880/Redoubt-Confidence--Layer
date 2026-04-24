@@ -9,6 +9,7 @@ type DatasetDetailPanelProps = {
     className?: string
     bodyClassName?: string
     compact?: boolean
+    titleVariant?: 'default' | 'hero'
     children: ReactNode
 }
 
@@ -21,11 +22,19 @@ export default function DatasetDetailPanel({
     className = '',
     bodyClassName = '',
     compact = false,
+    titleVariant = 'default',
     children
 }: DatasetDetailPanelProps) {
     const shellPaddingClass = compact ? 'p-3 sm:p-4' : 'p-4 sm:p-5'
     const headerGapClass = compact ? 'gap-2' : 'gap-3'
-    const titleClassName = compact ? 'text-base' : 'text-lg'
+    const titleClassName =
+        titleVariant === 'hero'
+            ? compact
+                ? 'text-xl sm:text-2xl'
+                : 'text-2xl sm:text-3xl lg:text-[2.35rem]'
+            : compact
+              ? 'text-base'
+              : 'text-lg'
     const descriptionClassName = compact ? 'mt-1.5 text-xs leading-5' : 'mt-2 text-sm leading-6'
     const bodySpacingClass = compact ? 'mt-3' : 'mt-4'
 
