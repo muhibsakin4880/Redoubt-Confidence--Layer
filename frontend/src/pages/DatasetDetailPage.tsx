@@ -3,8 +3,8 @@ import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import DealProgressTracker from '../components/DealProgressTracker'
 import DatasetUnavailableState from '../components/DatasetUnavailableState'
 import DatasetAccessPackagePanel from '../components/dataset-detail/DatasetAccessPackagePanel'
-import DatasetConfidencePanel from '../components/dataset-detail/DatasetConfidencePanel'
-import DatasetDecisionPanel from '../components/dataset-detail/DatasetDecisionPanel'
+import DatasetActionCheckoutPanel from '../components/dataset-detail/DatasetActionCheckoutPanel'
+import DatasetDealProgressSummaryPanel from '../components/dataset-detail/DatasetDealProgressSummaryPanel'
 import DatasetHeroPanel from '../components/dataset-detail/DatasetHeroPanel'
 import DatasetNotesGuidancePanel from '../components/dataset-detail/DatasetNotesGuidancePanel'
 import DatasetQualityPreviewPanel from '../components/dataset-detail/DatasetQualityPreviewPanel'
@@ -29,6 +29,7 @@ import PortfolioAlertBoard from '../components/PortfolioAlertBoard'
 import RemediationQueuePanel from '../components/RemediationQueuePanel'
 import ReadinessCertificationPanel from '../components/ReadinessCertificationPanel'
 import { DATASET_DETAILS, type RequestStatus, getDatasetDetailById } from '../data/datasetDetailData'
+import { getDatasetQualityPreviewById } from '../data/datasetCatalogData'
 import { getAccessPackageForDataset } from '../data/datasetAccessPackageData'
 import { type ContractLifecycleState } from '../domain/accessContract'
 import { canPerformBuyerEscrowAction, canStartEscrowForRequest } from '../domain/actionGuardrails'
@@ -180,16 +181,19 @@ function getUaeJurisdictionResidencyPanel(geographyLabel: string): UaeJurisdicti
     )
 }
 
-type DatasetDetailTab = 'overview' | 'schema' | 'governance' | 'access'
+type DatasetDetailTab = 'overview' | 'dealWorkspace' | 'schema' | 'governance' | 'access' | 'actionCheckout'
+type DatasetDetailAccordion = 'request' | 'secure' | null
 
 const DATASET_DETAIL_TABS: ReadonlyArray<{
     key: DatasetDetailTab
     label: string
 }> = [
     { key: 'overview', label: 'Overview & Quality' },
+    { key: 'dealWorkspace', label: 'Deal Workspace' },
     { key: 'schema', label: 'Schema Preview' },
     { key: 'governance', label: 'Governance & Compliance' },
-    { key: 'access', label: 'Access & Delivery' }
+    { key: 'access', label: 'Access & Delivery' },
+    { key: 'actionCheckout', label: 'Action / Checkout' }
 ]
 
 export default function DatasetDetailPage() {
@@ -199,6 +203,10 @@ export default function DatasetDetailPage() {
     const isDemoRoute = location.pathname.startsWith('/demo/')
     const routeDataset = getDatasetDetailById(id)
     const dataset = routeDataset ?? Object.values(DATASET_DETAILS)[0]
+    const datasetQualityPreview = useMemo(
+        () => getDatasetQualityPreviewById(dataset.id),
+        [dataset.id]
+    )
 
     const dealRoute = useMemo(
         () => getDealRouteRecordByDatasetId(dataset.id),
@@ -283,6 +291,10 @@ export default function DatasetDetailPage() {
     const [requestPrefillNote, setRequestPrefillNote] = useState<string | null>(null)
     const [requestQuoteSummary, setRequestQuoteSummary] = useState<string | null>(null)
     const [activeTab, setActiveTab] = useState<DatasetDetailTab>('overview')
+    const [activeDecisionMode, setActiveDecisionMode] = useState<'free' | 'protected'>(
+        latestSavedQuote || latestCheckout ? 'protected' : 'free'
+    )
+    const [activeAccordion, setActiveAccordion] = useState<DatasetDetailAccordion>(null)
 
     const openRequestModal = () => setShowRequestModal(true)
 
@@ -311,7 +323,18 @@ export default function DatasetDetailPage() {
         setRequestPrefillNote(null)
         setRequestQuoteSummary(null)
         setActiveTab('overview')
+        setActiveAccordion(null)
     }, [dataset])
+
+    useEffect(() => {
+        setActiveDecisionMode(latestSavedQuote || latestCheckout ? 'protected' : 'free')
+    }, [dataset.id, latestCheckout, latestSavedQuote])
+
+    useEffect(() => {
+        if (escrowActive) {
+            setActiveAccordion('secure')
+        }
+    }, [escrowActive])
 
     useEffect(() => {
         const state = location.state as DatasetDetailLocationState
@@ -425,6 +448,23 @@ export default function DatasetDetailPage() {
     const trustSummaryRows = getDatasetTrustSummaryRows(dataset.trustProfile)
     const requestEntryLabel = minimumTrustNeedsReview ? 'Request Review' : 'Request Evaluation'
     const requestSubmitLabel = minimumTrustNeedsReview ? 'Submit review request' : 'Submit evaluation request'
+    const requestStatusMeta = requestStatus === 'REQUEST_APPROVED'
+        ? {
+            label: 'Approved',
+            detail: 'Access configured. Review scope, quote posture, and settlement controls before widening usage.',
+            classes: 'bg-green-500/15 border-green-400 text-green-200'
+        }
+        : requestStatus === 'REVIEW_IN_PROGRESS'
+          ? {
+              label: 'Pending review',
+              detail: 'We received your request. A reviewer will follow up with controls, scope, and delivery steps.',
+              classes: 'bg-yellow-500/15 border-yellow-400 text-yellow-200'
+          }
+          : {
+              label: 'Rejected',
+              detail: 'Request declined. We can suggest alternate sources or share summary stats.',
+              classes: 'bg-red-500/15 border-red-400 text-red-200'
+          }
     const requestSectionDescription = minimumTrustNeedsReview
         ? 'Request review with intended use. One or more minimum trust fields still need provider or reviewer confirmation before live access.'
         : 'Request protected evaluation with context on intended use. We scope delivery, controls, and data handling together - no open marketplace listing.'
@@ -459,6 +499,10 @@ export default function DatasetDetailPage() {
         if (!latestSavedQuote) return
         applyRequestPrefill(buildRequestPrefillFromQuote(latestSavedQuote, compliancePassport))
         openRequestModal()
+    }
+
+    const toggleRailAccordion = (section: Exclude<DatasetDetailAccordion, null>) => {
+        setActiveAccordion(currentSection => (currentSection === section ? null : section))
     }
 
     if (!routeDataset) {
@@ -640,8 +684,17 @@ export default function DatasetDetailPage() {
                                         availableSurfaceCount={dealSurfaceReadiness.available}
                                         placeholderSurfaceCount={dealSurfaceReadiness.placeholder}
                                     />
-                                    <DatasetQualityPreviewPanel dataset={dataset} showSchemaPreview={false} />
+                                    <DatasetQualityPreviewPanel
+                                        dataset={dataset}
+                                        qualityPreview={datasetQualityPreview}
+                                        showSchemaPreview={false}
+                                        overviewMode
+                                    />
                                 </div>
+                            ) : null}
+
+                            {activeTab === 'dealWorkspace' ? (
+                                <DealProgressTracker model={dealProgress} variant="terminal" />
                             ) : null}
 
                             {activeTab === 'schema' ? (
@@ -682,11 +735,35 @@ export default function DatasetDetailPage() {
                                     />
                                 </div>
                             ) : null}
+
+                            {activeTab === 'actionCheckout' ? (
+                                <DatasetActionCheckoutPanel
+                                    dataset={dataset}
+                                    requestStatus={requestStatusMeta}
+                                    requestEntryLabel={requestEntryLabel}
+                                    onOpenRequestModal={openRequestModal}
+                                    minimumTrustNeedsReview={minimumTrustNeedsReview}
+                                    rightsQuotePath={`/datasets/${dataset.id}/rights-quote`}
+                                    escrowCheckoutPath={`/datasets/${dataset.id}/escrow-checkout`}
+                                    escrowCheckoutState={latestSavedQuote ? { quoteId: latestSavedQuote.id } : undefined}
+                                    latestCheckoutLabel={latestCheckoutLabel}
+                                    evaluationFeeLabel={formatUsd(evaluationFeeUsd)}
+                                    escrowHoldLabel={formatUsd(recommendedQuote.escrowHoldUsd)}
+                                    reviewWindowHours={validationWindowHours}
+                                    protectedSummary={protectedSummary}
+                                    activeDecisionMode={activeDecisionMode}
+                                    onDecisionModeChange={setActiveDecisionMode}
+                                    compact={false}
+                                />
+                            ) : null}
                         </div>
                     </div>
 
-                    <aside className="space-y-4 xl:sticky xl:top-24 xl:self-start">
-                        <DatasetConfidencePanel dataset={dataset} />
+                    <aside className="space-y-3 xl:sticky xl:top-24 xl:self-start">
+                        <DatasetDealProgressSummaryPanel
+                            model={dealProgress}
+                            dossierPath={dossierPath}
+                        />
                         <DatasetRequestStatusPanel
                             datasetId={dataset.id}
                             requestStatus={requestStatus}
@@ -694,11 +771,12 @@ export default function DatasetDetailPage() {
                             requestSectionDescription={requestSectionDescription}
                             minimumTrustNeedsReview={minimumTrustNeedsReview}
                             minimumTrustLabel={trustSignalStateLabel(minimumTrustState)}
-                            requestEntryLabel={requestEntryLabel}
-                            onOpenRequestModal={openRequestModal}
                             onOpenRiskAssessment={() => setShowRiskAssessment(true)}
                             onApplyPassportAndRequest={handleApplyPassportAndOpenRequest}
                             onApplyQuoteAndRequest={handleApplyQuoteAndOpenRequest}
+                            requestStatusMeta={requestStatusMeta}
+                            expanded={activeAccordion === 'request'}
+                            onToggle={() => toggleRailAccordion('request')}
                             compliancePassportId={compliancePassport.passportId}
                             compliancePassportCompletionPercent={compliancePassport.completionPercent}
                             passportStatus={{
@@ -708,16 +786,6 @@ export default function DatasetDetailPage() {
                             }}
                             latestSavedQuote={latestSavedQuote}
                         />
-                        <DealProgressTracker model={dealProgress} compact variant="terminal" />
-                        <DatasetDecisionPanel
-                            dataset={dataset}
-                            latestCheckoutLabel={latestCheckoutLabel}
-                            evaluationFeeLabel={formatUsd(evaluationFeeUsd)}
-                            escrowHoldLabel={formatUsd(recommendedQuote.escrowHoldUsd)}
-                            reviewWindowHours={validationWindowHours}
-                            protectedSummary={protectedSummary}
-                            compact
-                        />
                         <DatasetSecureAccessPanel
                             escrowWindow={escrowWindow}
                             onEscrowWindowChange={setEscrowWindow}
@@ -726,6 +794,8 @@ export default function DatasetDetailPage() {
                             startEscrowGuardrail={startEscrowGuardrail}
                             releasePaymentGuardrail={releasePaymentGuardrail}
                             disputeRefundGuardrail={disputeRefundGuardrail}
+                            expanded={activeAccordion === 'secure'}
+                            onToggle={() => toggleRailAccordion('secure')}
                         />
                     </aside>
                 </div>

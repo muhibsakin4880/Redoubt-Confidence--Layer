@@ -8,6 +8,7 @@ type DatasetDetailPanelProps = {
     action?: ReactNode
     className?: string
     bodyClassName?: string
+    compact?: boolean
     children: ReactNode
 }
 
@@ -19,20 +20,27 @@ export default function DatasetDetailPanel({
     action,
     className = '',
     bodyClassName = '',
+    compact = false,
     children
 }: DatasetDetailPanelProps) {
+    const shellPaddingClass = compact ? 'p-3 sm:p-4' : 'p-4 sm:p-5'
+    const headerGapClass = compact ? 'gap-2' : 'gap-3'
+    const titleClassName = compact ? 'text-base' : 'text-lg'
+    const descriptionClassName = compact ? 'mt-1.5 text-xs leading-5' : 'mt-2 text-sm leading-6'
+    const bodySpacingClass = compact ? 'mt-3' : 'mt-4'
+
     return (
         <section
-            className={`rounded-md border border-slate-800 bg-slate-900/50 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)] sm:p-5 ${className}`.trim()}
+            className={`rounded-md border border-slate-800 bg-slate-900/50 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)] ${shellPaddingClass} ${className}`.trim()}
         >
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+            <div className={`flex flex-col lg:flex-row lg:items-start lg:justify-between ${headerGapClass}`.trim()}>
                 <div className="min-w-0">
                     {eyebrow ? (
                         <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">{eyebrow}</div>
                     ) : null}
-                    <h2 className={`${eyebrow ? 'mt-1.5' : ''} text-lg font-semibold text-white`.trim()}>{title}</h2>
+                    <h2 className={`${eyebrow ? 'mt-1.5' : ''} ${titleClassName} font-semibold text-white`.trim()}>{title}</h2>
                     {description ? (
-                        <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-400">{description}</p>
+                        <p className={`${descriptionClassName} max-w-3xl text-slate-400`.trim()}>{description}</p>
                     ) : null}
                 </div>
 
@@ -44,7 +52,7 @@ export default function DatasetDetailPanel({
                 ) : null}
             </div>
 
-            <div className={`mt-4 ${bodyClassName}`.trim()}>{children}</div>
+            <div className={`${bodySpacingClass} ${bodyClassName}`.trim()}>{children}</div>
         </section>
     )
 }

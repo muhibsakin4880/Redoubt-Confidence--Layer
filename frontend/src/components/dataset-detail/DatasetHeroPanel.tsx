@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import type { DatasetDetail } from '../../data/datasetDetailData'
-import { DatasetDetailMetric } from './DatasetDetailPanel'
+import DatasetDetailPanel, { DatasetDetailMetric } from './DatasetDetailPanel'
 
 type DatasetHeroPanelProps = {
     dataset: DatasetDetail
@@ -22,8 +22,38 @@ export default function DatasetHeroPanel({
     placeholderSurfaceCount
 }: DatasetHeroPanelProps) {
     return (
-        <section className="rounded-md border border-slate-800 bg-slate-900/50 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)] sm:p-5">
-            <p className="text-base leading-7 text-slate-300">{dataset.description}</p>
+        <DatasetDetailPanel
+            eyebrow="Dataset profile"
+            title={dataset.title}
+            description={dataset.description}
+        >
+            <div className="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
+                <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                    <DatasetDetailMetric label="Dataset ID" value={dataset.id} />
+                    <DatasetDetailMetric label="Category / Domain" value={dataset.category} />
+                    <DatasetDetailMetric label="Size" value={dataset.size} />
+                    <DatasetDetailMetric label="Record count" value={dataset.recordCount} />
+                    <DatasetDetailMetric label="Last updated" value={dataset.lastUpdated} />
+                    <DatasetDetailMetric label="Confidence lane" value={`${dataset.confidenceScore}%`} />
+                </div>
+
+                <div className="rounded-md border border-slate-800 bg-slate-950/55 p-4">
+                    <div className="text-[11px] uppercase tracking-[0.16em] text-slate-500">Provenance & stewardship</div>
+
+                    <div className="mt-4 grid gap-2">
+                        <DatasetDetailMetric
+                            label="Contributor trust"
+                            value={dataset.contributorTrust}
+                            valueClassName="leading-6"
+                        />
+                        <DatasetDetailMetric
+                            label="Contribution history"
+                            value={dataset.contributionHistory}
+                            valueClassName="leading-6"
+                        />
+                    </div>
+                </div>
+            </div>
 
             {dossierPath ? (
                 <DealDossierHeroStrip
@@ -35,7 +65,7 @@ export default function DatasetHeroPanel({
                     placeholderSurfaceCount={placeholderSurfaceCount}
                 />
             ) : null}
-        </section>
+        </DatasetDetailPanel>
     )
 }
 

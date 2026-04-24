@@ -20,7 +20,9 @@ export default function DealProgressTracker({
 }: DealProgressTrackerProps) {
     const isTerminal = variant === 'terminal'
     const stageGridClass = isTerminal
-        ? 'grid-cols-1'
+        ? compact
+            ? 'grid-cols-1'
+            : 'grid-cols-[repeat(auto-fit,minmax(190px,1fr))]'
         : compact
           ? 'grid-cols-[repeat(auto-fit,minmax(180px,1fr))]'
           : 'grid-cols-[repeat(auto-fit,minmax(170px,1fr))]'

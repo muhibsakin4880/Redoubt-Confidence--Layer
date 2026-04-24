@@ -1,14 +1,19 @@
+import type { DatasetQualityPreview } from '../../data/datasetCatalogData'
 import { confidenceLevel, decisionLabel, type DatasetDetail } from '../../data/datasetDetailData'
 import DatasetDetailPanel, { DatasetDetailMetric } from './DatasetDetailPanel'
 
 type DatasetQualityPreviewPanelProps = {
     dataset: DatasetDetail
+    qualityPreview?: DatasetQualityPreview | null
     showSchemaPreview?: boolean
+    overviewMode?: boolean
 }
 
 export default function DatasetQualityPreviewPanel({
     dataset,
-    showSchemaPreview = true
+    qualityPreview,
+    showSchemaPreview = true,
+    overviewMode = false
 }: DatasetQualityPreviewPanelProps) {
     const confidenceTone = confidenceLevel(dataset.confidenceScore)
     const decisionTone = decisionLabel(dataset.preview.decision)
@@ -24,12 +29,52 @@ export default function DatasetQualityPreviewPanel({
             : dataset.preview.confidenceBand === 'medium'
               ? 'bg-amber-500/10 border-amber-400 text-amber-200'
               : 'bg-orange-500/10 border-orange-400 text-orange-200'
+    const completenessNarrative =
+        qualityPreview?.completenessNarrative ??
+        dataset.preview.qualityNotes[0] ??
+        dataset.confidenceSummary
+    const consistencyNarrative =
+        qualityPreview?.consistencyNarrative ??
+        dataset.preview.qualityNotes[1] ??
+        dataset.quality.freshnessNote
+    const validationNarrative =
+        qualityPreview?.validationNarrative ??
+        dataset.preview.qualityNotes[2] ??
+        dataset.quality.validationStatus
+    const coverageSummaryItems = [
+        {
+            label: 'Source network',
+            value: qualityPreview?.sourceNetwork ?? dataset.contributorTrust
+        },
+        {
+            label: 'Coverage window',
+            value: qualityPreview?.coverageWindow ?? dataset.preview.recordCountRange
+        },
+        {
+            label: 'Geography / scope',
+            value: qualityPreview?.geographyLabel ?? dataset.category
+        },
+        {
+            label: 'Escalation status',
+            value:
+                qualityPreview?.escalationStatus ??
+                (dataset.preview.riskFlags.length > 0
+                    ? `${dataset.preview.riskFlags.length} preview risk flag${dataset.preview.riskFlags.length === 1 ? '' : 's'} documented for review.`
+                    : 'No escalation items documented in the current preview package.')
+        }
+    ]
+    const panelTitle = overviewMode
+        ? 'Operational snapshot, coverage, and risk context'
+        : 'Decision-ready quality review'
+    const panelDescription = overviewMode
+        ? 'Confidence, provenance, coverage, and validation narratives stay visible before buyers move into governed evaluation.'
+        : 'Confidence, freshness, structure, and representative schema are visible before buyers move into governed evaluation.'
 
     return (
         <DatasetDetailPanel
             eyebrow="Quality & Preview"
-            title="Decision-ready quality review"
-            description="Confidence, freshness, structure, and representative schema are visible before buyers move into governed evaluation."
+            title={panelTitle}
+            description={panelDescription}
             badge={
                 <span className={`rounded-full border px-3 py-1 text-xs ${confidenceTone.classes}`}>
                     {confidenceTone.label}
@@ -62,10 +107,15 @@ export default function DatasetQualityPreviewPanel({
                             <DatasetDetailMetric label="Consistency" value={`${dataset.quality.consistency}%`} />
                             <DatasetDetailMetric label="Validation status" value={dataset.quality.validationStatus} valueClassName="leading-6" />
                         </div>
+
+                        <div className="mt-4 rounded-sm border border-slate-800 bg-slate-900/70 px-3 py-2.5">
+                            <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">Freshness note</div>
+                            <p className="mt-2 text-sm leading-6 text-slate-200">{dataset.quality.freshnessNote}</p>
+                        </div>
                     </div>
 
                     <div className="rounded-md border border-slate-800 bg-slate-950/55 p-4">
-                        <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">AI summary</div>
+                        <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">Operational snapshot</div>
                         <p className="mt-3 text-sm leading-6 text-slate-200">{dataset.preview.aiSummary}</p>
 
                         <div className="mt-4 grid gap-2 sm:grid-cols-2">
@@ -76,6 +126,33 @@ export default function DatasetQualityPreviewPanel({
                                 <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">Decision signal</div>
                                 <div className="mt-2 text-sm font-semibold">{decisionTone.text}</div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="grid gap-4 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
+                    <div className="rounded-md border border-slate-800 bg-slate-950/55 p-4">
+                        <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">Coverage & validation</div>
+                        <h3 className="mt-2 text-lg font-semibold text-white">Coverage footprint</h3>
+
+                        <div className="mt-4 grid gap-2">
+                            {coverageSummaryItems.map(item => (
+                                <DatasetDetailMetric
+                                    key={item.label}
+                                    label={item.label}
+                                    value={item.value}
+                                    valueClassName="leading-6"
+                                />
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="rounded-md border border-slate-800 bg-slate-950/55 p-4">
+                        <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">Validation narratives</div>
+                        <div className="mt-4 grid gap-3">
+                            <NarrativeCard label="Completeness narrative" value={completenessNarrative} />
+                            <NarrativeCard label="Consistency narrative" value={consistencyNarrative} />
+                            <NarrativeCard label="Validation narrative" value={validationNarrative} />
                         </div>
                     </div>
                 </div>
@@ -115,7 +192,7 @@ export default function DatasetQualityPreviewPanel({
                     </div>
                 ) : null}
 
-                <div className="grid gap-4 xl:grid-cols-3">
+                <div className="grid gap-4 xl:grid-cols-2 2xl:grid-cols-4">
                     <PreviewListCard
                         title="Strengths"
                         items={dataset.preview.strengths}
@@ -131,9 +208,29 @@ export default function DatasetQualityPreviewPanel({
                         items={dataset.preview.suggestedUseCases}
                         emptyLabel="No suggested use cases documented"
                     />
+                    <PreviewListCard
+                        title="Risk flags"
+                        items={dataset.preview.riskFlags}
+                        emptyLabel="No preview risk flags documented"
+                    />
                 </div>
             </div>
         </DatasetDetailPanel>
+    )
+}
+
+function NarrativeCard({
+    label,
+    value
+}: {
+    label: string
+    value: string
+}) {
+    return (
+        <div className="rounded-sm border border-slate-800 bg-slate-900/70 px-4 py-3">
+            <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">{label}</div>
+            <p className="mt-2 text-sm leading-6 text-slate-200">{value}</p>
+        </div>
     )
 }
 

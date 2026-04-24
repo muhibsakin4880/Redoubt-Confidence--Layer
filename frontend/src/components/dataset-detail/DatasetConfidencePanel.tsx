@@ -14,10 +14,11 @@ export default function DatasetConfidencePanel({
         <DatasetDetailPanel
             title="Overall Confidence Score"
             className="bg-slate-900/55"
+            compact
         >
-            <div className="space-y-4">
-                <div className="flex items-start justify-between gap-4">
-                    <div className="text-4xl font-semibold tracking-[-0.05em] text-white">{dataset.confidenceScore}%</div>
+            <div className="space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                    <div className="text-3xl font-semibold tracking-[-0.05em] text-white">{dataset.confidenceScore}%</div>
                     <span className={`rounded-sm border px-2.5 py-1 text-xs ${confidenceTone.classes}`}>
                         {confidenceTone.label}
                     </span>
@@ -30,9 +31,9 @@ export default function DatasetConfidencePanel({
                     />
                 </div>
 
-                <p className="text-sm leading-6 text-slate-300">{dataset.confidenceSummary}</p>
+                <p className="text-xs leading-5 text-slate-300">{dataset.confidenceSummary}</p>
 
-                <div className="grid gap-2">
+                <div className="grid gap-2 sm:grid-cols-2">
                     <DatasetDetailMetric label="Completeness" value={`${dataset.quality.completeness}%`} />
                     <DatasetDetailMetric label="Freshness" value={`${dataset.quality.freshnessScore}%`} />
                     <DatasetDetailMetric label="Consistency" value={`${dataset.quality.consistency}%`} />
