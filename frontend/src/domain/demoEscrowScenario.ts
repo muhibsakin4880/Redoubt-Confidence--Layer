@@ -118,7 +118,7 @@ const ESCROW_CHECKOUT_STORAGE_KEY = 'Redoubt:escrowCheckouts'
 const RIGHTS_QUOTE_STORAGE_KEY = 'Redoubt:rightsQuotes'
 const DEMO_DEFAULT_STAGE: DemoEscrowStage = 'quote_ready'
 const BUYER_DEMO_DEFAULT_STAGE: DemoEscrowStage = 'escrow_funded'
-const DEMO_SCENARIO_INSTANCE_ID = `demo_${Math.random().toString(36).slice(2, 10)}`
+const DEMO_SCENARIO_INSTANCE_ID = 'demo-canonical-buyer-flow'
 
 const CANONICAL_BUYER_LABEL = 'Northbridge Research Labs · Evaluation'
 const CANONICAL_PROVIDER_LABEL = 'Provider withheld · ANON-1001'

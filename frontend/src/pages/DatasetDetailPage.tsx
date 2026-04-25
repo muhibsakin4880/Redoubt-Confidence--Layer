@@ -45,6 +45,10 @@ import {
     buildRequestPrefillFromPassport,
     passportStatusMeta
 } from '../domain/compliancePassport'
+import {
+    filterOutCanonicalDemoEscrowRecords,
+    filterOutCanonicalDemoQuotes
+} from '../domain/demoEscrowScenario'
 import { buildDealProgressModel } from '../domain/dealProgress'
 import { getOutcomeEvaluationFee, loadEscrowCheckouts } from '../domain/escrowCheckout'
 import { getProviderDatasetSubmissionByDatasetId } from '../domain/providerDatasetSubmission'
@@ -257,16 +261,22 @@ export default function DatasetDetailPage() {
         [compliancePassport.status]
     )
     const latestSavedQuote = useMemo(
-        () => loadRightsQuotes(dataset.id)[0] ?? null,
-        [dataset.id, location.key]
+        () =>
+            (isDemoRoute
+                ? loadRightsQuotes(dataset.id)
+                : filterOutCanonicalDemoQuotes(loadRightsQuotes(dataset.id)))[0] ?? null,
+        [dataset.id, isDemoRoute, location.key]
     )
     const fallbackQuote = useMemo(
         () => buildRightsQuote(dataset, getDefaultRightsQuoteForm(compliancePassport), compliancePassport),
         [compliancePassport, dataset]
     )
     const recentEscrowCheckouts = useMemo(
-        () => loadEscrowCheckouts(dataset.id),
-        [dataset.id, location.key]
+        () =>
+            isDemoRoute
+                ? loadEscrowCheckouts(dataset.id)
+                : filterOutCanonicalDemoEscrowRecords(loadEscrowCheckouts(dataset.id)),
+        [dataset.id, isDemoRoute, location.key]
     )
     const latestCheckout = useMemo(() => {
         if (latestSavedQuote) {
@@ -763,8 +773,8 @@ export default function DatasetDetailPage() {
                                     requestEntryLabel={requestEntryLabel}
                                     onOpenRequestModal={openRequestModal}
                                     minimumTrustNeedsReview={minimumTrustNeedsReview}
-                                    rightsQuotePath={`/datasets/${dataset.id}/rights-quote`}
-                                    escrowCheckoutPath={`/datasets/${dataset.id}/escrow-checkout`}
+                                    rightsQuotePath={isDemoRoute ? `/demo/datasets/${dataset.id}/rights-quote` : `/datasets/${dataset.id}/rights-quote`}
+                                    escrowCheckoutPath={isDemoRoute ? `/demo/datasets/${dataset.id}/escrow-checkout` : `/datasets/${dataset.id}/escrow-checkout`}
                                     escrowCheckoutState={latestSavedQuote ? { quoteId: latestSavedQuote.id } : undefined}
                                     latestCheckoutLabel={latestCheckoutLabel}
                                     evaluationFeeLabel={formatUsd(evaluationFeeUsd)}

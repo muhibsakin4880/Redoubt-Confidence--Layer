@@ -6,6 +6,10 @@ import DealProgressTracker from '../components/DealProgressTracker'
 import DealConflictBanner from '../components/deals/DealConflictBanner'
 import { DATASET_DETAILS, getDatasetDetailById } from '../data/datasetDetailData'
 import { buildCompliancePassport, passportStatusMeta } from '../domain/compliancePassport'
+import {
+    filterOutCanonicalDemoQuotes,
+    isCanonicalDemoEscrowRecord
+} from '../domain/demoEscrowScenario'
 import { buildDealProgressModel } from '../domain/dealProgress'
 import { getDealPolicyConflictModelByDatasetId } from '../domain/dealPolicyConflict'
 import { loadEscrowCheckoutByQuoteId } from '../domain/escrowCheckout'
@@ -337,8 +341,18 @@ export default function RightsQuoteBuilderPage() {
 
     const quote = useMemo(() => buildRightsQuote(dataset, form, passport), [dataset, form, passport, quoteVersion])
     const usageGuidance = useMemo(() => buildRightsUsageGuidance(dataset, quote), [dataset, quote])
-    const savedQuotes = useMemo(() => loadRightsQuotes(dataset.id), [dataset.id, quoteVersion])
-    const persistedCheckout = useMemo(() => loadEscrowCheckoutByQuoteId(quote.id), [quote.id, quoteVersion])
+    const savedQuotes = useMemo(
+        () => (isDemo ? loadRightsQuotes(dataset.id) : filterOutCanonicalDemoQuotes(loadRightsQuotes(dataset.id))),
+        [dataset.id, isDemo, quoteVersion]
+    )
+    const persistedCheckout = useMemo(() => {
+        const record = loadEscrowCheckoutByQuoteId(quote.id)
+        if (!isDemo && record && isCanonicalDemoEscrowRecord(record)) {
+            return null
+        }
+
+        return record
+    }, [isDemo, quote.id, quoteVersion])
     const templateQuotes = useMemo(
         () =>
             savedPackageTemplates.map(template => ({
@@ -482,7 +496,7 @@ export default function RightsQuoteBuilderPage() {
 
     const handleProceedToCheckout = () => {
         const savedQuote = persistQuote()
-        navigate(`/datasets/${dataset.id}/escrow-checkout`, {
+        navigate(isDemo ? `/demo/datasets/${dataset.id}/escrow-checkout` : `/datasets/${dataset.id}/escrow-checkout`, {
             state: {
                 quoteId: savedQuote.id
             }
@@ -503,9 +517,9 @@ export default function RightsQuoteBuilderPage() {
             <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_16%_18%,rgba(34,211,238,0.14),transparent_35%),radial-gradient(circle_at_78%_0%,rgba(59,130,246,0.12),transparent_30%),radial-gradient(circle_at_48%_80%,rgba(16,185,129,0.08),transparent_35%)]" />
             <div className="relative mx-auto max-w-7xl px-6 py-10 lg:px-10">
                 <div className="flex items-center gap-2 text-sm text-slate-400">
-                    <Link to="/datasets" className="hover:text-white transition-colors">Datasets</Link>
+                    <Link to={isDemo ? '/demo/datasets' : '/datasets'} className="hover:text-white transition-colors">Datasets</Link>
                     <span>/</span>
-                    <Link to={`/datasets/${dataset.id}`} className="hover:text-white transition-colors">{dataset.title}</Link>
+                    <Link to={isDemo ? `/demo/datasets/${dataset.id}` : `/datasets/${dataset.id}`} className="hover:text-white transition-colors">{dataset.title}</Link>
                     <span>/</span>
                     <span className="text-slate-200">Evaluation Terms</span>
                 </div>

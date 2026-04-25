@@ -102,4 +102,18 @@ test.describe('buyer demo on normal routes', () => {
         await expect(page.getByRole('button', { name: 'Load buyer demo' })).toBeVisible()
         await expect(page.getByRole('heading', { name: 'No active Ephemeral Token' })).toBeVisible()
     })
+
+    test('demo storage does not leak canonical demo quote or escrow ids into normal dataset browsing', async ({ page }) => {
+        await seedParticipantSession(page)
+
+        await page.goto('/demo/escrow-center')
+        await page.getByRole('button', { name: /Jump to Token Issued/i }).click()
+
+        await page.goto('/datasets/1')
+        await expect(page.getByText('QT-DEMO-1001')).toHaveCount(0)
+        await expect(page.getByText('ESC-DEMO-1001')).toHaveCount(0)
+
+        await page.goto('/datasets/1/rights-quote')
+        await expect(page.getByText('QT-DEMO-1001')).toHaveCount(0)
+    })
 })

@@ -37,6 +37,12 @@ const presenterNarrative = [
     'Access closes automatically when the transaction is complete.'
 ] as const
 
+const controlMeaningPoints = [
+    'No uncontrolled raw data access is granted anywhere in this demo.',
+    'Buyer access is temporary, scoped, and tied to escrow, rights, workspace, policy checks, and deal state.',
+    'Outputs stay reviewed before release, and token access can expire, freeze, revoke, or close after release.'
+] as const
+
 const narrativeStageIndexMap: Record<DemoEscrowStage, number> = {
     quote_ready: 0,
     escrow_funded: 1,
@@ -260,6 +266,21 @@ export default function DemoEscrowControls({
                         </div>
                     </section>
                 </div>
+            ) : null}
+
+            {mode === 'demo-route' ? (
+                <section className="mt-5 rounded-2xl border border-amber-400/25 bg-amber-500/10 p-4">
+                    <div className="text-[11px] font-semibold uppercase tracking-[0.15em] text-amber-100/80">
+                        Control posture
+                    </div>
+                    <div className="mt-4 grid gap-3 lg:grid-cols-3">
+                        {controlMeaningPoints.map(point => (
+                            <div key={point} className="rounded-2xl border border-white/10 bg-slate-950/35 px-4 py-3 text-sm leading-6 text-slate-200">
+                                {point}
+                            </div>
+                        ))}
+                    </div>
+                </section>
             ) : null}
         </section>
     )

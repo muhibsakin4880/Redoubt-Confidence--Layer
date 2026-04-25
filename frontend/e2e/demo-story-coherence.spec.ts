@@ -24,6 +24,16 @@ async function seedParticipantSession(page: Page) {
 }
 
 test.describe('demo story coherence', () => {
+    test('demo rights quote builder hands off to the demo checkout route', async ({ page }) => {
+        await seedParticipantSession(page)
+
+        await page.goto('/demo/datasets/1/rights-quote')
+        await page.getByRole('button', { name: 'Proceed To Protected Evaluation' }).click()
+
+        await expect(page).toHaveURL(/\/demo\/datasets\/1\/escrow-checkout$/)
+        await expect(page.getByLabel('Demo controls')).toBeVisible()
+    })
+
     test('demo routes keep the same canonical buyer story across stage jumps, navigation, and reloads', async ({ page }) => {
         await seedParticipantSession(page)
 
