@@ -56,6 +56,15 @@ export const DEMO_ESCROW_STAGE_LABELS: Record<DemoEscrowStage, string> = {
     released: 'Released'
 }
 
+export const DEMO_ESCROW_STAGE_EXPLANATIONS: Record<DemoEscrowStage, string> = {
+    quote_ready: 'Buyer has selected dataset and rights terms, but escrow is not funded yet.',
+    escrow_funded: 'Funds are held by Redoubt, but workspace/token are not active yet.',
+    workspace_ready: 'Secure evaluation workspace is provisioned and ready.',
+    token_issued: 'Buyer has an active Ephemeral Token for governed evaluation.',
+    release_pending: 'Buyer validation is complete and escrow release is pending.',
+    released: 'Escrow has been released to provider and token access is closed.'
+}
+
 export const DEMO_ESCROW_CANONICAL_IDS = {
     dealId: 'DL-1001',
     datasetId: '1',
@@ -610,7 +619,12 @@ export function setDemoStage(stage: DemoEscrowStage, now = new Date()) {
 }
 
 export function resetDemo(now = new Date()) {
-    return setDemoStage(DEMO_DEFAULT_STAGE, now)
+    if (isBrowser()) {
+        window.localStorage.removeItem(DEMO_ESCROW_STAGE_STORAGE_KEY)
+    }
+
+    saveCanonicalDemoEscrowState(DEMO_DEFAULT_STAGE, now)
+    return getCanonicalDemoEscrowScenario(now)
 }
 
 export function loadHappyPath(now = new Date(), stage: DemoEscrowStage = 'token_issued') {

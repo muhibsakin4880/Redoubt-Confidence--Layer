@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router-dom'
+import DemoEscrowControls from '../components/demo/DemoEscrowControls'
 import DatasetUnavailableState from '../components/DatasetUnavailableState'
 import DealArtifactPreviewGrid from '../components/deals/DealArtifactPreviewGrid'
 import { getDealRouteRecordByDatasetId } from '../data/dealDossierData'
@@ -35,6 +36,13 @@ import {
     type EscrowReviewWindowHours
 } from '../domain/escrowCheckout'
 import { buildOutputReviewModel } from '../domain/outputReview'
+import {
+    DEMO_ESCROW_CANONICAL_IDS,
+    getCanonicalDemoEscrowScenario,
+    saveCanonicalDemoEscrowState,
+    setDemoStage,
+    type DemoEscrowScenario
+} from '../domain/demoEscrowScenario'
 import {
     buildRightsQuote,
     formatUsd,
@@ -452,6 +460,7 @@ export default function EscrowCheckoutPage() {
     const isDemo = location.pathname.startsWith('/demo/')
     const routeDataset = getDatasetDetailById(id)
     const dataset = routeDataset ?? Object.values(DATASET_DETAILS)[0]
+    const isCanonicalDemoRoute = isDemo && dataset.id === DEMO_ESCROW_CANONICAL_IDS.datasetId
     const dealRoute = getDealRouteRecordByDatasetId(dataset.id)
     const outputReviewPath = dealRoute
         ? isDemo
@@ -460,7 +469,8 @@ export default function EscrowCheckoutPage() {
         : null
     const passport = useMemo(() => buildCompliancePassport(), [])
     const passportStatus = passportStatusMeta(passport.status)
-    const savedQuotes = useMemo(() => loadRightsQuotes(dataset.id), [dataset.id])
+    const [recordVersion, setRecordVersion] = useState(0)
+    const savedQuotes = useMemo(() => loadRightsQuotes(dataset.id), [dataset.id, recordVersion])
     const fallbackQuote = useMemo(
         () => buildRightsQuote(dataset, getDefaultRightsQuoteForm(passport), passport),
         [dataset, passport]
@@ -473,7 +483,6 @@ export default function EscrowCheckoutPage() {
             availableQuotes[0]?.id ??
             fallbackQuote.id
     )
-    const [recordVersion, setRecordVersion] = useState(0)
     const selectedQuote =
         availableQuotes.find(quote => quote.id === selectedQuoteId) ??
         availableQuotes[0] ??
@@ -490,6 +499,25 @@ export default function EscrowCheckoutPage() {
     const [notice, setNotice] = useState<string | null>(
         savedQuotes.length === 0 ? 'No saved terms were found for this dataset, so evaluation is using a terms package generated from your passport defaults.' : null
     )
+
+    const applyDemoScenario = (scenario: DemoEscrowScenario) => {
+        setSelectedQuoteId(scenario.quote.id)
+        setCheckoutRecord(scenario.checkoutRecord)
+        setConfig(scenario.checkoutRecord?.configuration ?? getRecommendedCheckoutConfig(scenario.quote))
+        setDuaAccepted(Boolean(scenario.checkoutRecord?.dua.accepted))
+        setRecordVersion(current => current + 1)
+        setNotice(
+            scenario.checkoutRecord
+                ? `${scenario.stageLabel} loaded for ${scenario.checkoutRecord.escrowId}.`
+                : `${scenario.stageLabel} loaded. Rights terms are ready, but no escrow checkout is active yet.`
+        )
+    }
+
+    useEffect(() => {
+        if (!isCanonicalDemoRoute) return
+        saveCanonicalDemoEscrowState()
+        applyDemoScenario(getCanonicalDemoEscrowScenario())
+    }, [isCanonicalDemoRoute])
 
     useEffect(() => {
         if (!availableQuotes.some(quote => quote.id === selectedQuoteId)) {
@@ -646,6 +674,7 @@ export default function EscrowCheckoutPage() {
     }, [outputReviewModel])
 
     useEffect(() => {
+        if (isCanonicalDemoRoute) return
         if (!checkoutRecord || checkoutRecord.credentials.status !== 'issued') return
         if (checkoutRecord.outcomeProtection.engine.status !== 'not_started') return
 
@@ -656,7 +685,7 @@ export default function EscrowCheckoutPage() {
                 ? `${nextRecord.outcomeProtection.engine.summary} ${formatUsd(nextRecord.outcomeProtection.credits.amountUsd)} automatic credit applied and provider payout remains frozen.`
                 : `${nextRecord.outcomeProtection.engine.summary} Buyer confirmation is now required before escrow release.`
         )
-    }, [checkoutRecord, dataset, selectedQuote])
+    }, [checkoutRecord, dataset, isCanonicalDemoRoute, selectedQuote])
 
     const updateConfig = <T extends keyof EscrowCheckoutConfig>(field: T, value: EscrowCheckoutConfig[T]) => {
         if (configurationLocked) return
@@ -685,6 +714,10 @@ export default function EscrowCheckoutPage() {
 
     const handleFundEscrow = () => {
         if (!duaAccepted) return
+        if (isCanonicalDemoRoute) {
+            applyDemoScenario(setDemoStage('escrow_funded'))
+            return
+        }
         const nextRecord = buildEscrowCheckoutRecord(dataset, selectedQuote, passport, config)
         saveRecord(
             nextRecord,
@@ -694,6 +727,10 @@ export default function EscrowCheckoutPage() {
 
     const handleProvisionWorkspace = () => {
         if (!checkoutRecord || workspaceReady) return
+        if (isCanonicalDemoRoute) {
+            applyDemoScenario(setDemoStage('workspace_ready'))
+            return
+        }
         const nextRecord = provisionEscrowWorkspace(checkoutRecord)
         saveRecord(
             nextRecord,
@@ -703,6 +740,10 @@ export default function EscrowCheckoutPage() {
 
     const handleIssueCredentials = () => {
         if (!checkoutRecord || !workspaceReady || credentialsIssued) return
+        if (isCanonicalDemoRoute) {
+            applyDemoScenario(setDemoStage('token_issued'))
+            return
+        }
         const nextRecord = issueEscrowScopedCredentials(checkoutRecord)
         saveRecord(
             nextRecord,
@@ -712,6 +753,10 @@ export default function EscrowCheckoutPage() {
 
     const handleConfirmOutcome = () => {
         if (!checkoutRecord || !credentialsIssued) return
+        if (isCanonicalDemoRoute) {
+            applyDemoScenario(setDemoStage('release_pending'))
+            return
+        }
         const nextRecord = confirmOutcomeValidation(
             checkoutRecord,
             'Buyer confirmed that schema and freshness commitments match the contracted deal.'
@@ -724,6 +769,10 @@ export default function EscrowCheckoutPage() {
 
     const handleReleaseEscrow = () => {
         if (!checkoutRecord || checkoutRecord.lifecycleState !== 'RELEASE_PENDING') return
+        if (isCanonicalDemoRoute) {
+            applyDemoScenario(setDemoStage('released'))
+            return
+        }
         const nextRecord = releaseEscrowToProvider(checkoutRecord)
         saveRecord(
             nextRecord,
@@ -759,6 +808,12 @@ export default function EscrowCheckoutPage() {
                         Passport {passport.passportId} · {passportStatus.label}
                     </div>
                 </header>
+
+                {isCanonicalDemoRoute && (
+                    <div className="mt-6">
+                        <DemoEscrowControls onScenarioChange={applyDemoScenario} />
+                    </div>
+                )}
 
                 <div className="mt-8">
                     <DealProgressTracker model={dealProgress} />

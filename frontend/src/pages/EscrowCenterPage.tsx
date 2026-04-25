@@ -1,6 +1,15 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useLocation } from 'react-router-dom'
+import DemoEscrowControls from '../components/demo/DemoEscrowControls'
 import { CONTRACT_STATE_LABELS, type ContractLifecycleState } from '../domain/accessContract'
 import { canPerformBuyerEscrowAction } from '../domain/actionGuardrails'
+import {
+    getCanonicalDemoEscrowScenario,
+    isCanonicalDemoEscrowRecord,
+    saveCanonicalDemoEscrowState,
+    setDemoStage,
+    type DemoEscrowScenario
+} from '../domain/demoEscrowScenario'
 import {
     loadEscrowCheckouts,
     loadEscrowCheckoutTransactions,
@@ -76,6 +85,8 @@ const actionButtonClass = 'inline-flex items-center justify-center rounded-xl bo
 const ledgerPanelClass = "relative overflow-hidden rounded-[2rem] border border-slate-700/75 bg-[linear-gradient(180deg,rgba(15,23,42,0.88),rgba(2,6,23,0.78))] shadow-[0_34px_120px_rgba(3,8,20,0.58),0_12px_36px_rgba(8,15,32,0.35),inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-2xl before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-24 before:bg-[linear-gradient(180deg,rgba(255,255,255,0.045),transparent)] before:content-['']"
 
 export default function EscrowCenterPage() {
+    const location = useLocation()
+    const isDemo = location.pathname.startsWith('/demo/')
     const [recordsVersion, setRecordsVersion] = useState(0)
     const escrowCheckoutRecords = useMemo(() => loadEscrowCheckouts(), [recordsVersion])
     const escrowTransactions = useMemo(() => [...loadEscrowCheckoutTransactions(), ...seedEscrowTransactions], [recordsVersion])
@@ -89,6 +100,20 @@ export default function EscrowCenterPage() {
     const [selectedTags, setSelectedTags] = useState<string[]>([])
     const [comment, setComment] = useState('')
     const [showSuccessToast, setShowSuccessToast] = useState(false)
+
+    const applyDemoScenario = (scenario: DemoEscrowScenario) => {
+        setActiveFilter('All')
+        setSearchQuery('')
+        setCurrentPage(1)
+        setSelectedId(scenario.checkoutRecord?.escrowId ?? '')
+        setRecordsVersion(current => current + 1)
+    }
+
+    useEffect(() => {
+        if (!isDemo) return
+        saveCanonicalDemoEscrowState()
+        applyDemoScenario(getCanonicalDemoEscrowScenario())
+    }, [isDemo])
 
     const checkoutRecordByEscrowId = useMemo(
         () => new Map(escrowCheckoutRecords.map(record => [record.escrowId, record])),
@@ -184,6 +209,12 @@ export default function EscrowCenterPage() {
 
     const handleReleaseSelectedCheckout = () => {
         if (!selectedCheckoutRecord || selectedCheckoutRecord.lifecycleState !== 'RELEASE_PENDING') return
+        if (isDemo && isCanonicalDemoEscrowRecord(selectedCheckoutRecord)) {
+            applyDemoScenario(setDemoStage('released'))
+            setShowSuccessToast(true)
+            setTimeout(() => setShowSuccessToast(false), 3000)
+            return
+        }
         const nextRecord = releaseEscrowToProvider(selectedCheckoutRecord)
         saveEscrowCheckout(nextRecord)
         setRecordsVersion(current => current + 1)
@@ -220,6 +251,8 @@ export default function EscrowCenterPage() {
                         </div>
                     </div>
                 </header>
+
+                {isDemo && <DemoEscrowControls onScenarioChange={applyDemoScenario} />}
 
                 <section aria-labelledby="escrow-kpis" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
                     <MetricTile label="Access active" value={`${activeCount}`} detail="Live cases in governed access" />
