@@ -2,6 +2,7 @@ import { Link, useLocation, useParams } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
 import DatasetUnavailableState from '../components/DatasetUnavailableState'
 import DatasetAssistantPanel from '../components/dataset-detail/DatasetAssistantPanel'
+import ProtectedEvaluationGate from '../components/credentials/ProtectedEvaluationGate'
 import {
     DATASET_DETAILS,
     getDatasetDetailById
@@ -318,6 +319,7 @@ export default function DatasetQualityBreakdownPage() {
                         </div>
                     </section>
 
+                    <ProtectedEvaluationGate datasetId={dataset.id} fallbackRoute={`/datasets/${dataset.id}/quality-breakdown`}>
                     <div className="grid gap-8 xl:grid-cols-[minmax(0,1.45fr)_minmax(340px,0.85fr)]">
                         <section className="space-y-8">
                             <section className={`${pagePanelClass} overflow-hidden`}>
@@ -598,6 +600,7 @@ export default function DatasetQualityBreakdownPage() {
                             </section>
                         </aside>
                     </div>
+                    </ProtectedEvaluationGate>
                 </div>
             </div>
         </div>
