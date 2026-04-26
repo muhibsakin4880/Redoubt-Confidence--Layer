@@ -329,9 +329,6 @@ export default function EscrowCenterPage() {
                 </header>
 
                 {isDemo && <DemoEscrowControls mode="demo-route" onScenarioChange={handleDemoControlsChange} />}
-                {showNormalBuyerDemoBanner && (
-                    <DemoEscrowControls mode="normal-route" onScenarioChange={handleDemoControlsChange} />
-                )}
 
                 <section aria-labelledby="escrow-kpis" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
                     <MetricTile label="Access active" value={`${activeCount}`} detail="Live cases in governed access" />
@@ -569,62 +566,6 @@ export default function EscrowCenterPage() {
                             </div>
                             <p className="mt-3 text-sm text-slate-400">{selectedCaseSummary}</p>
                         </div>
-
-                        {isCanonicalDemoSelected && demoScenario && selectedCheckoutRecord ? (
-                            <section className={`mt-5 ${quietPanelClass} p-4`}>
-                                <div className="flex items-start justify-between gap-3">
-                                    <div>
-                                        <div className="text-sm font-semibold text-white">Active demo case</div>
-                                        <div className="mt-1 text-xs text-slate-400">
-                                            Canonical buyer walkthrough pinned to the live demo row.
-                                        </div>
-                                    </div>
-                                    <span className="rounded-full border border-cyan-400/35 bg-cyan-500/10 px-2.5 py-1 text-[10px] font-semibold text-cyan-100">
-                                        {demoScenario.stageLabel}
-                                    </span>
-                                </div>
-
-                                <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
-                                    <FactTile label="Escrow stage" value={demoScenario.stageLabel} />
-                                    <FactTile label="Lifecycle state" value={statusStyles[selectedTransaction.status].text} />
-                                    <FactTile label="Workspace state" value={selectedCheckoutRecord.workspace.status === 'ready' ? 'Ready' : 'Planned'} />
-                                    <FactTile label="Token state" value={demoTokenState ?? 'Not issued'} />
-                                    <FactTile label="Release readiness" value={demoReleaseReadiness ?? 'Not ready'} />
-                                    <FactTile label="Outcome protection" value={outcomeStageMeta[selectedCheckoutRecord.outcomeProtection.stage].label} />
-                                </div>
-
-                                <div className="mt-4 rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
-                                    <span className="font-semibold text-white">Next recommended action:</span> {getDemoEscrowNextAction(demoScenario.stage)}
-                                </div>
-
-                                <div className="mt-4 grid gap-3">
-                                    <Link
-                                        to={buyerRouteTargets.ephemeralToken}
-                                        className="rounded-xl border border-amber-400/40 bg-amber-500/10 px-4 py-3 text-center text-sm font-semibold text-amber-100 transition-colors hover:bg-amber-500/20"
-                                    >
-                                        Ephemeral Token
-                                    </Link>
-                                    <Link
-                                        to={buyerRouteTargets.secureWorkspace}
-                                        className="rounded-xl border border-cyan-400/40 bg-cyan-500/10 px-4 py-3 text-center text-sm font-semibold text-cyan-100 transition-colors hover:bg-cyan-500/20"
-                                    >
-                                        Secure Workspace
-                                    </Link>
-                                    <Link
-                                        to={buyerRouteTargets.outputReview}
-                                        className="rounded-xl border border-emerald-400/35 bg-emerald-500/10 px-4 py-3 text-center text-sm font-semibold text-emerald-100 transition-colors hover:bg-emerald-500/20"
-                                    >
-                                        Output Review
-                                    </Link>
-                                    <Link
-                                        to={buyerRouteTargets.checkout}
-                                        className="rounded-xl border border-white/15 px-4 py-3 text-center text-sm font-semibold text-white transition-colors hover:border-cyan-400/40 hover:bg-white/5"
-                                    >
-                                        Checkout
-                                    </Link>
-                                </div>
-                            </section>
-                        ) : null}
 
                         <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
                             <FactTile label="Escrow amount" value={selectedTransaction.amount} />
