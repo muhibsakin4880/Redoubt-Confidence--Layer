@@ -2411,7 +2411,7 @@ export default function ContributionsPage() {
                                                         to={buildDealPath(submittedRecord.dealId, 'dossier')}
                                                         className="inline-flex font-semibold text-emerald-100 underline underline-offset-2 transition-colors hover:text-white"
                                                     >
-                                                        Open Evaluation Dossier
+                                                        Request Evaluation
                                                     </Link>
                                                     <Link
                                                         to={buildDealPath(submittedRecord.dealId, 'provider-packet')}

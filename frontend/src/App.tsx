@@ -56,6 +56,8 @@ import TrustCenterPage from './pages/TrustCenterPage'
 import ResearcherAccessPage from './pages/ResearcherAccessPage'
 import DealIndexPage from './pages/DealIndexPage'
 import DealDossierPage from './pages/DealDossierPage'
+import BuyerDossierPage from './pages/BuyerDossierPage'
+import BuyerWorkspacePage from './pages/BuyerWorkspacePage'
 import ProviderRightsPacketPage from './pages/ProviderRightsPacketPage'
 import CleanRoomOutputReviewPage from './pages/CleanRoomOutputReviewPage'
 import DealApprovalPage from './pages/DealApprovalPage'
@@ -261,13 +263,13 @@ function App() {
                     <Route path="demo/consent-tracker" element={<ConsentTrackerPage />} />
                     <Route path="demo/trust-glossary" element={<TrustGlossaryPage />} />
                     <Route path="demo/secure-enclave" element={<SecureEnclavePage />} />
+                    <Route path="demo/workspace" element={<BuyerWorkspacePage demo />} />
                     <Route path="demo/deployment-model" element={<DeploymentModelPage />} />
                     <Route path="demo/security-ops" element={<SecurityOperationsPage />} />
                     <Route path="demo/compliance-locker" element={<ComplianceLockerPage />} />
                     <Route path="demo/data-classification" element={<DataClassificationPage />} />
-                    <Route path="demo/deals" element={<DealIndexPage demo />} />
-                    <Route path="demo/deals/:dealId" element={<DealDossierPage demo />} />
-                    <Route path="demo/deals/:dealId/provider-packet" element={<ProviderRightsPacketPage demo />} />
+<Route path="demo/deals" element={<DealIndexPage demo />} />
+                    <Route path="demo/deals/:dealId" element={<BuyerDossierPage demo />} />
                     <Route path="demo/deals/:dealId/output-review" element={<CleanRoomOutputReviewPage demo />} />
                     <Route path="login" element={!isAuthenticated ? <LoginPage /> : <Navigate to={getDashboardPath()} replace />} />
                     <Route path="application-status" element={<ApplicationStatusPage />} />
@@ -309,14 +311,10 @@ function App() {
                     <Route path="provider/datasets/:id/status" element={<ContributionStatusDetailsPage />} />
                     <Route path="provider/datasets/:id" element={<ContributionDetailPage />} />
 <Route path="researcher-access" element={<ResearcherAccessPage />} />
-                    <Route path="deals" element={<DealIndexPage />} />
-                    <Route path="deals/:dealId" element={<DealDossierPage />} />
-                    <Route path="deals/:dealId/provider-packet" element={<ProviderRightsPacketPage />} />
+<Route path="deals" element={<DealIndexPage />} />
+                    <Route path="deals/:dealId" element={<BuyerDossierPage />} />
+                    <Route path="deals/old/:dealId" element={<DealDossierPage />} />
                     <Route path="deals/:dealId/output-review" element={<CleanRoomOutputReviewPage />} />
-                    <Route path="deals/:dealId/approval" element={<DealApprovalPage />} />
-                    <Route path="deals/:dealId/negotiation" element={<DealNegotiationPage />} />
-                    <Route path="deals/:dealId/residency-memo" element={<ResidencyDecisionMemoPage />} />
-                    <Route path="deals/:dealId/go-live" element={<GoLiveHandoffPage />} />
                     <Route path="datasets" element={<DatasetsPage />} />
                     <Route path="datasets/:id" element={<DatasetDetailPage />} />
                     <Route path="datasets/:id/rights-quote" element={<RightsQuoteBuilderPage />} />
@@ -337,6 +335,7 @@ function App() {
                     <Route path="rbac-console" element={<RBACConsolePage />} />
                     <Route path="data-classification" element={<DataClassificationPage />} />
                     <Route path="secure-enclave" element={<SecureEnclavePage />} />
+                    <Route path="workspace" element={<BuyerWorkspacePage />} />
                     <Route path="security-ops" element={<SecurityOperationsPage />} />
                     <Route path="compliance-locker" element={<ComplianceLockerPage />} />
                     <Route path="audit-trail" element={<AuditTrailPage />} />

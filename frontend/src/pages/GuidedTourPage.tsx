@@ -606,7 +606,7 @@ function buildTourSteps(prefix: string): Record<TourMode, GuidedStep[]> {
             description: 'Open the deal workspace that binds dataset identity, provider packet, rights posture, approval state, evidence, and settlement readiness.',
             whyNow: 'The dossier is now the native operating surface between discovery and access request work, so buyers should inspect it before committing to deeper review.',
             to: joinPath(prefix, '/deals'),
-            ctaLabel: 'Open Evaluation Dossier',
+            ctaLabel: 'Request Evaluation',
             group: 'Buyer workflow',
             priority: 'core',
             metricLabel: 'Deal spine',

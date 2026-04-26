@@ -878,7 +878,7 @@ export default function DatasetsPage() {
                                                 <div className="mt-5 flex flex-wrap gap-3">
                                                     {dossierPath ? (
                                                         <Link to={dossierPath} className={primaryButtonClass}>
-                                                            Open Evaluation Dossier
+                                                            Request Evaluation
                                                         </Link>
                                                     ) : null}
                                                     <Link to={getDatasetDetailPath(dataset, demo)} className={secondaryButtonClass}>
@@ -1043,7 +1043,7 @@ export default function DatasetsPage() {
                                                             to={dossierPath}
                                                             className="mt-3 inline-flex text-sm font-semibold text-cyan-100 transition-colors hover:text-cyan-200"
                                                         >
-                                                            Open Evaluation Dossier
+                                                            Request Evaluation
                                                         </Link>
                                                     ) : null}
                                                 </div>
@@ -1304,7 +1304,7 @@ function DatasetDecisionCard({
                                     aria-label={`Open evaluation dossier for ${dataset.title}`}
                                     tabIndex={frontTabIndex}
                                 >
-                                    Open Evaluation Dossier
+                                    Request Evaluation
                                 </Link>
                             ) : null}
                             <Link

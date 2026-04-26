@@ -100,7 +100,7 @@ export default function ContributionDetailPage() {
                                 to={buildDealPath(dealRoute.dealId, 'dossier')}
                                 className="inline-flex items-center justify-center rounded-lg border border-emerald-500/35 bg-emerald-500/10 px-4 py-2 text-sm font-semibold text-emerald-100 transition-colors hover:bg-emerald-500/20"
                             >
-                                Open Evaluation Dossier
+                                Request Evaluation
                             </Link>
                             <Link
                                 to={buildDealPath(dealRoute.dealId, 'provider-packet')}

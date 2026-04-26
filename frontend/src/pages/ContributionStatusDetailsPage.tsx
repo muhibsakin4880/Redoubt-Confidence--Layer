@@ -143,7 +143,7 @@ export default function ContributionStatusDetailsPage() {
                                     {dealRoute ? (
                                         <>
                                             <Link to={buildDealPath(dealRoute.dealId, 'dossier')} className={secondaryActionButtonClass}>
-                                                Open Evaluation Dossier
+                                                Request Evaluation
                                             </Link>
                                             <Link to={buildDealPath(dealRoute.dealId, 'provider-packet')} className={secondaryActionButtonClass}>
                                                 Open provider packet
